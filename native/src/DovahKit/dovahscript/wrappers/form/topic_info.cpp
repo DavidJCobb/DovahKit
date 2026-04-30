@@ -1,10 +1,10 @@
-#include "topic_info.h"
-#include "../../../helpers/lua/error.h"
-#include "../../core/subsystems/permissions.h"
-#include "../../core/subsystems/userdata.h"
-#include "../../pull_native_object.h"
-#include "../../push_native_object.h"
-#include "../../wrapper.h"
+#include "./topic_info.h"
+#include "helpers/lua/error.h"
+#include "dovahscript/core/subsystems/permissions.h"
+#include "dovahscript/core/subsystems/userdata.h"
+#include "dovahscript/pull_native_object.h"
+#include "dovahscript/push_native_object.h"
+#include "dovahscript/wrapper.h"
 
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
 #include "dovah/use_info/entry_flags/topic.h"
@@ -12,7 +12,6 @@
 #include "editor/subsystems/form_info_cache/core.h"
 #include "./topic_info/collection_link_to.h"
 #include "./topic_info/collection_responses.h"
-#include "./topic_info/response.h"
 #include "../form_components/collection_conditions.h"
 
 namespace {
@@ -83,10 +82,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         wrapper out = self;
-         out.append_part(wrapper_part_types::topic_info_link_to);
-         out.is_collection = true;
-         return core::subsystems::userdata::get().push(L, out, wrappers::collections::topic_info_link_to.registry_key);
+         return wrapper_likes::native_lists::topic_info_link_to::push(L, self);
       }
       int override_topic_text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -123,10 +119,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         wrapper out = self;
-         out.append_part(wrapper_part_types::topic_info_response);
-         out.is_collection = true;
-         return core::subsystems::userdata::get().push(L, out, wrappers::collections::topic_info_responses.registry_key);
+         return wrapper_likes::native_lists::topic_info_responses::push(L, self);
       }
       int speaker(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -351,7 +344,7 @@ namespace dovahscript::wrappers {
    };
 
    /*static*/ void cls::extra_class_setup(lua_State* L) {
-      define_collection_metatable(L, collections::topic_info_link_to);
-      define_collection_metatable(L, collections::topic_info_responses);
+      wrapper_likes::native_lists::topic_info_link_to::define_metatable(L);
+      wrapper_likes::native_lists::topic_info_responses::define_metatable(L);
    }
 }

@@ -2,13 +2,13 @@
 #include "lua.h"
 #include "dovah/form_reference_t.h"
 #include "dovahscript/core/subsystems/permissions.h"
-#include "./member_function_spec.h"
+#include "./impl/concepts/is_fully_valid_spec.h"
 #include "./impl/get_list_mutation_target.h"
 #include "./impl/list_item_needs_form_to_clear.h"
 
 namespace dovahscript::api_helpers::native_lists {
    template<typename Spec>
-      requires (impl::is_fully_valid_spec<Spec> && Spec::allow_removals)
+      requires (impl::concepts::is_fully_valid_spec<Spec> && Spec::allow_removals)
    int remove_item_at_index(lua_State* L) {
       using list_type = typename Spec::collection_wrapped_type;
 

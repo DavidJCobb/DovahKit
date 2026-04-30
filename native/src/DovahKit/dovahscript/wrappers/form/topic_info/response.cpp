@@ -5,6 +5,7 @@
 #include "helpers/lua/error.h"
 #include "dovahscript/push_native_object.h"
 #include "dovahscript/wrapper.h"
+#include "./collection_responses.h"
 
 // For table-to-response ops:
 #include "dovahscript/api_helpers/subobject_property_helpers/common_lambdas.h"
@@ -31,7 +32,7 @@ namespace {
    static wrapped_type* _unwrap(wrapper& w) {
       if (w.is_collection)
          return nullptr;
-      if (w.parts[0].signature != wrapper_part_types::topic_info_response)
+      if (w.parts[0].signature != wrapper_likes::native_lists::topic_info_responses::signature)
          return nullptr;
       auto* form = w.get_loaded_form_data<form_type>();
       if (!form)
@@ -149,10 +150,10 @@ constexpr auto subobject_properties = std::tuple{
    },
 };
 
-/*static*/ void cls::verify_table_can_overwrite(lua_State* L, int pos, dovah::loaded_forms::Form& dst_form, wrapped_type& dst_subobject) {
+/*static*/ void cls::verify_table_can_overwrite(lua_State* L, int pos, const dovah::loaded_forms::Form& dst_form, const wrapped_type& dst_subobject) {
    return subobject_property_helpers::verify_table_for_lua_assignment<wrapped_type, subobject_properties>(L, pos, dst_form, dst_subobject);
 }
-/*static*/ void cls::verify_table_for_insertion(lua_State* L, int pos, dovah::loaded_forms::Form& dst_form) {
+/*static*/ void cls::verify_table_for_insertion(lua_State* L, int pos, const dovah::loaded_forms::Form& dst_form) {
    return subobject_property_helpers::verify_table_for_lua_insertion<wrapped_type, subobject_properties>(L, pos, dst_form);
 }
 /*static*/ void cls::overwrite_with_table(

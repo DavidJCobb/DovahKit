@@ -20,8 +20,8 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
 
       core::subsystems::permissions::verify_form_write_permissions();
       //
-      auto& self      = get_wrapper_for_thiscall<Wrapper>(L);
-      auto& subobject = UnwrapFunc(L);
+      wrapper&        self      = get_wrapper_for_thiscall<Wrapper>(L);
+      subobject_type& subobject = UnwrapFunc(L);
       {
          auto message = verify_table<subobject_type, IsAssign, PropertyList>(L, argument_stack_pos);
          if (!message.empty())

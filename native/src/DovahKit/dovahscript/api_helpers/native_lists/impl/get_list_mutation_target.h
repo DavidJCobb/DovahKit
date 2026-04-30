@@ -1,17 +1,16 @@
 #pragma once
 #include <tuple>
 #include "helpers/lua/error.h"
-#include "../member_function_spec.h"
+#include "./concepts/storage_is_bifurcated.h"
 
 namespace dovahscript::api_helpers::native_lists::impl {
    // Takes: wrapper; zero-based index within list
    // Returns: (sub-)list to modify; zero-based index within (sub-)list
    template<typename Spec>
    std::tuple<typename Spec::collection_wrapped_type*, size_t, size_t> get_list_mutation_target(lua_State* L, wrapper& self, size_t requested_index) {
-      if constexpr (impl::unwrap_collection::is_single<Spec>) {
+      if constexpr (!concepts::storage_is_bifurcated<Spec>) {
          return { Spec::unwrap_collection(self), requested_index, requested_index };
       } else {
-         static_assert(impl::unwrap_collection::is_bifurcated<Spec>);
          const auto pair = Spec::unwrap_collection(self);
          if (pair.first) {
             const size_t no_no_threshold = pair.first->size();
@@ -27,7 +26,7 @@ namespace dovahscript::api_helpers::native_lists::impl {
    // Returns: (sub-)list to modify; zero-based index within (sub-)list; zero-based sub-object index
    template<typename Spec>
    std::tuple<typename Spec::collection_wrapped_type*, size_t, size_t> get_list_mutation_target(lua_State* L, wrapper& self, std::optional<size_t> requested_index) {
-      if constexpr (impl::unwrap_collection::is_single<Spec>) {
+      if constexpr (!concepts::storage_is_bifurcated<Spec>) {
          auto*  list_ptr = Spec::unwrap_collection(self);
          size_t index;
          if (requested_index.has_value()) {
@@ -37,7 +36,6 @@ namespace dovahscript::api_helpers::native_lists::impl {
          }
          return { list_ptr, index, index };
       } else {
-         static_assert(impl::unwrap_collection::is_bifurcated<Spec>);
          const auto pair = Spec::unwrap_collection(self);
          if (requested_index.has_value()) {
             size_t subobject_index = requested_index.value();

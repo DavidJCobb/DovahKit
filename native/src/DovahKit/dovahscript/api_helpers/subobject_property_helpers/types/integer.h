@@ -134,42 +134,5 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
             .default_value = dv,
          };
       }
-
-      /*//
-      template<typename AccessFunc>
-      struct define : public property_definition<
-         AccessFunc,
-         decltype(&check_lua_value),
-         decltype(&pull::integer),
-         void (*)(lua_State*, const std::decay_t<typename cobb::function_traits<AccessFunc>::return_type>&)
-      > {
-         consteval define(std::string_view name, AccessFunc a) {
-            this->name   = name;
-            this->access = a;
-            this->check  = &check_lua_value;
-            this->pull   = &pull::integer;
-            this->push   = &push_lua_value;
-         }
-         
-         consteval define(std::string_view name, AccessFunc a, lua_Integer dv) {
-            this->name   = name;
-            this->access = a;
-            this->check  = &check_lua_value;
-            this->pull   = &pull::integer;
-            this->push   = &push_lua_value;
-            this->default_value = dv;
-         }
-
-         static void push_lua_value(lua_State* L, const std::decay_t<typename cobb::function_traits<AccessFunc>::return_type>& v) {
-            lua_pushinteger(L, v);
-         }
-      };
-
-      template<typename AccessFunc>
-      define(std::string_view, AccessFunc) -> define<AccessFunc>;
-
-      template<typename AccessFunc>
-      define(std::string_view, AccessFunc, lua_Integer) -> define<AccessFunc>;
-      //*/
    };
 }

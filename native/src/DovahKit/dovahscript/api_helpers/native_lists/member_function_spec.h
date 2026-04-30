@@ -1,179 +1,6 @@
 #pragma once
-#include <concepts>
-#include <type_traits>
-#include <utility> // std::pair
-#include "lua.h"
-#include "./impl/push_value.h"
-namespace dovah {
-   namespace loaded_forms {
-      class Form;
-   }
-   class form_stub;
-}
-namespace dovahscript {
-   class wrapper;
-}
 
 namespace dovahscript::api_helpers::native_lists {
-   struct member_function_spec;
-
-   namespace impl {
-      template<typename Spec>
-      concept pushes_value_directly = requires {
-         typename Spec::value_stored_type;
-         requires requires(lua_State* L, const typename Spec::value_stored_type& v) {
-            { Spec::push_value(L, v) } -> std::same_as<int>;
-         };
-      };
-      template<typename Spec>
-      concept pushes_value_as_subobject_wrapper = requires {
-         requires requires(lua_State* L, wrapper& collection, size_t zero_based_item_index) {
-            { Spec::push_value(L, collection, zero_based_item_index) } -> std::same_as<int>;
-         };
-      };
-
-      template<typename Spec>
-      concept values_are_subobjects = requires {
-         requires !std::is_same_v<typename Spec::value_wrapper_type, void>;
-      };
-
-      template<typename Spec>
-      concept is_a_spec = requires {
-         requires std::is_base_of_v<member_function_spec, Spec>;
-         requires !std::is_same_v<typename Spec::collection_wrapped_type, void>;
-         requires !std::is_same_v<typename Spec::value_stored_type,       void>;
-         requires !std::is_same_v<typename Spec::value_working_type,      void>;
-
-         requires requires(lua_State* L) {
-            { Spec::pull_collection(L) } -> std::same_as<wrapper&>;
-         };
-         requires (values_are_subobjects<Spec> ? pushes_value_as_subobject_wrapper<Spec> : (pushes_value_directly<Spec> || value_type_is_default_pushable<Spec>));
-      };
-
-      // optional static member functions:
-      namespace get_collection_length {
-         template<typename Spec>
-         concept present = requires {
-            { Spec::get_collection_length };
-         };
-
-         template<typename Spec>
-         concept valid = requires {
-            requires present<Spec>;
-            requires requires(lua_State* L) {
-               { Spec::get_collection_length(L) } -> std::same_as<int>;
-            };
-         };
-         
-         template<typename Spec>
-         concept defaultable = requires {
-            requires !present<Spec>;
-            typename Spec::collection_wrapped_type;
-            requires requires(const typename Spec::collection_wrapped_type& list) {
-               { list.size() } -> std::convertible_to<lua_Integer>;
-            };
-         };
-      }
-      namespace get_item_by_index {
-         template<typename Spec>
-         concept present = requires {
-            { Spec::get_item_by_index };
-         };
-
-         template<typename Spec>
-         concept valid = requires {
-            requires present<Spec>;
-            requires requires(lua_State* L) {
-               { Spec::get_item_by_index(L) } -> std::same_as<int>;
-            };
-         };
-         
-         template<typename Spec>
-         concept defaultable = requires {
-            requires !present<Spec>;
-            typename Spec::collection_wrapped_type;
-            typename Spec::value_stored_type;
-            requires requires(const typename Spec::collection_wrapped_type& list, size_t i) {
-               { list[i] } -> std::same_as<const typename Spec::value_stored_type&>;
-            };
-         };
-      }
-      namespace initialize_value {
-         template<typename Spec>
-         concept present = requires {
-            { Spec::initialize_value };
-         };
-         template<typename Spec>
-         concept valid = requires {
-            requires present<Spec>;
-            { Spec::initialize_value() } -> std::same_as<typename Spec::value_working_type>;
-         };
-      }
-      namespace pull_value {
-         template<typename Spec>
-         concept present = requires {
-            { Spec::pull_value };
-         };
-         template<typename Spec>
-         concept valid = requires {
-            requires present<Spec>;
-            requires requires(lua_State* L, int i) {
-               { Spec::pull_value(L, i) } -> std::same_as<typename Spec::value_working_type>;
-            };
-         };
-      }
-      namespace store_value {
-         template<typename Spec>
-         concept present = requires {
-            { Spec::store_value };
-         };
-         template<typename Spec>
-         concept valid = requires {
-            requires present<Spec>;
-            typename Spec::value_stored_type;
-            typename Spec::value_working_type;
-            requires (
-               std::is_invocable_v<decltype(Spec::store_value), const typename Spec::value_working_type&, typename Spec::value_stored_type&>
-            || std::is_invocable_v<decltype(Spec::store_value), const typename Spec::value_working_type&, typename Spec::value_stored_type&, dovah::loaded_forms::Form&>
-            );
-         };
-      }
-      namespace unwrap_collection {
-         template<typename Spec>
-         concept present = requires {
-            { Spec::unwrap_collection };
-         };
-
-         template<typename Spec>
-         concept is_bifurcated = requires(wrapper& self) {
-            requires present<Spec>;
-            typename Spec::collection_wrapped_type;
-            { Spec::unwrap_collection(self) } -> std::same_as<std::pair<typename Spec::collection_wrapped_type*, typename Spec::collection_wrapped_type*>>;
-         };
-
-         template<typename Spec>
-         concept is_single = requires(wrapper & self, size_t i) {
-            requires present<Spec>;
-            typename Spec::collection_wrapped_type;
-            { Spec::unwrap_collection(self) } -> std::same_as<typename Spec::collection_wrapped_type*>;
-         };
-
-         template<typename Spec>
-         concept valid = is_bifurcated<Spec> || is_single<Spec>;
-      }
-
-      template<typename Spec>
-      concept is_fully_valid_spec = requires {
-         requires is_a_spec<Spec>;
-         requires (get_collection_length::valid<Spec> || get_collection_length::defaultable<Spec>);
-         requires (get_item_by_index::valid<Spec> || get_item_by_index::defaultable<Spec>);
-         requires (!initialize_value::present<Spec> || initialize_value::valid<Spec>);
-         requires (!pull_value::present<Spec> || pull_value::valid<Spec>);
-         requires (!store_value::present<Spec> || store_value::valid<Spec>);
-         requires unwrap_collection::valid<Spec>;
-      };
-   }
-
    // A helper type for generating collection APIs via template metaprogramming.
    // 
    // Subclass this, shadow the `using` declarations and static members as appropriate, 
@@ -224,14 +51,44 @@ namespace dovahscript::api_helpers::native_lists {
       /// Do not provide both this and the overload listed above. Pick one.
       //static std::pair<collection_wrapped_type*, collection_wrapped_type*> unwrap_collection(wrapper& self);
 
-      /// Function which pulls a value off of the Lua stack, suitable for insertion 
-      /// into the wrapped native list.
-      //static value_working_type pull_value(lua_State* L, int pos);
-
       /// [Optional] Function which default-constructs a value of the given type. This 
       /// is needed for certain backend types that don't default-construct properly, 
       /// i.e. conditions in form data.
       //static value_working_type initialize_value();
+
+      /// [Optional] Functions which compute some state prior to making insertions, 
+      /// and then apply that state to any inserted or overwritten elements. The state 
+      /// type can be any type `T`.
+      /// 
+      /// The `prep_for_insertion` function is invoked with a Lua stack index if the 
+      /// `insert` member function was passed a value to insert. The function must 
+      /// always return a vector with `count_to_insert` elements inside (we `assert` 
+      /// that you do).
+      /// 
+      /// The `apply_preparations` function will be invoked for each inserted element. 
+      /// If the list allows insertions past the end, then this will include implicitly 
+      /// created elements between the end of the list and the desired element.
+      /// 
+      /// A usage example for this is TopicInfo responses, which must have unique IDs 
+      /// (separate from their indices, and potentially non-contiguous) within the 
+      /// info's response list. These IDs are automatically computed by default, and 
+      /// this is the functionality used to compute them.
+      //static std::vector<T> prep_for_insertion(const collection_wrapped_type&, size_t count_to_insert, lua_State*, std::optional<int> value_pos);
+      //static value_working_type apply_preparations(value_working_type&, T);
+
+      ///
+      /// == Functions for pull-and-store ==
+      /// 
+      /// These functions are used when it's possible to pull a table from Lua, convert 
+      /// it to a native object, and retain that native object as a local variable. 
+      /// Broadly speaking, that'll be possible if there are no `form_reference_t` or 
+      /// other "managed" fields in the object, or if the object is a "working" variation 
+      /// of something that relies on a transaction model (e.g. form conditions).
+      /// 
+
+      /// Function which pulls a value off of the Lua stack, suitable for insertion 
+      /// into the wrapped native list.
+      //static value_working_type pull_value(lua_State* L, int pos);
 
       /// Function which pushes a collection item onto the Lua stack. Use this signature 
       /// (and not the other one) if this is a collection of sub-objects.
@@ -248,5 +105,26 @@ namespace dovahscript::api_helpers::native_lists {
       /// simply be assigned to the stored type, and if the stored type isn't a form use 
       /// (i.e. `dovah::form_reference_t`).
       //static void store_value(const value_working_type&, value_stored_type&, dovah::loaded_forms::Form&);
+
+
+      ///
+      /// == Functions for validate-and-overwrite ==
+      /// 
+      /// These functions are used when pull-and-store isn't possible. We validate that a 
+      /// Lua-side table can be used to overwrite a value; and then we perform the overwrite 
+      /// by reading directly from the table into the object's fields.
+      /// 
+      /// This is designed to compose well with the "sub-object property helpers" elsewhere 
+      /// in the `api_helpers` namespace.
+      /// 
+
+      /// Function which validates that a value on the Lua stack can be used to overwrite an 
+      /// element in the wrapped list. The former overload is used for an insertion, while 
+      /// the latter overload is used for overwriting an existing value.
+      //static void validate_value(lua_State* L, int pos, const dovah::loaded_forms::Form&);
+      //static void validate_value(lua_State* L, int pos, const dovah::loaded_forms::Form&, const value_stored_type&);
+
+      /// Function which overwrites a stored value with a value from the Lua stack.
+      //static void overwrite_value(lua_State* L, int src_pos, value_stored_type&, dovah::loaded_forms::Form&);
    };
 }

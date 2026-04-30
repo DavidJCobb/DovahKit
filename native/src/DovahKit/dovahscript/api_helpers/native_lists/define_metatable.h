@@ -2,7 +2,6 @@
 #include <string_view>
 #include "lua.h"
 #include "dovahscript/wrapper.h"
-#include "./member_function_spec.h"
 #include "./impl/metamethods.h"
 
 #include "./clear.h"
@@ -12,13 +11,16 @@
 #include "./remove_item_at_index.h"
 #include "./set_item_at_index.h"
 
+#include "./impl/concepts/can_assign_elements.h"
+#include "./impl/concepts/is_fully_valid_spec.h"
+
 namespace dovahscript::api_helpers::native_lists {
    template<
       const std::string_view& CollectionMetatableKey,
       const std::string_view& ClassName,
       typename Spec
    >
-      requires impl::is_fully_valid_spec<Spec>
+      requires impl::concepts::is_fully_valid_spec<Spec>
    void define_metatable(lua_State* L) {
       impl::metamethods::prepare_iterator_metatables(L);
       
@@ -45,10 +47,10 @@ namespace dovahscript::api_helpers::native_lists {
       lua_setfield(L, index_mt, "__gc");
       {
          lua_CFunction f;
-         if constexpr (impl::get_collection_length::valid<Spec>) {
+         if constexpr (impl::fields::get_collection_length::valid<Spec>) {
             f = &Spec::get_collection_length;
          } else {
-            static_assert(impl::get_collection_length::defaultable<Spec>);
+            static_assert(impl::fields::get_collection_length::defaultable<Spec>);
             f = &get_collection_length<Spec>;
          }
          lua_pushcfunction(L, f);
@@ -56,27 +58,27 @@ namespace dovahscript::api_helpers::native_lists {
       }
       {
          lua_CFunction f;
-         if constexpr (impl::get_item_by_index::valid<Spec>) {
+         if constexpr (impl::fields::get_item_by_index::valid<Spec>) {
             f = &Spec::get_item_by_index;
          } else {
-            static_assert(impl::get_item_by_index::defaultable<Spec>);
+            static_assert(impl::fields::get_item_by_index::defaultable<Spec>);
             f = &get_item_by_index<Spec>;
          }
          lua_pushcfunction(L, f);
          lua_setfield(L, index_mt, "lookup_item_by_index");
       }
-      if constexpr (impl::pull_value::valid<Spec>) {
+      if constexpr (impl::concepts::can_assign_elements<Spec>) {
          lua_pushcfunction(L, &set_item_at_index<Spec>);
          lua_setfield(L, index_mt, "set_item");
       }
 
-      if constexpr (impl::pull_value::valid<Spec> || Spec::allow_removals) {
+      if constexpr (impl::concepts::can_assign_elements<Spec> || Spec::allow_removals) {
          lua_createtable(L, 0, 3);
          if constexpr (Spec::allow_removals) {
             lua_pushcfunction(L, &clear<Spec>);
             lua_setfield(L, -2, "clear");
          }
-         if constexpr (impl::pull_value::valid<Spec>) {
+         if constexpr (impl::concepts::can_assign_elements<Spec>) {
             lua_pushcfunction(L, &insert<Spec>);
             lua_setfield(L, -2, "insert");
          }

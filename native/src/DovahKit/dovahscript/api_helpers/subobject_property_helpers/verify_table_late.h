@@ -19,8 +19,8 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
    void verify_table_late(
       lua_State* L,
       int table_pos,
-      dovah::loaded_forms::Form& dst_form,
-      Dst* dst_data
+      const dovah::loaded_forms::Form& dst_form,
+      const Dst* dst_data
    ) {
       assert(lua_istable(L, table_pos) || lua_isuserdata(L, table_pos));
 
@@ -30,8 +30,8 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
             []<const auto& PropertyDefinition>(
                lua_State* L,
                int table_pos,
-               dovah::loaded_forms::Form& dst_form,
-               Dst* dst_data
+               const dovah::loaded_forms::Form& dst_form,
+               const Dst* dst_data
             ) {
                if constexpr (PropertyDefinition.late_check) {
                   lua_getfield(L, table_pos, PropertyDefinition.name.data());
@@ -44,7 +44,9 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
                   }
                }
             }
-         >(L, table_pos, dst_form, dst_data);
+         >(L, table_pos, dst_form, const_cast<Dst*>(dst_data));
+         // 04/29/2026: const-cast needed to work around a defect in either `for_each_nttp_value` or MSVC itself.
+         //             not sure which.
       }
    }
 }

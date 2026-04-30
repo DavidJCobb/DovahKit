@@ -1,365 +1,135 @@
 #include "./collection_responses.h"
 #include "helpers/lua/error.h"
 #include "helpers/lua/warning.h"
-#include "dovahscript/api_helpers/fail_table_if_expandos.h"
 #include "dovahscript/core/subsystems/userdata.h"
-#include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/classes.h"
-#include "dovahscript/pull_native_object.h"
-#include "dovahscript/wrapper.h"
 
 #include "dovah/forms/TopicInfo.h"
 #include "../topic_info.h"
 #include "./response.h"
 
-#include "dovahscript/api_helpers/subobject_property_helpers/verify_table_for_lua_assignment.h"
-
-namespace {
-   constexpr const char* collection_metatable_key = "collection<dovah.classes.topic_info.responses>";
-}
+#include "dovah/forms/TopicInfo.h"
+#include "dovahscript/api_helpers/native_lists/member_function_spec.h"
+#include "dovahscript/api_helpers/native_lists/common/pull_collection.h"
+#include "dovahscript/api_helpers/native_lists/define_metatable.h"
+#include "dovahscript/wrapper.h"
 
 namespace {
    using namespace dovahscript;
+   using containing_form_type = dovah::loaded_forms::TopicInfo;
+   using wrapper_spec         = dovahscript::wrapper_likes::native_lists::topic_info_responses;
 
-   using wrapped_type      = dovah::loaded_forms::TopicInfo;
-   using subobject_wrapper = wrappers::topic_info_response;
-   using subobject_type    = subobject_wrapper::wrapped_type;
-   
-   wrapper& get_collection_wrapper(lua_State* L) {
-      auto* self = (wrapper*) classes::cast_to_class(L, 1, collection_metatable_key);
-      if (self == nullptr) {
-         cobb::lua::error(L, "function called with bad self (expected %s)", collection_metatable_key);
+   struct member_function_spec : public api_helpers::native_lists::member_function_spec {
+      using collection_wrapped_type = decltype(containing_form_type::responses);
+      using value_wrapper_type      = wrappers::topic_info_response;
+      using value_stored_type       = typename collection_wrapped_type::value_type;
+      using value_working_type      = value_stored_type;
+
+      static constexpr const bool allow_insertions_past_end = true;
+
+      static constexpr const auto pull_collection = &api_helpers::native_lists::common::pull_collection<wrapper_spec::metatable_key>;
+
+      static collection_wrapped_type* unwrap_collection(wrapper& self) {
+         auto* form = self.get_loaded_form_data<containing_form_type>();
+         if (!form)
+            return nullptr;
+         return &form->responses;
       }
-      return *self;
-   }
 
-   static std::optional<uint8_t> generate_unique_id(auto& list) {
-      cobb::bitset<256> used_ids;
-      for (auto& item : list)
-         used_ids.set(item.id);
-
-      if (used_ids.all())
-         return {};
-      used_ids.set(0);
-      if (used_ids.all())
-         return 0;
-      //
-      // TODO: Prefer `highest_set_bit + 1` unless the highest set bit is the 255th bit, 
-      //       in which case fall through to the first clear bit.
-      //
-      return used_ids.find_first_clear();
-   }
-   static std::vector<uint8_t> generate_unique_ids(auto& list, size_t count) {
-      cobb::bitset<256> used_ids;
-      for (auto& item : list)
-         used_ids.set(item.id);
-      if (used_ids.all())
-         return {};
-
-      bool zero_is_taken = used_ids.test(0);
-      used_ids.set(0);
-
-      std::vector<uint8_t> result;
-      for (size_t i = 0; i < count; ++i) {
-         auto id = used_ids.find_first_clear();
-         if (id >= 0) {
-            result.push_back(id);
-            continue;
-         }
-         //
-         // All good IDs are taken. Abort.
-         //
-         if (!zero_is_taken) {
-            //
-            // ...though if zero isn't taken, use that and then abort.
-            //
-            result.push_back(0);
-         }
-         break;
+      static void validate_value(lua_State* L, int pos, const dovah::loaded_forms::Form& form, const value_stored_type& dst) {
+         value_wrapper_type::verify_table_can_overwrite(L, pos, form, dst);
       }
-      return result;
-   }
-
-   static bool table_has_unique_id(lua_State* L, int pos) {
-      lua_getfield(L, pos, "unique_id");
-      bool result = !lua_isnoneornil(L, -1);
-      lua_pop(L, 1);
-      return result;
-   }
-
-   //
-   // When you insert or overwrite a response within the response list, we 
-   // *may* need to auto-generate a unique ID for it, if the data you're 
-   // passing in doesn't specify a unique ID. However, there's a bit of a 
-   // wrinkle to this.
-   //  
-   // If you assign to an element past the end of the response list, OR if 
-   // you insert at a position past the end of the response list, then we 
-   // will create empty responses between [what used to be] the end of the 
-   // list, and the position you're writing into. Each of those responses 
-   // will also need a unique ID generated for it.
-   // 
-   // Therefore: `count_to_create` is the total number of responses that 
-   // are being created within the list, while `count_to_auto` is the number 
-   // of responses that need unique IDs generated. The latter will always be 
-   // either equal to the former, or (in the case that you're inserting a 
-   // response with a pre-specified unique ID) equal to the former minus one.
-   //
-   static void autogenerate_unique_ids_for_span(lua_State* L, std::vector<uint8_t>& out, auto& list, size_t count_to_create, size_t count_to_auto) {
-      out = generate_unique_ids(list, count_to_auto);
-      if (out.empty()) {
-         cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
+      static void validate_value(lua_State* L, int pos, const dovah::loaded_forms::Form& form) {
+         value_wrapper_type::verify_table_for_insertion(L, pos, form);
       }
-      if (out.size() < count_to_auto) {
-         cobb::lua::error(L, "this `topic_info` form doesn't have enough unique IDs left for the %u new responses you are attempting to create", (int)count_to_create);
+      static void overwrite_value(lua_State* L, int src_pos, value_stored_type& dst, dovah::loaded_forms::Form& dst_form) {
+         value_wrapper_type::overwrite_with_table(dst_form, dst, L, src_pos);
       }
-      if (out.back() == 0) {
-         cobb::lua::warning(L, "one of the new responses will end up using unique ID 0; this ID is a sentinel value used when recording lines in the Creation Kit");
+      static int push_value(lua_State* L, wrapper& collection, size_t zero_based_item_index) {
+         assert(collection.is_collection);
+         assert(collection.stub);
+         wrapper out = collection;
+         out.into_collection(zero_based_item_index);
+         return core::subsystems::userdata::get().push(L, out, value_wrapper_type::metatable_key);
       }
-   }
-   static void autogenerate_unique_ids_for_single(lua_State* L, std::vector<uint8_t>& out, auto& list) {
-      auto opt = generate_unique_id(list);
-      if (!opt.has_value())
-         cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
-      auto val = opt.value();
-      if (val == 0)
-         cobb::lua::warning(L, "this `topic_info` form only has unique ID 0 available for new responses; this ID is a sentinel value used when recording lines in the Creation Kit");
-      out.push_back(val);
-   }
 
-   static void apply_autogenerated_unique_ids(auto& list, const std::vector<uint8_t>& ids, size_t wrote_to, bool has_uid) {
-      //
-      // As mentioned above, a single set/insert operation on the list may 
-      // actually create multiple responses, and we may need to generate a 
-      // unique ID for either all created responses, or (if the data you're 
-      // inserting pre-specifies a UID) all but one of them.
-      //
-      // Since we only create multiple responses in the case of you inserting 
-      // past the end of the list, the index you're writing to will always be 
-      // either:
-      // 
-      //  - The index of the last response that needs a UID, if the data did 
-      //    not pre-specify one.
-      // 
-      //  - The index after the last response that needs a UID, if the data 
-      //    did pre-specify one.
-      //
-      if (ids.empty())
-         return;
-      size_t first = wrote_to;
-      if (!has_uid)
-         first += 1;
-      first -= ids.size();
-      for (size_t j = 0; j < ids.size(); ++j) {
-         list[first + j].id = ids[j];
-      }
-   }
-
-   // ---
-   
-   int get_collection_length(lua_State* L) {
-      auto& self = get_collection_wrapper(L);
-      auto* form = self.get_loaded_form_data<wrapped_type>();
-      if (!form) {
-         lua_pushinteger(L, 0);
-         return 1;
-      }
-      lua_pushinteger(L, form->responses.size());
-      return 1;
-   }
-   int lookup_item_by_index(lua_State* L) {
-      auto& self = get_collection_wrapper(L);
-      auto* form = self.get_loaded_form_data<wrapped_type>();
-      if (!form)
-         return 0;
-      auto  i    = lua_tointeger(L, 2);
-      auto& list = form->responses;
-      if (i > list.size() || i <= 0)
-         return 0;
-      --i;
-      wrapper out = self;
-      assert(out.is_collection);
-      assert(out.parts[0].signature == wrapper_part_types::topic_info_response);
-      out.into_collection(i);
-      return core::subsystems::userdata::get().push(L, out, subobject_wrapper::metatable_key);
-   }
-   int member_function_insert(lua_State* L) {
-      core::subsystems::permissions::verify_form_write_permissions();
-      
-      auto& self  = get_collection_wrapper(L);
-      auto* form  = self.get_loaded_form_data<wrapped_type>();
-      if (!form)
-         return 0;
-      auto&  list = form->responses;
-      size_t size = list.size();
-
-      int  insert_at = form->responses.size();
-      int  pos_value = 2;
-      bool has_value = false;
-      bool has_uid   = false;
-      {
-         if (lua_gettop(L) >= 3) {
-            pos_value = 3;
-
-            cobb::lua::argcheck(L, lua_isinteger(L, 2), 2, "provided index must be an integer");
-            auto i = lua_tointeger(L, 2);
-            cobb::lua::argcheck(L, i >= 1, 2, "cannot insert at a zero or negative index");
-            insert_at = i - 1;
-         }
-         if (!lua_isnoneornil(L, pos_value)) {
-            subobject_wrapper::verify_table_for_insertion(L, pos_value, *form);
-            has_value = true;
-            has_uid   = table_has_unique_id(L, pos_value);
-         }
-      }
-      if (!form)
-         return 0;
-
-      std::vector<uint8_t> uids_to_generate;
-      if (!has_uid) {
-         if (insert_at > size) {
-            cobb::lua::warning(L, "index %s is out of bounds; empty elements will be created between the end of the list and the new element", lua_tolstring(L, 2, nullptr));
-            {
-               size_t count_to_create = insert_at - size + 1;
-               size_t count_to_auto = count_to_create;
-               if (has_uid)
-                  --count_to_auto;
-               autogenerate_unique_ids_for_span(L, uids_to_generate, list, count_to_create, count_to_auto);
+      static std::vector<uint8_t> prep_for_insertion(
+         const collection_wrapped_type& dst_list,
+         size_t count_to_insert,
+         lua_State* L,
+         std::optional<int> value_pos
+      ) {
+         std::optional<uint8_t> specified_uid;
+         if (value_pos.has_value()) {
+            lua_getfield(L, value_pos.value(), "unique_id");
+            if (!lua_isnoneornil(L, -1)) {
+               if (lua_isinteger(L, -1))
+                  specified_uid = lua_tointeger(L, -1);
             }
-         } else {
-            autogenerate_unique_ids_for_single(L, uids_to_generate, list);
+            lua_pop(L, 1);
          }
-      }
 
-      self.before_edit();
-      {
-         if (insert_at >= list.size()) {
-            list.resize(insert_at + 1);
-         } else {
-            list.emplace(list.begin() + insert_at);
-            core::subsystems::userdata::get().insert_into_sequential_collection(self, insert_at);
+         std::vector<uint8_t> result;
+         size_t count_to_default = count_to_insert;
+         if (specified_uid.has_value()) {
+            --count_to_default;
+            if (!count_to_default) { // fast path: inserting just one value
+               result.push_back(specified_uid.value());
+               return result;
+            }
          }
-         if (has_value) {
-            subobject_wrapper::overwrite_with_table(
-               *form,
-               list[insert_at],
-               L,
-               pos_value
-            );
+
+         cobb::bitset<256> used_ids;
+         for (const auto& item : dst_list)
+            used_ids.set(item.id);
+         if (specified_uid.has_value())
+            used_ids.set(specified_uid.value());
+
+         bool zero_is_taken = used_ids.test(0);
+         used_ids.set(0);
+
+         for (size_t i = 0; i < count_to_default; ++i) {
+            auto id = used_ids.find_first_clear();
+            if (id >= 0) {
+               result.push_back(id);
+               continue;
+            }
+            //
+            // All good IDs are taken. Abort.
+            //
+            if (!zero_is_taken) {
+               //
+               // ...though if zero isn't taken, use that and then abort.
+               //
+               result.push_back(0);
+            }
+            break;
          }
-         apply_autogenerated_unique_ids(list, uids_to_generate, insert_at, has_uid);
+         if (specified_uid.has_value())
+            result.push_back(specified_uid.value());
+
+         if (result.empty())
+            cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
+         if (result.size() < count_to_default)
+            cobb::lua::error(L, "this `topic_info` form doesn't have enough unique IDs left for the %u new responses you are attempting to create", (int)count_to_insert);
+         if (result.back() == 0)
+            cobb::lua::warning(L, "one of the new responses will end up using unique ID 0; this ID is a sentinel value used when recording lines in the Creation Kit");
+         return result;
       }
-      self.after_edit();
-      return 0;
-   }
-   int member_function_remove(lua_State* L) {
-      core::subsystems::permissions::verify_form_write_permissions();
-      //
-      auto& self = get_collection_wrapper(L);
-      auto* form = self.get_loaded_form_data<wrapped_type>();
-      luaL_argcheck(L, lua_isinteger(L, 2), 2, "expected an integer index");
-      int i = lua_tointeger(L, 2);
-      if (!form)
-         return 0;
-      auto& list = form->responses;
-      if (i > list.size() || i <= 0)
-         return 0;
-      --i;
-      self.before_edit();
-      {
-         list[i].clear(*form);
-         list.erase(list.begin() + i);
+      static value_working_type apply_preparations(value_working_type& dst, uint8_t unique_id) {
+         dst.id = unique_id;
       }
-      self.after_edit();
-      {
-         wrapper to_remove = self;
-         to_remove.into_collection(i);
-         core::subsystems::userdata::get().remove_from_sequential_collection(to_remove);
-      }
-      return 0;
-   }
-   int set_item(lua_State* L) {
-      core::subsystems::permissions::verify_form_write_permissions();
-      
-      constexpr auto index_self  = 1;
-      constexpr auto index_key   = 2;
-      constexpr auto index_value = 3;
-
-      auto& self = get_collection_wrapper(L);
-      auto* form = self.get_loaded_form_data<wrapped_type>();
-      if (!form)
-         return 0;
-      cobb::lua::argcheck(L, lua_isinteger(L, index_key), index_key, "response indices must be integers");
-      auto i = lua_tointeger(L, index_key);
-      cobb::lua::argcheck(L, i >= 1, index_key, "indices below 1 are not allowed");
-      --i;
-      
-      std::vector<uint8_t> uids_to_generate;
-
-      auto& list    = form->responses;
-      auto  size    = list.size();
-      bool  has_uid = false;
-      if (i > size) {
-         //
-         // Inserting a response past the end of the list, such that we implicitly insert 
-         // multiple responses. Each will need its own UID.
-         //
-         subobject_wrapper::verify_table_for_insertion(L, index_value, *form);
-         cobb::lua::warning(L, "index %s is out of bounds; empty elements will be created between the end of the list and the new element", lua_tolstring(L, index_key, nullptr));
-
-         has_uid = table_has_unique_id(L, index_value);
-         {
-            size_t count_to_create = i - size + 1;
-            size_t count_to_auto   = count_to_create;
-            if (has_uid)
-               --count_to_auto;
-            autogenerate_unique_ids_for_span(L, uids_to_generate, list, count_to_create, count_to_auto);
-         }
-      } else if (i == size) {
-         //
-         // Inserting a response at the end of the list.
-         //
-         subobject_wrapper::verify_table_for_insertion(L, index_value, *form);
-
-         has_uid = table_has_unique_id(L, index_value);
-         if (!has_uid)
-            autogenerate_unique_ids_for_single(L, uids_to_generate, list);
-      } else {
-         //
-         // Overwriting a response already in the list.
-         //
-         subobject_wrapper::verify_table_can_overwrite(L, index_value, *form, list[i]);
-
-         // The response we're overwriting should already have a unique ID, so if the input 
-         // table doesn't specify one, the prior unique ID will simply be kept unchanged. 
-         // Don't bother generating one.
-      }
-
-      self.before_edit();
-      if (i >= size) {
-         list.resize(i + 1);
-      }
-      apply_autogenerated_unique_ids(list, uids_to_generate, i, has_uid);
-      subobject_wrapper::overwrite_with_table(
-         *form,
-         list[i],
-         L,
-         index_value
-      );
-      self.after_edit();
-      return 0;
-   }
+   };
 }
 
-namespace dovahscript::wrappers::collections {
-   extern const collection_definition_params topic_info_responses = {
-      .registry_key           = collection_metatable_key,
-      .garbage_collection     = &wrapper::__gc,
-      //
-      .get_collection_length  = &get_collection_length,
-      .lookup_item_by_index   = &lookup_item_by_index,
-      .member_function_insert = &member_function_insert,
-      .member_function_remove = &member_function_remove,
-      .set_item               = &set_item,
-   };
+namespace dovahscript::wrapper_likes::native_lists {
+   /*static*/ void wrapper_spec::define_metatable(lua_State* L) {
+      api_helpers::native_lists::define_metatable<metatable_key, class_name, member_function_spec>(L);
+   }
+   /*static*/ int wrapper_spec::push(lua_State* L, const wrapper& parent) {
+      wrapper out = parent;
+      out.append_part(signature);
+      out.is_collection = true;
+      return core::subsystems::userdata::get().push(L, out, metatable_key.data());
+   }
 }

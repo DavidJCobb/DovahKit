@@ -5,11 +5,6 @@ namespace dovah::loaded_forms {
    class TopicInfo;
 }
 
-namespace dovahscript::wrapper_part_types {
-   inline constexpr cobb::eight_cc topic_info_link_to  = "InfoLink";
-   inline constexpr cobb::eight_cc topic_info_response = "InfoResp";
-}
-
 namespace dovahscript::wrappers {
    struct topic_info : public form {
       static constexpr string_list_t superclass_list = { metatable_key };

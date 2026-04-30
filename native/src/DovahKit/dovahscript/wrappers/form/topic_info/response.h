@@ -21,8 +21,8 @@ namespace dovahscript::wrappers {
 
       // Collections that contain this sub-object can use this to check whether a value 
       // is valid, for a statement like `collection[n] = {}`.
-      static void verify_table_can_overwrite(lua_State*, int stack_pos, dovah::loaded_forms::Form& dst_form, wrapped_type& dst_subobject);
-      static void verify_table_for_insertion(lua_State*, int stack_pos, dovah::loaded_forms::Form& dst_form);
+      static void verify_table_can_overwrite(lua_State*, int stack_pos, const dovah::loaded_forms::Form& dst_form, const wrapped_type& dst_subobject);
+      static void verify_table_for_insertion(lua_State*, int stack_pos, const dovah::loaded_forms::Form& dst_form);
 
       // This won't validate the table you pass in, nor its fields, beyond nil-checking 
       // them as needed to default destination fields.

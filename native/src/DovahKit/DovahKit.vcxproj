@@ -139,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dovahscript\api_helpers\conditions\pull_comparison_as_table.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\conditions\pull_function_as_name.cpp" />
     <ClCompile Include="dovahscript\api_helpers\conditions\pull_parameters_as_table.cpp" />
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_event_parameter.cpp" />
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_indexed_parameter.cpp" />
@@ -146,6 +147,7 @@
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_comparison_operator.cpp" />
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_parameter_type_override.cpp" />
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_run_on.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\native_lists\impl\metamethods.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\dialogue_branch.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_base_forms.cpp" />
@@ -1524,7 +1526,12 @@
     <ClCompile Include="xaudio2\xwma_file_info.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovahscript\api_helpers\conditions\common\FAIL_ON_EXPANDOS.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\common\FAIL_UNLESS_TABLE_LIKE.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\common\TRY_ASSIGN_FIELD.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\common\TRY_OVERWRITE_FIELD.h" />
     <ClInclude Include="dovahscript\api_helpers\conditions\pull_comparison_as_table.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\pull_function_as_name.h" />
     <ClInclude Include="dovahscript\api_helpers\conditions\pull_parameters_as_table.h" />
     <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_event_parameter.h" />
     <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_indexed_parameter.h" />
@@ -1534,18 +1541,43 @@
     <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_run_on.h" />
     <ClInclude Include="dovahscript\api_helpers\conditions\_types.h" />
     <ClInclude Include="dovahscript\api_helpers\fail_table_if_expandos.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\clear.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\common\pull_collection.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\common\pull_value_as_form.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\common\pull_value_as_form_of_type.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\define_metatable.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\get_item_by_index.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\get_collection_length.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\can_assign_elements.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\is_a_spec.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\is_fully_valid_spec.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\is_pull_and_store.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\is_validate_and_overwrite.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\pushes_value_as_subobject_wrapper.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\pushes_value_directly.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\storage_is_bifurcated.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\values_are_subobjects.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\get_collection_length.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\get_item_by_index.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\initialize_value.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\overwrite_value.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\prepare_for_insertion.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\pull_value.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\store_value.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\validate_value.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\impl\get_list_mutation_target.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\impl\get_list_read_target.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\initialize_expanded_list.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\initialize_implicitly_inserted_list_items.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\list_item_needs_form_to_clear.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\list_needs_form_to_clear.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\make_insertion_preparations.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\metamethods.h" />
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\preparation_types.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\impl\push_value.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\impl\report_insertion_past_end.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\impl\store_value.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\insert.h" />
-    <ClInclude Include="dovahscript\api_helpers\native_lists\all_definition_params.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\member_function_spec.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\remove_item_at_index.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\set_item_at_index.h" />

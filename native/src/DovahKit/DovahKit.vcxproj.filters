@@ -4131,6 +4131,12 @@
     <ClCompile Include="dovahscript\api_helpers\conditions\pull_parameters_as_table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\pull_function_as_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\native_lists\impl\metamethods.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10193,9 +10199,6 @@
     <ClInclude Include="dovahscript\api_helpers\native_lists\common\pull_value_as_form_of_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\api_helpers\native_lists\all_definition_params.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovahscript\api_helpers\native_lists\common\pull_value_as_form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -10212,6 +10215,99 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\lua\for_each_in_pairs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\common\FAIL_UNLESS_TABLE_LIKE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\common\FAIL_ON_EXPANDOS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\common\TRY_OVERWRITE_FIELD.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\common\TRY_ASSIGN_FIELD.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\pull_function_as_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\list_item_needs_form_to_clear.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\clear.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\define_metatable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\metamethods.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\list_needs_form_to_clear.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\make_insertion_preparations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\initialize_expanded_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\initialize_implicitly_inserted_list_items.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\values_are_subobjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\get_collection_length.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\get_item_by_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\initialize_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\preparation_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\prepare_for_insertion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\is_validate_and_overwrite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\overwrite_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\validate_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\pull_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\fields\store_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\is_pull_and_store.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\can_assign_elements.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\pushes_value_as_subobject_wrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\pushes_value_directly.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\is_a_spec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\is_fully_valid_spec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\storage_is_bifurcated.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
