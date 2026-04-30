@@ -36,10 +36,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         wrapper out = self;
-         out.append_part(wrapper_part_types::condition_list);
-         out.is_collection = true;
-         return core::subsystems::userdata::get().push(L, out, wrappers::collections::condition_list.registry_key);
+         return dovahscript::wrapper_likes::native_lists::condition_list::push(L, self);
       }
       int favor_level(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);

@@ -26,4 +26,19 @@ namespace dovahscript::api_helpers::conditions {
       const context_type&,
       parameter_type_override
    );
+
+
+   // Treats `nil` keys in the table as "leave unchanged."
+   // Returns an empty string or an error string.
+   extern std::string pull_and_assign_parameters_as_table(
+      lua_State* L,
+      int pos,
+      //
+      const dovah::conditions::function_info&,
+      const context_type&,
+      parameter_type_override,
+      //
+      std::array<working_parameter, 2>&        dst_indexed,
+      std::optional<working_type::event_data>& dst_event
+   );
 }

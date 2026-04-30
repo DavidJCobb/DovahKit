@@ -21,6 +21,7 @@
 #include "./condition/comparison.h"
 #include "./condition/parameter_set.h"
 #include "dovahscript/api_helpers/conditions/pull_comparison_as_table.h"
+#include "dovahscript/api_helpers/conditions/pull_function_as_name.h"
 #include "dovahscript/api_helpers/conditions/pull_parameters_as_table.h"
 #include "dovahscript/api_helpers/conditions/push_pull_comparison_operand.h"
 #include "dovahscript/api_helpers/conditions/push_pull_comparison_operator.h"
@@ -68,28 +69,23 @@ namespace {
 }
 
 bool cls::is_not_locked(wrapper& w) {
-   size_t depth = w.parts.size();
-   for (size_t i = 0; i < w.parts.size(); ++i) {
-      if (w.parts[i].signature == wrapper_part_types::condition_list) {
-         depth = i;
-         break;
-      }
-   }
-   if (depth < w.parts.size()) {
-      if (w.stub && w.stub->form_type == dovah::form_type::topic_info) {
-         auto* form = w.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
-         if (!form)
-            return false;
-         return w.parts[depth].index >= form->conditions.locked.size();
-      }
-   }
+   if (!w.stub || w.stub->form_type != dovah::form_type::topic_info)
+      return true;
+   auto* form = w.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
+   if (!form)
+      return false;
+
+   for(const auto& part : w.parts)
+      if (part.signature == dovahscript::wrapper_likes::native_lists::condition_list::signatures::typical)
+         return part.index >= form->conditions.locked.size();
+
    return true;
 }
 wrapped_type* cls::unwrap(wrapper& w) {
    if (w.is_collection)
       return nullptr;
 
-   auto [list_ptr, i] = wrappers::collections::unwrap_condition_list_and_index(w);
+   auto [list_ptr, i] = dovahscript::wrapper_likes::native_lists::condition_list::unwrap_condition_list_and_index(w);
    if (!list_ptr)
       return nullptr;
    auto& list = *list_ptr;
@@ -103,33 +99,6 @@ context_type cls::context_of(wrapper& w) {
    if (!form)
       return {};
    return context_type(form->stub);
-}
-
-namespace {
-   std::expected<uint16_t, std::string_view> function_id_from_lua(lua_State* L, int pos) {
-      if (lua_isinteger(L, pos)) {
-         const auto i = lua_tointeger(L, pos);
-         if (i < 0 || i >= std::numeric_limits<uint16_t>::max()) {
-            return std::unexpected("invalid integer");
-         }
-         const auto* info = dovah::conditions::function_info_by_id(i);
-         if (!info) {
-            return std::unexpected("unrecognized function ID number");
-         }
-         return i;
-      }
-      if (lua_isstring(L, pos)) {
-         const std::string_view arg = lua_tostring(L, pos);
-         for (const auto& info : dovah::conditions::all_vanilla_function_info)
-            if (cobb::strieq_ascii(info.name, arg))
-               return info.id;
-         for (const auto& info : dovah::conditions::all_extended_function_info)
-            if (cobb::strieq_ascii(info.name, arg))
-               return info.id;
-         return std::unexpected("unrecognized function name");
-      }
-      return std::unexpected("expected string (function name) or integer (function ID)");
-   }
 }
 
 namespace {
@@ -224,7 +193,7 @@ namespace {
          // Construct the expected with an empty error object, since we're using std::string_view as 
          // our error object. This will avoid default-constructing the value-type just to immediately 
          // clobber it with whatever the `pull` function produces.
-         pulled_expected_type result{ std::unexpect, std::string_view{} };
+         pulled_expected_type result{ std::unexpect, typename pulled_expected_type::error_type{} };
          if constexpr (std::is_invocable_v<pull_function_type, lua_State*, int, context_type>) {
             result = pull(L, -1, context);
          } else {
@@ -255,7 +224,7 @@ namespace {
          // Construct the expected with an empty error object, since we're using std::string_view as 
          // our error object. This will avoid default-constructing the value-type just to immediately 
          // clobber it with whatever the `pull` function produces.
-         pulled_expected_type result{ std::unexpect, std::string_view{} };
+         pulled_expected_type result{ std::unexpect, typename pulled_expected_type::error_type{} };
          if constexpr (std::is_invocable_v<pull_function_type, lua_State*, int, context_type>) {
             result = pull(L, -1, context);
          } else {
@@ -281,16 +250,26 @@ namespace {
 
       //
 
-      _handle_field(
-         "comparison",
-         &api_helpers::conditions::pull_comparison_as_table,
-         [](auto& working, auto&& v) {
-            working.comparison = v;
+      if constexpr (TreatNilAsUnchanged) {
+         lua_getfield(L, table_pos, "comparison");
+         if (!lua_isnoneornil(L, -1)) {
+            auto error = api_helpers::conditions::pull_and_assign_comparison_as_table(L, -1, working.comparison);
+            if (!error.empty())
+               cobb::lua::argerror(L, table_pos, error.c_str());
          }
-      );
+         lua_pop(L, 1);
+      } else {
+         _handle_field(
+            "comparison",
+            &api_helpers::conditions::pull_comparison_as_table,
+            [](auto& working, auto&& v) {
+               working.comparison = v;
+            }
+         );
+      }
       _handle_field(
          "function_name",
-         &function_id_from_lua,
+         &api_helpers::conditions::pull_function_as_name,
          [&reset_params_always](auto& working, auto&& v) {
             working.function = v;
             reset_params_always = true;
@@ -326,34 +305,54 @@ namespace {
             // We've already handled `function_name` and `override_types_with`, so we can 
             // actually set the parameters and check their validity right now.
             //
-            auto result = api_helpers::conditions::pull_parameters_as_table(
-               L,
-               -1,
-               *dovah::conditions::function_info_by_id(working.function),
-               context,
-               working.override_types_with
-            );
-            lua_pop(L, 1);
-            if (result.has_value()) {
-               auto& p_set = result.value();
-               working.event_parameters = p_set.event_data;
-               if (p_set.event_data.has_value()) {
-                  working.reset_parameters();
-               } else {
-                  working.parameters = std::move(p_set.parameters);
-               }
-            } else {
+            auto _report_failure = [L, table_pos, &working](std::string& fail_info) {
                std::string_view function_name = "?";
                {
                   auto* info = dovah::conditions::function_info_by_id(working.function);
                   if (info)
                      function_name = info->name;
                }
-               auto error = std::format("problem with field `parameters` (given condition function `{}`): {}",
+               auto full = std::format("problem with field `parameters` (given condition function `{}`): {}",
                   function_name,
-                  result.error()
+                  fail_info
                );
-               cobb::lua::argerror(L, table_pos, error.c_str());
+               cobb::lua::argerror(L, table_pos, full.c_str());
+            };
+
+            if constexpr (TreatNilAsUnchanged) {
+               auto error = api_helpers::conditions::pull_and_assign_parameters_as_table(
+                  L,
+                  -1,
+                  *dovah::conditions::function_info_by_id(working.function),
+                  context,
+                  working.override_types_with,
+                  working.parameters,
+                  working.event_parameters
+               );
+               lua_pop(L, 1);
+               if (!error.empty()) {
+                  _report_failure(error);
+               }
+            } else {
+               auto result = api_helpers::conditions::pull_parameters_as_table(
+                  L,
+                  -1,
+                  *dovah::conditions::function_info_by_id(working.function),
+                  context,
+                  working.override_types_with
+               );
+               lua_pop(L, 1);
+               if (result.has_value()) {
+                  auto& p_set = result.value();
+                  working.event_parameters = p_set.event_data;
+                  if (p_set.event_data.has_value()) {
+                     working.reset_parameters();
+                  } else {
+                     working.parameters = std::move(p_set.parameters);
+                  }
+               } else {
+                  _report_failure(result.error());
+               }
             }
          }
       }
@@ -667,7 +666,7 @@ namespace {
          _try_edit_condition(
             L,
             [L, &function_id]() {
-               auto result = function_id_from_lua(L, 2);
+               auto result = api_helpers::conditions::pull_function_as_name(L, 2);
                if (result.has_value())
                   function_id = result.value();
                else

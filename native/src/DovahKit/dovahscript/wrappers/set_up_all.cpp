@@ -92,7 +92,7 @@ namespace dovahscript {
          #pragma endregion
       #pragma endregion
       #pragma region Form components
-         define_collection_metatable(L, collections::condition_list);
+         wrapper_likes::native_lists::condition_list::define_metatable(L);
             define_wrapper_metatable<condition>(L);
                define_wrapper_metatable<condition_comparison>(L);
                define_wrapper_metatable<condition_parameter_set>(L);

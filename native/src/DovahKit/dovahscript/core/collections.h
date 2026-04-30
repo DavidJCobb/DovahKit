@@ -7,16 +7,7 @@ namespace dovahscript {
       lua_CFunction garbage_collection = nullptr; // __gc metamethod (optional)
       //
       // The fields below should be kept alphabetized  in order to aid with the use of designated 
-      // initializers in C++20 and onward. Although designated initializers are a C99 feature and 
-      // originally had no  strict ordering, they are  only available in C++  as of C++20, and in 
-      // that language  the order of  the fields in the initializer  must match the  order of the 
-      // fields in the struct definition. My best  guess is that this is because C++20 bolted the 
-      // C99 feature onto C++'s  aggregate initializers  as a subfeature,  and the standards body 
-      // didn't even bother to preserve  what they knew (and noted  in the proposal) was a common 
-      // use case for  the original feature. Aggregate  initializers have to  be ordered, so they 
-      // just threw up their hands.
-      //
-      // Moving on.
+      // initializers in C++20 and onward.
       //
       // The fields whose names  are prefixed with "member_function_" represent  member functions 
       // that can appear  on a collection, i.e.  "member_function_foo" is  "my_collection:foo()". 

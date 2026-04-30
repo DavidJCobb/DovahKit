@@ -1,25 +1,20 @@
-#include "alias.h"
-#include "../../../../helpers/lua/error.h"
-#include "../../../core/subsystems/permissions.h"
-#include "../../../core/subsystems/userdata.h"
-#include "../../../core/classes.h"
-#include "../../../pull_native_object.h"
-#include "../../../push_native_object.h"
-#include "../../../wrap_native_object.h"
-#include "../../../wrapper.h"
+#include "./alias.h"
+#include "helpers/lua/error.h"
+#include "dovahscript/core/subsystems/permissions.h"
+#include "dovahscript/core/subsystems/userdata.h"
+#include "dovahscript/core/classes.h"
+#include "dovahscript/pull_native_object.h"
+#include "dovahscript/push_native_object.h"
+#include "dovahscript/wrap_native_object.h"
+#include "dovahscript/wrapper.h"
 
-#include "../../../../dovah/form_stub.h"
-#include "../../../../dovah/forms/Quest.h"
+#include "dovah/form_stub.h"
+#include "dovah/forms/Quest.h"
 #include "../quest.h"
 #include "loc_alias.h"
 #include "ref_alias.h"
+#include "../../form_components/collection_conditions.h"
 #include "../../form_components/papyrus.h"
-
-//
-// MISSING APIS:
-//  - Base
-//     - Common flags
-//
 
 namespace {
    using namespace dovahscript;
@@ -37,12 +32,18 @@ namespace {
             return 1;
          }
 
+         int fill_conditions(lua_State* L) {
+            auto& self = get_wrapper_for_thiscall<cls>(L);
+            auto* alias = cls::unwrap(self);
+            if (alias == nullptr)
+               cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
+            return dovahscript::wrapper_likes::native_lists::condition_list::push(L, self);
+         }
          int id(lua_State* L) {
             auto& self  = get_wrapper_for_thiscall<cls>(L);
             auto* alias = cls::unwrap(self);
             if (alias == nullptr)
                cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
-            //
             lua_pushinteger(L, alias->id);
             return 1;
          }
@@ -51,7 +52,6 @@ namespace {
             auto* alias = cls::unwrap(self);
             if (alias == nullptr)
                cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
-            //
             lua_pushstring(L, alias->name.c_str());
             return 1;
          }
@@ -157,6 +157,7 @@ namespace dovahscript::wrappers {
          { "optional",        &_base::getters::_flag<wrapped_type::flag::optional> },
          { "reserves_target", &_base::getters::_flag<wrapped_type::flag::reserves_target> },
       #pragma endregion
+      { "fill_conditions", &_base::getters::fill_conditions },
       { "id",      &_base::getters::id },
       { "name",    &_base::getters::name },
       { "parent",  &_base::getters::parent },

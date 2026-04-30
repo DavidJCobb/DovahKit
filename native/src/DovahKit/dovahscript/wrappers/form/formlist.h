@@ -1,12 +1,7 @@
 #pragma once
 #include "form.h"
-
 namespace dovah::loaded_forms {
    class FormList;
-}
-
-namespace dovahscript::wrapper_part_types {
-   inline constexpr cobb::eight_cc formlist_entries = "FormList";
 }
 
 namespace dovahscript::wrappers {

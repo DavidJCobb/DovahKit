@@ -1,15 +1,15 @@
-#include "land_texture.h"
-#include "../../../helpers/lua/error.h"
-#include "../../../helpers/lua/warning.h"
-#include "../../core/subsystems/permissions.h"
-#include "../../core/subsystems/userdata.h"
-#include "../../pull_native_object.h"
-#include "../../push_native_object.h"
-#include "../../wrapper.h"
+#include "./land_texture.h"
+#include "helpers/lua/error.h"
+#include "helpers/lua/warning.h"
+#include "dovahscript/core/subsystems/permissions.h"
+#include "dovahscript/core/subsystems/userdata.h"
+#include "dovahscript/pull_native_object.h"
+#include "dovahscript/push_native_object.h"
+#include "dovahscript/wrapper.h"
 
-#include "../../../dovah/forms/LandTexture.h"
-#include "land_texture/collection_grasses.h"
-#include "land_texture/havok.h"
+#include "dovah/forms/LandTexture.h"
+#include "./land_texture/collection_grasses.h"
+#include "./land_texture/havok.h"
 
 namespace {
    using namespace dovahscript;
@@ -33,10 +33,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         wrapper out = self;
-         out.append_part(wrapper_part_types::land_texture_grass);
-         out.is_collection = true;
-         return core::subsystems::userdata::get().push(L, out, wrappers::collections::land_texture_grasses.registry_key);
+         return wrapper_likes::native_lists::land_texture_grasses::push(L, self);
       }
       int specular_exponent(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -103,6 +100,6 @@ namespace dovahscript::wrappers {
    };
 
    /*static*/ void cls::extra_class_setup(lua_State* L) {
-      define_collection_metatable(L, collections::land_texture_grasses);
+      wrapper_likes::native_lists::land_texture_grasses::define_metatable(L);
    }
 }

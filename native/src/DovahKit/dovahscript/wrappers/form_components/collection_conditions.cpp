@@ -1,5 +1,4 @@
 #include "./collection_conditions.h"
-#include "helpers/lua/error.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
 #include "dovahscript/wrapper.h"
@@ -12,29 +11,40 @@
 #include "dovah/forms/TopicInfo.h"
 #include "./condition.h"
 
-#include "dovah/data/conditions/all_function_info.h"
-#include "dovah/forms/components/conditions/working_condition.h"
+#include "dovah/data/conditions/all_function_info.h" // so we can find GetIsID, for `initialize_value` below
+#include "dovahscript/wrappers/form/quest.h" // for quest-alias-by-id wrapper signature
 
 namespace {
-   constexpr std::string_view collection_metatable_key = "collection<dovah.classes.condition>";
+   constexpr const std::string_view collection_metatable_key = "native_list<condition>";
+
+   using wrapper_spec      = dovahscript::wrapper_likes::native_lists::condition_list;
+   using wrapped_list_type = wrapper_spec::wrapped_list_type;
 }
 
-namespace dovahscript::wrappers::collections {
-   extern dovah::loaded_forms::components::condition_list* unwrap_condition_list(wrapper& self) {
+namespace dovahscript::wrapper_likes::native_lists {
+   /*static*/ wrapped_list_type* wrapper_spec::unwrap_condition_list(wrapper& self) {
       return unwrap_condition_list_and_index(self).first;
    }
-   extern std::pair<dovah::loaded_forms::components::condition_list*, size_t> unwrap_condition_list_and_index(wrapper& w, size_t ctda_index) {
+   /*static*/ std::pair<wrapped_list_type*, size_t> wrapper_spec::unwrap_condition_list_and_index(wrapper& w, size_t ctda_index) {
       auto* form = w.get_loaded_form_data<dovah::loaded_forms::Form>();
       if (!form)
          return {};
 
       if (form->stub.form_type == dovah::form_type::quest) {
          auto* quest = static_cast<dovah::loaded_forms::Quest*>(form);
-         for (const auto& part : w.parts) {
-            if (part.signature == wrapper_part_types::condition_list_quest_dialogue)
+         for (size_t i = 0; i < w.parts.size(); ++i) {
+            const auto& part = w.parts[i];
+            if (part.signature == signatures::quest_dialogue)
                return { &quest->conditions.dialogue, part.index };
-            if (part.signature == wrapper_part_types::condition_list_quest_events)
+            if (part.signature == signatures::quest_events)
                return { &quest->conditions.event, part.index };
+            if (part.signature == wrapper_part_types::quest_alias_by_id) {
+               if (i + 1 < w.parts.size() && w.parts[i + 1].signature == signatures::typical) {
+                  auto* alias = quest->lookup_alias_by_id(part.index);
+                  if (alias)
+                     return { &alias->conditions, w.parts[i + 1].index };
+               }
+            }
          }
          return {};
       }
@@ -52,18 +62,18 @@ namespace dovahscript::wrappers::collections {
 
       size_t index = 0;
       for (size_t i = 0; i < w.parts.size(); ++i) {
-         if (w.parts[i].signature == wrapper_part_types::condition_list) {
+         if (w.parts[i].signature == signatures::typical) {
             index = w.parts[i].index;
             break;
          }
       }
       return { dovah::utils::form_component_accessors::condition_list(*form), index };
    }
-   extern std::pair<dovah::loaded_forms::components::condition_list*, size_t> unwrap_condition_list_and_index(wrapper& w) {
+   /*static*/ std::pair<wrapped_list_type*, size_t> wrapper_spec::unwrap_condition_list_and_index(wrapper& w) {
       size_t ctda_index = 0;
       if (w.stub && w.stub->form_type == dovah::form_type::topic_info) {
          for (const auto& part : w.parts) {
-            if (part.signature == wrapper_part_types::condition_list) {
+            if (part.signature == signatures::typical) {
                ctda_index = part.index;
                break;
             }
@@ -75,20 +85,20 @@ namespace dovahscript::wrappers::collections {
 
 #include "dovahscript/api_helpers/native_lists/member_function_spec.h"
 #include "dovahscript/api_helpers/native_lists/common/pull_collection.h"
-#include "dovahscript/api_helpers/native_lists/all_definition_params.h"
+#include "dovahscript/api_helpers/native_lists/define_metatable.h"
 
 namespace {
    using namespace dovahscript;
 
    struct member_function_spec : public api_helpers::native_lists::member_function_spec {
-      using collection_wrapped_type = dovah::loaded_forms::components::condition_list;
+      using collection_wrapped_type = wrapped_list_type;
       using value_wrapper_type      = wrappers::condition;
       using value_stored_type       = value_wrapper_type::wrapped_type;
       using value_working_type      = dovah::loaded_forms::components::conditions::working_condition;
 
       static constexpr const bool allow_insertions_past_end = false;
 
-      static constexpr const auto pull_collection = &api_helpers::native_lists::common::pull_collection<collection_metatable_key>;
+      static constexpr const auto pull_collection = &api_helpers::native_lists::common::pull_collection<wrapper_spec::metatable_key>;
 
       static std::pair<collection_wrapped_type*, collection_wrapped_type*> unwrap_collection(wrapper& self) {
          if (self.stub && self.stub->form_type == dovah::form_type::topic_info) {
@@ -97,7 +107,7 @@ namespace {
                return { nullptr, nullptr };
             return { &form->conditions.locked, &form->conditions.normal };
          }
-         return { nullptr, dovahscript::wrappers::collections::unwrap_condition_list(self) };
+         return { nullptr, wrapper_spec::unwrap_condition_list(self) };
       }
 
       static value_working_type pull_value(lua_State* L, int pos) {
@@ -132,6 +142,14 @@ namespace {
    };
 }
 
-namespace dovahscript::wrappers::collections {
-   extern const collection_definition_params condition_list = api_helpers::native_lists::all_definition_params<collection_metatable_key, member_function_spec>;
+namespace dovahscript::wrapper_likes::native_lists {
+   /*static*/ void wrapper_spec::define_metatable(lua_State* L) {
+      api_helpers::native_lists::define_metatable<metatable_key, class_name, member_function_spec>(L);
+   }
+   /*static*/ int wrapper_spec::push(lua_State* L, const wrapper& parent, cobb::eight_cc signature) {
+      wrapper out = parent;
+      out.append_part(signature);
+      out.is_collection = true;
+      return core::subsystems::userdata::get().push(L, out, metatable_key.data());
+   }
 }

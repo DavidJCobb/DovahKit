@@ -1,7 +1,9 @@
 #pragma once
 #include "helpers/lua/error.h"
 #include "lua.h"
+#include "dovahscript/pull_native_object.h"
 #include "dovahscript/wrapper.h"
+#include "dovahscript/wrappers/form/form.h"
 
 namespace dovahscript::api_helpers::native_lists::common {
    inline dovah::form_stub* pull_value_as_form(lua_State* L, int argpos) {

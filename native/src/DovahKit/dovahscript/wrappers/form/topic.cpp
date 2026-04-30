@@ -1,18 +1,16 @@
-#include "topic.h"
-#include "../../../helpers/lua/error.h"
-#include "../../core/subsystems/permissions.h"
-#include "../../core/subsystems/userdata.h"
-#include "../../pull_native_object.h"
-#include "../../push_native_object.h"
-#include "../../wrapper.h"
+#include "./topic.h"
+#include "helpers/lua/error.h"
+#include "dovahscript/core/subsystems/permissions.h"
+#include "dovahscript/core/subsystems/userdata.h"
+#include "dovahscript/pull_native_object.h"
+#include "dovahscript/push_native_object.h"
+#include "dovahscript/wrapper.h"
 
-#include "../../../dovah/data/dialogue/topic_subtype.h"
-#include "../../../dovah/form_stubs/helpers/get_unique_outbound_use.h"
-#include "../../../dovah/use_info/entry_flags/topic.h"
-#include "../../../dovah/form_stub_addenda.h"
-#include "../../../dovah/forms/Topic.h"
-
-#include "helpers/vectors/move_item_within.h"
+#include "dovah/data/dialogue/topic_subtype.h"
+#include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
+#include "dovah/use_info/entry_flags/topic.h"
+#include "dovah/form_stub_addenda.h"
+#include "dovah/forms/Topic.h"
 
 namespace {
    using namespace dovahscript;

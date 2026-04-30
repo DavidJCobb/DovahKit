@@ -1,12 +1,10 @@
 #pragma once
 #include "form.h"
-
 namespace dovah::loaded_forms {
    class LandTexture;
 }
 
 namespace dovahscript::wrapper_part_types {
-   inline constexpr cobb::eight_cc land_texture_grass   = "LTexGras";
    inline constexpr cobb::eight_cc land_texture_physics = "LTexPhys";
 }
 

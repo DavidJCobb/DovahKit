@@ -1,22 +1,15 @@
 #include "./collection_grasses.h"
-#include <string_view>
-#include "dovahscript/wrapper.h"
-
 #include "dovah/forms/LandTexture.h"
-#include "../land_texture.h"
-
-namespace {
-   constexpr const std::string_view collection_metatable_key = "collection<dovah.classes.land_texture.grasses>";
-}
-
 #include "dovahscript/api_helpers/native_lists/member_function_spec.h"
 #include "dovahscript/api_helpers/native_lists/common/pull_collection.h"
 #include "dovahscript/api_helpers/native_lists/common/pull_value_as_form_of_type.h"
-#include "dovahscript/api_helpers/native_lists/all_definition_params.h"
+#include "dovahscript/api_helpers/native_lists/define_metatable.h"
+#include "dovahscript/wrapper.h"
 
 namespace {
    using namespace dovahscript;
    using containing_form_type = dovah::loaded_forms::LandTexture;
+   using wrapper_spec         = dovahscript::wrapper_likes::native_lists::land_texture_grasses;
    
    struct member_function_spec : public api_helpers::native_lists::member_function_spec {
       using collection_wrapped_type = decltype(containing_form_type::grasses);
@@ -25,7 +18,7 @@ namespace {
 
       static constexpr const bool allow_insertions_past_end = true;
 
-      static constexpr const auto pull_collection = &api_helpers::native_lists::common::pull_collection<collection_metatable_key>;
+      static constexpr const auto pull_collection = &api_helpers::native_lists::common::pull_collection<wrapper_spec::metatable_key>;
 
       static collection_wrapped_type* unwrap_collection(wrapper& self) {
          auto* form = self.get_loaded_form_data<containing_form_type>();
@@ -38,6 +31,14 @@ namespace {
    };
 }
 
-namespace dovahscript::wrappers::collections {
-   extern const collection_definition_params land_texture_grasses = api_helpers::native_lists::all_definition_params<collection_metatable_key, member_function_spec>;
+namespace dovahscript::wrapper_likes::native_lists {
+   /*static*/ void wrapper_spec::define_metatable(lua_State* L) {
+      api_helpers::native_lists::define_metatable<metatable_key, class_name, member_function_spec>(L);
+   }
+   /*static*/ int wrapper_spec::push(lua_State* L, const wrapper& parent) {
+      wrapper out = parent;
+      out.append_part(signature);
+      out.is_collection = true;
+      return core::subsystems::userdata::get().push(L, out, metatable_key.data());
+   }
 }
