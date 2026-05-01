@@ -100,19 +100,18 @@ namespace {
       
       lua_pushnil(L);  /* first key */
       while (lua_next(L, stack_pos) != 0) {
-         if (!lua_isinteger(L, -1))
+         if (!lua_isinteger(L, -2))
             return array_invalidity::non_integer_keys;
-         auto i = lua_tointeger(L, -1);
+         auto i = lua_tointeger(L, -2);
          if (i <= 0)
             return array_invalidity::keys_out_of_range;
          if (i > max_index)
             max_index = i;
 
-         lua_pushvalue(L, -1);
-         lua_gettable(L, 2);
+         constexpr const int element_stack_pos = -1;
          {
             property_type value_type;
-            switch (lua_type(L, -1)) {
+            switch (lua_type(L, element_stack_pos)) {
                case LUA_TNIL:
                case LUA_TNONE:
                   value_type = property_type::object;
@@ -128,14 +127,14 @@ namespace {
                case LUA_TTABLE:
                   return array_invalidity::contains_table;
                case LUA_TUSERDATA:
-                  if (auto alias_opt = _pull_alias(L, 2); alias_opt.has_value()) {
+                  if (auto alias_opt = _pull_alias(L, element_stack_pos); alias_opt.has_value()) {
                      if (!alias_opt.value())
                         return array_invalidity::contains_zombie_alias;
                      has_aliases = true;
                      value_type   = property_type::object;
                      break;
                   }
-                  if (auto form_opt = _pull_form(L, 2); form_opt.has_value()) {
+                  if (auto form_opt = _pull_form(L, element_stack_pos); form_opt.has_value()) {
                      if (!form_opt.value())
                         return array_invalidity::contains_zombie_form;
                      has_forms  = true;
@@ -180,28 +179,29 @@ namespace {
          typename decltype(out)::reference dst = out[i - 1]; // can't just use `auto&` due to vector-of-bool
 
          lua_geti(L, stack_pos, i);
+         constexpr const int element_stack_pos = -1;
          if constexpr (std::is_same_v<T, bool>) {
-            dst = lua_toboolean(L, -1);
+            dst = lua_toboolean(L, element_stack_pos);
          } else if constexpr (std::is_same_v<T, float>) {
-            dst = lua_tonumber(L, -1);
+            dst = lua_tonumber(L, element_stack_pos);
          } else if constexpr (std::is_same_v<T, int32_t>) {
-            dst = lua_tointeger(L, -1);
+            dst = lua_tointeger(L, element_stack_pos);
          } else if constexpr (std::is_same_v<T, std::string>) {
-            dst = lua_tostring(L, -1);
+            dst = lua_tostring(L, element_stack_pos);
          } else if constexpr (std::is_same_v<T, property_object_value>) {
-            if (!lua_isnoneornil(L, -1)) {
-               if (auto* w = wrapper_from_stack<wrappers::quest_alias>(L, 2)) {
+            if (!lua_isnoneornil(L, element_stack_pos)) {
+               if (auto* w = wrapper_from_stack<wrappers::quest_alias>(L, element_stack_pos)) {
                   auto* alias = wrappers::quest_alias::unwrap(*w);
                   assert(!!alias);
                   dst.form.unmanaged_set(&alias->owner.stub);
                   dst.alias_id = alias->id;
-               } else if (auto* form_wrapper = wrapper_from_stack<wrappers::form>(L, 2)) {
+               } else if (auto* form_wrapper = wrapper_from_stack<wrappers::form>(L, element_stack_pos)) {
                   assert(!!form_wrapper->stub);
                   dst.form.unmanaged_set(form_wrapper->stub);
                }
             }
          }
-         lua_pop(L, -1);
+         lua_pop(L, 1);
       }
 
       return out;
