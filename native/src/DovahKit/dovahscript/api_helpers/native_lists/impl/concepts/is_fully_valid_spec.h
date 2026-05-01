@@ -69,6 +69,17 @@ namespace dovahscript::api_helpers::native_lists::impl::concepts {
       requires (!fields::pull_value::present<Spec> || fields::pull_value::valid<Spec>);
       requires (!fields::store_value::present<Spec> || fields::store_value::valid<Spec>);
       requires unwrap_collection::valid<Spec>;
+      
+      // If the list type is const, then the spec must not allow removals, and must not 
+      // supply member functions for modifying the list.
+      requires (
+         !std::is_const_v<typename Spec::collection_wrapped_type> || (
+            !Spec::allow_removals &&
+            !fields::overwrite_value::present<Spec> &&
+            !fields::store_value::present<Spec> &&
+            !fields::validate_value::valid<Spec>
+         )
+      );
 
       // Don't use both `pull_value` and `validate_value`/`overwrite_value`.
       requires (!fields::pull_value::present<Spec> || !fields::validate_value::valid<Spec>);

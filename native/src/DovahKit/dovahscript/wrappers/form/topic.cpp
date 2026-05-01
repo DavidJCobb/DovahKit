@@ -12,6 +12,8 @@
 #include "dovah/form_stub_addenda.h"
 #include "dovah/forms/Topic.h"
 
+#include "dovahscript/wrappers/form_components/collection_ordered_children.h"
+
 namespace {
    using namespace dovahscript;
    using cls          = wrappers::topic;
@@ -76,7 +78,31 @@ namespace {
          }
          subject_wrapper.after_edit(); // See above comment
       }
-
+      
+      int get_infos_as_table(lua_State* L) {
+         lua_settop(L, 1);
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.stub) {
+            lua_newtable(L);
+            return 1;
+         }
+         auto* addenda = self.stub->addenda;
+         if (!addenda) {
+            lua_newtable(L);
+            return 1;
+         }
+         auto&  list = addenda->ordered_children.get_active_list();
+         size_t size = list.size();
+         lua_createtable(L, size, 0);
+         auto   pos = lua_gettop(L);
+         size_t j = 0;
+         for (size_t i = 0; i < size; ++i) {
+            int wcount = push_native_object(list[i]);
+            while (wcount--)
+               lua_rawseti(L, pos, ++j);
+         }
+         return 1;
+      }
       int place_info_after(lua_State* L) {
          _move_info_by_index<true>(L);
          return 0;
@@ -97,27 +123,10 @@ namespace {
          return 1;
       }
       int infos(lua_State* L) {
-         lua_settop(L, 1);
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.stub) {
-            lua_newtable(L);
-            return 1;
-         }
-         auto* addenda = self.stub->addenda;
-         if (!addenda) {
-            lua_newtable(L);
-            return 1;
-         }
-         auto&  list = addenda->ordered_children.get_active_list();
-         size_t size = list.size();
-         lua_createtable(L, size, 0);
-         size_t j = 0;
-         for (size_t i = 0; i < size; ++i) {
-            int wcount = push_native_object(list[i]);
-            while (wcount--)
-               lua_rawseti(L, -2, ++j);
-         }
-         return 1;
+         if (!self.stub)
+            return 0;
+         return wrapper_likes::native_lists::form_ordered_children::push(L, self);
       }
       int parent_branch(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -247,8 +256,9 @@ namespace {
 
 namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_methods = {
-      { "place_info_after",  &_methods::place_info_after },
-      { "place_info_before", &_methods::place_info_before },
+      { "get_infos_as_table", &_methods::get_infos_as_table },
+      { "place_info_after",   &_methods::place_info_after },
+      { "place_info_before",  &_methods::place_info_before },
    };
    
    /*static*/ cls::method_list_t cls::metatable_getters = {

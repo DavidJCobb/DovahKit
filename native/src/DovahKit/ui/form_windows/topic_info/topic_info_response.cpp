@@ -48,8 +48,8 @@ FormSubdialogTopicInfoResponse::FormSubdialogTopicInfoResponse(QWidget* parent) 
 void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form, const response_type& src) {
    auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
    this->ui.text->setPlainText(gls.convert_localized_string(src.text));
-   this->ui.scriptNotes->setPlainText(gls.convert_localized_string(src.script_notes));
-   this->ui.edits->setPlainText(gls.convert_localized_string(src.edits));
+   this->ui.scriptNotes->setPlainText(QString::fromStdString(src.script_notes));
+   this->ui.edits->setPlainText(QString::fromStdString(src.edits));
 
    this->ui.animSpeaker->setFormStub(src.idles.speaker.get_form_stub());
    this->ui.animListener->setFormStub(src.idles.listener.get_form_stub());
@@ -100,9 +100,9 @@ void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form
 }
 void FormSubdialogTopicInfoResponse::exportTo(loaded_form_type& dst_form, response_type& dst) {
    auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
-   gls.assign_localized_string(dst.text,         this->ui.text->toPlainText());
-   gls.assign_localized_string(dst.script_notes, this->ui.scriptNotes->toPlainText());
-   gls.assign_localized_string(dst.edits,        this->ui.edits->toPlainText());
+   gls.assign_localized_string(dst.text, this->ui.text->toPlainText());
+   dst.script_notes = this->ui.scriptNotes->toPlainText().toStdString();
+   dst.edits        = this->ui.edits->toPlainText().toStdString();
 
    dst.idles.speaker.set(dst_form, this->ui.animSpeaker->formStub());
    dst.idles.listener.set(dst_form, this->ui.animListener->formStub());

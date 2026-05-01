@@ -4137,6 +4137,12 @@
     <ClCompile Include="dovahscript\api_helpers\native_lists\impl\metamethods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form_components\collection_ordered_children.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\helpers\update_active_file_seq_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10310,6 +10316,12 @@
     <ClInclude Include="dovahscript\api_helpers\native_lists\impl\concepts\storage_is_bifurcated.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form_components\collection_ordered_children.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\update_active_file_seq_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12382,6 +12394,7 @@
     <None Include="dovah\_docs\form types\q\quest\reference aliases.md" />
     <None Include="xaudio2\README.md" />
     <None Include="dovahscript\api_helpers\subobject_property_helpers\README.md" />
+    <None Include="dovahscript\api_helpers\native_lists\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

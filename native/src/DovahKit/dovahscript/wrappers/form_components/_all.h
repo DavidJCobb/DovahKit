@@ -3,6 +3,7 @@
    #include "./condition.h"
       #include "./condition/comparison.h"
       #include "./condition/parameter_set.h"
+#include "./collection_ordered_children.h"
 #include "./papyrus.h"
    #include "./papyrus/collection_scripts.h"
       #include "./papyrus/script.h"

@@ -170,6 +170,7 @@
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias_fill_params_linked_ref.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\topic_info\collection_link_to.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\collection_conditions.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\collection_ordered_children.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\comparison.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\parameter_set.cpp" />
@@ -471,6 +472,7 @@
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\helpers\is_form_type_legal_to_create.cpp" />
+    <ClCompile Include="editor\helpers\update_active_file_seq_file.cpp" />
     <ClCompile Include="editor\localize\collision_layer.cpp" />
     <ClCompile Include="editor\localize\dialogue_topic_subtype.cpp" />
     <ClCompile Include="editor\localize\entry_point_function.cpp" />
@@ -1628,6 +1630,7 @@
     <ClInclude Include="dovahscript\wrappers\form\quest\ref_alias_fill_params_linked_ref.h" />
     <ClInclude Include="dovahscript\wrappers\form\topic_info\collection_link_to.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\collection_conditions.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\collection_ordered_children.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\comparison.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\parameter_set.h" />
@@ -2323,6 +2326,7 @@
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
+    <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
     <ClInclude Include="helpers\attributes\forceinline.h" />
     <ClInclude Include="helpers\lua\for_each_in_pairs.h" />
     <ClInclude Include="helpers\tuples\all_types_match_functor.h" />
@@ -4176,6 +4180,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="dovahscript\api_helpers\native_lists\README.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovahscript\api_helpers\subobject_property_helpers\README.md">
       <SubType>
       </SubType>

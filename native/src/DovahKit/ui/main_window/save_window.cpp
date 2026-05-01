@@ -19,6 +19,8 @@
 #include "dovah/exceptions/game_change_failed.h"
 #include "dovah/notices/base_form_save_error.h"
 
+#include "editor/helpers/update_active_file_seq_file.h"
+
 ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
@@ -557,6 +559,9 @@ void ActiveFileSaveDialog::commit() {
       this->reject();
       return;
    }
+
+   auto seq_result = editor_helpers::update_active_file_seq_file(filename, this->ui.deleteEmptySeq->isChecked());
+
    if (results.saved_to_temporary_file) {
       QString message = tr("A minor problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(results.filename.c_str());
       //
@@ -568,5 +573,30 @@ void ActiveFileSaveDialog::commit() {
          message
       );
    }
+   if (seq_result != editor_helpers::update_active_file_seq_file_result::success) {
+      QString message;
+      switch (seq_result) {
+         using enum editor_helpers::update_active_file_seq_file_result;
+         case unable_to_delete:
+            message = tr("The updated SEQ file would be empty. For some reason, DovahKit could not delete it.");
+            break;
+         case unable_to_write_temporary:
+            message = tr("For some reason, DovahKit was unable to write updated SEQ file to a temporary file (with the intention of replacing the original file after successful writing).");
+            break;
+         case unable_to_relocate:
+            message = tr("DovahKit wrote the SEQ data to a temporary file, with the intention of replacing any existing SEQ file only after all data was successfully written. For some reason, the replacmenet failed.");
+            break;
+      }
+      message = tr("A minor problem occurred while updating the SEQ file. %1").arg(message);
+      //
+      logging.addLogItem(ui::types::log_item(message, ui::types::log_item_type::warning, ui::types::log_item_context::file_save));
+      //
+      QMessageBox::critical(
+         this,
+         tr("Warning", "save warning"),
+         message
+      );
+   }
+
    this->accept();
 }

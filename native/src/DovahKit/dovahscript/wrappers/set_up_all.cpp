@@ -41,13 +41,6 @@ namespace dovahscript {
       define_wrapper_metatable<wrapper_metatable>(L);
       #pragma region Form wrappers
          define_wrapper_metatable<form>(L);
-         #pragma region Common form components
-            /*// TODO: We are rewriting Papyrus data handling within the backend.
-            define_wrapper_metatable<papyrus_root>(L);
-               define_wrapper_metatable<papyrus_script>(L);
-                  define_wrapper_metatable<papyrus_property>(L);
-            //*/
-         #pragma endregion
          #pragma region Form types
             define_wrapper_metatable<cell>(L);
                define_wrapper_metatable<cell_grid_coords>(L);
@@ -96,6 +89,7 @@ namespace dovahscript {
             define_wrapper_metatable<condition>(L);
                define_wrapper_metatable<condition_comparison>(L);
                define_wrapper_metatable<condition_parameter_set>(L);
+         wrapper_likes::native_lists::form_ordered_children::define_metatable(L);
          define_wrapper_metatable<papyrus_root>(L);
             define_collection_metatable(L, collections::papyrus_scripts);
                define_wrapper_metatable<papyrus_script>(L);
