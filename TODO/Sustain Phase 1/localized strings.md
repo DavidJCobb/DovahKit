@@ -40,3 +40,20 @@ UI for working with L-strings would be enabled either program-wide or per active
 Additionally, when saving an existing active file, we'd want to update any extant string files; when saving a new active file, we'd want to warn if its filename or those of any localization are taken; and when overriding a form from a localized master, when the user commits the form dialog, we'd want to use an existing L-string in the active file (if an L-string in the edited form is exactly identical for all languages) or create a new L-string (otherwise).
 
 Lastly: we want a default language: if you only know three languages, you shouldn't have to copy and paste one language into nine textboxes to prevent missing string errors; instead, the string you write in the default language should be written to the other languages by default (QPlainTextEdit placeholder). Unfortunately, English has to be the default language: character sets vary by language and I believe ASCII may be the only commonality between them.
+
+
+## Broader plans (4/30/2026)
+
+We need use info between forms and l-strings. Since not all forms will contain l-strings, and since modded files won't use l-strings at all, form stubs shouldn't include that use info inline; it should be a pointer to an outbound use-info map. (Since forms can use l-strings but l-strings can't use forms, we don't need a pair of maps on each side.)
+
+In addition to requiring use info, l-strings must be aware of what string file they were loaded from, and it must be possible to know what data file that string file is a sidecar for.
+
+### When editing a form
+
+If a form is loaded from a localized master and then flagged as edited, such that we add it to the active file, and if the active file is also localized, then we must duplicate all l-strings within that form, from \[the localized string file for] the file that supplied the winning override, to the active file. This means that we'll need a virtual member function on managed form data to loop over all l-strings inside of the form data, with this being invoked by `form_stub::set_edited`.
+
+(The form rewrite I have planned would make things easier: when "committing" unmanaged data to a managed form, check if any localizable strings in the source data are localized, what file they're from, et cetera. If the source data contains a non-localized string, and the destination file is localized, then create a new l-string. If the source data contains an l-string from a master, then copy the l-string into the active file and replace the reference. If the source data contains an l-string from the active file, then no action needed. Since we're already processing data field-by-field, no need to invoke a vfunc on the form data to update all the l-strings.)
+
+### General
+
+I need to think about every operation one could perform on an l-string, *and* every option one could perform on a form [i.e. a thing that can refer to l-strings], and for each such action I need to consider and plan out what to do with the l-strings and how.
