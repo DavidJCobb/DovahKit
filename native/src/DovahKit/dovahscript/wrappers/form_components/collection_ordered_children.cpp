@@ -3,6 +3,7 @@
 #include "dovah/form_stub_addenda.h"
 #include "dovahscript/api_helpers/native_lists/member_function_spec.h"
 #include "dovahscript/api_helpers/native_lists/common/pull_collection.h"
+#include "dovahscript/api_helpers/native_lists/common/pull_value_as_form.h"
 #include "dovahscript/api_helpers/native_lists/define_metatable.h"
 #include "dovahscript/wrapper.h"
 
@@ -16,6 +17,7 @@ namespace {
       using value_working_type      = dovah::form_stub*;
 
       static constexpr const bool allow_insertions_past_end = false;
+      static constexpr const bool allow_mutation = false;
       static constexpr const bool allow_removals = false;
 
       static constexpr const auto pull_collection = &api_helpers::native_lists::common::pull_collection<wrapper_spec::metatable_key>;
@@ -29,6 +31,9 @@ namespace {
             return nullptr;
          return &addenda->ordered_children.get_active_list();
       }
+
+      // Provided so that Lua values can be comapred with stored elements, i.e. for `:index_of`
+      static constexpr const auto pull_value = &api_helpers::native_lists::common::pull_value_as_form;
    };
 
    // Ordered-child lists shouldn't allow direct editing. The owning form can expose member functions 

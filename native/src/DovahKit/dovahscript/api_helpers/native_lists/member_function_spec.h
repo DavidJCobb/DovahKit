@@ -23,6 +23,7 @@ namespace dovahscript::api_helpers::native_lists {
       using value_working_type      = void;
 
       static constexpr const bool allow_insertions_past_end = false;
+      static constexpr const bool allow_mutation = true;
       static constexpr const bool allow_removals = true;
 
       //

@@ -10322,6 +10322,9 @@
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\native_lists\index_of_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

@@ -7,6 +7,7 @@
 #include "./clear.h"
 #include "./get_collection_length.h"
 #include "./get_item_by_index.h"
+#include "./index_of_value.h"
 #include "./insert.h"
 #include "./remove_item_at_index.h"
 #include "./set_item_at_index.h"
@@ -72,11 +73,25 @@ namespace dovahscript::api_helpers::native_lists {
          lua_setfield(L, index_mt, "set_item");
       }
 
-      if constexpr (impl::concepts::can_assign_elements<Spec> || Spec::allow_removals) {
-         lua_createtable(L, 0, 3);
+      if constexpr (
+         // :insert
+         impl::concepts::can_assign_elements<Spec>
+
+         // :clear
+         // :remove
+      || Spec::allow_removals
+
+         // :index_of
+      || impl::index_of_value::possible<Spec>
+      ) {
+         lua_createtable(L, 0, 4);
          if constexpr (Spec::allow_removals) {
             lua_pushcfunction(L, &clear<Spec>);
             lua_setfield(L, -2, "clear");
+         }
+         if constexpr (impl::index_of_value::possible<Spec>) {
+            lua_pushcfunction(L, &index_of_value<Spec>);
+            lua_setfield(L, -2, "index_of");
          }
          if constexpr (impl::concepts::can_assign_elements<Spec>) {
             lua_pushcfunction(L, &insert<Spec>);

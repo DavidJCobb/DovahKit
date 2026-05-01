@@ -69,6 +69,10 @@ namespace dovahscript::api_helpers::native_lists::impl::concepts {
       requires (!fields::pull_value::present<Spec> || fields::pull_value::valid<Spec>);
       requires (!fields::store_value::present<Spec> || fields::store_value::valid<Spec>);
       requires unwrap_collection::valid<Spec>;
+
+      // If the spec doesn't allow mutation at all, then it should not claim to allow 
+      // removals.
+      requires (Spec::allow_mutation || !Spec::allow_removals);
       
       // If the list type is const, then the spec must not allow removals, and must not 
       // supply member functions for modifying the list.
