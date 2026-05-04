@@ -83,6 +83,10 @@ class DKRefsInCellModel : public QAbstractListModel {
       void setRequiredFormType(dovah::form_type);
 
       dovah::form_stub* ref(QModelIndex) const;
+
+      // Tests everything except the filter string, which is assumed to narrow refs down 
+      // rather than to be a criterion on what refs are "legal."
+      bool refMatchesHardFilters(dovah::form_stub*) const;
       
       #pragma region QAbstractItemModel overrides
          QModelIndex index(int row, int column, const QModelIndex& parent) const override;

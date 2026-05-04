@@ -4,12 +4,8 @@
 #include <QWidget>
 #if !defined(QT_PLUGIN)
    #include <functional>
-   #include "dovah/core.h"
 #endif
 #include "dovah/form_types.h"
-#if !defined(QT_PLUGIN)
-   #include "./widget-data/DKFormPickerCustomFilter.h"
-#endif
 
 namespace dovah {
    class form_stub;
@@ -19,6 +15,9 @@ namespace ui::impl::DKFormPicker {
 }
 class DKComboBox;
 class QComboBox;
+#if !defined(QT_PLUGIN)
+   class DKCustomFormFilter;
+#endif
 
 class DKFormPicker : public QWidget {
    Q_OBJECT;
@@ -27,6 +26,7 @@ class DKFormPicker : public QWidget {
    Q_PROPERTY(QString overrideTextForNone     READ overrideTextForNone     WRITE setOverrideTextForNone     DESIGNABLE true);
    Q_PROPERTY(QString requiredScriptname      READ requiredScriptname      WRITE setRequiredScriptname      DESIGNABLE true);
    Q_PROPERTY(QString requiredAliasScriptname READ requiredAliasScriptname WRITE setRequiredAliasScriptname DESIGNABLE true);
+   Q_PROPERTY(bool    alwaysSplitTypes        READ alwaysSplitTypes        WRITE setAlwaysSplitTypes        DESIGNABLE true);
    Q_PROPERTY(bool    splitTypesWhenMany      READ splitTypesWhenMany      WRITE setSplitTypesWhenMany      DESIGNABLE true);
    public:
       #if !defined(QT_PLUGIN)
@@ -43,7 +43,8 @@ class DKFormPicker : public QWidget {
       inline void setAllowedFormType(dovah::form_type ft) noexcept { this->setAllowedFormTypes({ ft }); }
       //
       inline bool allowsFormType(dovah::form_type ft) const noexcept {
-         return this->_properties.allowed_form_types.contains(ft);
+         auto& list = this->_properties.allowed_form_types;
+         return list.empty() || list.contains(ft);
       }
 
       constexpr bool allowNone() const noexcept { return this->_properties.allow_none; }
@@ -65,6 +66,9 @@ class DKFormPicker : public QWidget {
       constexpr bool splitTypesWhenMany() const noexcept { return this->_properties.split_types_when_many; }
       void setSplitTypesWhenMany(bool) noexcept;
 
+      constexpr bool alwaysSplitTypes() const noexcept { return this->_properties.split_types_always; }
+      void setAlwaysSplitTypes(bool) noexcept;
+
       #if !defined(QT_PLUGIN)
          constexpr dovah::form_stub* formStub() const noexcept { return this->_value; }
          void setFormStub(dovah::form_stub*) noexcept;
@@ -76,8 +80,8 @@ class DKFormPicker : public QWidget {
       constexpr bool isSplittingTypes() const noexcept { return this->_state.is_splitting_types; }
 
       #if !defined(QT_PLUGIN)
-         DKFormPickerCustomFilter* customFilter() const;
-         void setCustomFilter(DKFormPickerCustomFilter* v);
+         DKCustomFormFilter* customFilter() const;
+         void setCustomFilter(DKCustomFormFilter* v);
       #endif
 
    protected:
@@ -88,6 +92,7 @@ class DKFormPicker : public QWidget {
       struct {
          bool allow_none = true;
          QList<dovah::form_type> allowed_form_types;
+         bool split_types_always    = false;
          bool split_types_when_many = true;
 
          QString scriptname_on_alias;
@@ -99,7 +104,7 @@ class DKFormPicker : public QWidget {
       } _properties;
       struct {
          bool is_splitting_types = true;
-         bool needs_initial_fill = false;
+         bool needs_initial_fill = true;
 
          // DKFormPickers choose not to list certain forms, e.g. unnamed exterior cells. 
          // However, there are some cases where we need to be able to programmatically 
@@ -126,7 +131,7 @@ class DKFormPicker : public QWidget {
 
          bool _wouldAllowFormStub(const dovah::form_stub&) const;
 
-         virtual void changeEvent(QEvent* event) override;
+         virtual void showEvent(QShowEvent* event) override;
       #endif
 
       void _setIsSplittingTypes(bool) noexcept;

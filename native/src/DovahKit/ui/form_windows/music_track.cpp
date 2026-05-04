@@ -8,6 +8,12 @@
 FormDialogMusicTrack::FormDialogMusicTrack(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool only_if_flagged) {
+      for (auto& list : this->_state.palette.tracks_by_layer)
+         std::erase(list, stub);
+   });
+
    {
       auto* widget = this->ui.trackType;
       widget->clear();

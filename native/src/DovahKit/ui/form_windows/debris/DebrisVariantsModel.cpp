@@ -3,6 +3,14 @@
 
 DebrisVariantsModel::DebrisVariantsModel(QObject* parent) : DKGenericListModel(parent) {
    auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool only_if_flagged) {
+      for (auto* node : this->_nodes) {
+         auto& nif = node->path;
+         for (auto& item : nif.texture_swaps)
+            if (item.texture_set == stub)
+               item.texture_set = nullptr;
+      }
+   });
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &DebrisVariantsModel::clear);
 }
 

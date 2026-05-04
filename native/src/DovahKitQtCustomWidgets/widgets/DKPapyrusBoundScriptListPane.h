@@ -5,7 +5,6 @@
 
 class DKBoundScriptListModel;
 #if !defined(QT_PLUGIN)
-   #include "dovah/core.h"
    #include "dovah/form_stub.h"
    #include "dovah/forms/components/papyrus.h"
    #include "./widget-models/DKBoundScriptListModel.h"
@@ -42,7 +41,13 @@ class DKPapyrusBoundScriptListPane : public QWidget {
       constexpr bool usesGroupbox() const noexcept { return this->state.use_groupbox; }
       void setUsesGroupbox(bool);
 
+      std::vector<QString> allNonDeletedScriptnames() const;
+      bool hasScript(QString name, bool allow_deleted) const;
+
    signals:
+      void scriptAdded(QString scriptname);
+      void scriptRemoved(QString scriptname, bool inherited_and_removed);
+      void scriptListReset();
 
    protected:
       struct {

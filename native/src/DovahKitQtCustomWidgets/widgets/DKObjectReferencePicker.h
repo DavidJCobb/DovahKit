@@ -1,14 +1,18 @@
 #pragma once
+#if !defined(QT_PLUGIN)
+   #include <functional>
+#endif
 #include <string_view>
 #include <QComboBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 
+#include "dovah/form_types.h"
 #if !defined(QT_PLUGIN)
-   #include "../dovah/core.h"
    #include "./widget-models/DKRefsInCellModel.h"
 #endif
+#include "./DKComboBox.h"
 #include "./DKFormPicker.h"
 
 namespace dovah {
@@ -18,6 +22,7 @@ namespace dovah {
 class DKObjectReferencePicker : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(bool allowNone         READ allowNone         WRITE setAllowNone DESIGNABLE true);
+   Q_PROPERTY(dovah::form_type requiredFormType READ requiredFormType WRITE setRequiredFormType DESIGNABLE true);
    Q_PROPERTY(bool showRefListFilter READ showRefListFilter WRITE setShowRefListFilter DESIGNABLE true);
    Q_PROPERTY(bool showViewRefButton READ showViewRefButton WRITE setShowViewRefButton DESIGNABLE true);
    public:
@@ -38,6 +43,9 @@ class DKObjectReferencePicker : public QWidget {
       #if !defined(QT_PLUGIN)
          void setCell(dovah::form_stub*);
          void setRef(dovah::form_stub*);
+
+         void setValidationFunction(std::function<bool(dovah::form_stub*)>&&);
+         void setValidationFunction(const std::function<bool(dovah::form_stub*)>&);
       #endif
 
       void setRefFilterString(QString);
@@ -53,6 +61,9 @@ class DKObjectReferencePicker : public QWidget {
       void setAllowNone(bool);
       void setShowRefListFilter(bool);
       void setShowViewRefButton(bool);
+
+      constexpr dovah::form_type requiredFormType() const { return this->state.required_form_type; }
+      void setRequiredFormType(dovah::form_type);
 
    signals:
       void cellChanged(dovah::form_stub*);
@@ -71,14 +82,19 @@ class DKObjectReferencePicker : public QWidget {
          QLineEdit*   ref_filter_string   = nullptr;
 
          DKFormPicker* cell = nullptr;
-         QComboBox*    refr = nullptr;
+         DKComboBox*   refr = nullptr;
       } subwidgets;
       struct {
          bool allow_none_ref       = true;
          bool show_ref_list_filter = false;
          bool show_view_ref_button = false;
 
-         QString ref_filter_string;
+         QString          ref_filter_string;
+         dovah::form_type required_form_type = dovah::form_type::reference;
+
+         #if !defined(QT_PLUGIN)
+            std::function<bool(dovah::form_stub*)> validation_function;
+         #endif
       } state;
 
       void _rebuildLayout();

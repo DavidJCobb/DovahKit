@@ -4,6 +4,12 @@
 FormDialogFootstepSet::FormDialogFootstepSet(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool only_if_flagged) {
+      for (auto& list : this->_footsteps.sublists)
+         std::erase(list, stub);
+   });
+
    {
       auto* widget = this->ui.currentMovementState;
       widget->clear();

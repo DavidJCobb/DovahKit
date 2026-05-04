@@ -31,7 +31,7 @@ void DKRefsInCellModel::Item::updateFromStub() {
    if (me.isEmpty())
       me = editor_helpers::form_identifiers_to_string(stub);
 
-   base = dovah::form_stub_helpers::get_base_form(stub);
+   base = dovah::form_stub_helpers::get_base_form(*stub);
    if (base) {
       this->editor_ids.base = base->get_editor_id();
       this->cached_text = QString("%1 (%2)").arg(me).arg(this->editor_ids.base);
@@ -85,7 +85,7 @@ bool DKRefsInCellModel::_item_matches_filter(const Item& item) const {
       if (!papyrus.form_has_script_attached(*item.stub, this->required_scriptname))
          return false;
    }
-   return true;;
+   return true;
 }
 bool DKRefsInCellModel::_stub_allowed_in_model(const dovah::form_stub& stub) const {
    if (!dovah::form_type_is_reference(stub.form_type))
@@ -636,15 +636,15 @@ void DKRefsInCellModel::setParentCell(dovah::form_stub* cell) {
    }
 
    QVector<Item*> working;
-   dovah::form_stub_helpers::for_each_child_form(cell, [this, &working](dovah::form_stub* ref) -> bool {
-      if (!_stub_allowed_in_model(*ref))
+   dovah::form_stub_helpers::for_each_child_form(*cell, [this, &working](dovah::form_stub& ref) -> bool {
+      if (!_stub_allowed_in_model(ref))
          return false;
 
       for (auto* prepended : this->children)
-         if (prepended->stub == ref)
+         if (prepended->stub == &ref)
             return false;
 
-      auto* item = new Item(ref);
+      auto* item = new Item(&ref);
       working.push_back(item);
 
       return false;
@@ -696,6 +696,35 @@ dovah::form_stub* DKRefsInCellModel::ref(QModelIndex qmi) const {
    if (qmi.row() >= this->children.size())
       return nullptr;
    return this->children[qmi.row()]->stub;
+}
+
+bool DKRefsInCellModel::refMatchesHardFilters(dovah::form_stub* ref) const {
+   //
+   // Prepended items always match.
+   //
+   for (auto& item : this->children) {
+      if (!item->is_prepended)
+         break;
+      if (ref == item->stub)
+         return true;
+   }
+   //
+   // Otherwise, apply the usual constraints EXCEPT for the filter string. The 
+   // filter string is used to have the user narrow down matching refs, not to 
+   // determine what refs are legal.
+   //
+   if (!ref)
+      return false;
+   if (this->filter_form_type != dovah::form_type::none && this->filter_form_type != dovah::form_type::reference) {
+      if (ref->form_type != this->filter_form_type)
+         return false;
+   }
+   if (!this->required_scriptname.empty()) {
+      const auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+      if (!papyrus.form_has_script_attached(*ref, this->required_scriptname))
+         return false;
+   }
+   return true;
 }
 
 #pragma region Editor core hooks

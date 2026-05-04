@@ -1,6 +1,8 @@
 #include "DKFormListPaneModel.h"
 #include <QMimeData>
 #include "helpers/qt/strings.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
+#include "dovah/utils/form_type_is_cell_child.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/helpers/form_stub_drag_drop.h"
@@ -37,7 +39,7 @@ QString DKFormListPaneModel::Item::computeEditorID() const {
             world = parent;
          }
       }
-   } else if (dovah::form_type_is_reference(stub->form_type)) {
+   } else if (dovah::form_type_is_cell_child(stub->form_type)) {
       ref = stub;
       if (auto* parent = stub->get_parent_form()) [[likely]] {
          if (parent->form_type == dovah::form_type::cell) [[likely]] {
@@ -156,8 +158,25 @@ void DKFormListPaneModel::_recacheItemText(Item& item) {
 
    item.columnText.resize(Item::cached_builtin_column_count + extra.size());
 
+   QString editor_id;
+   {
+      bool done = false;
+      if (item.stub && item.stub->editorID.empty() && dovah::form_type_is_reference(item.stub->form_type)) {
+         if (this->nameless_refs_show_base_editor_id) {
+            auto* base = dovah::form_stub_helpers::get_base_form(*item.stub);
+            if (base && !base->editorID.empty()) {
+               editor_id = QString::fromStdString(base->editorID);
+               done = true;
+            }
+         }
+      }
+      if (!done) {
+         editor_id = item.computeEditorID();
+      }
+   }
+
    item.columnText[Item::cache_index_for_builtin_column(Column::Type).value()] = item.computeSignature();
-   item.columnText[Item::cache_index_for_builtin_column(Column::Name).value()] = item.computeEditorID();
+   item.columnText[Item::cache_index_for_builtin_column(Column::Name).value()] = editor_id;
 
    for (size_t i = 0; i < extra.size(); ++i) {
       auto& dst     = item.columnText[Item::cache_index_for_extra_column(i)];
@@ -766,6 +785,22 @@ void DKFormListPaneModel::setShowIndices(bool s) {
       return;
    this->show_indices = s;
    emit headerDataChanged(Qt::Vertical, 0, this->children.size() - 1);
+}
+void DKFormListPaneModel::setNamelessRefsShowBaseEditorID(bool v) {
+   if (this->nameless_refs_show_base_editor_id == v)
+      return;
+   this->nameless_refs_show_base_editor_id = v;
+
+   auto&        list = this->children;
+   const size_t size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (!item->stub->editorID.empty())
+         continue;
+      this->_recacheItemText(*item);
+      auto qmi = this->index(i, Column::Name, {});
+      emit dataChanged(qmi, qmi);
+   }
 }
 #pragma endregion
 

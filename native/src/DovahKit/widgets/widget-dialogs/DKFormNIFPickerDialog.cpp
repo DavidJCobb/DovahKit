@@ -38,7 +38,22 @@ class DKFormNIFPickerDialogTextureSwapModel : public DKGenericListModel<DKFormNI
       static constexpr const size_t column_count = 3; // override
 
    public:
-      DKFormNIFPickerDialogTextureSwapModel(QObject* parent) : DKGenericListModel(parent) {}
+      DKFormNIFPickerDialogTextureSwapModel(QObject* parent) : DKGenericListModel(parent) {
+         auto& editor = DovahKitCore::get();
+         QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool only_if_flagged) {
+            for (auto* node : this->_nodes) {
+               if (node->texture_set == stub) {
+                  node->texture_set = nullptr;
+                  this->emitNodeChanged(*node, Column::TextureSet);
+               }
+            }
+         });
+         QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+            for (auto* node : this->_nodes)
+               if (node->texture_set == stub)
+                  this->emitNodeChanged(*node, Column::TextureSet);
+         });
+      }
 
       using DKGenericListModel::clear;
 

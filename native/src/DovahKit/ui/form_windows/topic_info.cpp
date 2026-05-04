@@ -204,6 +204,10 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
             return;
          this->_update_topic_text_preview();
       });
+      QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) {
+         for (auto& response : this->form->responses)
+            response.sever_outbound_references_to(*this->form, *stub);
+      });
    }
 
    this->load(); // this creates the working copy.

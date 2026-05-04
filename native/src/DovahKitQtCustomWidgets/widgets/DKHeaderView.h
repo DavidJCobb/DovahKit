@@ -15,6 +15,9 @@ class DKHeaderView : public QHeaderView {
       int totalRenderedColumnSizes() const noexcept;
       int visibleLength() const noexcept;
       
+      int  columnBasisFactor(int logicalIndex) const noexcept;
+      int  columnModFactor(int logicalIndex) const noexcept;
+      void setColumnModFactor(int logicalIndex, int factor);
       int  columnGrowFactor(int logicalIndex) const noexcept;
       void setColumnGrowFactor(int logicalIndex, int factor);
       int  columnShrinkFactor(int logicalIndex) const noexcept;
@@ -24,10 +27,13 @@ class DKHeaderView : public QHeaderView {
       void reapplyColumnFlex();
       void resizeSection(int logicalIndex, int size); // changes the basis
       void modSectionSizeTo(int logicalIndex, int size); // applies a modifier, as if the user resized the section
+
+      int nextVisibleLogicalSection(int afterLogicalIndex) const;
       
    protected:
       void _reapplyColumnFlex(int length);
       void resizeEvent(QResizeEvent* event) override;
+      void showEvent(QShowEvent* event) override;
 
       struct _column_flex_info {
          int  grow   = 1;

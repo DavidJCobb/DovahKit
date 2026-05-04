@@ -134,7 +134,7 @@ void PerkEntriesModel::_on_form_deletion_imminent(dovah::form_stub* stub) {
    auto&  list = this->_data;
    size_t size = list.size();
    for (size_t i = 0; i < size; ++i) {
-      if (list[i].needs_recache_if_form_changed(*stub)) {
+      if (list[i].data.sever_references_to(*stub)) {
          this->_recache_data(list[i]);
          auto tl = this->index(i, 0, {});
          auto br = this->index(i, ColumnCount, {});

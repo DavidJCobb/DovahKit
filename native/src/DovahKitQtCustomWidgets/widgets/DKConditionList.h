@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
 #include <QWidget>
+#if !defined(QT_PLUGIN)
+   #include "ui/types/conditions/condition.h"
+#endif
 
 class QPushButton;
 class QTableView;
@@ -31,9 +34,19 @@ class DKConditionList : public QWidget {
 
       #if !defined(QT_PLUGIN)
          void importFrom(dovah::loaded_forms::Form& owner, const BackendConditionList& target);
+         void importFrom(dovah::loaded_forms::Form& owner, const std::vector<ui::types::conditions::condition>& target);
          void exportTo(dovah::loaded_forms::Form& owner, BackendConditionList& target);
+         void exportTo(dovah::loaded_forms::Form& owner, std::vector<ui::types::conditions::condition>& target);
          void clear();
+
+         void overrideOwningForm(dovah::loaded_forms::Form&);
+
+         // These exist to handle edge-cases with TopicInfo conditions.
+         void importBifurcatedList(dovah::loaded_forms::Form& owner, const BackendConditionList& locked, const BackendConditionList& normal);
+         void exportBifurcatedList(dovah::loaded_forms::Form& owner, BackendConditionList& locked, BackendConditionList& normal);
       #endif
+
+      size_t conditionCount() const;
 
    signals:
       void changeAttempted();

@@ -1,14 +1,23 @@
 #pragma once
+#include <optional>
+#if !defined(QT_PLUGIN)
+   #include <functional>
+   #include <variant>
+#endif
 #include <vector>
 #include <QAbstractItemModel>
+#include <QAbstractItemView>
 #include <QFrame>
 #include <QPushButton>
 #include <QTableView>
 
 class DKFormListPaneModel;
 #if !defined(QT_PLUGIN)
-   #include "../dovah/core.h"
    #include "widget-models/DKFormListPaneModel.h"
+   #include "dovah/form_reference_t.h"
+#endif
+#if !defined(QT_PLUGIN)
+   class DKCustomFormFilter;
 #endif
 
 namespace dovah {
@@ -20,26 +29,55 @@ namespace dovah {
 
 class DKFormListPane : public QWidget {
    Q_OBJECT;
-   Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation DESIGNABLE true);
+   Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation DESIGNABLE true USER true);
+   Q_PROPERTY(bool allowDuplicates  READ allowDuplicates  WRITE setAllowDuplicates  DESIGNABLE true);
+   Q_PROPERTY(bool readOnly         READ readOnly         WRITE setReadOnly         DESIGNABLE true);
    Q_PROPERTY(bool showFormTypes    READ showFormTypes    WRITE setShowFormTypes    DESIGNABLE true);
    Q_PROPERTY(bool showIndices      READ showIndices      WRITE setShowIndices      DESIGNABLE true);
    Q_PROPERTY(bool showMoveButtons  READ showMoveButtons  WRITE setShowMoveButtons  DESIGNABLE true);
    Q_PROPERTY(bool showRemoveButton READ showRemoveButton WRITE setShowRemoveButton DESIGNABLE true);
    public:
+      enum NamelessRefDisplayMode {
+         Placement,
+         BaseFormEditorID,
+      };
+      Q_ENUM(NamelessRefDisplayMode);
+      Q_PROPERTY(NamelessRefDisplayMode namelessRefDisplayMode READ namelessRefDisplayMode WRITE setNamelessRefDisplayMode DESIGNABLE true);
+
+   public:
+      #if !defined(QT_PLUGIN)
+         //
+         // You can add extra columns to the listview, with getters that take a form stub or 
+         // a loaded form. Your getters will be invoked when forms are added to the listview 
+         // as well as when any forms already in the listview are modified. The strings that 
+         // your getters return will be cached.
+         //
+         using ExtraColumnHandler = std::variant<
+            std::function<QString(const dovah::form_stub&)>,
+            std::function<QString(const dovah::loaded_forms::Form&)>
+         >;
+      #endif
+
+   protected:
+      static constexpr const int ColumnType   = 0;
+      static constexpr const int ColumnName   = 1;
+      static constexpr const int ColumnFormID = 2;
+
+   public:
       DKFormListPane(QWidget* parent);
       
-      static constexpr int ColumnType   = 0;
-      static constexpr int ColumnName   = 1;
-      static constexpr int ColumnFormID = 2;
-
       #if !defined(QT_PLUGIN)
          QHeaderView* horizontalHeader() const noexcept { return this->subwidgets.view->horizontalHeader(); }
       #endif
-      inline Qt::Orientation orientation() const noexcept { return this->state.orientation; }
-      inline bool showFormTypes() const noexcept { return this->state.show_form_types; }
-      inline bool showIndices() const noexcept { return this->state.show_indices; }
-      inline bool showMoveButtons() const noexcept { return this->state.show_move_buttons; }
-      inline bool showRemoveButton() const noexcept { return this->state.show_remove_button; }
+      constexpr bool allowDuplicates() const noexcept { return this->state.allow_duplicates; }
+      constexpr bool allowMultiSelect() const noexcept { return this->state.allow_multi_select; }
+      constexpr NamelessRefDisplayMode namelessRefDisplayMode() const noexcept { return this->state.nameless_ref_display_mode; }
+      constexpr bool readOnly() const noexcept { return this->state.read_only; }
+      constexpr Qt::Orientation orientation() const noexcept { return this->state.orientation; }
+      constexpr bool showFormTypes() const noexcept { return this->state.show_form_types; }
+      constexpr bool showIndices() const noexcept { return this->state.show_indices; }
+      constexpr bool showMoveButtons() const noexcept { return this->state.show_move_buttons; }
+      constexpr bool showRemoveButton() const noexcept { return this->state.show_remove_button; }
 
       #if !defined(QT_PLUGIN)
          QVector<dovah::form_stub*> stubs() const noexcept;
@@ -58,9 +96,15 @@ class DKFormListPane : public QWidget {
       #if !defined(QT_PLUGIN)
          void addStub(dovah::form_stub* stub);
          void clear();
+         bool contains(const dovah::form_stub*) const;
+         int  indexOf(const dovah::form_stub*) const;
+         void removeStub(dovah::form_stub*);
          void reserve(size_t);
       #endif
 
+      void setAllowDuplicates(bool);
+      void setAllowMultiSelect(bool);
+      void setReadOnly(bool);
       #if !defined(QT_PLUGIN)
          void setAllowedFormTypes(QVector<dovah::form_type>);
       #endif
@@ -69,8 +113,29 @@ class DKFormListPane : public QWidget {
       void setOrientation(Qt::Orientation);
       void setShowMoveButtons(bool);
       void setShowRemoveButton(bool);
+      void setNamelessRefDisplayMode(NamelessRefDisplayMode);
+      
+   public: // Ensure these are not Qt slots; slots can't have moved&& parameters
+      #if !defined(QT_PLUGIN)
+         void addExtraColumn(QString header, ExtraColumnHandler&&);
+         void removeExtraColumn(size_t which); // the first-added extra column is index 0. indices shift as columns are removed.
+      #endif
+
+      #if !defined(QT_PLUGIN)
+         DKCustomFormFilter* customFilter() const;
+         void setCustomFilter(DKCustomFormFilter* v);
+      #endif
+
+      #if !defined(QT_PLUGIN)
+         [[nodiscard]] std::vector<dovah::form_stub*> selectedForms() const;
+         [[nodiscard]] std::vector<size_t> selectedRows() const;
+      #endif
 
    signals:
+      void formsAdded(size_t count);
+      void formsRemoved(size_t count);
+      void selectedFormsChanged(const std::vector<dovah::form_stub*>&);
+      void selectedRowsChanged(const std::vector<size_t>&);
 
    protected:
       struct {
@@ -83,6 +148,10 @@ class DKFormListPane : public QWidget {
          QTableView* view = nullptr;
       } subwidgets;
       struct {
+         bool allow_duplicates   = false;
+         bool allow_multi_select = true;
+         NamelessRefDisplayMode nameless_ref_display_mode = NamelessRefDisplayMode::Placement;
+         bool read_only          = false;
          bool show_form_types    = true;
          bool show_indices       = false;
          bool show_move_buttons  = true;
@@ -93,8 +162,8 @@ class DKFormListPane : public QWidget {
       DKFormListPaneModel* _model() const noexcept;
 
       #if !defined(QT_PLUGIN)
-      void _moveSelected(int down); // negative values move up
-      void _removeSelected();
+         void _moveSelected(int down); // negative values move up
+         void _removeSelected();
       #endif
       void _updateButtonVisibility();
       void _updateOrientation();

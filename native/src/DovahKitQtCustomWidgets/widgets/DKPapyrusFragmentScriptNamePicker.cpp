@@ -59,8 +59,9 @@ void DKPapyrusFragmentScriptNamePicker::setSourceWidget(DKPapyrusBoundScriptList
       const auto blocker = QSignalBlocker(widget);
       widget->clear();
       if (src) {
-         QObject::connect(this->_source, &DKPapyrusBoundScriptListPane::scriptAdded,   this, &DKPapyrusFragmentScriptNamePicker::_on_source_script_list_changed);
-         QObject::connect(this->_source, &DKPapyrusBoundScriptListPane::scriptRemoved, this, &DKPapyrusFragmentScriptNamePicker::_on_source_script_list_changed);
+         QObject::connect(this->_source, &DKPapyrusBoundScriptListPane::scriptAdded,     this, &DKPapyrusFragmentScriptNamePicker::_on_source_script_list_changed);
+         QObject::connect(this->_source, &DKPapyrusBoundScriptListPane::scriptRemoved,   this, &DKPapyrusFragmentScriptNamePicker::_on_source_script_list_changed);
+         QObject::connect(this->_source, &DKPapyrusBoundScriptListPane::scriptListReset, this, &DKPapyrusFragmentScriptNamePicker::_on_source_script_list_changed);
       
          auto list = this->_source->allNonDeletedScriptnames();
          for (auto& item : list)

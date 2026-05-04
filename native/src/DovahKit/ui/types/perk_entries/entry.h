@@ -28,5 +28,8 @@ namespace ui::types::perk_entries {
       static std::vector<entry> pull_list_from_backend(const dovah::loaded_forms::Perk&);
 
       void append_into_backend(dovah::loaded_forms::Perk&) const;
+
+      // Returns `true` if any references were severed, or `false` otherwise.
+      bool sever_references_to(const dovah::form_stub&);
    };
 }

@@ -1,10 +1,13 @@
 #include "./DKConditionList.h"
 #include <QBoxLayout>
+#include <QHeaderView>
 #include <QPushButton>
 #include <QTableView>
 #if !defined(QT_PLUGIN)
    #include "./widget-dialogs/DKConditionEditDialog.h"
    #include "./widget-models/DKConditionListModel.h"
+   #include "./DKHeaderView.h"
+
    #include "dovah/data/conditions/all_function_info.h"
    #include "dovah/forms/Form.h"
    #include "helpers/string/strieq_ascii.h"
@@ -26,18 +29,30 @@ namespace {
 DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
    auto*    layout      = new QVBoxLayout(this);
    QWidget* button_wrap = nullptr;
-   this->setLayout(layout);
    layout->setMargin(0);
+   this->setLayout(layout);
 
    {
       auto* view = this->_subwidgets.view = new QTableView(this);
       layout->addWidget(view, 1);
+
+      if (auto* vh = view->verticalHeader()) {
+         vh->setVisible(false);
+         vh->setSectionResizeMode(QHeaderView::ResizeToContents);
+      }
+      view->setCornerButtonEnabled(false);
+      view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+      view->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+      view->setHorizontalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel);
+      view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
+      view->setWordWrap(false);
    }
    {
       button_wrap = new QWidget(this);
       layout->addWidget(button_wrap);
 
       auto* sublayout = new QHBoxLayout(button_wrap);
+      sublayout->setContentsMargins(0, 0, 0, 0);
       button_wrap->setLayout(sublayout);
       {
          auto* button = this->_subwidgets.move_up = new QPushButton(tr("<<", "move up label"));
@@ -70,12 +85,72 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
       auto* widget = this->_subwidgets.view;
       this->_model = new DKConditionListModel(this);
       widget->setModel(this->_model);
+
+      {  // Set up new header
+         //
+         // Have to do this after setting the model, because QHeaderView::setSectionResizeMode 
+         // and friends will crash if the section in question doesn't exist yet.
+         //
+         auto* header = new DKHeaderView(Qt::Orientation::Horizontal, widget);
+         widget->setHorizontalHeader(header);
+         header->setFlexResizeEnabled(true);
+
+         header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+         header->setMinimumSectionSize(2);
+         {
+            using Column = DKConditionListModel::Column;
+
+            auto metrics = widget->fontMetrics();
+
+            header->setColumnFlex(Column::Target,   0, 0, metrics.boundingRect("Subject 123").width() * 1.5F + 4);
+            header->setColumnFlex(Column::Function, 2, 2, metrics.boundingRect("LongIshFunctionName").width() * 1.5F + 4);
+            header->setColumnFlex(Column::Args,     4, 1);
+            header->setColumnFlex(Column::Operator, 0, 0, metrics.boundingRect("<=>").width());
+            header->setColumnFlex(Column::Operand,  1, 3, metrics.boundingRect("12345.6789").width());
+            header->setColumnFlex(Column::UsesOr,   0, 0, metrics.boundingRect("AND").width() * 1.5F + 4);
+
+            header->setSectionResizeMode(Column::Target,   QHeaderView::Interactive);
+            header->setSectionResizeMode(Column::Function, QHeaderView::Interactive);
+            header->setSectionResizeMode(Column::Args,     QHeaderView::Interactive);
+            header->setSectionResizeMode(Column::Operand,  QHeaderView::Interactive);
+         }
+         header->setStretchLastSection(false);
+      }
    }
+   QObject::connect(this->_subwidgets.add_item, &QPushButton::clicked, this, &DKConditionList::openCreateConditionModal);
+   QObject::connect(this->_subwidgets.view, &QTableView::doubleClicked, this, [this](const QModelIndex& qmi) {
+      auto start = qmi.siblingAtColumn(0);
+      auto end   = qmi.siblingAtColumn(DKConditionListModel::column_count - 1);
+
+      auto* sm = this->_subwidgets.view->selectionModel();
+      sm->select(QItemSelection(start, end), QItemSelectionModel::SelectionFlag::ClearAndSelect);
+
+      this->openEditConditionModal();
+   });
+
+   QObject::connect(this->_subwidgets.move_up, &QPushButton::clicked, this, [this]() {
+      auto* sm  = this->_subwidgets.view->selectionModel();
+      auto  sel = sm->selection();
+      if (sel.empty())
+         return;
+      this->_model->move(sel, -1);
+   });
+   QObject::connect(this->_subwidgets.move_down, &QPushButton::clicked, this, [this]() {
+      auto* sm  = this->_subwidgets.view->selectionModel();
+      auto  sel = sm->selection();
+      if (sel.empty())
+         return;
+      this->_model->move(sel, 1);
+   });
    #endif
 }
 
 #if !defined(QT_PLUGIN)
    void DKConditionList::importFrom(dovah::loaded_forms::Form& owner, const BackendConditionList& target) {
+      this->_owning_stub = &owner.stub;
+      this->_model->importFrom(owner, target);
+   }
+   void DKConditionList::importFrom(dovah::loaded_forms::Form& owner, const std::vector<ui::types::conditions::condition>& target) {
       this->_owning_stub = &owner.stub;
       this->_model->importFrom(owner, target);
    }
@@ -87,11 +162,34 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
          dst_item.commit(owner, src_item);
       }
    }
+   void DKConditionList::exportTo(dovah::loaded_forms::Form& owner, std::vector<ui::types::conditions::condition>& dst) {
+      dst = this->_model->conditions();
+   }
    void DKConditionList::clear() {
       this->_model->clear();
       this->_owning_stub = nullptr;
    }
+
+   void DKConditionList::overrideOwningForm(dovah::loaded_forms::Form& form) {
+      this->_model->overrideOwningForm(form);
+   }
+
+   void DKConditionList::importBifurcatedList(dovah::loaded_forms::Form& owner, const BackendConditionList& locked, const BackendConditionList& normal) {
+      this->_owning_stub = &owner.stub;
+      this->_model->importBifurcatedList(owner, locked, normal);
+   }
+   void DKConditionList::exportBifurcatedList(dovah::loaded_forms::Form& owner, BackendConditionList& locked, BackendConditionList& normal) {
+      this->_model->exportBifurcatedList(owner, locked, normal);
+   }
 #endif
+
+size_t DKConditionList::conditionCount() const {
+   #if !defined(QT_PLUGIN)
+      return this->_model->rowCount();
+   #else
+      return 0;
+   #endif
+}
 
 void DKConditionList::openCreateConditionModal() {
    #if !defined(QT_PLUGIN)

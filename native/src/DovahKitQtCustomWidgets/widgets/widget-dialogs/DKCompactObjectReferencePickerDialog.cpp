@@ -40,3 +40,7 @@ void DKCompactObjectReferencePickerDialog::setRequiredScriptname(QString v) {
 void DKCompactObjectReferencePickerDialog::setRequiredScriptname(std::string_view v) {
    this->ui.refPicker->setRequiredScriptname(v);
 }
+
+void DKCompactObjectReferencePickerDialog::setValidationFunction(const std::function<bool(dovah::form_stub*)>& f) {
+   this->ui.refPicker->setValidationFunction(f);
+}

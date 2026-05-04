@@ -24,6 +24,9 @@ namespace SceneFormVisualEditor_impl {
    class Action;
    class Actor;
    class Phase;
+
+   class DialogueAction;
+   class PackageAction;
 }
 class FormSubdialogSceneActionBase;
 class QuestAllDialogueDatastore;
@@ -206,4 +209,9 @@ class SceneFormVisualEditor : public QWidget {
       void _update_phase_conditions(bool trigger_geometry_update = true);
       void _update_cached_internal_relationships();
       void _update_geometry();
+
+      void _recache_action(DialogueAction&);
+      void _recache_action(PackageAction&);
+      void _on_form_deleted(dovah::form_stub&);
+      void _on_form_modified(dovah::form_stub&);
 };

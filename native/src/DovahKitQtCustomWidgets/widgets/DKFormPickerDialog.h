@@ -1,0 +1,72 @@
+#pragma once
+#if defined(QT_PLUGIN)
+   #error This widget is not meant to be usable in Qt Designer.
+#endif
+#include <QAbstractItemModel>
+#include <QDialog>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QTableView>
+#include "dovah/form_types.h"
+
+namespace dovah {
+   class form_stub;
+}
+namespace ui::impl::DKFormPicker {
+   class DialogModel;
+}
+#if !defined(QT_PLUGIN)
+   class DKCustomFormFilter;
+#endif
+
+class DKFormPickerDialog : public QDialog {
+   Q_OBJECT;
+   Q_PROPERTY(QList<dovah::form_type> allowedFormTypes READ allowedFormTypes WRITE setAllowedFormTypes DESIGNABLE true USER true);
+   public:
+      DKFormPickerDialog(QWidget* parent = nullptr);
+      
+      constexpr const QList<dovah::form_type>& allowedFormTypes() const noexcept { return this->_properties.allowed_form_types; }
+      void setAllowedFormTypes(QList<dovah::form_type>) noexcept;
+      //
+      void addAllowedFormType(dovah::form_type);
+      inline void allowAllFormTypes() noexcept { this->setAllowedFormTypes({}); }
+      inline void setAllowedFormType(dovah::form_type ft) noexcept { this->setAllowedFormTypes({ ft }); }
+      //
+      inline bool allowsFormType(dovah::form_type ft) const noexcept {
+         return this->_properties.allowed_form_types.contains(ft);
+      }
+
+      #if !defined(QT_PLUGIN)
+         constexpr dovah::form_stub* formStub() const noexcept { return this->_value; }
+         void setFormStub(dovah::form_stub*) noexcept;
+      #endif
+
+      #if !defined(QT_PLUGIN)
+         DKCustomFormFilter* customFilter() const;
+         void setCustomFilter(DKCustomFormFilter* v);
+      #endif
+
+      constexpr bool allowMultiSelect() const noexcept { return this->_allow_multi_select; }
+      void setAllowMultiSelect(bool);
+      #if !defined(QT_PLUGIN)
+         std::vector<dovah::form_stub*> selectedFormStubs() const;
+      #endif
+         
+   protected:
+      #if !defined(QT_PLUGIN)
+         dovah::form_stub* _value = nullptr;
+      #endif
+      ui::impl::DKFormPicker::DialogModel* _model = nullptr;
+      struct {
+         QList<dovah::form_type> allowed_form_types;
+      } _properties;
+      struct {
+         QLineEdit*  filter = nullptr;
+         QTableView* table  = nullptr;
+      } _subwidgets;
+      bool _allow_multi_select = false;
+
+      void _updateColumnVisibility();
+
+      virtual void showEvent(QShowEvent* event) override;
+};

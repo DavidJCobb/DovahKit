@@ -220,6 +220,14 @@ void DKFormPicker::setSplitTypesWhenMany(bool b) noexcept {
       this->_setIsSplittingTypes(should);
 }
 
+void DKFormPicker::setAlwaysSplitTypes(bool b) noexcept {
+   this->_properties.split_types_always = b;
+   bool now    = this->isSplittingTypes();
+   bool should = this->_shouldSplitTypes();
+   if (now != should)
+      this->_setIsSplittingTypes(should);
+}
+
 void DKFormPicker::setAllowNone(bool b) noexcept {
    if (b == this->allowNone())
       return;
@@ -340,15 +348,13 @@ bool DKFormPicker::_wouldAllowFormStub(const dovah::form_stub& stub) const {
    return true;
 }
 
-/*virtual*/ void DKFormPicker::changeEvent(QEvent* event) /*override*/ {
+/*virtual*/ void DKFormPicker::showEvent(QShowEvent* event) /*override*/ {
    //
    // If the widget is attached to the UI without ever having parameters configured 
    // on it (i.e. the stock defaults), then we need to populate the widget at that 
    // time.
    //
    if (!this->_state.needs_initial_fill)
-      return;
-   if (event->type() != QEvent::ParentChange)
       return;
    this->_state.needs_initial_fill = false;
    this->_updateTypePicker();
@@ -371,6 +377,8 @@ void DKFormPicker::_setSubwidgetEnableState(bool s) {
    this->_subwidgets.form->setEnabled(s);
 }
 bool DKFormPicker::_shouldSplitTypes() const noexcept {
+   if (this->alwaysSplitTypes())
+      return true;
    if (!this->splitTypesWhenMany())
       return false;
    if (this->_properties.allowed_form_types.isEmpty())

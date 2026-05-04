@@ -64,6 +64,7 @@ DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
             view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
             view->setCornerButtonEnabled(false);
             view->setAcceptDrops(false);
+            view->setWordWrap(false);
 
             if (auto* vh = view->verticalHeader()) {
                vh->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -230,7 +231,7 @@ DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
             label->setBuddy(widget);
             widget->setAlignment(spinbox_alignment);
             widget->setRange(-360, 360);
-            widget->setWhatsThis(tr("The angle tolerance on the attack. For example, a value of 35 means that targets within ±35 degrees of the Attack Angle would be hit by the attack."));
+            widget->setWhatsThis(tr("The angle tolerance on the attack. For example, a value of 35 means that targets within (+/-)35 degrees of the Attack Angle would be hit by the attack."));
             //
             layout->addWidget(label, row, col);
             layout->addWidget(widget, row, col + 1);
@@ -353,6 +354,26 @@ DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
       QObject::connect(ui.flags.bash,          &QCheckBox::toggled, this, &DKAttackDataWidget::_push_node_from_ui);
       QObject::connect(ui.flags.lefthanded,    &QCheckBox::toggled, this, &DKAttackDataWidget::_push_node_from_ui);
       QObject::connect(ui.flags.rotating,      &QCheckBox::toggled, this, &DKAttackDataWidget::_push_node_from_ui);
+
+      QObject::connect(this->_subwidgets.event_listing.button_create, &QPushButton::clicked, this, [this, sel_model, model]() {
+         auto qmi = model->create();
+         if (!qmi.isValid())
+            return;
+         auto col = model->columnCount({});
+         auto tl  = qmi.siblingAtColumn(0);
+         auto br  = qmi.siblingAtColumn(col - 1);
+         sel_model->select({ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+      });
+      QObject::connect(this->_subwidgets.event_listing.button_delete, &QPushButton::clicked, this, [this, sel_model, model]() {
+         size_t row;
+         {
+            auto rows = sel_model->selectedRows();
+            if (rows.isEmpty())
+               return;
+            row = rows[0].row();
+         }
+         model->deleteItems(row, 1);
+      });
    }
    #endif
    #pragma endregion

@@ -26,7 +26,7 @@ class DKFormDestructionDataButton : public QWidget {
          Q_DECLARE_FLAGS(DestructionStageFlags, DestructionStageFlag);
          
          struct DestructionStage {
-            uint16_t                health_percent   = 100;
+            uint8_t                 health_percent   = 100;
             uint8_t                 damage_stage     = 0;
             DestructionStageFlags   flags            = {};
             uint32_t                self_damage_rate = 0; // the object inflicts this much damage on itself per second (i.e. health decay)

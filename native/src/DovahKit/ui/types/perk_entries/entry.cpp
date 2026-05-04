@@ -237,4 +237,39 @@ namespace ui::types::perk_entries {
          }
       }
    }
+
+   bool entry::sever_references_to(const dovah::form_stub& stub) {
+      bool  changed = false;
+      auto& variant = this->data;
+      if (auto* casted_ptr = std::get_if<quest_entry>(&variant)) {
+         if (casted_ptr->quest == &stub) {
+            casted_ptr->quest = nullptr;
+            changed = true;
+         }
+      } else if (auto* casted_ptr = std::get_if<spell_entry>(&variant)) {
+         if (casted_ptr->spell == &stub) {
+            casted_ptr->spell = nullptr;
+            changed = true;
+         }
+      } else if (auto* casted_ptr = std::get_if<entry_point_entry>(&variant)) {
+         auto& params = casted_ptr->parameters;
+         if (auto* casted_params = std::get_if<ui::types::perk_entries::params::activate_choice>(&params)) {
+            if (casted_params->spell == &stub) {
+               casted_params->spell = nullptr;
+               changed = true;
+            }
+         } else if (auto* casted_params = std::get_if<ui::types::perk_entries::params::form>(&params)) {
+            if (casted_params->value == &stub) {
+               casted_params->value = nullptr;
+               changed = true;
+            }
+         }
+         for (auto& cnd_list : casted_ptr->conditions_by_entity) {
+            for (auto& cnd : cnd_list.conditions)
+               if (cnd.sever_outbound_references_to(&stub))
+                  changed = true;
+         }
+      }
+      return false;
+   }
 }

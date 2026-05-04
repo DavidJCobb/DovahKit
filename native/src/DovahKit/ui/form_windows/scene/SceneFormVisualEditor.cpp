@@ -9,6 +9,7 @@
 #include "dovah/forms/components/papyrus/fragment_data/scene_fragment_data.h"
 #include "dovah/forms/Quest.h"
 #include "dovah/forms/Scene.h"
+#include "editor/core.h"
 #include "./SceneFormVisualEditor_impl/Actor.h"
 #include "./SceneFormVisualEditor_impl/Phase.h"
 #include "./SceneFormVisualEditor_impl/StyleOption.h"
@@ -51,6 +52,10 @@ namespace {
 }
 
 SceneFormVisualEditor::SceneFormVisualEditor(QWidget* parent) : QWidget(parent) {
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) { this->_on_form_deleted(*stub); });
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) { this->_on_form_modified(*stub); });
+
    this->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    this->setSizePolicy({ QSizePolicy::Fixed, QSizePolicy::Fixed });
 
@@ -278,6 +283,8 @@ void SceneFormVisualEditor::importData() {
             casted_dst->data.emotion.value = casted->emotion.value;
             casted_dst->data.looping.min = casted->looping.min;
             casted_dst->data.looping.max = casted->looping.max;
+
+            this->_recache_action(*casted_dst);
          } else if (auto* casted = std::get_if<src_type::package_data>(&src.data)) {
             auto* casted_dst = new PackageAction;
             dst = casted_dst;
@@ -286,6 +293,8 @@ void SceneFormVisualEditor::importData() {
             for (auto& use : casted->packages)
                if (use)
                   casted_dst->data.packages.push_back(use.get_form_stub());
+
+            this->_recache_action(*casted_dst);
          } else if (auto* casted = std::get_if<src_type::timer_data>(&src.data)) {
             auto* casted_dst = new TimerAction;
             dst = casted_dst;
@@ -332,25 +341,6 @@ void SceneFormVisualEditor::importData() {
          item->cached.alias_name = this->referenceAliasName(item->alias_id);
 
       this->_update_phase_conditions(false);
-
-      for (auto* action : this->_data.actions) {
-         if (auto* casted = dynamic_cast<DialogueAction*>(action)) {
-            auto& dst = casted->cached.infos;
-            dst.clear();
-
-            if (!this->_context.dialogue)
-               continue;
-            if (!casted->data.topic)
-               continue;
-            auto* data = this->_context.dialogue->item_for_topic_stub(*casted->data.topic);
-            if (!data)
-               continue;
-
-            for (auto* info : data->infos) {
-               dst.push_back(info->cached.responses);
-            }
-         }
-      }
    }
    this->_update_geometry();
    this->updateGeometry();
@@ -1156,9 +1146,11 @@ void SceneFormVisualEditor::editAction(Action& action) {
       if (action_d) {
          auto& src = ((FormSubdialogSceneDialogueAction*)untyped_dialog)->data;
          action_d->data = src;
+         this->_recache_action(*action_d);
       } else if (action_p) {
          auto& src = ((FormSubdialogScenePackageAction*)untyped_dialog)->data;
          action_p->data = src;
+         this->_recache_action(*action_p);
       } else if (action_t) {
          auto& src = ((FormSubdialogSceneTimerAction*)untyped_dialog)->data;
          action_t->data = src;
@@ -1265,6 +1257,10 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
    }
 }
 void SceneFormVisualEditor::removeAction(Action& action) {
+   if (std::holds_alternative<Action*>(this->_selection))
+      if (std::get<Action*>(this->_selection) == &action)
+         this->_selection = {};
+
    std::erase(this->_data.actions, &action);
    delete &action;
 
@@ -1274,6 +1270,10 @@ void SceneFormVisualEditor::removeAction(Action& action) {
    this->update();
 }
 void SceneFormVisualEditor::removePhase(Phase& phase) {
+   if (std::holds_alternative<Phase*>(this->_selection))
+      if (std::get<Phase*>(this->_selection) == &phase)
+         this->_selection = {};
+
    size_t i = 0;
    for (; i < this->_data.phases.size(); ++i)
       if (this->_data.phases[i] == &phase)
@@ -2033,4 +2033,109 @@ void SceneFormVisualEditor::_update_geometry() {
    this->_cached.size.setHeight(graph_bottom);
    this->_cached.size *= this->_zoom;
    this->updateGeometry();
+}
+
+void SceneFormVisualEditor::_recache_action(DialogueAction& action) {
+   auto& dst = action.cached.infos;
+   dst.clear();
+
+   if (!this->_context.dialogue)
+      return;
+   if (!action.data.topic)
+      return;
+   auto* data = this->_context.dialogue->item_for_topic_stub(*action.data.topic);
+   if (!data)
+      return;
+
+   for (auto* info : data->infos) {
+      dst.push_back(info->cached.responses);
+   }
+}
+void SceneFormVisualEditor::_recache_action(PackageAction& action) {
+   const auto& src_list = action.data.packages;
+   auto&       dst_list = action.cached.package_editor_ids;
+
+   size_t size = src_list.size();
+   dst_list.resize(size);
+   for (size_t i = 0; i < size; ++i) {
+      const auto* form = src_list[i];
+      if (form) {
+         dst_list[i] = QString::fromStdString(form->editorID);
+      } else {
+         dst_list[i].clear();
+      }
+   }
+}
+void SceneFormVisualEditor::_on_form_deleted(dovah::form_stub& stub) {
+   bool changed = false;
+   if (this->_context.quest == &stub) {
+      this->_context.quest = nullptr;
+      changed = true;
+   }
+   if (this->_context.scene == &stub) {
+      this->_context.scene = nullptr;
+      changed = true;
+   }
+   switch (stub.form_type) {
+      case dovah::form_type::package:
+         for (auto* action : this->_data.actions) {
+            auto* casted = dynamic_cast<PackageAction*>(action);
+            if (!casted)
+               continue;
+            size_t count_removed = std::erase(casted->data.packages, &stub);
+            if (count_removed == 0)
+               continue;
+            changed = true;
+            this->_recache_action(*casted);
+         }
+         break;
+      case dovah::form_type::topic:
+         for (auto* action : this->_data.actions) {
+            auto* casted = dynamic_cast<DialogueAction*>(action);
+            if (!casted)
+               continue;
+            if (casted->data.topic != &stub)
+               continue;
+            casted->data.topic = nullptr;
+            changed = true;
+            this->_recache_action(*casted);
+         }
+         break;
+   }
+   if (changed) {
+      this->_update_geometry();
+      this->updateGeometry();
+   }
+}
+void SceneFormVisualEditor::_on_form_modified(dovah::form_stub& stub) {
+   bool changed = false;
+   switch (stub.form_type) {
+      case dovah::form_type::package:
+         for (auto* action : this->_data.actions) {
+            auto* casted = dynamic_cast<PackageAction*>(action);
+            if (!casted)
+               continue;
+            auto it = std::find(casted->data.packages.begin(), casted->data.packages.end(), &stub);
+            if (it != casted->data.packages.end()) {
+               this->_recache_action(*casted);
+               changed = true;
+            }
+         }
+         break;
+      case dovah::form_type::topic:
+         for (auto* action : this->_data.actions) {
+            auto* casted = dynamic_cast<DialogueAction*>(action);
+            if (!casted)
+               continue;
+            if (casted->data.topic != &stub)
+               continue;
+            changed = true;
+            this->_recache_action(*casted);
+         }
+         break;
+   }
+   if (changed) {
+      this->_update_geometry();
+      this->updateGeometry();
+   }
 }

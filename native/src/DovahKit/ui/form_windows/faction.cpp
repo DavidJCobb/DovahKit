@@ -76,7 +76,7 @@
                auto* node = new node_type;
                this->_nodes.push_back(node);
                node->other = stub;
-               node->mod   = item.mod;
+               node->mod = item.mod;
                switch (item.combat) {
                   using enum loaded_form_type::alliance_status;
                   using enum FactionReaction;
@@ -130,16 +130,18 @@
 
                auto qmi = this->index(i, 0, {});
                emit dataChanged(qmi, qmi, { Qt::DisplayRole, Qt::ToolTipRole });
-               return;
             }
          }
       }
       void FormDialogFaction::RelationshipModel::onFactionDeletionImminent(const dovah::form_stub& faction) {
-         for (size_t i = 0; i < this->_nodes.size(); ++i) {
-            auto& node = this->_nodes[i];
+         auto&  list = this->_nodes;
+         size_t size = list.size();
+         for (size_t i = 0; i < size; ++i) {
+            auto* node = list[i];
             if (node->other == &faction) {
                this->deleteItems(i, 1);
-               return;
+               --i;
+               --size;
             }
          }
       }

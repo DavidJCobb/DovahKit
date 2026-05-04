@@ -248,7 +248,46 @@ void FormDialogQuest::_save_impl() {
    //
    auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
-   //
+
+   {  // HACK to deal with event conditions
+      //
+      // When you edit Story Manager event trees, you'll find that you can put 
+      // conditions on a Quest Node (SMQN), which is a container for quests, or 
+      // on an individual Quest (QUST) in that node. The trick is that in the 
+      // latter case, the conditions are stored on the QUST form itself. So this 
+      // is form data in QUST that is only visible and alterable via the SM*N UI.
+      // 
+      // DovahKit's current design doesn't allow us to commit "everything except 
+      // the event conditions;" I have rewrite plans in mind which would allow 
+      // me to be that granular, but that isn't possible now. For now, we rely 
+      // on the "form working copy" system, which means we're basically bulldozing 
+      // *all* of the form data. So, we need to manually load the form data that 
+      // we're going to overwrite, and copy the event conditions from the form 
+      // data to our working copy.
+      // 
+      // Why not just leave the data unchanged in the working copy? Two reasons:
+      // 
+      //  - Working copies don't have their use info managed automatically. If a 
+      //    form is deleted, any data in the working copy which refers to that 
+      //    form will be left with a dangling use. Most of the time, our UI copes 
+      //    with that by just manually managing things, or by managing things via 
+      //    its widgets.
+      // 
+      //  - If you open the QUST UI, and then the SM*N UI, and then make changes 
+      //    via the latter, those changes won't be visible to the QUST UI. Pulling 
+      //    the conditions from the "canonical" form data ensures we won't end up 
+      //    clobbering those changes.
+      //
+      auto& dst = working.conditions.event;
+      dst.clear(working);
+
+      auto src_ptr = this->stub->load().ptr_cast<loaded_form_type>();
+      if (src_ptr) {
+         auto& src = src_ptr->conditions.event;
+         dst.append_all_of(working, src);
+      }
+   }
+   
    #pragma region Basic Data
       gls.assign_localized_string(working.name, this->ui.name->text());
       this->ui.textDisplayGlobals->commitStubs(working.text_display_globals, working);

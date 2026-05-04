@@ -4,6 +4,7 @@
 #include "dovah/forms/components/magic_effect_list.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 
 /*// TODO: When we can load AVIFs, use their TESFullNames.
 #include "dovah/forms/ActorValue.h"
@@ -64,8 +65,9 @@ void DKMagicEffectListModelItem::_update_cache() {
    }
 
    auto& editor = DovahKitCore::get();
+   auto& gls    = dovahkit::subsystems::game_localized_strings::core::get();
    this->cached.base_cost   = loaded->base_cost;
-   this->cached.effect_name = editor.convert_localized_string(loaded->name);
+   this->cached.effect_name = gls.convert_localized_string(loaded->name);
    if (this->cached.effect_name.isEmpty()) {
       this->cached.effect_name = QString::fromStdString(this->magic_effect->editorID);
    }
@@ -84,7 +86,7 @@ void DKMagicEffectListModelItem::_update_cache() {
             /*// TODO: When we can load AVIFs, use their TESFullNames.
             auto loaded = av_stub->load().ptr_cast<dovah::loaded_forms::ActorValue>();
             if (loaded) {
-            av_name = editor.convert_localized_string(loaded->name);
+            av_name = gls.convert_localized_string(loaded->name);
             }
             //*/
          }

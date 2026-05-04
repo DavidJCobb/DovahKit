@@ -43,7 +43,9 @@ DKHeaderView::DKHeaderView(Qt::Orientation o, QWidget* parent) : QHeaderView(o, 
       list[index].hide = false;
       //
       int mod = after - list[index].render;
-      if (index + 1 < list.size()) {
+
+      int index_of_next = this->nextVisibleLogicalSection(index);
+      if (index_of_next >= 0) {
          //
          // The user resized this section; that is, they clicked on the right edge of this 
          // section and dragged it... but the right edge of this section is the left edge 
@@ -52,7 +54,7 @@ DKHeaderView::DKHeaderView(Qt::Orientation o, QWidget* parent) : QHeaderView(o, 
          // If we choose to modify the next section, then we need to apply (-mod) to it.
          //
          auto& self = list[index];
-         auto& next = list[index + 1];
+         auto& next = list[index_of_next];
          if (self.grow > 0 && next.grow == 0) {
             //
             // If the current section stretches but the next section doesn't, then the user's 
@@ -123,6 +125,39 @@ int DKHeaderView::visibleLength() const noexcept {
    return vp->height();
 }
 
+int DKHeaderView::columnBasisFactor(int logicalIndex) const noexcept {
+   if (logicalIndex < 0)
+      return 0;
+   auto& list  = this->_flexColumns;
+   auto  count = this->count();
+   if (logicalIndex >= count)
+      return 0;
+   if (logicalIndex >= list.size())
+      return 1;
+   return list[logicalIndex].basis;
+}
+int DKHeaderView::columnModFactor(int logicalIndex) const noexcept {
+   if (logicalIndex < 0)
+      return 0;
+   auto& list  = this->_flexColumns;
+   auto  count = this->count();
+   if (logicalIndex >= count)
+      return 0;
+   if (logicalIndex >= list.size())
+      return 1;
+   return list[logicalIndex].mod;
+}
+void DKHeaderView::setColumnModFactor(int logicalIndex, int factor) {
+   if (logicalIndex < 0)
+      return;
+   auto& list  = this->_flexColumns;
+   auto  count = this->count();
+   if (logicalIndex >= count)
+      return;
+   if (list.size() < count)
+      list.resize(count);
+   list[logicalIndex].mod = factor;
+}
 int DKHeaderView::columnGrowFactor(int logicalIndex) const noexcept {
    if (logicalIndex < 0)
       return 0;
@@ -148,7 +183,7 @@ void DKHeaderView::setColumnGrowFactor(int logicalIndex, int factor) {
 int DKHeaderView::columnShrinkFactor(int logicalIndex) const noexcept {
    if (logicalIndex < 0)
       return 0;
-   auto& list = this->_flexColumns;
+   auto& list  = this->_flexColumns;
    auto  count = this->count();
    if (logicalIndex >= count)
       return 0;
@@ -244,38 +279,51 @@ void DKHeaderView::_reapplyColumnFlex(int length) {
          total_factor = total_shrink;
       }
       //
-      int    diff = length - total_basis;
-      double per  = (double)diff / total_factor;
-      //
-      // We need to account for integer rounding errors on these calculations, which would 
-      // result in there being leftover pixels at the end of the header viewport. If we just 
-      // distribute these pixels into arbitrary sections, then we'll end up with jittering 
-      // when the user resizes a section.
-      //
-      // What we need to do instead is actively carry the rounding error from one section 
-      // into the next section. If rounding makes one section 0.33 pixels larger, then it 
-      // should make the next section 0.33 pixels smaller, and vice versa, rather than us 
-      // adding whole pixels to what are essentially random and irrelevant sections.
-      //
-      double carry = 0; // helper for sub-pixel values, to prevent jittering
-      //
-      for (int i = 0; i < count; ++i) {
-         auto& entry = this->_flexColumns[i];
-         if (this->isSectionHidden(i) || entry.hide)
-            continue;
-         int    basis  = std::max(minimum_size, entry.basis + entry.mod);
-         double offset = (per * (entry.*factor)) + carry;
+      if (total_factor == 0) {
          //
-         double rounded = round(offset);
-         entry.render = basis + rounded;
-         if (entry.render < minimum_size) {
-            entry.render = minimum_size;
-            carry = offset - minimum_size;
-         } else {
-            carry = offset - rounded; // The effect of this is that if we round one column up by 0.33px, the next will have its computed width reduced by 0.33px.
+         // We want to [grow|shrink], but we cannot.
+         //
+         for (int i = 0; i < count; ++i) {
+            auto& entry = this->_flexColumns[i];
+            if (this->isSectionHidden(i) || entry.hide)
+               continue;
+            entry.render = std::max(minimum_size, entry.basis + entry.mod);
+            total_render += entry.render;
          }
+      } else {
+         int    diff = length - total_basis;
+         double per  = (double)diff / total_factor;
          //
-         total_render += entry.render;
+         // We need to account for integer rounding errors on these calculations, which would 
+         // result in there being leftover pixels at the end of the header viewport. If we just 
+         // distribute these pixels into arbitrary sections, then we'll end up with jittering 
+         // when the user resizes a section.
+         //
+         // What we need to do instead is actively carry the rounding error from one section 
+         // into the next section. If rounding makes one section 0.33 pixels larger, then it 
+         // should make the next section 0.33 pixels smaller, and vice versa, rather than us 
+         // adding whole pixels to what are essentially random and irrelevant sections.
+         //
+         double carry = 0; // helper for sub-pixel values, to prevent jittering
+         //
+         for (int i = 0; i < count; ++i) {
+            auto& entry = this->_flexColumns[i];
+            if (this->isSectionHidden(i) || entry.hide)
+               continue;
+            int    basis  = std::max(minimum_size, entry.basis + entry.mod);
+            double offset = (per * (entry.*factor)) + carry;
+            //
+            double rounded = round(offset);
+            entry.render = basis + rounded;
+            if (entry.render < minimum_size) {
+               entry.render = minimum_size;
+               carry = offset - minimum_size;
+            } else {
+               carry = offset - rounded; // The effect of this is that if we round one column up by 0.33px, the next will have its computed width reduced by 0.33px.
+            }
+            //
+            total_render += entry.render;
+         }
       }
    }
    //
@@ -327,13 +375,43 @@ void DKHeaderView::modSectionSizeTo(int logicalIndex, int size) {
    if (list.size() < count)
       list.resize(count);
    auto prior = this->sectionSize(logicalIndex);
-   list[logicalIndex].mod = size - prior;
+   list[logicalIndex].mod += size - prior; // += because we should already be applying a `mod`
    this->reapplyColumnFlex();
+}
+
+int DKHeaderView::nextVisibleLogicalSection(int afterLogicalIndex) const {
+   if (afterLogicalIndex < 0)
+      return -1;
+
+   auto count = this->count();
+   if (afterLogicalIndex >= count)
+      return -1;
+
+   int subject_vis = this->visualIndex(afterLogicalIndex);
+   if (subject_vis == -1)
+      return -1;
+
+   for (int i = subject_vis + 1; i < count; ++i) {
+      auto logical = this->logicalIndex(i);
+      if (logical == -1)
+         continue;
+      if (this->isSectionHidden(logical))
+         continue;
+      return logical;
+   }
+   return -1;
 }
 
 void DKHeaderView::resizeEvent(QResizeEvent* event) {
    if (!this->_flexResizeEnabled) {
       QHeaderView::resizeEvent(event);
+      return;
+   }
+   this->reapplyColumnFlex();
+}
+void DKHeaderView::showEvent(QShowEvent* event) {
+   QHeaderView::showEvent(event);
+   if (!this->_flexResizeEnabled) {
       return;
    }
    this->reapplyColumnFlex();

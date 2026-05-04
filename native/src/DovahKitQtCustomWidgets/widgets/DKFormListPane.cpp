@@ -6,6 +6,7 @@
 #include "DKHeaderView.h"
 #if !defined(QT_PLUGIN)
    #include "../editor/open_window_for_form.h"
+   #include "./widget-data/DKCustomFormFilter.h"
 #endif
 
 namespace {
@@ -89,10 +90,11 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       });
    #endif
    view->setSelectionBehavior(QAbstractItemView::SelectRows);
-   view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+   view->setSelectionMode(this->allowMultiSelect() ? QAbstractItemView::ExtendedSelection : QAbstractItemView::SingleSelection);
    view->setCornerButtonEnabled(false);
    view->setAcceptDrops(true);
    view->setDragDropOverwriteMode(false);
+   view->setWordWrap(false);
    {
       auto* header = new DKHeaderView(Qt::Horizontal, view);
       header->setFlexResizeEnabled(true);
@@ -102,7 +104,7 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
       header->setMinimumSectionSize(2);
       header->setColumnFlex(ColumnType,   0, 0, metrics.boundingRect("XMMX").width() * 1.5F + 4);
-      header->setColumnFlex(ColumnName,   1, 0);
+      header->setColumnFlex(ColumnName,   5, 0); // large flex grow factor so that extra columns (which have a default flex of 1) aren't prioritized equally by default
       header->setColumnFlex(ColumnFormID, 0, 0, metrics.boundingRect("00000000").width() * 1.5F + 4); // sets minimum size
       header->modSectionSizeTo(ColumnFormID, 4); // mimics a user resize and shrinks the column
       header->setSectionResizeMode(ColumnType,   QHeaderView::Interactive);
@@ -113,7 +115,18 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       view->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
       view->verticalHeader()->setVisible(this->state.show_indices);
       #if !defined(QT_PLUGIN)
-         this->_model()->setShowIndices(this->state.show_indices);
+      {
+         auto* model = this->_model();
+         model->setAllowDuplicates(this->state.allow_duplicates);
+         model->setShowIndices(this->state.show_indices);
+
+         QObject::connect(model, &DKFormListPaneModel::rowsInserted, this, [this](const QModelIndex&, int first, int last) {
+            emit this->formsAdded(last - first + 1);
+         });
+         QObject::connect(model, &DKFormListPaneModel::rowsRemoved, this, [this](const QModelIndex&, int first, int last) {
+            emit this->formsRemoved(last - first + 1);
+         });
+      }
       #endif
    }
    //
@@ -121,6 +134,32 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       QObject::connect(this->subwidgets.buttons.move_up,   &QPushButton::clicked, this, [this]() { this->_moveSelected(-1); });
       QObject::connect(this->subwidgets.buttons.move_down, &QPushButton::clicked, this, [this]() { this->_moveSelected(1); });
       QObject::connect(this->subwidgets.buttons.remove,    &QPushButton::clicked, this, [this]() { this->_removeSelected(); });
+   #endif
+   #if !defined(QT_PLUGIN)
+      {
+         auto* sel_model = this->subwidgets.view->selectionModel();
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& sel) {
+            if (sel.isEmpty()) {
+               emit selectedRowsChanged({});
+               emit selectedFormsChanged({});
+               return;
+            }
+
+            std::vector<dovah::form_stub*> forms;
+            std::vector<size_t> rows;
+
+            for (auto& sel_item : sel) {
+               int first = sel_item.top();
+               int last  = sel_item.bottom();
+               for (int i = first; i <= last; ++i) {
+                  forms.push_back(this->_model()->getNthStub(i));
+                  rows.push_back(i);
+               }
+            }
+            emit selectedRowsChanged(rows);
+            emit selectedFormsChanged(forms);
+         });
+      }
    #endif
    //
    this->_updateOrientation();
@@ -132,12 +171,16 @@ DKFormListPaneModel* DKFormListPane::_model() const noexcept {
 
 #if !defined(QT_PLUGIN)
    void DKFormListPane::_moveSelected(int down) {
+      if (this->readOnly())
+         return;
       auto* sm = this->subwidgets.view->selectionModel();
       if (!sm)
          return;
       this->_model()->moveStubs(sm->selectedRows(), down);
    }
    void DKFormListPane::_removeSelected() {
+      if (this->readOnly())
+         return;
       auto* sm = this->subwidgets.view->selectionModel();
       if (!sm)
          return;
@@ -145,6 +188,10 @@ DKFormListPaneModel* DKFormListPane::_model() const noexcept {
    }
 #endif
 void DKFormListPane::_updateButtonVisibility() {
+   if (this->readOnly()) {
+      this->subwidgets.buttons.wrapper->setVisible(false);
+      return;
+   }
    auto* prev   = this->subwidgets.buttons.move_up;
    auto* next   = this->subwidgets.buttons.move_down;
    auto* remove = this->subwidgets.buttons.remove;
@@ -229,6 +276,29 @@ void DKFormListPane::_updateOrientation() {
    }
 #endif
 
+void DKFormListPane::setAllowDuplicates(bool v) {
+   this->state.allow_duplicates = v;
+   #if !defined(QT_PLUGIN)
+      this->_model()->setAllowDuplicates(v);
+   #endif
+}
+void DKFormListPane::setAllowMultiSelect(bool v) {
+   auto& dst = this->state.allow_multi_select;
+   if (v == dst)
+      return;
+   dst = v;
+   this->subwidgets.view->setSelectionMode(v ? QAbstractItemView::ExtendedSelection : QAbstractItemView::SingleSelection);
+}
+void DKFormListPane::setReadOnly(bool v) {
+   if (this->readOnly() == v)
+      return;
+   this->state.read_only = v;
+
+   auto* view = this->subwidgets.view;
+   view->setAcceptDrops(!v);
+   this->subwidgets.buttons.wrapper->setEnabled(!v);
+   this->subwidgets.buttons.wrapper->setVisible(!v);
+}
 #if !defined(QT_PLUGIN)
    void DKFormListPane::setAllowedFormTypes(QVector<dovah::form_type> list) {
       this->_model()->setAllowedFormTypes(list);
@@ -267,6 +337,65 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    this->state.show_remove_button = v;
    this->_updateButtonVisibility();
 }
+void DKFormListPane::setNamelessRefDisplayMode(NamelessRefDisplayMode m) {
+   if (this->namelessRefDisplayMode() == m)
+      return;
+   this->state.nameless_ref_display_mode = m;
+   #if !defined(QT_PLUGIN)
+      this->_model()->setNamelessRefsShowBaseEditorID(m == NamelessRefDisplayMode::BaseFormEditorID);
+   #endif
+}
+
+#if !defined(QT_PLUGIN)
+   void DKFormListPane::addExtraColumn(QString header, ExtraColumnHandler&& handler) {
+      this->_model()->addExtraColumn(header, std::forward<ExtraColumnHandler>(handler));
+   }
+   void DKFormListPane::removeExtraColumn(size_t which) {
+      this->_model()->removeExtraColumn(which);
+   }
+#endif
+   
+
+#if !defined(QT_PLUGIN)
+   DKCustomFormFilter* DKFormListPane::customFilter() const {
+      return this->_model()->get_custom_filter();
+   }
+   void DKFormListPane::setCustomFilter(DKCustomFormFilter* v) {
+      this->_model()->set_custom_filter(v);
+   }
+#endif
+   
+
+#if !defined(QT_PLUGIN)
+   [[nodiscard]] std::vector<dovah::form_stub*> DKFormListPane::selectedForms() const {
+      std::vector<dovah::form_stub*> forms;
+
+      auto sel = this->subwidgets.view->selectionModel()->selection();
+      for (auto& sel_item : sel) {
+         int first = sel_item.top();
+         int last  = sel_item.bottom();
+         for (int i = first; i <= last; ++i) {
+            forms.push_back(this->_model()->getNthStub(i));
+         }
+      }
+
+      return forms;
+   }
+   [[nodiscard]] std::vector<size_t> DKFormListPane::selectedRows() const {
+      std::vector<size_t> rows;
+
+      auto sel = this->subwidgets.view->selectionModel()->selection();
+      for (auto& sel_item : sel) {
+         int first = sel_item.top();
+         int last  = sel_item.bottom();
+         for (int i = first; i <= last; ++i) {
+            rows.push_back(i);
+         }
+      }
+
+      return rows;
+   }
+#endif
 
 #if !defined(QT_PLUGIN)
    void DKFormListPane::addStub(dovah::form_stub* stub) {
@@ -275,6 +404,18 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    void DKFormListPane::clear() {
       this->_model()->clear();
    }
+   bool DKFormListPane::contains(const dovah::form_stub* stub) const {
+      return this->indexOf(stub) >= 0;
+   }
+   int DKFormListPane::indexOf(const dovah::form_stub* stub) const {
+      return this->_model()->indexOfStub(stub);
+   }
+   void DKFormListPane::removeStub(dovah::form_stub* stub) {
+      auto* model = this->_model();
+      auto  i     = model->indexOfStub(stub);
+      if (i >= 0)
+         model->removeStub(i);
+   }
    void DKFormListPane::reserve(size_t i) {
       this->_model()->reserve(i);
    }
@@ -282,8 +423,10 @@ void DKFormListPane::setShowRemoveButton(bool v) {
 
 void DKFormListPane::keyPressEvent(QKeyEvent* event) {
    #if !defined(QT_PLUGIN)
-      if (event->matches(QKeySequence::Delete)) {
-         this->_removeSelected();
+      if (!this->readOnly()) {
+         if (event->matches(QKeySequence::Delete)) {
+            this->_removeSelected();
+         }
       }
    #endif
 }

@@ -62,9 +62,25 @@ void DKCompactObjectReferencePicker::setPlaceholder(QString v) {
       auto* prior = this->ref();
       if (stub == prior)
          return;
+      if (auto& f = this->state.validation_function)
+         if (!f(stub))
+            return;
       this->state.value = stub;
       this->_update_text();
       emit this->refChanged(stub);
+   }
+
+   void DKCompactObjectReferencePicker::setValidationFunction(std::function<bool(dovah::form_stub*)>&& func) {
+      this->state.validation_function = std::move(func);
+      if (auto& f = this->state.validation_function)
+         if (!f(this->ref()))
+            this->setRef(nullptr);
+   }
+   void DKCompactObjectReferencePicker::setValidationFunction(const std::function<bool(dovah::form_stub*)>& func) {
+      this->state.validation_function = func;
+      if (auto& f = this->state.validation_function)
+         if (!f(this->ref()))
+            this->setRef(nullptr);
    }
 #endif
 
@@ -95,11 +111,11 @@ void DKCompactObjectReferencePicker::setRequiredFormType(dovah::form_type ft) {
    if (ft == this->requiredFormType())
       return;
    #if !defined(QT_PLUGIN)
-   #if _DEBUG
-      if (!dovah::form_type_is_reference(ft)) {
-         qWarning("DKCompactObjectReferencePicker is being told to require a form type that isn't REFR or a subclass; no forms will qualify");
-      }
-   #endif
+      #if _DEBUG
+         if (!dovah::form_type_is_reference(ft)) {
+            qWarning("DKCompactObjectReferencePicker is being told to require a form type that isn't REFR or a subclass; no forms will qualify");
+         }
+      #endif
    #endif
    this->state.required_form_type = ft;
    #if !defined(QT_PLUGIN)

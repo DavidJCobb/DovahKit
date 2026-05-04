@@ -67,11 +67,11 @@ DKTopicOrSubtypePicker::DKTopicOrSubtypePicker(QWidget* parent) : QWidget(parent
       #if !defined(QT_PLUGIN)
          auto* model  = new model_type(widget);
          widget->setModel(model);
-         QObject::connect(model, &QAbstractItemModel::rowsInserted, this, [this]() {
-            this->_subwidgets.form->setEnabled(this->_subwidgets.form->count() > 0);
+         QObject::connect(model, &QAbstractItemModel::rowsInserted, this, [this, model]() {
+            this->_subwidgets.form->setEnabled(model->rowCount({}) != 0);
          });
-         QObject::connect(model, &QAbstractItemModel::rowsRemoved, this, [this]() {
-            this->_subwidgets.form->setEnabled(this->_subwidgets.form->count() > 0);
+         QObject::connect(model, &QAbstractItemModel::rowsRemoved, this, [this, model]() {
+            this->_subwidgets.form->setEnabled(model->rowCount({}) != 0);
          });
          QObject::connect(model, &model_type::filled, this, [this]() {
             auto* model = this->_rawModel();
@@ -94,6 +94,8 @@ DKTopicOrSubtypePicker::DKTopicOrSubtypePicker(QWidget* parent) : QWidget(parent
                emit valueChanged(this->_topic, this->_subtype);
             }
          });
+         if (model->rowCount({}) != 0)
+            this->_setSubwidgetEnableState(true);
       #endif
    }
 
@@ -202,15 +204,13 @@ bool DKTopicOrSubtypePicker::_wouldAllowFormStub(const dovah::form_stub& stub) c
    return (stub.form_type == dovah::form_type::topic);
 }
 
-/*virtual*/ void DKTopicOrSubtypePicker::changeEvent(QEvent* event) /*override*/ {
+/*virtual*/ void DKTopicOrSubtypePicker::showEvent(QShowEvent* event) /*override*/ {
    //
    // If the widget is attached to the UI without ever having parameters configured 
    // on it (i.e. the stock defaults), then we need to populate the widget at that 
    // time.
    //
    if (!this->_state.needs_initial_fill)
-      return;
-   if (event->type() != QEvent::ParentChange)
       return;
    this->_state.needs_initial_fill = false;
    this->_updateForms();
