@@ -63,7 +63,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tabBase">
       <attribute name="title">
@@ -266,6 +266,173 @@
       <attribute name="title">
        <string>Objectives</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,1">
+       <item>
+        <layout class="QVBoxLayout" name="objectivesLayout">
+         <item>
+          <widget class="QTableView" name="objectives">
+           <property name="whatsThis">
+            <string>&lt;p&gt;A quest objective is a piece of text that can be displayed to the player; it can optionally be paired with a list of targets to be indicated on the player's HUD, compass, and maps. If you think of a quest as a checklist of steps to complete, an objective is a single checkbox in that list. A quest can have multiple objectives. Objectives are initially hidden from the player, and can be revealed to the player and checked off using Papyrus script functions.&lt;/p&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="currentObjectiveGroupbox">
+           <property name="title">
+            <string>Selected objective</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_10">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Index:</string>
+              </property>
+              <property name="buddy">
+               <cstring>objectiveID</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer_6">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="objectiveID">
+              <property name="whatsThis">
+               <string>A number identifying this objective. Papyrus scripts are used to show, hide, and check off objectives, and they use this number to refer to a given objective. There is no other significance to this number; you don't need to put the objectives in any particular order, for example.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="maximum">
+               <number>65535</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QCheckBox" name="objectiveFlagOR">
+              <property name="text">
+               <string>OR'd with previous</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Text:</string>
+              </property>
+              <property name="buddy">
+               <cstring>objectiveText</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" colspan="3">
+             <widget class="QLineEdit" name="objectiveText">
+              <property name="whatsThis">
+               <string>&lt;p&gt;This text is displayed in the following places in-game:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;On the HUD as a center-screen notification, when the objective is made visible and when it is completed or failed.&lt;/li&gt;
+   &lt;li&gt;On the quest page in the player's Journal menu.&lt;/li&gt;
+   &lt;li&gt;Next to the markers for each of the objective's quest targets, on the world and local maps.&lt;/li&gt;
+&lt;/ul&gt;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="objectiveTargetsLayout">
+         <item>
+          <widget class="QTableView" name="objectiveTargets">
+           <property name="whatsThis">
+            <string>&lt;p&gt;The quest targets for this objective. If the player chooses to track the objective, then each of its targets will (subject to the conditions they're assigned in this list) have markers displayed over them on the player's HUD, compass, and world and local maps. If a target is not in the loaded area, the game will use its pathfinding algorithm to find the shortest unobstructed path to the target, and then display a marker over the nearest load door along that path.&lt;/p&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="currentTargetGroupbox">
+           <property name="title">
+            <string>Selected target</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_11">
+            <item row="0" column="1">
+             <widget class="QComboBox" name="targetAlias"/>
+            </item>
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="3">
+             <widget class="QCheckBox" name="targetFlagIgnoreLocks">
+              <property name="whatsThis">
+               <string>If the player tracks an objective, and one of that objective's targets isn't in the loaded area, the game will compute the shortest path to that target and then display a marker over the nearest load door along that path. This checkbox controls whether the pathing algorithm avoids locked doors in favor of other paths.</string>
+              </property>
+              <property name="text">
+               <string>Compass markers ignore locks</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Target Alias:</string>
+              </property>
+              <property name="buddy">
+               <cstring>targetAlias</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="4">
+             <widget class="QGroupBox" name="targetConditionsGroupbox">
+              <property name="title">
+               <string>Conditions</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_3">
+               <item>
+                <widget class="DKConditionList" name="targetConditions">
+                 <property name="whatsThis">
+                  <string>&lt;p&gt;The conditions under which this target should be marked on the player's HUD, compass, and world and local maps.&lt;/p&gt;
+&lt;p&gt;Note that for these conditions, the quest target is the &quot;Subject.&quot; Setting conditions to run on the &quot;Target&quot; is not valid.&lt;/p&gt;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tabAliases">
       <attribute name="title">
@@ -444,8 +611,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>519</width>
-              <height>377</height>
+              <width>517</width>
+              <height>373</height>
              </rect>
             </property>
            </widget>
@@ -574,11 +741,34 @@
   <tabstop>flagWarnOnAliasFillFailure</tabstop>
   <tabstop>flagAllowRepeatedStages</tabstop>
   <tabstop>flagExcludeFromDialogueExport</tabstop>
+  <tabstop>textDisplayGlobals</tabstop>
   <tabstop>priority</tabstop>
-  <tabstop>buttonCancel</tabstop>
-  <tabstop>buttonOK</tabstop>
+  <tabstop>dialogueConditions</tabstop>
+  <tabstop>objectives</tabstop>
+  <tabstop>objectiveID</tabstop>
+  <tabstop>objectiveFlagOR</tabstop>
+  <tabstop>objectiveText</tabstop>
+  <tabstop>objectiveTargets</tabstop>
+  <tabstop>targetAlias</tabstop>
+  <tabstop>targetFlagIgnoreLocks</tabstop>
+  <tabstop>targetConditions</tabstop>
   <tabstop>aliasList</tabstop>
+  <tabstop>buttonDialogueHelp</tabstop>
   <tabstop>dialogueTabbox</tabstop>
+  <tabstop>scenePicker</tabstop>
+  <tabstop>sceneEditorID</tabstop>
+  <tabstop>buttonSceneProperties</tabstop>
+  <tabstop>buttonSceneActorBehavior</tabstop>
+  <tabstop>buttonSceneActorParticipation</tabstop>
+  <tabstop>flagStartSceneWithQuest</tabstop>
+  <tabstop>flagEndQuestWithScene</tabstop>
+  <tabstop>sceneScrollbox</tabstop>
+  <tabstop>buttonSceneZoomIn</tabstop>
+  <tabstop>buttonSceneZoomOut</tabstop>
+  <tabstop>sceneShowAllText</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
  </tabstops>
  <resources/>
  <connections/>

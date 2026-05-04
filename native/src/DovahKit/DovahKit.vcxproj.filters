@@ -435,9 +435,6 @@
     <ClCompile Include="ui\main_window\object_window\object_window_treeview.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="helpers\lua\isempty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -4141,6 +4138,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\helpers\update_active_file_seq_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestTabObjectives.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestObjectivesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestObjectiveTargetsModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -10325,6 +10331,12 @@
     <ClInclude Include="dovahscript\api_helpers\native_lists\index_of_value.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\arrays\construct_from.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\quest\QuestObjectiveTargetsModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10385,9 +10397,6 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui">
@@ -10948,9 +10957,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h">
@@ -11833,6 +11839,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKProgressBar.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestTabObjectives.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestObjectivesModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

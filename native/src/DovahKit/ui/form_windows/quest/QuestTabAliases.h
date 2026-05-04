@@ -3,8 +3,6 @@
 #include <QAction>
 #include <QMenu>
 #include <QTableView>
-#include "dovah/form_stub.h"
-
 namespace dovah {
    namespace loaded_forms {
       class Alias;
@@ -24,6 +22,8 @@ class QuestTabAliases : public QObject {
 
       void setupUi();
 
+      constexpr const QuestAliasesModel* model() const noexcept { return this->_model; }
+
       struct {
          struct {
             QMenu menu;
@@ -38,7 +38,7 @@ class QuestTabAliases : public QObject {
       
    protected:
       quest_form_type&   working_quest;
-      QuestAliasesModel* model = nullptr;
+      QuestAliasesModel* _model = nullptr;
 
       void edit_selected_alias();
 };

@@ -3,8 +3,8 @@
 #include "dovah/form_stub_addenda.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "./odds_and_ends/quest_tab_stages.h"
-#include "./odds_and_ends/quest_tab_objectives.h"
 #include "./quest/QuestTabAliases.h"
+#include "./quest/QuestTabObjectives.h"
 #include "./quest/QuestTabScenes.h"
 
 #include "ui/utils/bind.h"
@@ -90,8 +90,7 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
          page->setLayout(layout);
       };
       
-      _insert(1, (this->tabs.stages     = new QuestTabStages(stub, *this->form, *this->ui.scriptListPane)));
-      _insert(2, (this->tabs.objectives = new QuestTabObjectives(stub, *this->form)));
+      _insert(1, (this->tabs.stages = new QuestTabStages(stub, *this->form, *this->ui.scriptListPane)));
    }
    {
       auto* ds = this->data.dialogue_datastore;
@@ -143,39 +142,65 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
       );
    }
    #pragma endregion
-   
-   {  // Aliases tab
-      auto* manager = this->tabs.aliases = new QuestTabAliases(*this->form, this);
-      manager->ui.view = this->ui.aliasList;
-      manager->setupUi();
-   }
-   {  // Scene tab
-      auto* manager = this->tabs.scenes = new QuestTabScenes(*this->form, *this->data.dialogue_datastore, this);
-      manager->ui = {
-         .buttons = {
-            .zoom_in  = this->ui.buttonSceneZoomIn,
-            .zoom_out = this->ui.buttonSceneZoomOut,
-         },
-         .show_all_text = this->ui.sceneShowAllText,
 
-         .scene_picker = this->ui.scenePicker,
+   #pragma region Tabs
+      {  // Objectives tab
+         auto* manager = this->tabs.objectives = new QuestTabObjectives(*this->form, this);
+         manager->ui = decltype(QuestTabObjectives::ui){
+            .objectives = {
+               .current = {
+                  .flag_or = this->ui.objectiveFlagOR,
+                  .index   = this->ui.objectiveID,
+                  .text    = this->ui.objectiveText,
+               },
+               .view = this->ui.objectives,
+            },
+            .targets = {
+               .current = {
+                  .alias        = this->ui.targetAlias,
+                  .conditions   = this->ui.targetConditions,
+                  .ignore_locks = this->ui.targetFlagIgnoreLocks,
+               },
+               .view = this->ui.objectiveTargets,
+            },
+         };
+         manager->setupUi();
+      }
+      {  // Aliases tab
+         auto* manager = this->tabs.aliases = new QuestTabAliases(*this->form, this);
+         manager->ui.view = this->ui.aliasList;
+         manager->setupUi();
 
-         .current_scene = {
+         this->tabs.objectives->setAliasesModel(manager->model());
+      }
+      {  // Scene tab
+         auto* manager = this->tabs.scenes = new QuestTabScenes(*this->form, *this->data.dialogue_datastore, this);
+         manager->ui = {
             .buttons = {
-               .actor_behavior      = this->ui.buttonSceneActorBehavior,
-               .actor_participation = this->ui.buttonSceneActorParticipation,
+               .zoom_in  = this->ui.buttonSceneZoomIn,
+               .zoom_out = this->ui.buttonSceneZoomOut,
             },
-            .editor_id = this->ui.sceneEditorID,
-            .flags = {
-               .start_scene_with_quest = this->ui.flagStartSceneWithQuest,
-               .end_quest_with_scene   = this->ui.flagEndQuestWithScene,
+            .show_all_text = this->ui.sceneShowAllText,
+
+            .scene_picker = this->ui.scenePicker,
+
+            .current_scene = {
+               .buttons = {
+                  .actor_behavior      = this->ui.buttonSceneActorBehavior,
+                  .actor_participation = this->ui.buttonSceneActorParticipation,
+               },
+               .editor_id = this->ui.sceneEditorID,
+               .flags = {
+                  .start_scene_with_quest = this->ui.flagStartSceneWithQuest,
+                  .end_quest_with_scene   = this->ui.flagEndQuestWithScene,
+               },
+               .editor_scrollbox = this->ui.sceneScrollbox,
+               .editor = nullptr,
             },
-            .editor_scrollbox = this->ui.sceneScrollbox,
-            .editor = nullptr,
-         },
-      };
-      manager->setupUi();
-   }
+         };
+         manager->setupUi();
+      }
+   #pragma endregion
 
    {  // "Help" button on dialogue tab
       auto* sub_tabbox = this->ui.dialogueTabbox;

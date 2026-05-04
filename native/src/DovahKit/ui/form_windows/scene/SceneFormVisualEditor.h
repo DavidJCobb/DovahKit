@@ -210,8 +210,8 @@ class SceneFormVisualEditor : public QWidget {
       void _update_cached_internal_relationships();
       void _update_geometry();
 
-      void _recache_action(DialogueAction&);
-      void _recache_action(PackageAction&);
+      void _recache_action(SceneFormVisualEditor_impl::DialogueAction&);
+      void _recache_action(SceneFormVisualEditor_impl::PackageAction&);
       void _on_form_deleted(dovah::form_stub&);
       void _on_form_modified(dovah::form_stub&);
 };

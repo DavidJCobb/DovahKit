@@ -10,12 +10,12 @@
 #include "ui/utils/typical_tableview_config.h"
 
 QuestTabAliases::QuestTabAliases(quest_form_type& quest, QWidget* parent) : QObject(parent), working_quest(quest) {
-   this->model = new QuestAliasesModel(quest, this);
+   this->_model = new QuestAliasesModel(quest, this);
 }
 QuestTabAliases::~QuestTabAliases() {
 }
 void QuestTabAliases::setupUi() {
-   this->ui.view->setModel(this->model);
+   this->ui.view->setModel(this->_model);
    this->ui.view->setWordWrap(false);
    ui::set_custom_context_menu(*this->ui.view, this->ui.context.menu);
    ui::typical_tableview_config(this->ui.view);
@@ -50,7 +50,7 @@ void QuestTabAliases::setupUi() {
          auto* action = actions.create_loc = new QAction(tr("New Location Alias"));
          menu.addAction(action);
          QObject::connect(action, &QAction::triggered, this, [this]() {
-            auto qmi = this->model->createLocAlias();
+            auto qmi = this->_model->createLocAlias();
             if (!qmi.isValid())
                return;
             {
@@ -65,7 +65,7 @@ void QuestTabAliases::setupUi() {
          auto* action = actions.create_loc = new QAction(tr("New Reference Alias"));
          menu.addAction(action);
          QObject::connect(action, &QAction::triggered, this, [this]() {
-            auto qmi = this->model->createRefAlias();
+            auto qmi = this->_model->createRefAlias();
             if (!qmi.isValid())
                return;
             {
@@ -83,7 +83,7 @@ void QuestTabAliases::setupUi() {
             auto rows = this->ui.view->selectionModel()->selectedRows();
             if (rows.empty())
                return;
-            this->model->deleteAlias(rows[0]);
+            this->_model->deleteAlias(rows[0]);
          });
       }
    }
@@ -98,7 +98,7 @@ void QuestTabAliases::edit_selected_alias() {
    if (rows.empty())
       return;
    auto  qmi   = rows[0];
-   auto* alias = this->model->alias(qmi);
+   auto* alias = this->_model->alias(qmi);
    if (!alias)
       return;
 
@@ -120,5 +120,5 @@ void QuestTabAliases::edit_selected_alias() {
    } else {
       return;
    }
-   this->model->onAliasChanged(qmi);
+   this->_model->onAliasChanged(qmi);
 }

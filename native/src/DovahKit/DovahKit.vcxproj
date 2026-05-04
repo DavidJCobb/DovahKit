@@ -1125,7 +1125,10 @@
     <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchlessTopicsModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueTabBody.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueTopicInfosModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestObjectivesModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestObjectiveTargetsModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestTabAliases.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestTabObjectives.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestTabScenes.cpp" />
     <ClCompile Include="ui\form_windows\race.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
@@ -1138,7 +1141,6 @@
     <ClCompile Include="ui\form_windows\light.cpp" />
     <ClCompile Include="ui\form_windows\misc_item.cpp" />
     <ClCompile Include="ui\form_windows\note.cpp" />
-    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\outfit.cpp" />
@@ -2328,10 +2330,14 @@
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
+    <ClInclude Include="helpers\arrays\construct_from.h" />
     <ClInclude Include="helpers\attributes\forceinline.h" />
     <ClInclude Include="helpers\lua\for_each_in_pairs.h" />
     <ClInclude Include="helpers\tuples\all_types_match_functor.h" />
     <ClInclude Include="helpers\tuples\for_each_nttp_value.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestTabObjectives.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestObjectivesModel.h" />
+    <ClInclude Include="ui\form_windows\quest\QuestObjectiveTargetsModel.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
@@ -3853,7 +3859,6 @@
     <QtMoc Include="ui\form_windows\quest.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
-    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
     <ClInclude Include="lua.h" />
     <QtMoc Include="ui\generic\CanvasWidget.h" />
     <QtMoc Include="ui\generic\ObservableStandardItemModel.h" />
@@ -4012,7 +4017,6 @@
     <QtUic Include="ui\form_windows\potion.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.ui" />
-    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
     <QtUic Include="ui\form_windows\outfit.ui" />

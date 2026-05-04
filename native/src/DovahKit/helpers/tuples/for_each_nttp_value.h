@@ -25,6 +25,6 @@ namespace cobb::tuples {
       using tuple_type    = std::decay_t<decltype(Tuple)>;
       using sequence_type = std::make_index_sequence<std::tuple_size_v<tuple_type>>;
 
-      impl::for_each_nttp_value<sequence_type>::template execute<Tuple, Functor>(std::forward<Args>(args)...);
+      impl::for_each_nttp_value<sequence_type>::template execute<Tuple, Functor, Args...>(std::forward<Args>(args)...);
    }
 }

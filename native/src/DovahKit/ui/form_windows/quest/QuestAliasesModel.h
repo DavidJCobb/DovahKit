@@ -71,7 +71,10 @@ class QuestAliasesModel : public QAbstractItemModel {
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
       #pragma endregion
 
+      const dovah::loaded_forms::Alias* alias(const QModelIndex&) const;
       dovah::loaded_forms::Alias* alias(const QModelIndex&);
+      const dovah::loaded_forms::Alias* aliasByID(int32_t) const;
+      dovah::loaded_forms::Alias* aliasByID(int32_t);
 
       QModelIndex createRefAlias();
       QModelIndex createLocAlias();

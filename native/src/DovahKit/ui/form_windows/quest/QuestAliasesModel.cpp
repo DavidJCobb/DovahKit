@@ -270,6 +270,21 @@ QuestAliasesModel::QuestAliasesModel(dovah::loaded_forms::Quest& q, QObject* par
             if (it != this->_cache.end())
                cache = &it->second;
          }
+         if (role == Qt::EditRole) {
+            switch (index.column()) {
+               case Column::Name:
+                  return QString::fromStdString(alias.name);
+               case Column::ID:
+                  return alias.id;
+               case Column::Optional:
+                  return (bool)(alias.flags & alias_flag::optional);
+               case Column::Type:
+                  return (int)alias.type;
+               case Column::Flags:
+                  return alias.flags;
+            }
+            return {};
+         }
          if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
             switch (index.column()) {
                case Column::Name:
@@ -411,7 +426,7 @@ QuestAliasesModel::QuestAliasesModel(dovah::loaded_forms::Quest& q, QObject* par
    }
 #pragma endregion
 
-dovah::loaded_forms::Alias* QuestAliasesModel::alias(const QModelIndex& qmi) {
+const dovah::loaded_forms::Alias* QuestAliasesModel::alias(const QModelIndex& qmi) const {
    if (qmi.model() != this)
       return nullptr;
    if (!qmi.isValid())
@@ -419,6 +434,15 @@ dovah::loaded_forms::Alias* QuestAliasesModel::alias(const QModelIndex& qmi) {
    if (qmi.row() >= this->_quest.aliases.size())
       return nullptr;
    return this->_quest.aliases[qmi.row()];
+}
+dovah::loaded_forms::Alias* QuestAliasesModel::alias(const QModelIndex& qmi) {
+   return const_cast<dovah::loaded_forms::Alias*>(std::as_const(*this).alias(qmi));
+}
+const dovah::loaded_forms::Alias* QuestAliasesModel::aliasByID(int32_t id) const {
+   return this->_quest.lookup_alias_by_id(id);
+}
+dovah::loaded_forms::Alias* QuestAliasesModel::aliasByID(int32_t id) {
+   return const_cast<dovah::loaded_forms::Alias*>(std::as_const(*this).aliasByID(id));
 }
 
 QModelIndex QuestAliasesModel::createRefAlias() {
