@@ -74,8 +74,6 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
    }
    this->ui.priority->setRange(0, 255);
    //
-   this->load(); // this creates the working copy. we need that on hand before we create our tab-body widgets
-   //
    this->ui.tabWidget->setCurrentIndex(0);
    this->ui.dialogueTabbox->setCurrentIndex(0);
    //
@@ -237,6 +235,8 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
          );
       });
    }
+
+   this->load();
 }
 void FormDialogQuest::_load_impl() {
    auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
