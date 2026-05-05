@@ -82,6 +82,11 @@ void QuestTabObjectives::setupUi() {
 
       QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &QuestTabObjectives::_on_objective_selected);
 
+      // Loading data into the model fires `modelReset`, which means we're basically pretending to delete 
+      // the no-objective QMI, which means the targets tableview ceases to use that as its root index. If 
+      // we call `_on_objective_selected`, it should get that fixed right up.
+      QObject::connect(model, &QAbstractItemModel::modelReset, this, &QuestTabObjectives::_on_objective_selected);
+
       QObject::connect(this->ui.objectives.current.flag_or, &QCheckBox::toggled, this, &QuestTabObjectives::_on_objective_data_edited);
       QObject::connect(this->ui.objectives.current.index,   qOverload<int>(&QSpinBox::valueChanged), this, &QuestTabObjectives::_on_objective_data_edited);
       QObject::connect(this->ui.objectives.current.text,    &QLineEdit::textEdited, this, &QuestTabObjectives::_on_objective_data_edited);
@@ -93,7 +98,6 @@ void QuestTabObjectives::setupUi() {
 
       view->setModel(model);
       view->setWordWrap(false);
-      view->setRootIndex(model->mapFromSource(this->models.objectives->noObjectiveQMI()));
       ui::set_custom_context_menu(*view, context.menu);
       ui::typical_tableview_config(view);
       ui::size_tableview_columns<std::array<ui::tableview_column_spec, QuestObjectiveTargetsModel::ColumnCount>{
@@ -153,6 +157,8 @@ void QuestTabObjectives::setupUi() {
          this->models.targets->setTargetConditions(qmi, std::move(list));
       });
    }
+
+   this->_on_objective_selected();
 }
 void QuestTabObjectives::setAliasesModel(const QuestAliasesModel* model) {
    this->models.objectives->setAliasesModel(model);
@@ -251,10 +257,11 @@ QModelIndex QuestTabObjectives::_selected_objective_qmi() {
 void QuestTabObjectives::_on_objective_selected() {
    using model_type = QuestObjectivesModel;
 
-   const auto widgets = std::array<QWidget*, 3>{
+   const auto widgets = std::array<QWidget*, 4>{
       this->ui.objectives.current.flag_or,
       this->ui.objectives.current.index,
-      this->ui.objectives.current.text
+      this->ui.objectives.current.text,
+      this->ui.targets.view,
    };
    const auto blockers = cobb::arrays::construct_from<QSignalBlocker, QWidget*>(widgets);
 
@@ -266,6 +273,7 @@ void QuestTabObjectives::_on_objective_selected() {
       this->ui.objectives.current.index->setValue(0);
       this->ui.objectives.current.text->setText({});
       this->ui.targets.view->setRootIndex(this->models.targets->mapFromSource(this->models.objectives->noObjectiveQMI()));
+      this->ui.targets.view->selectionModel()->select(QModelIndex{}, QItemSelectionModel::SelectionFlag::ClearAndSelect);
       this->_on_target_selected();
       return;
    }
@@ -277,6 +285,7 @@ void QuestTabObjectives::_on_objective_selected() {
    this->ui.objectives.current.text->setText(qmi.data(model_type::TextRole).toString());
 
    this->ui.targets.view->setRootIndex(this->models.targets->mapFromSource(qmi));
+   this->ui.targets.view->selectionModel()->select(QModelIndex{}, QItemSelectionModel::SelectionFlag::ClearAndSelect);
    this->_on_target_selected();
 }
 void QuestTabObjectives::_on_objective_data_edited() {

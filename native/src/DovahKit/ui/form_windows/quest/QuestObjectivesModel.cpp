@@ -267,6 +267,8 @@ void QuestObjectivesModel::setAliasesModel(const QuestAliasesModel* model) {
       /*virtual*/ int QuestObjectivesModel::rowCount(const QModelIndex& parent) const /*override*/ {
          if (!parent.isValid())
             return this->_data.size();
+         if (_is_no_objective_qmi(parent))
+            return 0;
          auto* objective = _qmi_to_objective(parent);
          if (!objective)
             return 0;

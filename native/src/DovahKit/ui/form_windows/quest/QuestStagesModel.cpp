@@ -249,6 +249,8 @@ void QuestStagesModel::save(loaded_form_data& dst_form) {
       /*virtual*/ int QuestStagesModel::rowCount(const QModelIndex& parent) const /*override*/ {
          if (!parent.isValid())
             return this->_stages.size();
+         if (_is_no_stage_qmi(parent))
+            return 0;
          auto* stage = _qmi_to_stage(parent);
          if (!stage)
             return 0;

@@ -59,7 +59,6 @@ void QuestTabStages::setupUi() {
 
       view->setModel(model);
       view->setWordWrap(false);
-      view->setRootIndex(model->mapFromSource(this->models.stages->noStageQMI()));
       ui::typical_tableview_config(view);
       ui::size_tableview_columns<std::array<ui::tableview_column_spec, QuestStageLogEntriesModel::ColumnCount>{
          ui::tableview_column_spec{ // Log Entry Text
@@ -88,6 +87,11 @@ void QuestTabStages::setupUi() {
 
       QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &QuestTabStages::_on_log_entry_selected);
 
+      // Loading data into the model fires `modelReset`, which means we're basically pretending to delete 
+      // the no-stage QMI, which means the log entries tableview ceases to use that as its root index. If 
+      // we call `_on_stage_selected`, it should get that fixed right up.
+      QObject::connect(model, &QAbstractItemModel::modelReset, this, &QuestTabStages::_on_stage_selected);
+
       QObject::connect(this->ui.log_entries.current.complete,    &QCheckBox::toggled, this, &QuestTabStages::_on_log_entry_data_edited);
       QObject::connect(this->ui.log_entries.current.conditions,  &DKConditionList::changed, this, &QuestTabStages::_on_log_entry_data_edited);
       QObject::connect(this->ui.log_entries.current.fail,        &QCheckBox::toggled, this, &QuestTabStages::_on_log_entry_data_edited);
@@ -96,6 +100,8 @@ void QuestTabStages::setupUi() {
       QObject::connect(this->ui.log_entries.current.next_quest,  &DKFormPicker::formChanged, this, &QuestTabStages::_on_log_entry_data_edited);
       QObject::connect(this->ui.log_entries.current.text,        &QPlainTextEdit::textChanged, this, &QuestTabStages::_on_log_entry_data_edited);
    }
+
+   this->_on_stage_selected();
 }
 
 void QuestTabStages::load() {
@@ -114,11 +120,12 @@ QModelIndex QuestTabStages::_selected_stage_qmi() {
 void QuestTabStages::_on_stage_selected() {
    using model_type = QuestStagesModel;
 
-   const auto widgets = std::array<QWidget*, 4>{
+   const auto widgets = std::array<QWidget*, 5>{
       this->ui.stages.current.id,
       this->ui.stages.current.keep_instance_data,
       this->ui.stages.current.shutdown,
-      this->ui.stages.current.startup
+      this->ui.stages.current.startup,
+      this->ui.log_entries.view,
    };
    const auto blockers = cobb::arrays::construct_from<QSignalBlocker, QWidget*>(widgets);
 
@@ -132,6 +139,7 @@ void QuestTabStages::_on_stage_selected() {
       this->ui.stages.current.shutdown->setChecked(false);
       this->ui.stages.current.startup->setChecked(false);
       this->ui.log_entries.view->setRootIndex(this->models.log_entries->mapFromSource(this->models.stages->noStageQMI()));
+      this->ui.log_entries.view->selectionModel()->select(QModelIndex{}, QItemSelectionModel::SelectionFlag::ClearAndSelect);
       this->_on_log_entry_selected();
       return;
    }
@@ -144,6 +152,7 @@ void QuestTabStages::_on_stage_selected() {
    this->ui.stages.current.startup->setChecked(data->startup);
 
    this->ui.log_entries.view->setRootIndex(this->models.log_entries->mapFromSource(qmi));
+   this->ui.log_entries.view->selectionModel()->select(QModelIndex{}, QItemSelectionModel::SelectionFlag::ClearAndSelect);
    this->_on_log_entry_selected();
 }
 void QuestTabStages::_on_stage_data_edited() {
