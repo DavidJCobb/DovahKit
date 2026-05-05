@@ -19,6 +19,19 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
    initialize(stub);
 
    this->data.dialogue_datastore = new QuestAllDialogueDatastore(this);
+
+   {
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) {
+         //
+         // We should never touch this data, but as long as it's lying around, I'd like 
+         // to keep it well-formed.
+         //
+         auto& list = this->form->conditions.event;
+         for (auto& item : list)
+            item.sever_outbound_references_to(*stub, *this->form);
+      });
+   }
    
    this->ui.textDisplayGlobals->setAllowedFormTypes({ dovah::form_type::global });
    {

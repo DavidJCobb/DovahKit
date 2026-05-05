@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>825</width>
-    <height>560</height>
+    <height>570</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,7 +63,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabBase">
       <attribute name="title">
@@ -295,7 +295,7 @@
          <item>
           <widget class="QGroupBox" name="groupBox">
            <property name="title">
-            <string>Selected stage</string>
+            <string>Selected Quest Stage</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_7">
             <item>
@@ -335,6 +335,9 @@
               </item>
               <item>
                <widget class="QCheckBox" name="stageFlagStartup">
+                <property name="whatsThis">
+                 <string>If this box is checked, then this Quest Stage's Items will run every time the quest starts, even if the quest was started by directly &lt;code&gt;SetStage&lt;/code&gt;ing it to a different Quest Stage number.</string>
+                </property>
                 <property name="text">
                  <string>Startup Stage</string>
                 </property>
@@ -358,6 +361,9 @@
               </item>
               <item>
                <widget class="QCheckBox" name="stageFlagShutdown">
+                <property name="whatsThis">
+                 <string>If this box is checked, then this Quest Stage's Items will be run every time the quest stops.</string>
+                </property>
                 <property name="text">
                  <string>Shutdown Stage</string>
                 </property>
@@ -381,6 +387,9 @@
               </item>
               <item>
                <widget class="QCheckBox" name="stageFlagKeepInstanceData">
+                <property name="whatsThis">
+                 <string>&lt;p&gt;If this quest uses Text Replacement, then this flag is required in order to preserve text replacement data in the player's save file. Checking this box will trigger the quest to begin writing that data to the savegame once this Quest Stage has been activated.&lt;/p&gt;</string>
+                </property>
                 <property name="text">
                  <string>Keep instance data from here on</string>
                 </property>
@@ -390,8 +399,11 @@
             </item>
             <item>
              <widget class="QGroupBox" name="groupBox_3">
+              <property name="whatsThis">
+               <string>&lt;p&gt;Quest Stage Items are groups of conditional effects that can occur when a Quest Stage is activated. A single Quest Stage can have multiple Quest Stage Items, each able to specify a log entry, a Papyrus fragment, and other parameters.&lt;/p&gt;</string>
+              </property>
               <property name="title">
-               <string>Log entries</string>
+               <string>Quest Stage Items</string>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_8">
                <item>
@@ -434,7 +446,7 @@
             <item>
              <widget class="QGroupBox" name="groupBox_2">
               <property name="title">
-               <string>Selected log entry</string>
+               <string>Selected Quest Stage Item</string>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
@@ -452,13 +464,25 @@
                     </widget>
                    </item>
                    <item row="3" column="2">
-                    <widget class="DKFormPicker" name="logEntryNextQuest"/>
+                    <widget class="DKFormPicker" name="logEntryNextQuest">
+                     <property name="whatsThis">
+                      <string>This is not used.</string>
+                     </property>
+                    </widget>
                    </item>
                    <item row="1" column="0" colspan="3">
-                    <widget class="QPlainTextEdit" name="logEntryText"/>
+                    <widget class="QPlainTextEdit" name="logEntryText">
+                     <property name="whatsThis">
+                      <string>If a Quest Stage Item has Log Entry text, then that text will become the quest's summary in the player's journal menu. Only the most recent Log Entry is displayed to the player.</string>
+                     </property>
+                    </widget>
                    </item>
                    <item row="3" column="0">
                     <widget class="QCheckBox" name="logEntryFail">
+                     <property name="whatsThis">
+                      <string>&lt;p&gt;If this box is checked, then the activation of this Quest Stage Item will trigger the &quot;Quest Failed&quot; UI pop-up, and move the quest from the &quot;active quests&quot; section of the player's journal menu to the &quot;completed quests&quot; section.&lt;/p&gt;
+&lt;p&gt;This is purely a cosmetic effect. The quest will continue running unless stopped by script.&lt;/p&gt;</string>
+                     </property>
                      <property name="text">
                       <string>Fail Quest</string>
                      </property>
@@ -467,7 +491,7 @@
                    <item row="0" column="0" colspan="3">
                     <widget class="QLabel" name="label_15">
                      <property name="text">
-                      <string>Journal text:</string>
+                      <string>Log Entry:</string>
                      </property>
                      <property name="buddy">
                       <cstring>logEntryText</cstring>
@@ -476,6 +500,10 @@
                    </item>
                    <item row="2" column="0">
                     <widget class="QCheckBox" name="logEntryComplete">
+                     <property name="whatsThis">
+                      <string>&lt;p&gt;If this box is checked, then the activation of this Quest Stage Item will trigger the &quot;Quest Completed&quot; UI pop-up, and move the quest from the &quot;active quests&quot; section of the player's journal menu to the &quot;completed quests&quot; section.&lt;/p&gt;
+&lt;p&gt;This is purely a cosmetic effect. The quest will continue running unless stopped by script.&lt;/p&gt;</string>
+                     </property>
                      <property name="text">
                       <string>Complete Quest</string>
                      </property>
@@ -505,7 +533,11 @@
                 </layout>
                </item>
                <item>
-                <widget class="DKConditionList" name="logEntryConditions"/>
+                <widget class="DKConditionList" name="logEntryConditions">
+                 <property name="whatsThis">
+                  <string>A Quest Stage Item will only activate if its conditions are met at the time that the quest is set to the containing Quest Stage.</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -867,7 +899,7 @@
               <x>0</x>
               <y>0</y>
               <width>517</width>
-              <height>373</height>
+              <height>383</height>
              </rect>
             </property>
            </widget>

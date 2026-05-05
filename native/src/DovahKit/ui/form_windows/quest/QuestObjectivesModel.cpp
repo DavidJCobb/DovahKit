@@ -5,6 +5,7 @@
 #include "dovah/forms/Quest.h"
 #include "editor/core.h"
 #include "editor/helpers/stringify_conditions.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "./QuestAliasesModel.h"
 
 QModelIndex QuestObjectivesModel::noObjectiveQMI() const noexcept {
@@ -105,12 +106,14 @@ void QuestObjectivesModel::load(const loaded_form_data& src_form) {
    this->_data.clear();
    this->_context = ui::types::conditions::context(src_form.stub, true);
    {
+      auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
       this->_data.reserve(src_form.objectives.size());
       for (auto& src_objective : src_form.objectives) {
          auto& dst_objective_ptr = this->_data.emplace_back(std::make_unique<Objective>());
          auto& dst_objective     = *dst_objective_ptr;
          dst_objective.index        = src_objective.index;
          dst_objective.or_with_prev = (bool)(src_objective.flags & loaded_form_data::Objective::flag::or_with_previous);
+         dst_objective.text = gls.convert_localized_string(src_objective.text);
          for (auto& src_target : src_objective.targets) {
             auto& dst_target_ptr = dst_objective.targets.emplace_back(std::make_unique<Target>());
             auto& dst_target     = *dst_target_ptr;
@@ -142,14 +145,16 @@ void QuestObjectivesModel::save(loaded_form_data& dst_form) {
       dst_list.resize(size);
    };
 
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
    _overwrite_list(
       this->_data,
       dst_form.objectives,
-      [&dst_form, &_overwrite_list](const Objective& src_objective, loaded_form_data::Objective& dst_objective) {
+      [&dst_form, &gls, &_overwrite_list](const Objective& src_objective, loaded_form_data::Objective& dst_objective) {
          dst_objective.index = src_objective.index;
          dst_objective.flags = 0;
          if (src_objective.or_with_prev)
             dst_objective.flags |= loaded_form_data::Objective::flag::or_with_previous;
+         gls.assign_localized_string(dst_objective.text, src_objective.text);
          _overwrite_list(
             src_objective.targets,
             dst_objective.targets,

@@ -49,9 +49,31 @@ void QuestTabStages::setupUi() {
       });
 
       QObject::connect(this->ui.stages.current.keep_instance_data, &QCheckBox::toggled, this, &QuestTabStages::_on_stage_data_edited);
-      QObject::connect(this->ui.stages.current.id,       qOverload<int>(&QSpinBox::valueChanged), this, &QuestTabStages::_on_stage_data_edited);
       QObject::connect(this->ui.stages.current.shutdown, &QCheckBox::toggled, this, &QuestTabStages::_on_stage_data_edited);
       QObject::connect(this->ui.stages.current.startup,  &QCheckBox::toggled, this, &QuestTabStages::_on_stage_data_edited);
+      QObject::connect(this->ui.stages.current.id, &QSpinBox::editingFinished, this, [this]() {
+         //
+         // We don't want to let the user change two stages to use the same ID. However, if 
+         // we try to intercept things on `valueChanged`, we'll interfere with typing into 
+         // the spinbox (e.g. you can't type `1000` because you have a stage `100`). We'll 
+         // do it here instead.
+         // 
+         // First, try to commit the user's change. Then, we'll check if it succeeded.
+         //
+         this->_on_stage_data_edited();
+         //
+         const auto* data = this->models.stages->stage(_selected_stage_qmi());
+         if (!data)
+            return;
+         auto* widget = this->ui.stages.current.id;
+         auto  value  = widget->value();
+         if (value == data->id)
+            return;
+         if (this->models.stages->isStageIDAvailable(value))
+            return;
+         const auto blocker = QSignalBlocker(widget);
+         widget->setValue(data->id);
+      });
    }
    {  // Log Entries
       auto* model   = this->models.log_entries;
@@ -91,6 +113,8 @@ void QuestTabStages::setupUi() {
       // the no-stage QMI, which means the log entries tableview ceases to use that as its root index. If 
       // we call `_on_stage_selected`, it should get that fixed right up.
       QObject::connect(model, &QAbstractItemModel::modelReset, this, &QuestTabStages::_on_stage_selected);
+
+      this->ui.log_entries.current.next_quest->setAllowedFormType(dovah::form_type::quest);
 
       QObject::connect(this->ui.log_entries.current.complete,    &QCheckBox::toggled, this, &QuestTabStages::_on_log_entry_data_edited);
       QObject::connect(this->ui.log_entries.current.conditions,  &DKConditionList::changed, this, &QuestTabStages::_on_log_entry_data_edited);

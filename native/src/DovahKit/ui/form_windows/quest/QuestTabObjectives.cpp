@@ -319,7 +319,7 @@ void QuestTabObjectives::_on_target_selected() {
    };
    const auto blockers = cobb::arrays::construct_from<QSignalBlocker>(widgets);
 
-   auto qmi = _selected_objective_qmi();
+   auto qmi = _selected_target_qmi();
    if (!qmi.isValid()) {
       for (auto* widget : widgets)
          widget->setEnabled(false);

@@ -66,6 +66,13 @@ Both `shout` and `shout::word_type` use X-macros, configuration macros, and an i
 [^form_data_params_type]: The `form_data_params_type` type alias is needed so that templates can check whether a given type `T` is directly *or indirectly* templated on form data params. (That capability, in turn, is needed so that functions wishing to visit members of an outer type can tell when they encounter a field that is, itself, contingent on params, i.e. a field over which they should recurse.) It's not sufficient to just check whether `T<Params>` is valid because, using the example above, that wouldn't work for `shout<Params>::word_type`: the `word_type` is not a template in itself, but rather is a non-template member of a template; the only way to tell that `word_type` is contingent on form-data-params is to expose the params as `word_type::form_data_params_type`.
 
 
+## Additional uses for "visit" functions
+
+For a while, I've been considering whether and how DovahKit should handle mistyped form uses, e.g. a form specifying a `STAT` when an `NPC_` was expected. Currently, DovahKit's backend leaves these uses intact when loading form data, merely warning upon encountering them. The frontend's various UI widgets generally end up auto-correcting these uses as you edit forms while using the program, but in general, code can't make assumptions about the type of form that a form use points to, even when the types it *should* point to are known.
+
+I've considered having DovahKit silently correct these form uses to `NONE`, or making that an option that form-data classes are templated on. It occurs to me now that I could write a function that uses `visit_fields` to perform that correction, modifying form-data (managed or unmanaged) in place.
+
+
 ## Potential improvements
 
 In addition to defining "visit" functions, it may be useful to offer a `visit_at_compile_time` function, which would be invoked as `lambda.template operator()<typename FieldType>(std::string_view{field_name})`. This would allow us to run compile-time queries on the types of an object's fields, without needing to default-construct an instance in order to call `visit_fields` on it. Potential uses of these queries include:

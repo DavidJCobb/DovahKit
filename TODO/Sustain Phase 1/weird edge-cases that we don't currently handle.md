@@ -40,6 +40,10 @@ After the game calls `TESForm::Load`, it checks whether the current record comes
 
 ## Form-type-specific edge cases
 
+### Minor things I got wrong
+
+* What I call "log entries" in `QUST` data are actually "quest stage items." Bethesda uses the term "log entry" to refer specifically to the text of a quest stage item, and that text is optional.
+
 ### Placed projectile forms
 
 **BLUF:** Rename the `dovah::form_type` constants for placed projectile forms. When designing editing features, e.g. Render Window features, be mindful that REFR subclasses are not interchangeable: you should not allow: an `ACHR` to have a base form that isn't an actor; nor a `PHZD` to have a base form that isnt' a hazard; nor a `PGRE` or similar to have a base form that isn't a projectile; nor a plain `REFR` to have a base form that *is* an actor, projectile, or hazard.
