@@ -10,6 +10,7 @@
 #include "ui/utils/set_custom_context_menu.h"
 #include "widgets/DKFormPickerDialog.h"
 
+#include "dovah/forms/Quest.h" // for QUST-side event conditions
 #include "dovah/forms/StoryManagerBranchNode.h"
 #include "dovah/forms/StoryManagerEventNode.h"
 #include "dovah/forms/StoryManagerQuestNode.h"
@@ -374,6 +375,11 @@ void FormDialogStoryManagerNodes::_pull_selected_node_to_ui() {
          this->ui.questFieldHoursUntilReset->setValue(v.hours_until_reset);
          this->ui.questFlagResetAfter24Hours->setChecked(v.reset_after_24_hours);
       }
+
+      auto loaded_ptr = stub->load().ptr_cast<dovah::loaded_forms::Quest>();
+      if (loaded_ptr) {
+         this->ui.nodeConditions->importFrom(*loaded_ptr, loaded_ptr->conditions.event);
+      }
    } else {
       this->ui.nodeEditorID->setEnabled(true);
       this->ui.itemFieldsTyped->setCurrentWidget(this->ui.nodeFields);
@@ -425,23 +431,34 @@ void FormDialogStoryManagerNodes::_push_selected_node_from_ui() {
    if (!stub)
       return;
 
+   auto loaded_base = stub->load();
    if (stub->form_type == dovah::form_type::quest) {
       StoryManagerFormsModel::quest_properties v = {
          .hours_until_reset    = (float)this->ui.questFieldHoursUntilReset->value(),
          .reset_after_24_hours = this->ui.questFlagResetAfter24Hours->isChecked(),
       };
       model->setQuestProperties(qmi, v);
+
+      auto loaded_quest = loaded_base.ptr_cast<dovah::loaded_forms::Quest>();
+      assert(!!loaded_quest);
+
+      auto& editor = DovahKitCore::get();
+      emit editor.formModificationImminent(stub);
+      stub->set_edited(true);
+      //
+      this->ui.nodeConditions->exportTo(*loaded_quest, loaded_quest->conditions.event);
+      //
+      emit editor.formModified(stub);
       return;
    }
 
-   auto  loaded_base  = stub->load();
    auto* loaded_mixin = dynamic_cast<loaded_node_base_type*>(&*loaded_base);
    assert(!!loaded_mixin);
 
    auto& editor = DovahKitCore::get();
    emit editor.formModificationImminent(stub);
-   //
    stub->set_edited(true);
+   //
    stub->editorID = this->ui.nodeEditorID->text().toStdString();
    cobb::edit_bit(loaded_mixin->flags, loaded_node_base_type::flag::random, this->ui.nodeFlagRandom->isChecked());
    cobb::edit_bit(loaded_mixin->flags, loaded_node_base_type::flag::warn_if_no_child_quest_started, this->ui.nodeFlagWarnIfNoStart->isChecked());
