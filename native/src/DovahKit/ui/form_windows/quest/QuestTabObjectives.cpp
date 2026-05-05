@@ -93,6 +93,7 @@ void QuestTabObjectives::setupUi() {
 
       view->setModel(model);
       view->setWordWrap(false);
+      view->setRootIndex(model->mapFromSource(this->models.objectives->noObjectiveQMI()));
       ui::set_custom_context_menu(*view, context.menu);
       ui::typical_tableview_config(view);
       ui::size_tableview_columns<std::array<ui::tableview_column_spec, QuestObjectiveTargetsModel::ColumnCount>{
@@ -154,6 +155,7 @@ void QuestTabObjectives::setupUi() {
    }
 }
 void QuestTabObjectives::setAliasesModel(const QuestAliasesModel* model) {
+   this->models.objectives->setAliasesModel(model);
    if (this->aliases_model) {
       QObject::disconnect(this->aliases_model, nullptr, this, nullptr);
    }
@@ -263,7 +265,8 @@ void QuestTabObjectives::_on_objective_selected() {
       this->ui.objectives.current.flag_or->setChecked(false);
       this->ui.objectives.current.index->setValue(0);
       this->ui.objectives.current.text->setText({});
-      this->ui.targets.view->setRootIndex(this->models.objectives->noObjectiveQMI());
+      this->ui.targets.view->setRootIndex(this->models.targets->mapFromSource(this->models.objectives->noObjectiveQMI()));
+      this->_on_target_selected();
       return;
    }
    for (auto* widget : widgets)
@@ -273,7 +276,8 @@ void QuestTabObjectives::_on_objective_selected() {
    this->ui.objectives.current.index->setValue(qmi.data(model_type::IndexRole).toInt());
    this->ui.objectives.current.text->setText(qmi.data(model_type::TextRole).toString());
 
-   this->ui.targets.view->setRootIndex(qmi);
+   this->ui.targets.view->setRootIndex(this->models.targets->mapFromSource(qmi));
+   this->_on_target_selected();
 }
 void QuestTabObjectives::_on_objective_data_edited() {
    using model_type = QuestObjectivesModel;

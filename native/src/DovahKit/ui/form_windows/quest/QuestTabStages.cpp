@@ -59,6 +59,7 @@ void QuestTabStages::setupUi() {
 
       view->setModel(model);
       view->setWordWrap(false);
+      view->setRootIndex(model->mapFromSource(this->models.stages->noStageQMI()));
       ui::typical_tableview_config(view);
       ui::size_tableview_columns<std::array<ui::tableview_column_spec, QuestStageLogEntriesModel::ColumnCount>{
          ui::tableview_column_spec{ // Log Entry Text
@@ -130,7 +131,8 @@ void QuestTabStages::_on_stage_selected() {
       this->ui.stages.current.keep_instance_data->setChecked(false);
       this->ui.stages.current.shutdown->setChecked(false);
       this->ui.stages.current.startup->setChecked(false);
-      this->ui.log_entries.view->setRootIndex(this->models.stages->noStageQMI());
+      this->ui.log_entries.view->setRootIndex(this->models.log_entries->mapFromSource(this->models.stages->noStageQMI()));
+      this->_on_log_entry_selected();
       return;
    }
    for (auto* widget : widgets)
@@ -141,7 +143,8 @@ void QuestTabStages::_on_stage_selected() {
    this->ui.stages.current.shutdown->setChecked(data->shutdown);
    this->ui.stages.current.startup->setChecked(data->startup);
 
-   this->ui.log_entries.view->setRootIndex(qmi);
+   this->ui.log_entries.view->setRootIndex(this->models.log_entries->mapFromSource(qmi));
+   this->_on_log_entry_selected();
 }
 void QuestTabStages::_on_stage_data_edited() {
    using model_type = QuestStagesModel;
