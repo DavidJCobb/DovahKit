@@ -258,18 +258,16 @@ void QuestTabObjectives::_on_objective_selected() {
 
    auto qmi = _selected_objective_qmi();
    if (!qmi.isValid()) {
-      this->ui.objectives.current.flag_or->setEnabled(false);
-      this->ui.objectives.current.index->setEnabled(false);
-      this->ui.objectives.current.text->setEnabled(false);
+      for (auto* widget : widgets)
+         widget->setEnabled(false);
       this->ui.objectives.current.flag_or->setChecked(false);
       this->ui.objectives.current.index->setValue(0);
       this->ui.objectives.current.text->setText({});
       this->ui.targets.view->setRootIndex(this->models.objectives->noObjectiveQMI());
       return;
    }
-   this->ui.objectives.current.flag_or->setEnabled(true);
-   this->ui.objectives.current.index->setEnabled(true);
-   this->ui.objectives.current.text->setEnabled(true);
+   for (auto* widget : widgets)
+      widget->setEnabled(true);
 
    this->ui.objectives.current.flag_or->setChecked(qmi.data(model_type::IsOrRole).toBool());
    this->ui.objectives.current.index->setValue(qmi.data(model_type::IndexRole).toInt());
@@ -310,21 +308,19 @@ void QuestTabObjectives::_on_target_selected() {
 
    auto qmi = _selected_objective_qmi();
    if (!qmi.isValid()) {
-      alias_picker->setEnabled(false);
-      this->ui.targets.current.ignore_locks->setEnabled(false);
-      this->ui.targets.current.conditions->setEnabled(false);
+      for (auto* widget : widgets)
+         widget->setEnabled(false);
       alias_picker->setCurrentIndex(alias_picker->findData(-1));
       this->ui.targets.current.ignore_locks->setChecked(false);
       this->ui.targets.current.conditions->clear();
       return;
    }
-   alias_picker->setEnabled(true);
+   for (auto* widget : widgets)
+      widget->setEnabled(true);
    alias_picker->setCurrentIndex(alias_picker->findData(qmi.data(model_type::AliasIDRole).toInt()));
-   this->ui.targets.current.ignore_locks->setEnabled(true);
    this->ui.targets.current.ignore_locks->setChecked(qmi.data(model_type::IgnoreLocksRole).toBool());
    {
       auto* widget = this->ui.targets.current.conditions;
-      widget->setEnabled(true);
       widget->clear();
       widget->importFrom(this->working_quest, this->models.targets->targetConditions(qmi));
    }

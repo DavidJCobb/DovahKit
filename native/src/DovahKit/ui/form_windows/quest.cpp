@@ -2,10 +2,10 @@
 #include <QWhatsThis> // for the "Help" button in the dialogue tab
 #include "dovah/form_stub_addenda.h"
 #include "editor/subsystems/game_localized_strings/core.h"
-#include "./odds_and_ends/quest_tab_stages.h"
 #include "./quest/QuestTabAliases.h"
 #include "./quest/QuestTabObjectives.h"
 #include "./quest/QuestTabScenes.h"
+#include "./quest/QuestTabStages.h"
 
 #include "ui/utils/bind.h"
 
@@ -81,18 +81,6 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
    //
    #pragma region Create tabs
    {
-      auto* tabbox  = this->ui.tabWidget;
-      auto  _insert = [tabbox](int i, QWidget* body) {
-         auto* page   = tabbox->widget(i);
-         auto* layout = new QGridLayout(page);
-         assert(page);
-         layout->addWidget(body);
-         page->setLayout(layout);
-      };
-      
-      _insert(1, (this->tabs.stages = new QuestTabStages(stub, *this->form, *this->ui.scriptListPane)));
-   }
-   {
       auto* ds = this->data.dialogue_datastore;
       auto& dst = this->subwidgets.dialogue_tab_bodies;
 
@@ -144,6 +132,40 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
    #pragma endregion
 
    #pragma region Tabs
+      {  // Stages tab
+         auto* manager = this->tabs.stages = new QuestTabStages(*this->form, this);
+         manager->ui = decltype(QuestTabStages::ui){
+            .stages = {
+               .buttons = {
+                  .create = this->ui.buttonStageCreate,
+                  .remove = this->ui.buttonStageDelete,
+               },
+               .current = {
+                  .id       = this->ui.stageID,
+                  .keep_instance_data = this->ui.stageFlagKeepInstanceData,
+                  .shutdown = this->ui.stageFlagShutdown,
+                  .startup  = this->ui.stageFlagStartup,
+               },
+               .view = this->ui.stages,
+            },
+            .log_entries = {
+               .buttons = {
+                  .create = this->ui.buttonLogEntryCreate,
+                  .remove = this->ui.buttonLogEntryDelete,
+               },
+               .current = {
+                  .complete   = this->ui.logEntryComplete,
+                  .conditions = this->ui.logEntryConditions,
+                  .fail       = this->ui.logEntryFail,
+                  .fragment   = this->ui.logEntryFragment,
+                  .next_quest = this->ui.logEntryNextQuest,
+                  .text       = this->ui.logEntryText,
+               },
+               .view = this->ui.logEntries,
+            },
+         };
+         manager->setupUi();
+      }
       {  // Objectives tab
          auto* manager = this->tabs.objectives = new QuestTabObjectives(*this->form, this);
          manager->ui = decltype(QuestTabObjectives::ui){
@@ -237,14 +259,10 @@ void FormDialogQuest::_load_impl() {
       this->ui.dialogueConditions->importFrom(*this->form, working.conditions.dialogue);
    #pragma endregion
    #pragma region Stages
-      //
-      // Done by the subwidget, in its constructor.
-      //
+      this->tabs.stages->load();
    #pragma endregion
    #pragma region Objectives
-      //
-      // Done by the subwidget, in its constructor.
-      //
+      this->tabs.objectives->load();
    #pragma endregion
    #pragma region Aliases
       //
@@ -319,14 +337,10 @@ void FormDialogQuest::_save_impl() {
       this->ui.dialogueConditions->exportTo(*this->form, working.conditions.dialogue);
    #pragma endregion
    #pragma region Stages
-      //
-      // The subwidget makes all changes in real-time.
-      //
+      this->tabs.stages->save();
    #pragma endregion
    #pragma region Objectives
-      //
-      // The subwidget makes all changes in real-time.
-      //
+      this->tabs.objectives->save();
    #pragma endregion
    #pragma region Aliases
       //

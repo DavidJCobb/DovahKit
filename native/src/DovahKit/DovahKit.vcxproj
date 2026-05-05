@@ -1127,9 +1127,12 @@
     <ClCompile Include="ui\form_windows\quest\QuestDialogueTopicInfosModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestObjectivesModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestObjectiveTargetsModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestStageLogEntriesModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestStagesModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestTabAliases.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestTabObjectives.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestTabScenes.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestTabStages.cpp" />
     <ClCompile Include="ui\form_windows\race.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\global.cpp" />
@@ -1141,7 +1144,6 @@
     <ClCompile Include="ui\form_windows\light.cpp" />
     <ClCompile Include="ui\form_windows\misc_item.cpp" />
     <ClCompile Include="ui\form_windows\note.cpp" />
-    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\outfit.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
@@ -2338,6 +2340,9 @@
     <QtMoc Include="ui\form_windows\quest\QuestTabObjectives.h" />
     <QtMoc Include="ui\form_windows\quest\QuestObjectivesModel.h" />
     <ClInclude Include="ui\form_windows\quest\QuestObjectiveTargetsModel.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestTabStages.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h" />
+    <ClInclude Include="ui\form_windows\quest\QuestStageLogEntriesModel.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
@@ -3857,7 +3862,6 @@
     <QtMoc Include="ui\main_window\default_object_window\default_object_list.h" />
     <QtMoc Include="ui\form_windows\formlist.h" />
     <QtMoc Include="ui\form_windows\quest.h" />
-    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
     <ClInclude Include="lua.h" />
     <QtMoc Include="ui\generic\CanvasWidget.h" />
@@ -4017,7 +4021,6 @@
     <QtUic Include="ui\form_windows\potion.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.ui" />
-    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
     <QtUic Include="ui\form_windows\outfit.ui" />
     <QtUic Include="ui\form_windows\projectile.ui" />
@@ -4522,7 +4525,6 @@
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
     <None Include="ui\form_group_windows\region\RegionCanvasWidget.inl" />
     <None Include="ui\form_windows\quest\QuestAllDialogueDatastore.inl" />
-    <None Include="ui\form_windows\quest\QuestAllDialogueModel.md" />
     <None Include="ui\form_windows\_base.inl" />
     <None Include="ui\models\DKGenericListModel.inl" />
     <None Include="ui\models\DKGenericTreeModel.inl" />

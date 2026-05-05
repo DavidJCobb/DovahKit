@@ -63,7 +63,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabBase">
       <attribute name="title">
@@ -261,6 +261,261 @@
       <attribute name="title">
        <string>Stages</string>
       </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,1">
+       <item>
+        <layout class="QVBoxLayout" name="stagesListLayout">
+         <item>
+          <widget class="QListView" name="stages">
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonStageCreate">
+           <property name="text">
+            <string>Add Stage</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonStageDelete">
+           <property name="text">
+            <string>Delete Stage</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="stagesDataLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>Selected stage</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QLabel" name="label_17">
+                <property name="text">
+                 <string>ID:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>stageID</cstring>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="stageID">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="maximum">
+                 <number>65535</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_7">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="stageFlagStartup">
+                <property name="text">
+                 <string>Startup Stage</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_8">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>8</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="stageFlagShutdown">
+                <property name="text">
+                 <string>Shutdown Stage</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_9">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>8</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="stageFlagKeepInstanceData">
+                <property name="text">
+                 <string>Keep instance data from here on</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_3">
+              <property name="title">
+               <string>Log entries</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_8">
+               <item>
+                <widget class="QTableView" name="logEntries"/>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_4">
+                 <item>
+                  <widget class="QPushButton" name="buttonLogEntryCreate">
+                   <property name="text">
+                    <string>New</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="buttonLogEntryDelete">
+                   <property name="text">
+                    <string>Delete</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="verticalSpacer_2">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_2">
+              <property name="title">
+               <string>Selected log entry</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_6">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_6">
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_12">
+                   <item row="2" column="2">
+                    <widget class="QLabel" name="label_16">
+                     <property name="text">
+                      <string>Next quest (unused):</string>
+                     </property>
+                     <property name="buddy">
+                      <cstring>logEntryNextQuest</cstring>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="2">
+                    <widget class="DKFormPicker" name="logEntryNextQuest"/>
+                   </item>
+                   <item row="1" column="0" colspan="3">
+                    <widget class="QPlainTextEdit" name="logEntryText"/>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="QCheckBox" name="logEntryFail">
+                     <property name="text">
+                      <string>Fail Quest</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0" colspan="3">
+                    <widget class="QLabel" name="label_15">
+                     <property name="text">
+                      <string>Journal text:</string>
+                     </property>
+                     <property name="buddy">
+                      <cstring>logEntryText</cstring>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QCheckBox" name="logEntryComplete">
+                     <property name="text">
+                      <string>Complete Quest</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <spacer name="horizontalSpacer_10">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Fixed</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>8</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <widget class="DKPapyrusFragmentFunctionPicker" name="logEntryFragment"/>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="DKConditionList" name="logEntryConditions"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tabObjectives">
       <attribute name="title">
@@ -714,6 +969,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
    <class>DKFormListPane</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormListPane.h</header>
@@ -722,6 +982,11 @@
    <class>DKPapyrusBoundScriptListPane</class>
    <extends>QWidget</extends>
    <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusFragmentFunctionPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusFragmentFunctionPicker.h</header>
   </customwidget>
   <customwidget>
    <class>DKConditionList</class>
@@ -744,6 +1009,22 @@
   <tabstop>textDisplayGlobals</tabstop>
   <tabstop>priority</tabstop>
   <tabstop>dialogueConditions</tabstop>
+  <tabstop>stages</tabstop>
+  <tabstop>buttonStageCreate</tabstop>
+  <tabstop>buttonStageDelete</tabstop>
+  <tabstop>stageID</tabstop>
+  <tabstop>stageFlagStartup</tabstop>
+  <tabstop>stageFlagShutdown</tabstop>
+  <tabstop>stageFlagKeepInstanceData</tabstop>
+  <tabstop>logEntries</tabstop>
+  <tabstop>buttonLogEntryCreate</tabstop>
+  <tabstop>buttonLogEntryDelete</tabstop>
+  <tabstop>logEntryText</tabstop>
+  <tabstop>logEntryComplete</tabstop>
+  <tabstop>logEntryFail</tabstop>
+  <tabstop>logEntryNextQuest</tabstop>
+  <tabstop>logEntryFragment</tabstop>
+  <tabstop>logEntryConditions</tabstop>
   <tabstop>objectives</tabstop>
   <tabstop>objectiveID</tabstop>
   <tabstop>objectiveFlagOR</tabstop>

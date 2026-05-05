@@ -1,5 +1,7 @@
 #pragma once
+#include <cstdint>
 #include <memory>
+#include <vector>
 #include <QAbstractItemModel>
 #include <QPointer>
 #include "ui/types/conditions/condition.h"

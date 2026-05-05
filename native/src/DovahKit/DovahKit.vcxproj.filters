@@ -405,9 +405,6 @@
     <ClCompile Include="editor\get_condition_description.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\helpers\stringify_conditions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -4147,6 +4144,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\form_windows\quest\QuestObjectiveTargetsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestTabStages.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestStagesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestStageLogEntriesModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -10337,6 +10343,9 @@
     <ClInclude Include="ui\form_windows\quest\QuestObjectiveTargetsModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\quest\QuestStageLogEntriesModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10394,9 +10403,6 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\quest.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui">
@@ -10945,9 +10951,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\quest.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\papyrus_dictionary.h">
@@ -11847,6 +11850,12 @@
     <QtMoc Include="ui\form_windows\quest\QuestObjectivesModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestTabStages.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -12290,7 +12299,6 @@
     <None Include="ui\types\face_tints\layer.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="ui\form_windows\quest\QuestAllDialogueModel.md" />
     <None Include="dovah\data\dialogue\topic_subtype.inl">
       <Filter>Header Files</Filter>
     </None>
