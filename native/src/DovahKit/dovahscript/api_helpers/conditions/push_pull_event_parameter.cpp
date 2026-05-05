@@ -28,8 +28,9 @@ namespace dovahscript::api_helpers::conditions {
       std::string_view name = lua_tostring(L, pos);
       if (name.size() != 2)
          return std::unexpected("argument is not an event member signature");
-      if constexpr (std::endian::native == std::endian::little) {
+      if constexpr (std::endian::native == std::endian::little) { // this really should be done in the condition internals...
          return name[1] | ((uint16_t)name[0] << 8);
+         // DKConditionListModel handles this too, so if we ever do fix it, we should fix it there too
       } else {
          return name[0] | ((uint16_t)name[1] << 8);
       }

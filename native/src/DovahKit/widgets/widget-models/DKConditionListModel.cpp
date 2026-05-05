@@ -136,12 +136,17 @@ QString DKConditionListModel::_stringify_condition_parameter(const Condition& co
          }
          return QObject::tr("<event function:%1>").arg(params.function);
       } else if (i == 1) {
+         auto member = params.member;
+         if constexpr (std::endian::native == std::endian::little) { // this really should be done within the condition internals...
+            member = std::byteswap(member);
+            // Dovahscript also handles this, too, so if we ever do fix it, gotta fix it there too
+         }
          if (auto* q = this->_context.get_owning_quest()) {
             if (auto* e = dovah::story_event_definition::lookup(q->event))
-               if (auto* m = e->member_by_signature(params.member))
+               if (auto* m = e->member_by_signature(member))
                   return m->name;
          }
-         return QObject::tr("<event member:%1>").arg(params.member, 4, 16, QChar('0'));
+         return QObject::tr("<event member:%1>").arg(member, 4, 16, QChar('0'));
       } else if (i == 2) {
          if (!dovah::conditions::event_function_uses_form(params.function))
             return {};
@@ -432,8 +437,16 @@ QVariant DKConditionListModel::data_of(const node_type& node, Qt::ItemDataRole r
             case Qt::ToolTipRole:
                if (!function)
                   break;
+               if (function->uses_event_data) {
+                  auto value_a = _stringify_condition_parameter(node, 0);
+                  auto value_b = _stringify_condition_parameter(node, 1);
+                  auto value_c = _stringify_condition_parameter(node, 2);
+                  if (value_c.isEmpty()) {
+                     return tr("%1(%2)").arg(value_a).arg(value_b);
+                  }
+                  return tr("%1(%2, %3)").arg(value_a).arg(value_b).arg(value_c);
+               }
                if (function->argument_types[0] != &dovah::conditions::parameter_types::None) {
-                  bool dummy;
                   auto value_a = _stringify_condition_parameter(node, 0);
                   if (function->argument_types[1] && function->argument_types[1] != &dovah::conditions::parameter_types::None) {
                      auto value_b = _stringify_condition_parameter(node, 1);
