@@ -291,9 +291,6 @@
     <ClCompile Include="dovah\localization\common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\generic\QTextEncodingValidator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\files\tes_file_writing\config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -4153,6 +4150,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\form_windows\quest\QuestStageLogEntriesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\game_localized_strings\convert_string.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -10346,6 +10346,18 @@
     <ClInclude Include="ui\form_windows\quest\QuestStageLogEntriesModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set_definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10924,9 +10936,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\generic\QTextEncodingValidator.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\log_window.h">
@@ -12418,6 +12427,7 @@
     <None Include="xaudio2\README.md" />
     <None Include="dovahscript\api_helpers\subobject_property_helpers\README.md" />
     <None Include="dovahscript\api_helpers\native_lists\README.md" />
+    <None Include="dovah\_docs\form working copies (suck, and are bad).md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

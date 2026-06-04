@@ -169,7 +169,7 @@ ScriptWindowHyperlinkConfirmDialog::ScriptWindowHyperlinkConfirmDialog(const QSt
    box->addWidget(buttonCopy);
    box->addWidget(buttonNo);
    box->addStretch(1);
-   box->setMargin(0);
+   box->setContentsMargins(0, 0, 0, 0);
    layout->addWidget(bar, 3, 0);
    //
    QObject::connect(buttonYes, &QPushButton::clicked, this, [this]() {

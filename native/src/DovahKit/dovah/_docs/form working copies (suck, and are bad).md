@@ -1,4 +1,4 @@
-
+﻿
 # Form working copies (suck, and are bad)
 
 DovahKit features loaded form data that is, by default, "managed:" forms refer to each other via `form_reference_t` objects which function as tracked pointers, with setters that keep use info up-to-date bidirectionally. Several parts of the UI, however, need to be able to create and retain their own copies of form-data structs; they need to be able to store form-data locally, edit it without automatically updating Use Info, and then commit it into the backend (with Use Info updated appropriately) all at once if the user clicks "OK."

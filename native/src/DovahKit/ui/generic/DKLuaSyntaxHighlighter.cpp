@@ -106,7 +106,7 @@ namespace {
    // 
    // The first character in the QStringRef should be the first `[`.
    //
-   static void extract_long_bracket(const QStringRef& view, int& level, int& token_length) {
+   static void extract_long_bracket(const QStringView view, int& level, int& token_length) {
       level        = -1;
       token_length =  0;
       if (view[0] != '[')
@@ -129,7 +129,7 @@ namespace {
       }
    }
 
-   static bool extract_long_bracket_close(const QStringRef& view, int level, int& token_length) {
+   static bool extract_long_bracket_close(const QStringView view, int level, int& token_length) {
       token_length = 0;
       if (view[0] != ']')
          return false;
@@ -154,7 +154,7 @@ namespace {
       return false;
    }
 
-   static const QString* extract_keyword(const QStringRef& view) {
+   static const QString* extract_keyword(const QStringView view) {
       auto size = view.size();
       for (auto& keyword : keywords) {
          if (view.startsWith(keyword)) {
@@ -169,7 +169,7 @@ namespace {
       return nullptr;
    }
 
-   static const QString* extract_operator(const QStringRef& view) {
+   static const QString* extract_operator(const QStringView view) {
       for (auto& keyword : operators)
          if (view.startsWith(keyword))
             return &keyword;
@@ -177,7 +177,7 @@ namespace {
    }
 
    // returns length of the number, if there was a valid one at the start of the string
-   static int skip_number(const QStringRef& view) {
+   static int skip_number(const QStringView view) {
       auto size = view.size();
       bool hex  = false;
       int  i    = 0;
@@ -306,7 +306,7 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
          if (c == '[') {
             int length =  0;
             int level  = -1;
-            extract_long_bracket(QStringRef(&text, i, size - i), level, length);
+            extract_long_bracket(QStringView(text).slice(i, size - i), level, length);
             if (level > BlockState::max_supported_param)
                level = -1;
             if (level >= 0) {
@@ -323,7 +323,7 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
             int   level  = -1;
             QChar e      = (i + 2) < size ? text.at(i + 2) : '\0';
             if (e == '[') {
-               extract_long_bracket(QStringRef(&text, i + 2, size - i - 2), level, length);
+               extract_long_bracket(QStringView(text).slice(i + 2, size - i - 2), level, length);
                if (level > BlockState::max_supported_param)
                   level = -1;
             }
@@ -362,9 +362,9 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
             }
          }
          //
-         auto next = QStringRef(&text, i, size - i);
+         auto next = QStringView(text).slice(i, size - i);
          if (i && is_keyword_boundary(text[i - 1]) && !is_keyword_boundary(c)) {
-            auto  view = QStringRef(&text, i, size - i);
+            auto  view = QStringView(text).slice(i, size - i);
             auto* keyword = extract_keyword(view);
             if (keyword) {
                auto length = keyword->size();
@@ -394,7 +394,7 @@ void DKLuaSyntaxHighlighter::highlightBlock(const QString& text) {
       //
       // We're in some sort of special token.
       //
-      auto next   = QStringRef(&text, i, size - i);
+      auto next   = QStringView(text).slice(i, size - i);
       int  length = 0;
       switch (state.code()) {
          case TokenType::String_Simple:

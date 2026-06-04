@@ -6,7 +6,7 @@
 DovahscriptAuthorWidget::DovahscriptAuthorWidget(QWidget* parent) : QWidget(parent) {
    auto* layout = new QGridLayout(this);
    this->setLayout(layout);
-   layout->setMargin(0);
+   layout->setContentsMargins(0, 0, 0, 0);
    //
    {
       auto* widget = this->_subwidgets.name = new QLabel;
@@ -23,7 +23,7 @@ DovahscriptAuthorWidget::DovahscriptAuthorWidget(QWidget* parent) : QWidget(pare
       auto* widget = this->_subwidgets.linkWrap = new QWidget;
       layout->addWidget(widget, 1, 0);
       widget->setLayout(new QBoxLayout(QBoxLayout::Direction::Down, widget));
-      widget->layout()->setMargin(0);
+      widget->layout()->setContentsMargins(0, 0, 0, 0);
    }
 }
 

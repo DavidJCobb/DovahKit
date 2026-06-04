@@ -179,7 +179,7 @@ namespace cobb::qt::ini {
          void discardPendingValue();
          void commitPendingValue();
 
-         void load(QStringRef);
+         void load(QStringView);
          QString currentValueString() const noexcept;
 
       signals:

@@ -86,15 +86,15 @@
     </Link>
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
-    <QtModules>core;gui;help;widgets;winextras</QtModules>
+    <QtInstall>6.11.1 MSVC2022 x64</QtInstall>
+    <QtModules>core;gui;help;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtDeploy>true</QtDeploy>
     <QtOptionsBuildLog>true</QtOptionsBuildLog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
-    <QtModules>core;gui;help;widgets;winextras</QtModules>
+    <QtInstall>6.11.1 MSVC2022 x64</QtInstall>
+    <QtModules>core;gui;help;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
     <QtDeploy>true</QtDeploy>
   </PropertyGroup>
@@ -506,6 +506,7 @@
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\threaded_builder.cpp" />
+    <ClCompile Include="editor\subsystems\game_localized_strings\convert_string.cpp" />
     <ClCompile Include="editor\subsystems\game_localized_strings\game_localized_strings.cpp" />
     <ClCompile Include="editor\subsystems\game_settings\game_settings_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
@@ -1413,7 +1414,6 @@
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
-    <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
     <ClCompile Include="ui\main_window\cell_view.cpp" />
     <ClCompile Include="ui\main_window\cell_view\cell_list.cpp" />
@@ -2332,6 +2332,10 @@
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
+    <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h" />
+    <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />
+    <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set.h" />
+    <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set_definitions.h" />
     <ClInclude Include="helpers\arrays\construct_from.h" />
     <ClInclude Include="helpers\attributes\forceinline.h" />
     <ClInclude Include="helpers\lua\for_each_in_pairs.h" />
@@ -3854,7 +3858,6 @@
     <ClInclude Include="helpers\vector.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
-    <QtMoc Include="ui\generic\QTextEncodingValidator.h" />
     <QtMoc Include="ui\main_window\log_window.h" />
     <QtMoc Include="ui\main_window\game_setting_window\game_setting_list.h" />
     <QtMoc Include="ui\main_window\game_setting_window.h" />
@@ -4290,6 +4293,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\t\topic info.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form working copies (suck, and are bad).md">
       <SubType>
       </SubType>
     </None>

@@ -98,7 +98,7 @@ EditorSingleScriptWindow::EditorSingleScriptWindow(QWidget* parent) : QMainWindo
                return;
             }
             QTextStream stream(&file);
-            stream.setCodec("UTF-8");
+            stream.setEncoding(QStringConverter::Encoding::Utf8);
             stream << this->ui.script->toPlainText();
             file.commit();
          });

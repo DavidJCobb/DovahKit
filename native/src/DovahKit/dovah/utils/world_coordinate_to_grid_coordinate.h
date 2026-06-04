@@ -30,7 +30,7 @@ namespace dovah {
          return ci >> shift_by;
       } else {
          auto out = ci / side_length;
-         if (ci < 0)
+         if (ci < 0 && ci > -side_length)
             --out;
          return out;
       }

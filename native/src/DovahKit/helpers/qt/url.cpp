@@ -26,13 +26,13 @@ namespace cobb::qt {
          QChar c = path[i];
          if (c == '/' || c == '\\') {
             if (i != 0)
-               list.push_back(QStringRef(&path, from, i - from).toString());
+               list.push_back(QStringView(path).slice(from, i - from).toString());
             from = i + 1;
             continue;
          }
       }
       if (from < size)
-         list.push_back(QStringRef(&path, from, size - from).toString());
+         list.push_back(QStringView(path).slice(from, size - from).toString());
       return list;
    }
 

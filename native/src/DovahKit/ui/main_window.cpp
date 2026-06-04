@@ -3,7 +3,6 @@
 #include <QMDISubWindow>
 #include <QMessageBox>
 #include <QShowEvent>
-#include <QtWinExtras/QWinTaskbarProgress.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
 #include "helpers/qt/strings.h"
 #include "widgets/DKStatusBar.h"
 #include "editor/core.h"
@@ -33,6 +32,8 @@
    //
    #include "./options_window/options_window.h"
 #pragma endregion
+
+#define HAVE_A_POLYFILL_FOR_QWinTaskbarButton 0
 
 #include "dovah/files/common.h"
 #include "dovah/form_stub.h"
@@ -90,7 +91,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    ui.setupUi(this);
    _window = this;
    //
-   this->taskbar_button = new QWinTaskbarButton(this);
+   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
+      this->taskbar_button = new QWinTaskbarButton(this);
+   #endif
    
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::fileLoadStatisticsAvailable, [this](const DovahKitCore::file_load_stats& stats) {
@@ -298,29 +301,29 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       modal->exec();
    });
    #pragma region Menu items to set editor encoding
-      this->ui.actionSetEncodingWin1250->setData("Windows-1250");
-      this->ui.actionSetEncodingWin1251->setData("Windows-1251");
-      this->ui.actionSetEncodingWin1252->setData("Windows-1252");
-      this->ui.actionSetEncodingWin1253->setData("Windows-1253");
-      this->ui.actionSetEncodingWin1254->setData("Windows-1254");
-      this->ui.actionSetEncodingWin1256->setData("Windows-1256");
-      this->ui.actionSetEncodingUTF8->setData("UTF-8");
+      this->ui.actionSetEncodingWin1250->setData((int)dovahkit::subsystems::game_localized_strings::character_encoding::windows_1250);
+      this->ui.actionSetEncodingWin1251->setData((int)dovahkit::subsystems::game_localized_strings::character_encoding::windows_1251);
+      this->ui.actionSetEncodingWin1252->setData((int)dovahkit::subsystems::game_localized_strings::character_encoding::windows_1252);
+      this->ui.actionSetEncodingWin1253->setData((int)dovahkit::subsystems::game_localized_strings::character_encoding::windows_1253);
+      this->ui.actionSetEncodingWin1254->setData((int)dovahkit::subsystems::game_localized_strings::character_encoding::windows_1254);
+      this->ui.actionSetEncodingWin1256->setData((int)dovahkit::subsystems::game_localized_strings::character_encoding::windows_1255);
+      this->ui.actionSetEncodingUTF8->setData((int)dovahkit::subsystems::game_localized_strings::character_encoding::utf_8);
       for (auto* action : this->ui.menuTextEncoding->actions()) {
          action->setCheckable(true);
          action->setChecked(false);
          QObject::connect(action, &QAction::triggered, this, [action]() {
             auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
-            gls.set_encoding(action->data().toString().toStdString());
+            gls.set_encoding((dovahkit::subsystems::game_localized_strings::character_encoding)action->data().toInt());
          });
       }
       QObject::connect(this->ui.menuTextEncoding, &QMenu::aboutToShow, this, [this]() {
          auto* menu = this->ui.menuTextEncoding;
          auto& gls  = dovahkit::subsystems::game_localized_strings::core::get();
-         auto  encoding = QString::fromStdString(gls.get_encoding());
+         auto  encoding = gls.get_encoding();
          //
          for (auto* action : menu->actions()) {
-            QString n = action->data().toString();
-            action->setChecked(n == encoding);
+            auto n = action->data().toInt();
+            action->setChecked(n == (int)encoding);
          }
       });
    #pragma endregion
@@ -418,20 +421,26 @@ MainWindow::~MainWindow() {
 void MainWindow::setProgressBounds(int min, int max) {
    if (!this->taskbar_button)
       return;
-   auto p = this->taskbar_button->progress();
-   p->setRange(min, max);
+   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
+      auto p = this->taskbar_button->progress();
+      p->setRange(min, max);
+   #endif
 }
 void MainWindow::setProgressStep(int s) {
    if (!this->taskbar_button)
       return;
-   auto p = this->taskbar_button->progress();
-   p->setValue(s);
+   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
+      auto p = this->taskbar_button->progress();
+      p->setValue(s);
+   #endif
 }
 void MainWindow::setProgressEnableState(bool s) {
    if (!this->taskbar_button)
       return;
-   auto p = this->taskbar_button->progress();
-   p->setVisible(s);
+   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
+      auto p = this->taskbar_button->progress();
+      p->setVisible(s);
+   #endif
 }
 
 QMdiSubWindow* MainWindow::getSubwindowFor(QWidget* w) const noexcept {
@@ -453,8 +462,10 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 void MainWindow::showEvent(QShowEvent* event) {
    event->accept();
    //
+   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
    if (auto tb = this->taskbar_button)
       tb->setWindow(this->windowHandle());
+   #endif
    //
    auto g_canvas = this->ui.mdi->geometry();
    if (auto* subwindow = this->subwindows.object._window) { // set initial object window height

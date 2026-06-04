@@ -2031,8 +2031,8 @@ namespace cobb::html {
    namespace {
       class _index_cache {
          protected:
-            static bool is_lower(QChar c) { return c >= 0x61 && c <= 0x7A; }
-            static bool is_upper(QChar c) { return c >= 0x41 && c <= 0x5A; }
+            static bool is_lower(QChar c) { return c.unicode() >= 0x61 && c.unicode() <= 0x7A; }
+            static bool is_upper(QChar c) { return c.unicode() >= 0x41 && c.unicode() <= 0x5A; }
 
             _index_cache() {
                auto& list = all_entities;

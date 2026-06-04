@@ -2,6 +2,7 @@
 #pragma region Drag and drop
    #include <QByteArray>
    #include <QDataStream>
+   #include <QIODevice>
    #include <QMimeData>
 #pragma endregion
 #include "helpers/bitset.h"

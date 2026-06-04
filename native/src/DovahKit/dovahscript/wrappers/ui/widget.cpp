@@ -972,7 +972,7 @@ namespace {
          if (!self.widget)
             return 0;
          auto value = QString::fromUtf8(lua_tostring(L, 2));
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setObjectName, value);
+         api_helpers::set_widget_property<wrapped_type, QObject, const QString&, QString>((wrapped_type*)self.widget, &wrapped_type::setObjectName, value);
          return 0;
       }
       int tooltip(lua_State* L) {

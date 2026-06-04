@@ -29,7 +29,7 @@ namespace {
 DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
    auto*    layout      = new QVBoxLayout(this);
    QWidget* button_wrap = nullptr;
-   layout->setMargin(0);
+   layout->setContentsMargins(0, 0, 0, 0);
    this->setLayout(layout);
 
    {

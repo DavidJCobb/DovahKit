@@ -55,7 +55,6 @@ namespace DovahKitDebug::features::qt {
          #define ADD(name) _add_button(QPalette::ColorRole::name, #name);
          ADD(NoRole);
          ADD(AlternateBase);
-         ADD(Background);
          ADD(Base);
          ADD(Button);
          ADD(Highlight);

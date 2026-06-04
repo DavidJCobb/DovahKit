@@ -6,6 +6,7 @@
 #include <QAbstractItemModel>
 #include <QByteArray>
 #include <QDataStream>
+#include <QIODevice>
 #include "./drag_drop_node_id_map.h"
 
 namespace ui::model_utils::drag_drop_nodes_by_id {

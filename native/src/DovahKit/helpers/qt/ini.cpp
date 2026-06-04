@@ -20,7 +20,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <QTextStream>
 
 namespace {
-   QString _extractCategoryName(QStringRef view, QChar comment_char) {
+   QString _extractCategoryName(QStringView view, QChar comment_char) {
       assert(view[0] == '[');
       int depth = 1;
       int last  = -1;
@@ -128,7 +128,7 @@ namespace cobb::qt::ini {
       emit valueChanged(old, this->values.current);
    }
 
-   void Setting::load(QStringRef view) {
+   void Setting::load(QStringView view) {
       view = view.trimmed();
       //
       bool ok;
@@ -360,7 +360,7 @@ namespace cobb::qt::ini {
             data = this->exportToString();
          }
          QTextStream stream(&file);
-         stream.setCodec("UTF-8");
+         stream.setEncoding(QStringConverter::Encoding::Utf8);
          stream << data;
          file.commit();
          return true;
@@ -374,12 +374,12 @@ namespace cobb::qt::ini {
       int i    = 0;
       int size = text.size();
       while (i < size) {
-         QStringRef line;
+         QStringView line;
          {
             int j = text.indexOf('\n', i);
             if (j < 0)
                j = size;
-            line = QStringRef(&text, i, j - i).trimmed();
+            line = QStringView(text).slice(i, j - i).trimmed();
             i = j + 1;
          }
          if (line.isEmpty())
@@ -489,12 +489,12 @@ namespace cobb::qt::ini {
       int i    = 0;
       int size = old.size();
       while (i < size) {
-         QStringRef line;
+         QStringView line;
          {
             int j = old.indexOf('\n', i);
             if (j < 0)
                j = size;
-            line = QStringRef(&old, i, j - i).trimmed();
+            line = QStringView(old).slice(i, j - i).trimmed();
             i = j + 1;
          }
          if (line.trimmed().isEmpty()) {

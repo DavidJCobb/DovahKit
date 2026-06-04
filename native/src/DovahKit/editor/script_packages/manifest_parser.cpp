@@ -24,7 +24,7 @@ namespace script_packages {
       this->xml.setEntityResolver(&this->entity_resolver);
    }
 
-   /*static*/ manifest::version manifest_parser::_parse_version(QStringRef text) {
+   /*static*/ manifest::version manifest_parser::_parse_version(QStringView text) {
       manifest::version out;
       //
       // Permitted strings:
@@ -101,7 +101,7 @@ namespace script_packages {
          }
          if (name.compare(QLatin1String("version"), Qt::CaseInsensitive) == 0) {
             auto t = xml.readElementText(QXmlStreamReader::ErrorOnUnexpectedElement);
-            this->out.version_info.package = _parse_version(QStringRef(&t));
+            this->out.version_info.package = _parse_version(t);
             continue;
          }
          xml.skipCurrentElement();
@@ -151,11 +151,11 @@ namespace script_packages {
          auto name = xml.name();
          if (name.compare(QLatin1String("min-version"), Qt::CaseInsensitive) == 0) {
             auto t = xml.readElementText(QXmlStreamReader::ErrorOnUnexpectedElement);
-            this->out.version_info.dovah_minimum = _parse_version(QStringRef(&t));
+            this->out.version_info.dovah_minimum = _parse_version(t);
             continue;
          } else if (name.compare(QLatin1String("latest-version"), Qt::CaseInsensitive) == 0) {
             auto t = xml.readElementText(QXmlStreamReader::ErrorOnUnexpectedElement);
-            this->out.version_info.dovah_tested = _parse_version(QStringRef(&t));
+            this->out.version_info.dovah_tested = _parse_version(t);
             continue;
          }
          xml.skipCurrentElement();

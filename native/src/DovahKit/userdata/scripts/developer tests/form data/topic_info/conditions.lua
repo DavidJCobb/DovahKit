@@ -52,7 +52,6 @@ do
    })
 end
 
--- BUG: `insert` does not pay attention to any value you pass in, yet
 info.conditions:insert(info.conditions[2])
 do
    local cnd = info.conditions[4]
@@ -60,3 +59,9 @@ do
       is_or_linked = true
    })
 end
+
+dovah.dump(info.conditions[4]:copy_as_table())
+dovah.dump(info.conditions[4].parameters[1])
+
+info.conditions:remove(3)
+dovah.dump(info.conditions[3]:copy_as_table())

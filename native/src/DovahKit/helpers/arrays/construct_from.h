@@ -11,7 +11,7 @@ namespace cobb::arrays {
       struct _construct_from<src_array_type, dst_array_type, std::index_sequence<I...>> {
          template<typename... Args>
          static dst_array_type exec(const src_array_type& src, Args&&... args) {
-            return dst_array_type{ typename dst_array_type::value_type(src[I], std::forward<Args>(args)...), ... };
+            return dst_array_type{ typename dst_array_type::value_type(src[I], std::forward<Args>(args)...)... };
          };
       };
       

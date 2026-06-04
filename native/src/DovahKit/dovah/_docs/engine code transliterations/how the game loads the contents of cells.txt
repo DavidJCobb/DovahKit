@@ -1,0 +1,415 @@
+
+// ID'd by CommonLibSSE
+struct FORM {
+   char     signature[4];    // 00
+   uint32_t length;          // 04
+   uint32_t flags;           // 08
+   uint32_t form_id;         // 0C
+   uint32_t version_control; // 10
+   uint16_t form_version;    // 14
+   uint16_t vc_version;      // 16
+};
+
+// inferred, based on code below. it seems that TESFile actually stores a union 
+// of FORM and this
+struct GRUP {
+   char     signature[4];    // 00
+   uint32_t length;          // 04
+   char     label[4];        // 08
+   uint32_t type;            // 0C
+   uint32_t version_control; // 10
+   uint16_t form_version;    // 14
+   uint16_t vc_version;      // 16
+};
+
+struct InteriorCellOffsetTuple {
+   uint32_t cell_form_id;      // 00
+   uint32_t child_grup_offset; // 04
+   uint32_t cell_form_offset;  // 08 // maybe actually the offset of the record body?
+};
+
+//
+// ... called when loading the cell ...
+//
+
+// Called when loading the `DATA` subrecord
+// LE: 4C0960
+void TSEObjectCELL::CacheInteriorCellRecordOffset(TESFile* file, uint32_t offset) {
+   if (!this->IsInterior())
+      return;
+   TESFile* edi = file->sub444890();
+   if (!edi)
+      edi = file;
+   if (edi == this->GetSourceFile(0)) {
+      // inlined:
+      auto* data = this->GetInteriorData(); // this->IsInterior() ? this->loadedData : nullptr
+      if (!data)
+         return;
+      this->loadedData->unk5C = offset;
+      return;
+   }
+   file->StoreCellOffset_B(this, offset);
+}
+// A similar function is called when the child group is opened, to cache that offset 
+// (if and only if the cell is an interior). That function, of course, doesn't store 
+// anything on the cell's `loadedData`; it unconditionally stores the offset within 
+// the `TESFile`.
+
+// LE: 445860
+// Identical to the function below, except it sets a different field
+void TESFile::StoreInteriorCellOffset_ChildGroup(TESForm* form, uint32_t offset);
+
+// LE: 445910
+void TESFile::StoreCellOffset_B(TESForm* form, uint32_t offset) {
+   bool     found = false; // dl
+   uint32_t edi   = 0;
+   do {
+      if (edi >= this->unk430->size()) // size == dword at offset 0x10
+         goto reached_end;
+      InteriorCellOffsetTuple& item = this->unk430->operator[](esi);
+      if (item.cell_form_id == form->formID) {
+         item.cell_form_offset = offset;
+         found = true;
+      }
+   } while (++edi, !found);
+   return;
+reached_end:
+   if (found)
+      return;
+   this->unk430->emplace_back() = { form->formID, 0, offset }; // inlined
+}
+
+//
+// ... much later ...
+//
+
+// LE: 4CDBF0
+bool TESObjectCELL::LoadChildrenOfAllMyRecords() {
+   if (this->cell_flags & 0x10) // children already loaded?
+      return true;
+   
+   bool all_files_succeeded = true;  // esp0E
+   
+   bool load_on_some_thread_of_note; // esp0F
+   if (GetCurrentThreadID() == (0x01B97EC0)->unk70) {
+      (0x01B97EC0)->subAF69B0(); // something to do with thread-locks
+      load_on_some_thread_of_note = true;
+   } else {
+      load_on_some_thread_of_note = false;
+   }
+   
+   uint32_t file_count = this->unk04 ? this->unk04->unk04 : 0;
+   for(uint32_t i = 0; i < file_count; ++i) { // ebx as loop counter
+      TESFile* edi = this->GetSourceFile(i)->sub4472D0(0x4000);
+      if (!edi)
+         continue;
+      if (!edi->IsMaster()) // if (!(TESFile::unk3E8 & 1))
+         continue;
+      TESFile* ebp = edi->sub444890();
+      if (!ebp)
+         ebp = edi;
+      
+      bool al;
+      if (this->IsInterior()) { // this->unk2C & 1
+         [[unknown_type]] uint32_t eax;
+         if (ebp == this->GetSourceFile(0)) {
+            eax = this->parentWorld; // DWORD PTR [ESI+0x84]
+         } else {
+            eax = edi->OffsetOfInteriorCellChildGroup(this); // documented below
+         }
+         if (eax) {
+            al = edi->SeekTo(eax); // documented below
+         } else {
+            al = edi->SeekToRecordOf(this); // documented below
+         }
+      } else {
+         al = edi->SeekToRecordOf(this);
+      }
+      if (al) {
+         if (this->LoadChildrenFromFile(edi)) // documented below
+            continue;
+      }
+      all_files_succeeded = false;
+   }
+   
+   if (!load_on_some_thread_of_note) {
+      (0x01B97EC0)->subAF69D0(); // unlock whatever we locked further up
+   }
+   
+   this->cell_flags |= 0x10; // mark as children loaded
+   this->InitItemImpl(); // vfunc 0x13
+   if (!(this->form_flags & (1 << 13))) {
+      if (BGSLocation* eax = this->GetComputedLocation())
+         eax->OnMemberCellLoaded();
+      if (!this->IsInterior()) { // !(this->unk2C & 1)
+         if (this->parentWorld) {
+            //
+            // Does some stuff involving a `QueuedPromoteLargeReferencesTask`. 
+            // Probably promotes "large refs" to persistent.
+            //
+            this->parentWorld->unk170.sub4AD090(this);
+         }
+      }
+   }
+   // at 4CDD39
+   this->sub4CD5E0();
+   return all_files_succeeded;
+}
+
+// LE: 4450D0
+uint32_t TESFile::OffsetOfInteriorCellChildGroup(TESObjectCELL* cell) {
+   auto* edi = this->unk430; // looks like a BSTArray<T>* maybe
+   for(uint32_t i = 0; i < edi->size(); ++i) {
+      InteriorCellOffsetTuple& item = edi->operator[](i); // sizeof(item) == 0xC
+      if (item.cell_form_id == cell->formID)
+         return item.child_grup_offset;
+   }
+   return 0;
+}
+
+// LE: 445110 // separate subroutine from the above, taking a reference type
+uint32_t TESFile::OffsetOfInteriorCellRecordBody(TESObjectCELL& cell) {
+   auto* edi = this->unk430; // looks like a BSTArray<T>* maybe
+   for(uint32_t i = 0; i < edi->size(); ++i) {
+      InteriorCellOffsetTuple& item = edi->operator[](i); // sizeof(item) == 0xC
+      if (item.cell_form_id == cell.formID)
+         return item.cell_form_offset;
+   }
+   return 0;
+}
+
+// LE: 446DA0
+bool TESFile::SeekTo(uint32_t offset) {
+   if (!this->unk10) {
+      this->sub446130(&this->unk124, &this->unk20, 0, 0);
+   }
+   if (this->unk420) {
+      this->unk420 = 0;
+      this->unk424 = 0;
+   }
+   this->unk264 = offset;
+   if (offset >= this->unk260) {
+      this->currentForm = {};
+      return false;
+   }
+   this->unk10->Unk_06(offset, *(uint32_t*)(0x01120D44));
+   
+   auto eax = this->unk10->unk38;
+   if (eax == -1)
+      eax = this->unk10->unk150;
+   this->unk264 = eax;
+   if (eax == -1) {
+      FormatMessageA(0x1300, 0, GetLastError(), 0x400, &esp0C, 0, 0);
+      //
+      // presumably a logging call was #ifdef'd out
+      //
+      LocalFree(&esp0C);
+      return false;
+   }
+   this->currentForm = {};
+   this->EnsureIsInRecord();
+   return true;
+}
+
+// LE: 446010
+bool TESFile::SeekToRecordOf(const TESForm* form) {
+   if (!form)
+      return false;
+   if (!this->unk298)
+      return false;
+   if (!this->unk10)
+      return false;
+   if (this->unk10->unk2C == 0)
+      return false;
+   
+   if (form->FindInFileFast(this)) // virtual 0x0C // documented below
+      return true;
+   
+   this->sub445F40(/*bool ensureInRecord=*/true);
+   while (this->currentForm.signature == 'TES4')
+      this->AdvanceToNextRecordOrGroup();
+   
+   uint32_t subject_id = form->formID;
+   uint32_t subject_cc = FormTypeToSignatureList[form->GetSavedFormType()].signature;
+   if (!form->GetSavedFormType())
+      return false;
+   
+   bool result = false; // esp13
+   bool bl     = true;  // bl
+   do {
+      if (!bl)
+         return result;
+      if (this->currentForm.signature == 'GRUP') {
+         if (!form->BelongsInGroup(&this->currentForm, true, false)) {
+            this->AdvanceToFirstRecordInGroup();
+            continue;
+         }
+      }
+      if (this->currentForm.formID == subject_id) {
+         bl     = false;
+         result = true;
+         continue;
+      }
+      this->AdvanceToNextRecordOrGroup();
+   } while (this->currentForm.signature);
+   return result;
+}
+
+// LE: 4C0BC0
+virtual bool TESObjectCELL::FindInFileFast(TESFile* file) override {
+   if (!file) // edi
+      return false;
+   if (!file->IsMaster())
+      return false;
+   if (this->IsInterior()) { // this->unk2C & 1
+      auto eax = this->sub4C08F0(file);
+      if (eax)
+         file->SeekTo(eax);
+   } else {
+      // at 4C0BF4
+      if (TESWorldSpace* ebx = this->parentWorld) {
+         int32_t x;
+         int32_t y;
+         this->GetCellCoordinates(&x, &y);
+         ebx->sub4F2DC0(file, x, y);
+      }
+   }
+   // at 4C0C23
+   FormType ft = file->EnsureIsInRecord();
+   return ft == FormType::Cell;
+}
+
+// LE: 4C08F0
+uint32_t TESObjectCELL::sub4C08F0(TESFile* file) {
+   if (!this->IsInterior())
+      return 0;
+   TESFile* edi = file->sub444890();
+   if (!edi)
+      edi = file;
+   if (edi == this->GetSourceFile(0)) {
+      if (!this->Isinterior())
+         return 0;
+      if (!this->loadedData)
+         return 0;
+      //
+      // Cached by `TESObjectCELL::sub4C0960`, called when loading the `DATA` 
+      // subrecord of an interior cell. This is the cell's offset within the 
+      // file that originally defined it.
+      //
+      return this->loadedData->unk5C;
+   }
+   return file->OffsetOfInteriorCellRecordBody(*this); // documented above
+}
+
+// LE: 4CCA50
+bool TESObjectCELL::LoadChildrenFromFile(TESFile* file) {
+   if (!file)
+      return false;
+   if (!file->IsMaster())
+      return true;
+   
+   FORM& record = file->currentForm;
+   GRUP& group  = *(GRUP*)&record;
+   // The original function uses registers `esi` and `edi` for the two variables 
+   // above. The `edi` register is exclusively used when dealing with groups, but 
+   // `esi` is used for both.
+   
+   if (record.signature == 'CELL') {
+      if (record.formID != this->formID)
+         return false;
+      file->AdvanceToNextRecordOrGroup(true);
+      if (!RecordIsCellChildGRUP(&group))
+         return true;
+      //
+      // Redundant checks:
+      //
+      if (group.signature != 'GRUP')
+         return false;
+      if (group.type != 6) // Cell Children
+         return false;
+      file->AdvanceToNextRecordOrGroup();
+      
+      if (group.signature != 'GRUP')
+         return false;
+      if (group.type == 8) {
+         file->AdvanceToFirstRecordInGroup();
+         if (!RecordIsCellChildGRUP(&group))
+            return true;
+      }
+   }
+   // at 4CCB85
+   if (group.signature != 'GRUP' || group.type != 9)
+      return false;
+   bool  al  = file->AdvanceToNextRecordOrGroup(true);
+   auto* esi = al ? &record : nullptr;
+   
+   *(0x012E5638) = esp18;
+   thread_local_variable_2E8 = true;
+   if (esi && esi->signature == 'GRUP' && esi->type == 9) {
+      file->AdvanceToNextRecordOrGroup(true);
+      esi = al ? &record : nullptr;
+      ProcessLists::GetSingleton()->sub754060(1);
+   }
+   uint8_t esp20 = ~/*uint32_t*/thread_local_variable_334 & 1;
+   thread_local_variable_334 |= 1;
+   thread_local_variable_2EE = true;
+   esp18->unk20 = 0x02;
+   bool result = true; // esp13
+   if (esi) {
+      // at 4CCC33
+      do {
+         FormType al = SetCurrentLoadFormType(esi->signature);
+         if (al < 0x61 || al > 0x6D || al == 0x6C)
+            break;
+         // at 4CCC5B
+         auto esi = file->currentForm.formID;
+         if (sub445BA0(esi, file)) {
+            // at 4CCC6D
+            auto* edi = LookupFormByID(esi);
+            auto* ecx = BGSSaveLoadManager::GetInstance();
+            bool  al  = false;
+            if (!(ecx->unk3F0 & 1)) {
+               al = ecx->sub679130(esi);
+            }
+            if (!edi) {
+               if (!al) {
+                  al = ptrTESDataHandler->sub4401B0(file, 0, /* TESForm* */nullptr, 0);
+                  if (!al)
+                     result = false;
+               }
+            } else if (edi->formType == 0x49 && !edi->IsDeleted()) {
+               // at 4CCCC1
+               auto esi = this->unk48;
+               if (!esi) {
+                  esi = new BSTArray<?>;
+                  this->sub4CC240(esi);
+               }
+               // at 4CCCFF
+               auto* eax = esi->sub4C40B0(&esp20, edi->formID);
+               esp18.unk04.sub43BEC0();
+               if (*eax) {
+                  esi->sub43D4E0(Struct43BE70{ edi }, 0);
+               }
+               // at 4CCD34
+               // ebx = file; // restore clobbered register
+            }
+         }
+         // at 4CCD38
+         if (!file->AdvanceToNextRecordOrGroup(true))
+            break;
+         if (group.signature != 'GRUP')
+            continue;
+         if (group.type != 9)
+            continue;
+         if (group.unk08 == this->formID) {
+            if (!file->AdvanceToNextRecordOrGroup(true))
+               break;
+         }
+      } while (esi);
+   }
+   // at 4CCD80
+   thread_local_variable_2EE = false;
+   BGSSaveLoadManager::GetInstance()->sub43BA60(esp20);
+   ProcessLists::GetSingleton()->sub754060(0);
+   return result;
+}

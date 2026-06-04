@@ -405,7 +405,7 @@ namespace {
             auto m = QRegularExpression(R"(^(\d+)\.(\d+)\.(\d+)\.(\d+)$)").match(v);
             if (m.hasMatch()) {
                for (size_t i = 0; i < field_names.size(); ++i) {
-                  auto v = m.capturedRef(i + 1).toInt();
+                  auto v = m.capturedView(i + 1).toInt();
                   //
                   lua_pushinteger(L, v);
                   lua_setfield(L, -2, field_names[i]);

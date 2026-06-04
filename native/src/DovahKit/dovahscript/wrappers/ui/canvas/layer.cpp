@@ -268,7 +268,7 @@ namespace {
          if (!self.canvas_entity)
             return 0;
          auto value = QString::fromUtf8(lua_tostring(L, 2));
-         api_helpers::set_widget_property(self.canvas_entity, &QObject::setObjectName, value);
+         api_helpers::set_widget_property<CanvasWidgetEntity, QObject, const QString&, QString>(self.canvas_entity, &QObject::setObjectName, value);
          return 0;
       }
       int opacity(lua_State* L) {

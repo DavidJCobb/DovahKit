@@ -21,21 +21,11 @@
 //
 
 namespace {
-   // Qt's implementation of QSortFilterProxyModel filters always goes through QRegExp and 
-   // friends, even when you just filter by a fixed string. QRegExp objects can wrap a fixed 
-   // string rather than a real regex, but even in that case, it still incurs the overhead 
-   // of regex matching, including locking to access a global cache of regex results.
-   constexpr const bool replace_qt_filter_string_handling = false;
-
-   // Ignores QSortFilterProxyModel's parameters for filtering, and uses hardcoded ones.
-   constexpr const bool replace_qt_filter_string_params = false;
-
    //
-   // The above options don't really help much. I think the only solution to the lag we're 
-   // seeing in Debug would be to build a custom sort/filter proxy model with cheaper mappings. 
-   // QSortFilterProxyModel is designed to support recursive filtering if you enable it (it's 
-   // disabled by default, and we obviously don't use it here), and as a result, its design 
-   // incurs overhead for that:
+   // I think the only solution to the lag we're seeing in Debug would be to build a custom 
+   // sort/filter proxy model with cheaper mappings. QSortFilterProxyModel is designed to 
+   // support recursive filtering if you enable it (it's disabled by default, and we obviously 
+   // don't use it here), and as a result, its design incurs overhead for that:
    // 
    //  - The proxy stores its mappings as a vector of source-to-proxy row indices, a vector of 
    //    the reverse, and another pair of vectors for column indices. However, the proxy is 
@@ -489,54 +479,7 @@ bool FormTableModelProxy::filterAcceptsRow(int source_row, const QModelIndex& so
             return false;
       }
    }
-   if constexpr (replace_qt_filter_string_handling) {
-      QString filter_string;
-      {
-         //
-         // Qt stores a fixed-string pattern as QRegExp, not QRegularExpression, and 
-         // the former is accessible only via an undocumented getter.
-         // 
-         // I... think the API they designed for this may be a bit poorly thought out.
-         //
-         auto regex = this->filterRegExp();
-         if (regex.patternSyntax() == QRegExp::PatternSyntax::FixedString) {
-            filter_string = regex.pattern();
-         }
-      }
-      if (!filter_string.isEmpty()) {
-         if constexpr (replace_qt_filter_string_params) {
-            for (size_t i = 0; i < 2; ++i) {
-               auto qmi  = model->index(source_row, i, source_parent);
-               auto data = model->data(qmi, FormTableModel::FilterableTextRole).toString();
-               if (data.contains(filter_string, Qt::CaseInsensitive))
-                  return true;
-            }
-            return false;
-         } else {
-            const auto case_sensitivity = this->filterCaseSensitivity();
-            const auto filter_role = this->filterRole();
-
-            const auto col = this->filterKeyColumn();
-            const auto col_count = model->columnCount(source_parent);
-            if (col == -1) {
-               for (int i = 0; i < col_count; ++i) {
-                  auto qmi = model->index(source_row, i, source_parent);
-                  auto subject = model->data(qmi, filter_role).toString();
-                  if (subject.contains(filter_string, case_sensitivity))
-                     return true;
-               }
-               return false;
-            } else {
-               auto qmi = model->index(source_row, col, source_parent);
-               auto subject = model->data(qmi, filter_role).toString();
-               return subject.contains(filter_string, case_sensitivity);
-            }
-         }
-      }
-      return true;
-   } else {
-      return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
-   }
+   return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
 }
 #pragma endregion
 

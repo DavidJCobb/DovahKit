@@ -98,5 +98,6 @@ void FormDialogFootstepSet::_push_footstep_list(size_t which) {
       which = this->ui.currentMovementState->currentData().toInt();
    if (which >= this->_footsteps.sublists.size())
       return;
-   this->_footsteps.sublists[which] = this->ui.footsteps->stubs().toStdVector();
+   auto stubs = this->ui.footsteps->stubs();
+   this->_footsteps.sublists[which] = { stubs.constBegin(), stubs.constEnd() };
 }

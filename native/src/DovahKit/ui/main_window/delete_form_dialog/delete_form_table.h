@@ -37,7 +37,7 @@ class DeleteFormDialogListModel : public QAbstractTableModel {
       QVector<item_type*> children;
       QVector<item_type*> queued_additions;
       //
-   protected slots:
+   protected:
       void formModified(const dovah::form_stub*);
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
       void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
@@ -60,7 +60,7 @@ class DeleteFormDialogListModel : public QAbstractTableModel {
       //
       bool contains(const dovah::form_stub&) const noexcept;
       //
-   public slots:
+   public:
       void clear();
       void insert(const dovah::form_stub&, bool queued = false);
       void remove(const dovah::form_stub&);

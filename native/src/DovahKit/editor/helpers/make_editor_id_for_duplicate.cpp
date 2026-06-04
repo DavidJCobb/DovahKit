@@ -1,16 +1,17 @@
 #include "make_editor_id_for_duplicate.h"
-#include <QRegExp>
+#include <QRegularExpression>
 
 namespace editor_helpers {
    QString make_editor_id_for_duplicate(QString editorID) {
       if (editorID.endsWith("DUPLICATE")) {
          editorID += QString("001");
       } else {
-         auto re = QRegExp("DUPLICATE(\\d+)$");
-         if (re.indexIn(editorID) == -1) {
+         auto re    = QRegularExpression("DUPLICATE(\\d+)$");
+         auto match = re.match(editorID);
+         if (!match.hasMatch()) {
             editorID += QString("DUPLICATE");
          } else {
-            auto index = re.cap(1);
+            auto index = match.captured(1);
             bool is_int = false;
             auto val = index.toInt(&is_int) + 1;
             if (is_int) {

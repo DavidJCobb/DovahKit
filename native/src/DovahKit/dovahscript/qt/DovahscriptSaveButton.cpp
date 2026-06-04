@@ -105,7 +105,7 @@ void DovahscriptSaveButton::requestSave() {
    }
    if (this->contentIsText()) {
       QTextStream stream(&file);
-      stream.setCodec("UTF-8");
+      stream.setEncoding(QStringConverter::Encoding::Utf8);
       stream << this->state.content.text;
       file.commit();
    } else {

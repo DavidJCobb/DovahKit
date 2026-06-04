@@ -3,7 +3,6 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QMdiSubWindow>
-#include <QtWinExtras/qwintaskbarbutton.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
 #include "ui_main_window.h"
 
 class DefaultObjectWindow;
@@ -14,6 +13,8 @@ class CellViewWindow;
 class LogWindow;
 class ObjectWindow;
 class RenderWindow;
+
+class QWinTaskbarButton;
 
 class MainWindow : public QMainWindow {
    Q_OBJECT

@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <QByteArray>
 #include <QDataStream>
+#include <QIODevice>
 #include "../core.h"
 
 namespace editor_helpers {

@@ -558,7 +558,7 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
          widget->clear();
          widget->addItem(tr("Any", "minute"), schedule_type::any_minute);
          for (int i = 0; i < 59; ++i) {
-            widget->addItem(tr("%1", "minute").arg(i, 2, QChar('0')), i);
+            widget->addItem(tr("%1", "minute").arg(i, 2, 10, QChar('0')), i);
          }
       }
    }
@@ -814,13 +814,17 @@ void FormDialogPackage::_save_impl() {
          using fragment_data_type   = dovah::loaded_forms::components::papyrus::package_fragment_data;
          using single_fragment_type = dovah::loaded_forms::components::papyrus::basic_fragment;
 
+         // 6/3/2026: MSVC is choking on this if it appears as the "this" type of a member function 
+         //           pointer declaration; stuff it in a `using` declaration to avoid that
+         using fragment_collection_type = decltype(fragment_data_type::fragments);
+
          auto* casted = dynamic_cast<fragment_data_type*>(working.script_data.fragment_data);
          assert((casted || !working.script_data.fragment_data) && "Fragment data for another form type shouldn't be here!");
 
          auto _commit = [&working, &casted](
             DKPapyrusFragmentFunctionPicker* widget,
-            std::optional<single_fragment_type> decltype(fragment_data_type::fragments)::* target_ptr
-         ) {
+            std::optional<single_fragment_type> fragment_collection_type::* target_ptr
+         ) -> void {
             auto scriptname = widget->currentScriptname();
             auto function   = widget->currentFunction();
             if (!scriptname.isEmpty() || !function.isEmpty()) {

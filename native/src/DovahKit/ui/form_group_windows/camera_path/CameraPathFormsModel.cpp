@@ -4,6 +4,7 @@
 #pragma region Drag and drop
    #include <QByteArray>
    #include <QDataStream>
+   #include <QIODevice>
    #include <QMimeData>
 #pragma endregion
 #include "dovah/datastores/camera_paths/node.h"

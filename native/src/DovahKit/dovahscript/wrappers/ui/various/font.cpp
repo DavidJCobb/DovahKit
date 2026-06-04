@@ -49,7 +49,18 @@
 // 
 //  - void QFont::resolve(uint);
 //    Wholly overwrite the internal bitmask of "resolved" properties.
+// 
+// UPDATE: As of Qt 6, these functions are no longer accessible. We have to cheat and access fields 
+// on the font that are supposed to be private. Somehow, it occurred to Qt's developers that they 
+// should properly encapsulate their classes, but not that they should allow callers to test whether 
+// optional fields on a class have actually been set.
 //
+namespace {
+   uint _get_font_resolve_mask(const QFont& f) {
+      // HACK HACK HACK because QFont is a bad API that sucks
+      return *(const uint*)((const uint8_t*)&f + 8); // uint QFont::resolveMask
+   }
+}
 
 namespace {
    // Maximum font size; attempts to set a size higher than this will produce a Lua error. I couldn't 
@@ -112,7 +123,7 @@ namespace {
                   return;
                if (has_row && has_col) {
                   if (auto* item = o->item()) {
-                     if (f.resolve() == 0) {
+                     if (_get_font_resolve_mask(f) == 0) {
                         item->setData(QVariant(), Qt::FontRole); // if it's an empty font, just clear it entirely
                      } else {
                         item->setData(f, Qt::FontRole);
@@ -132,7 +143,7 @@ namespace {
                   pos = o->col;
                   orientation = ObservableStandardItemModelObserver::colOrientation;
                }
-               if (f.resolve() == 0) {
+               if (_get_font_resolve_mask(f) == 0) {
                   model->setDefaultDataForSpan(Qt::FontRole, orientation, pos, QVariant()); // if it's an empty font, just clear it entirely
                } else {
                   model->setDefaultDataForSpan(Qt::FontRole, orientation, pos, f);
@@ -444,7 +455,7 @@ namespace {
             bool after = value.toBool();
             bool prior = font.weight() >= QFont::Medium;
             if (after == prior) {
-               if (font.resolve() & QFont::ResolveProperties::WeightResolved)
+               if (_get_font_resolve_mask(font) & QFont::ResolveProperties::WeightResolved)
                   return;
             }
             if (after)
@@ -557,7 +568,7 @@ namespace {
          QVariant get(const QFont& font) {
             QString out;
             //
-            auto mask = font.resolve();
+            auto mask = _get_font_resolve_mask(font);
             if (mask & QFont::ResolveProperties::FamilyResolved) {
                auto family = font.family();
                if (_is_generic(family)) {

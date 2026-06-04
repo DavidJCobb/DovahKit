@@ -155,7 +155,7 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
    for (size_t i = 0; i < this->parameters.size(); ++i) {
       auto& param  = this->parameters[i];
       auto* layout = new QGridLayout(param.parent);
-      layout->setMargin(0);
+      layout->setContentsMargins(0, 0, 0, 0);
       param.parent->setLayout(layout);
 
       param.stack = new QStackedWidget(param.parent);

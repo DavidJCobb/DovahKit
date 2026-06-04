@@ -9,7 +9,6 @@
 
 #ifdef _WIN32
    #include "helpers/windows.h"
-   #include <QtWin>
 #endif
 
 namespace {
@@ -46,7 +45,7 @@ namespace {
                continue;
             if (info.hIcon == NULL)
                continue;
-            auto pm = QtWin::fromHICON(info.hIcon);
+            auto pm = QPixmap::fromImage(QImage::fromHICON(info.hIcon));
             DestroyIcon(info.hIcon);
             if (pm.isNull())
                continue;
@@ -183,7 +182,7 @@ File* Folder::file(const QString& name) const noexcept {
    return nullptr;
 }
 File* Folder::file(const QString& name, int stop_at) const noexcept {
-   size_t size = std::min(std::max(0, stop_at), this->files.size());
+   size_t size = std::min(std::max(0, stop_at), (int)this->files.size());
    for (size_t i = 0; i < size; ++i)
       if (name == this->files[i]->name)
          return this->files[i];

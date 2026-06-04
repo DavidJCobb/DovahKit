@@ -30,10 +30,10 @@ EditorScriptPackageWindow::EditorScriptPackageWindow(QWidget* parent) : QDialog(
       if (!v.isEmpty()) {
          auto m = QRegularExpression(R"--(^(\d+)\.(\d+)\.(\d+)\.(\d+)$)--").match(v);
          if (m.hasMatch()) {
-            dv.major = m.capturedRef(1).toInt();
-            dv.minor = m.capturedRef(2).toInt();
-            dv.patch = m.capturedRef(3).toInt();
-            dv.build = m.capturedRef(4).toInt();
+            dv.major = m.capturedView(1).toInt();
+            dv.minor = m.capturedView(2).toInt();
+            dv.patch = m.capturedView(3).toInt();
+            dv.build = m.capturedView(4).toInt();
          }
       }
    }

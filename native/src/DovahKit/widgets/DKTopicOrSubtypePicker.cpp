@@ -31,7 +31,7 @@ DKTopicOrSubtypePicker::DKTopicOrSubtypePicker(QWidget* parent) : QWidget(parent
    this->_subwidgets.form = new DKComboBox(this);
    this->_subwidgets.form->setDisabled(true);
    layout->addWidget(this->_subwidgets.form, 0);
-   layout->setMargin(0);
+   layout->setContentsMargins(0, 0, 0, 0);
    layout->setStretch(1, 1);
    this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
    this->setFocusProxy(this->_subwidgets.form);

@@ -318,7 +318,7 @@ bool DKBreadcrumbBar::setPath(QString path) {
    if (!this->_data.model)
       return false;
    const auto cs     = this->caseSensitivity();
-   const auto chunks = path.splitRef(this->_text_editing.separator, Qt::SkipEmptyParts, cs);
+   const auto chunks = QStringView(path).split(this->_text_editing.separator, Qt::SkipEmptyParts, cs);
    //
    // Try to see if this matches a subset of the path we're already in. 
    // If so, that saves us some model queries.
@@ -862,7 +862,7 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
       style = proxy->baseStyle();
 
    QStyleOption opt;
-   opt.init(&menu);
+   opt.initFrom(&menu);
 
    int left = 0;
    //

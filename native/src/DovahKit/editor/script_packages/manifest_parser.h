@@ -10,7 +10,7 @@ namespace script_packages {
          cobb::qt::xml::XmlHtmlEntityResolver entity_resolver;
          manifest out;
 
-         static manifest::version _parse_version(QStringRef);
+         static manifest::version _parse_version(QStringView);
 
          void _parse_metadata();
             void _parse_author();

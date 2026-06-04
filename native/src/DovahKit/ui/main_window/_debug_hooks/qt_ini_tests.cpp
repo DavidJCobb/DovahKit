@@ -40,7 +40,7 @@ namespace {
 
 namespace DovahKitDebug {
    /*static*/ INIValueTestStruct INIValueTestStruct::fromString(const QString& text) {
-      auto view = QStringRef(&text).trimmed();
+      auto view = QStringView(text).trimmed();
       auto i = view.indexOf(':');
       if (i <= 0)
          return INIValueTestStruct{};

@@ -11,7 +11,7 @@
 
 DKMagicEffectListWidget::DKMagicEffectListWidget(QWidget* parent) : QWidget(parent) {
    auto* layout = new QVBoxLayout(this);
-   layout->setMargin(0);
+   layout->setContentsMargins(0, 0, 0, 0);
    this->setLayout(layout);
 
    {
