@@ -8,7 +8,13 @@ namespace cobb::html {
       QString replace;
 
       entity_definition() {}
-      entity_definition(uint char_code, QString n) : name(n), replace(QChar(char_code)) {}
+      entity_definition(uint char_code, QString n) : name(n) {
+         if (char_code <= 0xFFFF) {
+            this->replace = QChar(char_code);
+         } else {
+            this->replace = QString::fromUcs4(&char_code, 1);
+         }
+      }
    };
 
    extern std::array<entity_definition, 2024> all_entities;
