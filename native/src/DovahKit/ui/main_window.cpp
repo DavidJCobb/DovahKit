@@ -32,8 +32,8 @@
    //
    #include "./options_window/options_window.h"
 #pragma endregion
-
-#define HAVE_A_POLYFILL_FOR_QWinTaskbarButton 0
+#include "qt/DKWinTaskbarButton.h"
+#include "qt/DKWinTaskbarProgress.h"
 
 #include "dovah/files/common.h"
 #include "dovah/form_stub.h"
@@ -90,10 +90,8 @@ void MainWindow::_subwindow_base::_open(QMdiArea* parent) {
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    ui.setupUi(this);
    _window = this;
-   //
-   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
-      this->taskbar_button = new QWinTaskbarButton(this);
-   #endif
+
+   this->taskbar_button = new DKWinTaskbarButton(this);
    
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::fileLoadStatisticsAvailable, [this](const DovahKitCore::file_load_stats& stats) {
@@ -421,26 +419,20 @@ MainWindow::~MainWindow() {
 void MainWindow::setProgressBounds(int min, int max) {
    if (!this->taskbar_button)
       return;
-   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
-      auto p = this->taskbar_button->progress();
-      p->setRange(min, max);
-   #endif
+   auto p = this->taskbar_button->progress();
+   p->setRange(min, max);
 }
 void MainWindow::setProgressStep(int s) {
    if (!this->taskbar_button)
       return;
-   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
-      auto p = this->taskbar_button->progress();
-      p->setValue(s);
-   #endif
+   auto p = this->taskbar_button->progress();
+   p->setValue(s);
 }
 void MainWindow::setProgressEnableState(bool s) {
    if (!this->taskbar_button)
       return;
-   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
-      auto p = this->taskbar_button->progress();
-      p->setVisible(s);
-   #endif
+   auto p = this->taskbar_button->progress();
+   p->setVisible(s);
 }
 
 QMdiSubWindow* MainWindow::getSubwindowFor(QWidget* w) const noexcept {
@@ -462,10 +454,8 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 void MainWindow::showEvent(QShowEvent* event) {
    event->accept();
    //
-   #if HAVE_A_POLYFILL_FOR_QWinTaskbarButton
    if (auto tb = this->taskbar_button)
       tb->setWindow(this->windowHandle());
-   #endif
    //
    auto g_canvas = this->ui.mdi->geometry();
    if (auto* subwindow = this->subwindows.object._window) { // set initial object window height

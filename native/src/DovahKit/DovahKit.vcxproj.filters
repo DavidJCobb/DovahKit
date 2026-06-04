@@ -4155,6 +4155,15 @@
     <ClCompile Include="editor\subsystems\game_localized_strings\convert_string.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="qt\DKWinTaskbarProgress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qt\DKWinTaskbarButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qt\DKWinTaskbarButtonPrivate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10358,6 +10367,9 @@
     <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set_definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="qt\DKWinTaskbarButtonPrivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11863,6 +11875,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="qt\DKWinTaskbarButton.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="qt\DKWinTaskbarProgress.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

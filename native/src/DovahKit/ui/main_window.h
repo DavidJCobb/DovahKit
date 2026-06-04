@@ -14,7 +14,7 @@ class LogWindow;
 class ObjectWindow;
 class RenderWindow;
 
-class QWinTaskbarButton;
+class DKWinTaskbarButton;
 
 class MainWindow : public QMainWindow {
    Q_OBJECT
@@ -66,7 +66,7 @@ class MainWindow : public QMainWindow {
          _subwindow<ObjectWindow>   object;
          _subwindow<RenderWindow>   render;
       } subwindows;
-      QWinTaskbarButton*   taskbar_button        = nullptr;
+      DKWinTaskbarButton*  taskbar_button        = nullptr;
       DefaultObjectWindow* default_object_window = nullptr;
       GameSettingWindow*   game_setting_window   = nullptr;
       FileMetadataWindow*  metadata_window       = nullptr;

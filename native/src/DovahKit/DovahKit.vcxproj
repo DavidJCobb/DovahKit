@@ -999,6 +999,9 @@
     <ClCompile Include="nif\types\NiTransform.cpp" />
     <ClCompile Include="nif\utils\find_all_retexturable_blocks.cpp" />
     <ClCompile Include="nif\utils\precache_nif_info.cpp" />
+    <ClCompile Include="qt\DKWinTaskbarButton.cpp" />
+    <ClCompile Include="qt\DKWinTaskbarButtonPrivate.cpp" />
+    <ClCompile Include="qt\DKWinTaskbarProgress.cpp" />
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathFormsModel.cpp" />
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathsDialog.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.cpp" />
@@ -2343,6 +2346,9 @@
     <ClInclude Include="helpers\tuples\for_each_nttp_value.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabObjectives.h" />
     <QtMoc Include="ui\form_windows\quest\QuestObjectivesModel.h" />
+    <QtMoc Include="qt\DKWinTaskbarButton.h" />
+    <QtMoc Include="qt\DKWinTaskbarProgress.h" />
+    <ClInclude Include="qt\DKWinTaskbarButtonPrivate.h" />
     <ClInclude Include="ui\form_windows\quest\QuestObjectiveTargetsModel.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabStages.h" />
     <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h" />
