@@ -548,7 +548,7 @@ void DKBSABrowseDialog::openNode(const QModelIndex& index) {
       emit this->directoryEntered(model->fullPathTo(index));
    } else if (model->isFile(index)) {
       auto data = model->data(index, DKBSACollectionModel::FullPathRole);
-      if (data.isValid() && data.type() == QMetaType::QString) {
+      if (data.isValid() && data.typeId() == QMetaType::QString) {
          this->acceptWithFile(data.toString());
          return;
       }
@@ -575,7 +575,7 @@ void DKBSABrowseDialog::selectFileByName(QString name) {
    if (!file.isValid())
       return;
    auto data = model->data(index, DKBSACollectionModel::FullPathRole);
-   if (data.isValid() && data.type() == QMetaType::QString) {
+   if (data.isValid() && data.typeId() == QMetaType::QString) {
       this->acceptWithFile(data.toString());
       return;
    }

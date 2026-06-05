@@ -418,7 +418,7 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
       QObject::connect(this->ui.operandGlobal, &DKFormPicker::formChanged, this, [this](dovah::form_stub* value) {
          this->_value.comparison.operand = value;
       });
-      QObject::connect(this->ui.flagCompareToGlobal, &QCheckBox::stateChanged, this, [this](int state) {
+      QObject::connect(this->ui.flagCompareToGlobal, &QCheckBox::checkStateChanged, this, [this](int state) {
          if (state == Qt::CheckState::Checked) {
             this->ui.operandStack->setCurrentWidget(this->ui.operandPageGlobal);
          } else {
@@ -842,7 +842,7 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
          if (widget->count() > 0) {
             bool success    = false;
             auto basis_data = widget->itemData(0); // base it on the first item's data's type
-            desired_type = (decltype(desired_type)) basis_data.type(); // cast needed for QVariant's historical jank
+            desired_type = (decltype(desired_type)) basis_data.typeId(); // cast needed for QVariant's historical jank
          }
 
          bool success = false;

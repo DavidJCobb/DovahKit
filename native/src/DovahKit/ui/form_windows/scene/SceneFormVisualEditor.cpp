@@ -1000,7 +1000,7 @@ void SceneFormVisualEditor::_update_cursor(const QMouseEvent* event) {
       return;
    }
 
-   auto targets = this->_find_mouse_targets(this->_map_from_global(event->globalPos()));
+   auto targets = this->_find_mouse_targets(this->_map_from_global(event->globalPosition().toPoint()));
    if (targets.action.pointer) {
       if (targets.action.edge_l || targets.action.edge_r) {
          this->setCursor(Qt::CursorShape::SizeHorCursor);
@@ -1466,7 +1466,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          Phase*  phase  = nullptr;
       } targets;
 
-      auto pos = this->_map_from_global(event->globalPos());
+      auto pos = this->_map_from_global(event->globalPosition().toPoint());
       for (auto* item : this->_data.actions) {
          if (item->geometry.rect.contains(pos)) {
             targets.action = item;
@@ -1502,9 +1502,10 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          return;
       event->setAccepted(true);
 
-      this->_mouse.mousedown_at   = event->localPos().toPoint();
-      this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
-      auto targets = this->_find_mouse_targets(this->_map_from_global(event->globalPos()));
+      const auto global_pos = event->globalPosition().toPoint();
+      this->_mouse.mousedown_at   = event->position().toPoint();
+      this->_mouse.mouse_prev_pos = global_pos;
+      auto targets = this->_find_mouse_targets(this->_map_from_global(global_pos));
       if (targets.action.pointer) {
          this->_mouse.mousedown_on = targets.action;
          this->_select(targets.action.pointer);
@@ -1527,7 +1528,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
       if (this->_mouse.is_panning) {
          if (!this->_scroll_area)
             return;
-         auto pos   = event->screenPos().toPoint();
+         auto pos   = event->globalPosition().toPoint();
          auto delta = this->_mouse.mouse_prev_pos - pos; // the order here is not a mistake; panning means that dragging left should scroll right, and vice versa
          this->_mouse.mouse_prev_pos = pos;
 
@@ -1539,7 +1540,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          return;
       }
       if (this->_mouse.is_resizing) {
-         auto pos   = event->screenPos().toPoint();
+         auto pos   = event->globalPosition().toPoint();
          auto delta = pos - this->_mouse.mouse_prev_pos;
          this->_mouse.mouse_prev_pos = pos;
          //
@@ -1550,8 +1551,8 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          return;
       }
       if (lmb || mmb) {
-         this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
-         if ((event->pos() - this->_mouse.mousedown_at).manhattanLength() < QApplication::startDragDistance()) {
+         this->_mouse.mouse_prev_pos = event->globalPosition().toPoint();
+         if ((event->position().toPoint() - this->_mouse.mousedown_at).manhattanLength() < QApplication::startDragDistance()) {
             this->_update_cursor(event);
             return;
          }
@@ -1708,7 +1709,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
             ActionType action_type;
             _extract_dragged_action_data(*event->mimeData(), action_id, action_type);
 
-            auto target = this->_find_drag_drop_target(event->pos(), action_type, action_id);
+            auto target = this->_find_drag_drop_target(event->position().toPoint(), action_type, action_id);
             if (target.actor && target.phase) {
                Action* action = nullptr;
                for (auto* a : this->_data.actions) {

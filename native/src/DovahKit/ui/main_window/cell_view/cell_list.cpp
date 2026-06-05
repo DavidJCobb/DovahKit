@@ -376,7 +376,7 @@ bool CellListModelProxy::lessThan(const QModelIndex& left, const QModelIndex& ri
    //
    QVariant lhs = source->data(left,  sort_role);
    QVariant rhs = source->data(right, sort_role);
-   if (lhs.type() != QMetaType::QString && lhs.canConvert<int>() && rhs.type() == lhs.type()) {
+   if (lhs.typeId() != QMetaType::QString && lhs.canConvert<int>() && rhs.typeId() == lhs.typeId()) {
       return lhs.toInt() < rhs.toInt();
    }
    return QString::localeAwareCompare(lhs.toString(), rhs.toString()) < 0;

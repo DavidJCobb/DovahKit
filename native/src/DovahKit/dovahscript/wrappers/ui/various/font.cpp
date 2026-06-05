@@ -92,7 +92,7 @@ namespace {
                if (auto* i = o->item()) {
                   assert(w.parts[0].signature == dovahscript::wrapper_part_types::ui_font_role);
                   auto data = i->data(Qt::FontRole);
-                  if (data.isValid() && data.type() == QMetaType::QFont)
+                  if (data.isValid() && data.typeId() == QMetaType::QFont)
                      return data.value<QFont>();
                }
             }

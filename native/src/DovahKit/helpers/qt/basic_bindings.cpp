@@ -19,12 +19,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace cobb::qt {
    void bind(QCheckBox* widget, bool& target) {
       widget->setChecked(target);
-      QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target](int state) {
+      QObject::connect(widget, &QCheckBox::checkStateChanged, widget, [&target](int state) {
          target = state == Qt::CheckState::Checked;
       });
    }
    void unbind(QCheckBox* widget) {
-      QObject::disconnect(widget, &QCheckBox::stateChanged, widget, nullptr);
+      QObject::disconnect(widget, &QCheckBox::checkStateChanged, widget, nullptr);
    }
 
    void bind(QLineEdit* widget, std::string& target) {

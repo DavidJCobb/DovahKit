@@ -39,7 +39,7 @@ namespace ui {
    template<typename Target, typename Mask>
    void bind(QCheckBox* widget, Target& target, Mask mask) {
       widget->setChecked((target & mask) != 0);
-      QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target, mask](int state) {
+      QObject::connect(widget, &QCheckBox::checkStateChanged, widget, [&target, mask](int state) {
          if (state == Qt::CheckState::Checked)
             target |= mask;
          else
@@ -77,7 +77,7 @@ namespace ui {
    template<typename Target, typename Mask>
    void bind_inverse(QCheckBox* widget, Target& target, Mask mask) {
       widget->setChecked((target & mask) == 0);
-      QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target, mask](int state) {
+      QObject::connect(widget, &QCheckBox::checkStateChanged, widget, [&target, mask](int state) {
          if (state == Qt::CheckState::Checked)
             target &= ~mask;
          else

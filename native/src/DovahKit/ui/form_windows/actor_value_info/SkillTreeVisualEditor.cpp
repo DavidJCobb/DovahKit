@@ -672,19 +672,19 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       if (event->button() != Qt::LeftButton && event->button() != Qt::RightButton)
          return;
 
-      this->_mouse.mousedown_at   = event->localPos().toPoint();
-      this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
+      this->_mouse.mousedown_at   = event->position().toPoint();
+      this->_mouse.mouse_prev_pos = event->globalPosition().toPoint();
       this->_mouse.is_cancelled   = false;
 
       if (this->_is_in_node_connection_interaction()) {
-         auto* dst = this->_get_node_at_point(_map_from_global(event->globalPos()));
+         auto* dst = this->_get_node_at_point(_map_from_global(event->globalPosition().toPoint()));
          this->_complete_node_connection_interaction(dst);
          return;
       }
 
       event->setAccepted(true);
 
-      this->_mouse.mousedown_on = this->_get_node_at_point(_map_from_global(event->globalPos()));
+      this->_mouse.mousedown_on = this->_get_node_at_point(_map_from_global(event->globalPosition().toPoint()));
       if (this->_mouse.mousedown_on)
          this->_select_node(this->_mouse.mousedown_on);
    }
@@ -1092,7 +1092,7 @@ void SkillTreeVisualEditor::_update_cursor(const QMouseEvent* event) {
    if (this->_is_in_node_connection_interaction()) {
       this->setCursor(Qt::CursorShape::ForbiddenCursor);
 
-      auto  pos = _map_from_global(event->globalPos());
+      auto  pos = _map_from_global(event->globalPosition().toPoint());
       auto* dst = _get_node_at_point(pos);
       if (dst && dst->id != this->_connecting.source_node) {
          if (this->_connecting.is_connecting) {
@@ -1132,7 +1132,7 @@ void SkillTreeVisualEditor::_update_cursor(const QMouseEvent* event) {
       }
    }
    {
-      auto pos = _map_from_global(event->globalPos());
+      auto pos = _map_from_global(event->globalPosition().toPoint());
       if (_get_node_at_point(pos)) {
          this->setCursor(Qt::CursorShape::ArrowCursor);
          return;

@@ -2,7 +2,7 @@
 
 namespace cobb::lua {
    extern bool qt_variant_is_int(const QVariant& variant) {
-      switch (variant.type()) {
+      switch (variant.typeId()) {
          case QMetaType::Int:
          case QMetaType::UInt:
          case QMetaType::LongLong:
@@ -12,7 +12,7 @@ namespace cobb::lua {
       return false;
    }
    extern int type_of_qt_variant(const QVariant& variant) {
-      switch (variant.type()) {
+      switch (variant.typeId()) {
          case QMetaType::Bool:
             return LUA_TBOOLEAN;
          case QMetaType::Double:
@@ -37,7 +37,7 @@ namespace cobb::lua {
          lua_pushnil(L);
          return 1;
       }
-      switch (variant.type()) {
+      switch (variant.typeId()) {
          case QMetaType::Bool:
             lua_pushboolean(L, variant.toBool());
             return 1;

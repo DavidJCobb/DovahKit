@@ -54,7 +54,7 @@ namespace DovahKitDebug::features::widgets {
          //
          auto* button = new QCheckBox("Can split by type");
          button->setChecked(true);
-         QObject::connect(button, &QCheckBox::stateChanged, picker, [picker](int state) {
+         QObject::connect(button, &QCheckBox::checkStateChanged, picker, [picker](int state) {
             picker->setSplitTypesWhenMany(state == Qt::CheckState::Checked);
          });
          layout->addWidget(button, 0, 1);

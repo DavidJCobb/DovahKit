@@ -239,7 +239,7 @@ namespace dovahscript::api_helpers::moph {
 
    extern int push_color(lua_State* L, const QVariant& v, const wrapper& observer) {
       QColor color;
-      switch (v.type()) {
+      switch (v.typeId()) {
          case QMetaType::QBrush:
             color = v.value<QBrush>().color();
             break;
@@ -259,7 +259,7 @@ namespace dovahscript::api_helpers::moph {
 
    extern int push_font(lua_State* L, const QVariant& v, const wrapper& observer) {
       if (v.isValid()) {
-         assert(v.type() == QMetaType::QFont);
+         assert(v.typeId() == QMetaType::QFont);
          wrapper out = observer;
          out.append_part(wrapper_part_types::ui_font_role);
          return core::subsystems::userdata::get().push(L, out, wrappers::ui::font::metatable_key);
@@ -274,7 +274,7 @@ namespace dovahscript::api_helpers::moph {
    }
 
    extern int push_icon(lua_State* L, const QVariant& v, const wrapper& observer) {
-      switch (v.type()) {
+      switch (v.typeId()) {
          case QMetaType::QBrush:
             api_helpers::push_color(L, v.value<QBrush>().color());
             return 1;
@@ -282,7 +282,7 @@ namespace dovahscript::api_helpers::moph {
             api_helpers::push_color(L, v.value<QColor>());
             return 1;
       }
-      if (v.type() == qMetaTypeId<DovahscriptResourceHandle>()) {
+      if (v.typeId() == qMetaTypeId<DovahscriptResourceHandle>()) {
          auto* resource = DovahscriptResourceHandle::extract_from_variant(v);
          return push_native_object(resource);
       }

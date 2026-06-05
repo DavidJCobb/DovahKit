@@ -11,7 +11,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, &target_type::stateChanged, &impl::get_event_connection_recipient(),
+            QObject::connect(casted, &target_type::checkStateChanged, &impl::get_event_connection_recipient(),
                [casted, ln](int state) {
                   QString s;
                   switch (state) {
@@ -36,7 +36,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, &target_type::stateChanged, &impl::get_event_connection_recipient(),
+            QObject::connect(casted, &target_type::checkStateChanged, &impl::get_event_connection_recipient(),
                [casted, ln](int state) {
                   core::subsystems::events::get().receive_event_from_main_thread(*casted, "OnToggled", ln.c_str(), { state == Qt::CheckState::Checked });
                }

@@ -61,7 +61,7 @@
       case QEvent::Type::MouseButtonRelease:
          {
             auto* casted = (QMouseEvent*)event;
-            if (!_get_checkbox_rect(option).contains(casted->pos()))
+            if (!_get_checkbox_rect(option).contains(casted->position().toPoint()))
                return false;
          }
          break;

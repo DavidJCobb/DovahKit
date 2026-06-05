@@ -287,12 +287,12 @@ namespace {
                   return;
                has_layout = true;
                if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
-                  if (arg_a.type() != QMetaType::QString) {
+                  if (arg_a.typeId() != QMetaType::QString) {
                      error.text = "axis name (\"row\" or \"col\" or \"column\") expected";
                      error.arg  = 2;
                      return;
                   }
-                  if (arg_b.type() != QMetaType::Int) {
+                  if (arg_b.typeId() != QMetaType::Int) {
                      error.text = "index (integer) expected";
                      error.arg  = 3;
                      return;
@@ -313,7 +313,7 @@ namespace {
                   return;
                }
                if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
-                  if (arg_a.type() != QMetaType::Int) {
+                  if (arg_a.typeId() != QMetaType::Int) {
                      error.text = "index (integer) expected";
                      error.arg  = 2;
                      return;
@@ -472,7 +472,7 @@ namespace {
                   error.text = "this widget has a grid layout, so you must pass the axis name, an index, and a stretch value";
                   return;
                }
-               if (args[0].type() != QMetaType::QString) {
+               if (args[0].typeId() != QMetaType::QString) {
                   error.arg  = 2;
                   error.text = "axis name (\"row\" or \"col\" or \"column\") expected";
                   return;

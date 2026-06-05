@@ -460,7 +460,7 @@
                      }
                      break;
                   case Qt::EditRole:
-                     if (value.type() != QVariant::Type::Bool)
+                     if (value.typeId() != QMetaType::Bool)
                         return false;
                      if (!_set_entry_point_enabled(value.toBool()))
                         return false;

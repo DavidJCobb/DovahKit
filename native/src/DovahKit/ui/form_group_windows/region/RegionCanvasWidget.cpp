@@ -417,7 +417,7 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
    /*virtual*/ void RegionCanvasWidget::mouseMoveEvent(QMouseEvent* event) /*override*/ {
       QPoint delta;
       if (this->state.panning || this->isMovingArea()) {
-         auto pos = event->globalPos();
+         auto pos = event->globalPosition().toPoint();
          delta = pos - this->state.last_mouse_pos;
          this->state.last_mouse_pos = pos;
       }
@@ -434,7 +434,7 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
          this->state.moving_area_delta += world_delta;
          this->repaint();
       }
-      auto local_pos = event->localPos().toPoint();
+      auto local_pos = event->position().toPoint();
       if (!this->state.panning && this->isDrawingArea()) {
          if (_can_close_polygon_at(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(local_pos))) {
             this->setCursor(Qt::CursorShape::PointingHandCursor);
@@ -445,12 +445,12 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
       this->_update_status_panels(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(local_pos));
    }
    /*virtual*/ void RegionCanvasWidget::mousePressEvent(QMouseEvent* event) /*override*/ {
-      auto local_pos    = event->localPos().toPoint();
+      auto local_pos    = event->position().toPoint();
       bool is_on_canvas = this->state.viewport.contains(local_pos);
       if (is_on_canvas) {
          switch (event->button()) {
             case Qt::MouseButton::MiddleButton:
-               this->_start_panning(event->globalPos());
+               this->_start_panning(event->globalPosition().toPoint());
                break;
             case Qt::MouseButton::LeftButton:
                if (this->isMovingArea()) {

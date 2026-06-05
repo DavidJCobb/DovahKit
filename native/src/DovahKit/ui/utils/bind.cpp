@@ -22,7 +22,7 @@
 namespace ui {
    extern void bind(QCheckBox* widget, bool& target) {
       widget->setChecked(target);
-      QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target](int state) {
+      QObject::connect(widget, &QCheckBox::checkStateChanged, widget, [&target](int state) {
          target = state == Qt::CheckState::Checked;
       });
    }
@@ -34,7 +34,7 @@ namespace ui {
    }
    extern void bind_inverse(QCheckBox* widget, bool& target) {
       widget->setChecked(!target);
-      QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target](int state) {
+      QObject::connect(widget, &QCheckBox::checkStateChanged, widget, [&target](int state) {
          target = state != Qt::CheckState::Checked;
       });
    }

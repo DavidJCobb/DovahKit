@@ -1086,7 +1086,7 @@ bool DKBreadcrumbBar::_do_menu_eavesdropping(QMenu& menu, QEvent& event) {
             // Only eavesdrop on mouse-move events if the mouse is not over the 
             // menu. Otherwise, ensure the menu has priority.
             //
-            if (!menu.rect().contains(menu.mapFromGlobal(mev.globalPos()))) {
+            if (!menu.rect().contains(menu.mapFromGlobal(mev.globalPosition()).toPoint())) {
                this->mouseMoveEvent(&mev);
             }
          }
@@ -1094,7 +1094,7 @@ bool DKBreadcrumbBar::_do_menu_eavesdropping(QMenu& menu, QEvent& event) {
       case QEvent::MouseButtonPress:
          {
             auto* mev = (QMouseEvent*)&event;
-            if (mev->button() == Qt::LeftButton && this == QApplication::widgetAt(mev->globalPos())) {
+            if (mev->button() == Qt::LeftButton && this == QApplication::widgetAt(mev->globalPosition().toPoint())) {
                this->_state.last_click_closed_our_menu = true;
             }
          }
@@ -1464,10 +1464,10 @@ void DKBreadcrumbBar::_recache_icons() {
       this->_on_segment_hovered(index_of_none);
    }
    /*virtual*/ void DKBreadcrumbBar::mouseMoveEvent(QMouseEvent* event) {
-      //auto pos = event->localPos();
-      auto pos = this->mapFromGlobal(event->globalPos());
+      //auto pos = event->position();
+      auto pos = this->mapFromGlobal(event->globalPosition());
       // The event may have been originally delivered to a QMenu before we took it, 
-      // so we can't trust its own localPos(). Refer to the "menu eavesdropping" 
+      // so we can't trust its own position(). Refer to the "menu eavesdropping" 
       // code and its comments for further information.
 
       if (this->_root_button.menu) {
@@ -1502,10 +1502,10 @@ void DKBreadcrumbBar::_recache_icons() {
             return;
          }
 
-         //auto pos = event->localPos();
-         auto pos = this->mapFromGlobal(event->globalPos());
+         //auto pos = event->position();
+         auto pos = this->mapFromGlobal(event->globalPosition());
          // The event may have been originally delivered to a QMenu before we took it, 
-         // so we can't trust its own localPos(). Refer to the "menu eavesdropping" 
+         // so we can't trust its own position(). Refer to the "menu eavesdropping" 
          // code and its comments for further information.
 
          if (this->_root_button.menu) {

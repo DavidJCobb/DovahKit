@@ -808,7 +808,7 @@ void FormDialogActorBase::_load_impl() {
             this->ui.templateUseKeywords,
          };
          for (auto* checkbox : checkboxes) {
-            QObject::connect(checkbox, &QCheckBox::stateChanged, this, &FormDialogActorBase::_update_from_template_actor);
+            QObject::connect(checkbox, &QCheckBox::checkStateChanged, this, &FormDialogActorBase::_update_from_template_actor);
          }
       #pragma endregion
    #pragma endregion

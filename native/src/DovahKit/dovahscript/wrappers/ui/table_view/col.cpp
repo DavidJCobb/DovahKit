@@ -65,7 +65,7 @@ namespace {
             return 0;
          QVariant result = api_helpers::get_model_items_data(self.model_observer, Qt::ForegroundRole);
          QColor   color;
-         switch (result.type()) {
+         switch (result.typeId()) {
             case QMetaType::QBrush:
                color = result.value<QBrush>().color();
                break;

@@ -247,7 +247,7 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
    });
 
    #pragma region Value-change handlers
-   QObject::connect(this->ui.valueWidget_bool, &QCheckBox::stateChanged, this, [this](int state) {
+   QObject::connect(this->ui.valueWidget_bool, &QCheckBox::checkStateChanged, this, [this](int state) {
       if (this->_selected_property_element_type() != vmad::property_type::boolean)
          return;
       bool checked = (state == Qt::CheckState::Checked);

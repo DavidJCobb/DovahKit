@@ -225,7 +225,7 @@ QVariant ObservableStandardItemModel::data(const QModelIndex& index, int role) c
          col = entry.forCol(index.column());
       }
       //
-      if (!cell.isValid() || cell.type() == QMetaType::QFont) {
+      if (!cell.isValid() || cell.typeId() == QMetaType::QFont) {
          QFont resolved = cell.value<QFont>();
          resolved = resolved.resolve(row.value<QFont>());
          resolved = resolved.resolve(col.value<QFont>());
