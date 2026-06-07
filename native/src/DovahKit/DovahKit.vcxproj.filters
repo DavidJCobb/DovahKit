@@ -1002,7 +1002,7 @@
     <ClCompile Include="helpers\qt\url.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\qt\minimize_intent.cpp">
+    <ClCompile Include="helpers\qt\minimize_indent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovahscript\qt\impl\DovahscriptCanvasExporter.cpp">

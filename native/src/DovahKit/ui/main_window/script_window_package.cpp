@@ -278,7 +278,7 @@ void EditorScriptPackageWindow::redrawPackage() {
       if (vi.package) {
          text = tr("version %1.%2.%3.%4", "package version info (package version)");
          if (vi.dovah_minimum) {
-            text = tr((const char*)u8"version %1.%2.%3.%4 — supports DovahKit versions %5.%6.%7.%8 and up", "package version info (package version and minimum DovahKit version)");
+            text = tr((const char*)u8"version %1.%2.%3.%4 \u2014 supports DovahKit versions %5.%6.%7.%8 and up", "package version info (package version and minimum DovahKit version)");
          }
       } else if (vi.dovah_minimum) {
          text = tr("supports DovahKit versions %5.%6.%7.%8 and up", "package version info (minimum DovahKit version)");

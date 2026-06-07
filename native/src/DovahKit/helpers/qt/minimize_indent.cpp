@@ -73,7 +73,7 @@ namespace cobb::qt {
       //
       // Removing leading and trailing line breaks:
       //
-      uint size  = text.size();
+      uint size  = out.size();
       uint start = 0;
       uint end   = size;
       for (uint i = 0; i < size; ++i) {

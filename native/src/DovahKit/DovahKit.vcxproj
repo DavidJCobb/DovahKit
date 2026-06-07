@@ -896,7 +896,7 @@
     <ClCompile Include="helpers\qt\ini.cpp" />
     <ClCompile Include="helpers\qt\keycodes.cpp" />
     <ClCompile Include="helpers\qt\layout.cpp" />
-    <ClCompile Include="helpers\qt\minimize_intent.cpp" />
+    <ClCompile Include="helpers\qt\minimize_indent.cpp" />
     <ClCompile Include="helpers\qt\ownership.cpp" />
     <ClCompile Include="helpers\qt\repaint.cpp" />
     <ClCompile Include="helpers\qt\set_model_of.cpp" />
