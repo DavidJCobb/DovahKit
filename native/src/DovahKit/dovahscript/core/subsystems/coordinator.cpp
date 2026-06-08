@@ -42,8 +42,12 @@ namespace {
       #endif
    ;
 
-   static constexpr const char* ui_locked_queue_registry_key   = "dovahscript.internal.queued_fucntions.ui_locked";
-   static constexpr const char* ui_unlocked_queue_registry_key = "dovahscript.internal.queued_fucntions.ui_unlocked";
+   // A change made to how we manage QEvents, in an attempt to alleviate issues where some 
+   // events (i.e. mouse-clicks, widget focus, etc.) get dropped.
+   static constexpr const bool set_ui_lock_state_as_briefly_as_possible = true;
+
+   static constexpr const char* ui_locked_queue_registry_key   = "dovahscript.internal.queued_functions.ui_locked";
+   static constexpr const char* ui_unlocked_queue_registry_key = "dovahscript.internal.queued_functions.ui_unlocked";
 }
 
 namespace dovahscript::core::subsystems {
@@ -273,18 +277,18 @@ namespace dovahscript::core::subsystems {
       require_worker_thread();
       require_script_thread();
       //
-      auto start      = lua_gettop(this->lua_state);
-      auto index_list = start + 1;
-      auto index_nk   = start + 2;
-      auto index_nv   = start + 3;
-      //
-      this->ui_lock_override = ui_locked ? ui_lock_override_state::locked : ui_lock_override_state::unlocked;
-      //
+      const auto start      = lua_gettop(this->lua_state);
+      const auto index_list = start + 1;
+      
+      if constexpr (!set_ui_lock_state_as_briefly_as_possible) {
+         this->ui_lock_override = ui_locked ? ui_lock_override_state::locked : ui_lock_override_state::unlocked;
+      }
+      
       auto* key = ui_locked ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
       auto* L   = this->lua_state;
       int   count_executed = 0;
       if (lua_getfield(L, LUA_REGISTRYINDEX, key) == LUA_TTABLE) {
-         int count = lua_rawlen(L, -1);
+         const int count = lua_rawlen(L, index_list);
          if (count) {
             //
             // Clear the list out of the registry (replace it with a blank table), leaving the original list 
@@ -295,16 +299,25 @@ namespace dovahscript::core::subsystems {
             //
             // Execute each individual function in the list.
             //
-            for (int i = 0; i < count; ++i) {
-               lua_geti(L, -1, i + 1); // get the function
-               safe_call(this->lua_state, 0, 0); // this will pop the function
+            if constexpr (set_ui_lock_state_as_briefly_as_possible) {
+               this->ui_lock_override = ui_locked ? ui_lock_override_state::locked : ui_lock_override_state::unlocked;
             }
+            for (int i = 1; i <= count; ++i) {
+               lua_geti(L, index_list, i); // get the function
+               safe_call(L, 0, 0); // this will pop the function
+            }
+            if constexpr (set_ui_lock_state_as_briefly_as_possible) {
+               this->ui_lock_override = ui_lock_override_state::unchanged;
+            }
+            count_executed += count;
          }
-         count_executed += count;
       }
       lua_settop(this->lua_state, start);
-      //
-      this->ui_lock_override = ui_lock_override_state::unchanged;
+      
+      if constexpr (!set_ui_lock_state_as_briefly_as_possible) {
+         this->ui_lock_override = ui_lock_override_state::unchanged;
+      }
+
       return count_executed;
    }
 
