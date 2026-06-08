@@ -19,12 +19,17 @@ namespace dovahscript::wrappers::ui::impl::tabbox {
          task->handler = [widget, at, &name, &body]() {
             body = new DovahscriptTabboxTab;
             core::subsystems::coordinator::get().set_up_widget(*body);
-            core::subsystems::lifetime::get().on_hierarchy_item_created(*body);
             set_widget_forced_parent(body, widget);
             if (at >= 0)
                widget->insertTab(at, body, name);
             else
                widget->addTab(body, name);
+            //
+            // Ensure that we start tracking the tab-body widget's lifetime *after* 
+            // we add it to the tabbox, so we don't mistakenly consider it an "orphan" 
+            // widget.
+            //
+            core::subsystems::lifetime::get().on_hierarchy_item_created(*body);
          };
          send_script_ui_task(*task);
          delete task;

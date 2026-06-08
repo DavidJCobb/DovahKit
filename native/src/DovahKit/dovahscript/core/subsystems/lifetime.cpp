@@ -408,12 +408,12 @@ namespace dovahscript::core::subsystems {
          if (auto* widget = qobject_cast<QWidget*>(child)) {
             auto& list = base.widgets;
             auto  i    = list.indexOf(widget);
-            assert(i >= 0);
+            assert(i >= 0 && "if the widget was previously orphaned, it should be in our orphan list");
             list.remove(i);
          } else if (auto* cwe = qobject_cast<CanvasWidgetEntity*>(child)) {
             auto& list = base.canvas_widget_entities;
             auto  i    = list.indexOf(cwe);
-            assert(i >= 0);
+            assert(i >= 0 && "if the canvas-widget-entity was previously orphaned, it should be in our orphan list");
             list.remove(i);
          } else {
             // Don't bother handling button groups; we deal with those elsewhere
@@ -425,11 +425,11 @@ namespace dovahscript::core::subsystems {
          //
          if (auto* widget = qobject_cast<QWidget*>(child)) {
             auto& list = base.widgets;
-            assert(!list.contains(widget));
+            assert(!list.contains(widget) && "if the widget is becoming orphaned, it should not already be in our orphan list");
             list.push_back(widget);
          } else if (auto* cwe = qobject_cast<CanvasWidgetEntity*>(child)) {
             auto& list = base.canvas_widget_entities;
-            assert(!list.contains(cwe));
+            assert(!list.contains(cwe) && "if the canvas-widget-entity is becoming orphaned, it should not already be in our orphan list");
             list.push_back(cwe);
          } else {
             // Don't bother handling button groups; we deal with those elsewhere
