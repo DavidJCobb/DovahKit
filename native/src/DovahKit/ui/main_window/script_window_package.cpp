@@ -10,6 +10,11 @@
 #include "./script_window/hyperlink_confirm.h"
 #include "./script_window_package/DovahscriptAuthorWidget.h"
 
+#include <QClipboard>
+#include <QGuiApplication>
+#include <QMenu>
+#include <QAction>
+
 namespace {
    static QDir _get_script_path() {
       return dovahkit::subsystems::options::core::get().get_user_script_package_path();
@@ -77,6 +82,27 @@ EditorScriptPackageWindow::EditorScriptPackageWindow(QWidget* parent) : QDialog(
          //
          QObject::connect(this->ui.paneLog, &DKCollapsiblePane::contentsExpanded, this, [header]() {
             header->setBadgeCount(0);
+         });
+      }
+      //
+      // Context menu:
+      //
+      {
+         widget->setContextMenuPolicy(Qt::CustomContextMenu);
+         auto* menu = new QMenu(this);
+         {
+            auto* action = new QAction(tr("Copy log item"), menu);
+            menu->addAction(action);
+            QObject::connect(action, &QAction::triggered, action, [widget]() {
+               auto* item = widget->currentItem();
+               if (!item)
+                  return;
+               auto data = item->data(Qt::UserRole).toString();
+               QGuiApplication::clipboard()->setText(data);
+            });
+         }
+         QObject::connect(widget, &QWidget::customContextMenuRequested, menu, [widget, menu](const QPoint& pos) {
+            menu->popup(widget->mapToGlobal(pos));
          });
       }
    }
@@ -385,7 +411,36 @@ void EditorScriptPackageWindow::logMessage(const QString& text) {
    auto* widget = this->ui.log;
    auto  index  = widget->rowCount();
    widget->insertRow(index);
-   widget->setItem(index, 0, new QTableWidgetItem(text));
+   auto* item = new QTableWidgetItem;
+   {
+      constexpr const size_t max_lines  = 8;
+      constexpr const size_t max_length = 4096;
+
+      auto view = QStringView(text);
+      if (text.size() > max_length) {
+         view = view.slice(0, max_length);
+      }
+      int end = view.size();
+      int i   = view.indexOf('\n');
+      {
+         int lines = 0;
+         while (i >= 0) {
+            ++lines;
+            if (lines > max_lines) {
+               end = i;
+               break;
+            }
+            i = view.indexOf('\n', i + 1);
+         }
+      }
+      if (end == text.size()) {
+         item->setData(Qt::DisplayRole, text);
+      } else {
+         item->setData(Qt::DisplayRole, view.slice(0, end).toString());
+      }
+   }
+   item->setData(Qt::UserRole, text);
+   widget->setItem(index, 0, item);
    //
    auto* pane = this->ui.paneLog;
    if (pane->collapsed()) {
