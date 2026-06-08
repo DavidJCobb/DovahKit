@@ -38,21 +38,22 @@ namespace {
       return 1;
    }
    int lookup_item_by_name(lua_State* L) {
-      //
-      // args: wrapper<papyrus_root>, name
-      //
       auto& self = get_collection_wrapper(L);
       auto* form = self.get_loaded_form_data<wrapped_type>();
       if (!form)
          return 0;
-      const char* name = lua_tostring(L, 2);
-      if (!name)
-         return 0;
-      auto& list = form->aliases;
-      auto  size = list.size();
+      std::string_view name;
+      {
+         auto* name_ptr = lua_tostring(L, 2);
+         if (!name_ptr)
+            return 0;
+         name = name_ptr;
+      }
+      const auto&  list = form->aliases;
+      const size_t size = list.size();
       for (size_t i = 0; i < size; ++i) {
          const auto* alias = list[i];
-         if (_stricmp(alias->name.c_str(), name) == 0)
+         if (alias->name == name)
             return alias_wrapper_type::wrap(L, self, alias);
       }
       return 0;
