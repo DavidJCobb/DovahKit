@@ -38,29 +38,9 @@
 //  - Query which properties have been set on a given QFont
 //  - Clear a property that was previously set on a given QFont
 // 
-// In reality, it's not nearly that simple. There are no documented functions which can be used for 
-// these tasks. There are, however, undocumented public functions in files that are not marked as 
-// being internal-only, which can perform these tasks. This is not entirely unusual; the "detach" 
-// function on classes like QImage is also undocumented in most cases. For QFont, the functions we 
-// want are these:
-// 
-//  - uint QFont::resolve() const;
-//    Return the internal bitmask of "resolved" properties.
-// 
-//  - void QFont::resolve(uint);
-//    Wholly overwrite the internal bitmask of "resolved" properties.
-// 
-// UPDATE: As of Qt 6, these functions are no longer accessible. We have to cheat and access fields 
-// on the font that are supposed to be private. Somehow, it occurred to Qt's developers that they 
-// should properly encapsulate their classes, but not that they should allow callers to test whether 
-// optional fields on a class have actually been set.
+// However, as of this writing, the API for that is not considered public, so we wrap it in some helper 
+// functions.
 //
-namespace {
-   uint _get_font_resolve_mask(const QFont& f) {
-      // HACK HACK HACK because QFont is a bad API that sucks
-      return *(const uint*)((const uint8_t*)&f + 8); // uint QFont::resolveMask
-   }
-}
 
 namespace {
    // Maximum font size; attempts to set a size higher than this will produce a Lua error. I couldn't 
@@ -123,7 +103,7 @@ namespace {
                   return;
                if (has_row && has_col) {
                   if (auto* item = o->item()) {
-                     if (_get_font_resolve_mask(f) == 0) {
+                     if (cobb::qt::get_font_property_presence_mask(f) == 0) {
                         item->setData(QVariant(), Qt::FontRole); // if it's an empty font, just clear it entirely
                      } else {
                         item->setData(f, Qt::FontRole);
@@ -143,7 +123,7 @@ namespace {
                   pos = o->col;
                   orientation = ObservableStandardItemModelObserver::colOrientation;
                }
-               if (_get_font_resolve_mask(f) == 0) {
+               if (cobb::qt::get_font_property_presence_mask(f) == 0) {
                   model->setDefaultDataForSpan(Qt::FontRole, orientation, pos, QVariant()); // if it's an empty font, just clear it entirely
                } else {
                   model->setDefaultDataForSpan(Qt::FontRole, orientation, pos, f);
@@ -455,7 +435,7 @@ namespace {
             bool after = value.toBool();
             bool prior = font.weight() >= QFont::Medium;
             if (after == prior) {
-               if (_get_font_resolve_mask(font) & QFont::ResolveProperties::WeightResolved)
+               if (cobb::qt::get_font_property_presence_mask(font) & QFont::ResolveProperties::WeightResolved)
                   return;
             }
             if (after)
@@ -515,14 +495,14 @@ namespace {
          }
       }
       namespace family {
-         std::array generics_to_constants = {
+         constexpr const std::array generics_to_constants = {
             std::pair{ QFont::SansSerif, "sans-serif" },
             std::pair{ QFont::Serif,     "serif" },
             std::pair{ QFont::Monospace, "monospace" },
             std::pair{ QFont::Fantasy,   "fantasy" },
             std::pair{ QFont::Cursive,   "cursive" },
          };
-         //
+         
          QFont::StyleHint _check_generic(const QString& family) {
             for (auto& pair : generics_to_constants)
                if (family.compare(QByteArray(pair.second), Qt::CaseInsensitive) == 0)
@@ -568,7 +548,7 @@ namespace {
          QVariant get(const QFont& font) {
             QString out;
             //
-            auto mask = _get_font_resolve_mask(font);
+            auto mask = cobb::qt::get_font_property_presence_mask(font);
             if (mask & QFont::ResolveProperties::FamilyResolved) {
                auto family = font.family();
                if (_is_generic(family)) {

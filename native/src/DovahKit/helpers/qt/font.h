@@ -27,6 +27,7 @@ namespace cobb::qt {
    // become impossible in the future...
    //
 
+   extern uint get_font_property_presence_mask(const QFont&) noexcept;
    extern void clear_font_properties(QFont&, uint mask) noexcept;
    extern bool test_font_properties(const QFont&, uint mask) noexcept; // use QFont::ResolveProperty for mask bits
 }

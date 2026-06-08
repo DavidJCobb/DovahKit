@@ -17,32 +17,30 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "font.h"
 
 namespace cobb::qt {
-
-   //
-   // These functions rely on undocumented, but public, functions on QFont.
-   // 
-   // UPDATE: These functions are unavailable as of Qt 6; we now use vile hacks to 
-   // break into QFont's private state.
-   //
-
-   extern void clear_font_properties(QFont& font, uint mask) noexcept {
+   extern uint get_font_property_presence_mask(const QFont& font) noexcept {
+      uint mask;
+      #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+         mask = font.resolve();
+      #else
+         mask = font.resolveMask();
+      #endif
+      return mask;
+   }
+   extern void clear_font_properties(QFont& font, uint mask_to_clear) noexcept {
+      uint mask = get_font_property_presence_mask(font);
+      mask &= ~mask_to_clear;
+      #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+         font.resolve(mask);
+      #else
+         font.setResolveMask(mask);
+      #endif
       //
-      // Let's start by modifying the mask.
-      //
-      *(uint*)((uint8_t*)&font) &= ~(uint)mask;
-      //
-      // Modifying the mask isn't enough; QFont has some internal state that we can't access or 
-      // reset from the outside. Fortunately, there's a way to work around this by replacing 
-      // the font with a modified copy of itself.
-      // 
-      // If we call {QFont QFont::resolve(const QFont&) const} on our font, the function will 
-      // create and return a new QFont, copying fields as appropriate without copying whatever 
-      // it is that makes merely clearing the flags insufficient.
+      // Detach the font's shared state:
       //
       font = font.resolve(QFont());
    }
-   extern bool test_font_properties(const QFont& font, uint mask) noexcept {
-      auto resolve_mask = *(const uint*)((const uint8_t*)&font + 8);
-      return (resolve_mask & mask) == mask;
+   extern bool test_font_properties(const QFont& font, uint mask_to_test) noexcept {
+      uint mask = get_font_property_presence_mask(font);
+      return (mask & mask_to_test) == mask_to_test;
    }
 }
