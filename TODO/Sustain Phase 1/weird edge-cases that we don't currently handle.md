@@ -130,3 +130,8 @@ We also need to double-check which form ID the landscape ends up with (that of t
 * When we convert an active file across games, we continue loading data from the source-game masters, rather than loading data from the destination-game masters. This is necessary if the user decides to save despite missing masters in the destination game, and it'd be necessary if the destination game's masters are incompatible (see previous bullet point); but even if the destination-game masters are correct, we still load data from the source-game masters until such time as the user reloads all involved files from scratch.
 
   This is obviously more efficient, compared to having to do a full reload, but it *does* give me pause, a little bit.
+
+
+### Form ID management
+
+It'd be easier to create mods in SSE and backport them to LE if the editor offered a checkbox, to enable or disable the "extended ESL" form ID range.
