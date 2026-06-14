@@ -20,7 +20,7 @@ namespace dovahscript::api_helpers::native_lists::impl {
    };
    template<typename Spec> requires fields::prepare_for_insertion::present<Spec>
    struct preparation_value_type<Spec> {
-      using type = typename preparation_list_type<Spec>::value_type;
+      using type = typename preparation_list_type_t<Spec>::value_type;
    };
    template<typename Spec>
    using preparation_value_type_t = typename preparation_value_type<Spec>::type;

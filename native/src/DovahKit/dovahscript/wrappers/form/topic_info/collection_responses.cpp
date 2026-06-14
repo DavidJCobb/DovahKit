@@ -53,7 +53,7 @@ namespace {
          return core::subsystems::userdata::get().push(L, out, value_wrapper_type::metatable_key);
       }
 
-      static std::vector<uint8_t> prep_for_insertion(
+      static std::vector<uint8_t> prepare_for_insertion(
          const collection_wrapped_type& dst_list,
          size_t count_to_insert,
          lua_State* L,
@@ -116,7 +116,7 @@ namespace {
             cobb::lua::warning(L, "one of the new responses will end up using unique ID 0; this ID is a sentinel value used when recording lines in the Creation Kit");
          return result;
       }
-      static value_working_type apply_preparations(value_working_type& dst, uint8_t unique_id) {
+      static void apply_preparation(value_working_type& dst, uint8_t unique_id) {
          dst.id = unique_id;
       }
    };
