@@ -257,8 +257,13 @@ bool ActiveFileSaveDialog::_enforce_form_id_ranges(bool allow_bees, bool allow_n
       if (form_id & 0x00FFF000) {
          ++forms_not_in_esl_range;
       }
-      if ((form_id & 0x00000FFF) <= dovah::max_hardcoded_form_id) {
-         ++forms_in_bees_range;
+      {
+         uint32_t mask = 0x00FFFFFF;
+         if ((form_id >> 0x18) == 0xFE)
+            mask = 0x00000FFF;
+         if ((form_id & mask) <= dovah::max_hardcoded_form_id) {
+            ++forms_in_bees_range;
+         }
       }
       return false;
    });
