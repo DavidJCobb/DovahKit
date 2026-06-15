@@ -1,4 +1,6 @@
 #include "./PackageProcedureTreeModel.h"
+#include <QBrush>
+#include <QColor>
 #pragma region Drag and drop
    #include <QByteArray>
    #include <QDataStream>

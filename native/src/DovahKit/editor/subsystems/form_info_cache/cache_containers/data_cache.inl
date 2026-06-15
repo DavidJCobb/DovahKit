@@ -101,7 +101,8 @@ namespace dovahkit::subsystems::form_info_cache {
       if (*it == value) {
          return {};
       }
+      auto prior = *it;
       *it = value;
-      return value;
+      return prior;
    }
 }

@@ -251,7 +251,6 @@ namespace dovah {
          std::optional<game_change_failure_reason> can_change_current_game(game) const noexcept;
          void change_current_game(game);
          
-         #pragma region Content related to loading
          std::string base_path; // used for loading and saving. changing this between loading files and saving them back out is undefined behavior.
          struct {
             std::vector<std::string> files;
@@ -268,7 +267,11 @@ namespace dovah {
          generic_callback_t         on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
          emit_error_callback        on_error         = nullptr; // any "error" notice. invoked on whatever thread encountered the error; make sure your callback is thread-safe.
          emit_warning_callback      on_warning       = nullptr; // any "warning" notice. invoked on whatever thread encountered the error; make sure your callback is thread-safe.
-         //
+         struct {
+            bool new_forms_avoid_extended_esl_form_id_range = false; // if `true`, new forms avoid that ID range unless no IDs outside that range are available
+         } prefs;
+         
+         #pragma region Content related to loading
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
          void queue_active_file(const std::string& name); // TODO

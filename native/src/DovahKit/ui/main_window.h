@@ -84,4 +84,6 @@ class MainWindow : public QMainWindow {
       void updateFormUsesWindowList();
 
       void updateStatusBarWarningsCount(size_t count, size_t count_unread);
+
+      void updateAvoidBEESMenuToggle();
 };

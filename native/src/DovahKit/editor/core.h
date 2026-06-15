@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <filesystem>
-#include <QDialog>
 #include <QObject>
 #include "dovah/bare_form_id_t.h"
 #include "dovah/files/file_load_order.h"
@@ -42,8 +41,8 @@ namespace dovah {
 namespace DovahKitEditorInternals {
    class load_task;
 }
-
 class DKBSACollectionModelBackend;
+class QThread;
 
 class DovahKitCore : public QObject {
    Q_OBJECT;
@@ -169,6 +168,9 @@ class DovahKitCore : public QObject {
       bool for_each_impossible_to_save_form(dovah::game, std::function<bool(dovah::form_stub*)>);
 
       bool is_form_defined_in_active_file(dovah::form_stub*) const noexcept;
+
+      bool get_new_forms_avoid_extended_esl_form_id_range() const noexcept;
+      void set_new_forms_avoid_extended_esl_form_id_range(bool) noexcept;
 
       dovah::form_stub* create_form_of_type(dovah::form_type);
       dovah::form_creation_request request_form_creation(dovah::form_type) noexcept;

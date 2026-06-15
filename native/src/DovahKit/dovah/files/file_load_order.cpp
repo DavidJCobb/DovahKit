@@ -1938,6 +1938,14 @@ namespace dovah {
             if (!(formID & 0x00FFFFFF) || this->get_form(formID, true) != nullptr) {
                formID = this->find_first_free_form_id_in_active_file();
             }
+            if (this->prefs.new_forms_avoid_extended_esl_form_id_range && formID) {
+               auto local_id = formID & 0x00FFFFFF;
+               if (local_id < 0x800) {
+                  auto alternative_id = this->find_first_free_form_id_in_active_file(0x00000800);
+                  if (alternative_id)
+                     formID = alternative_id;
+               }
+            }
          }
          if (formID)
             list.push_back(formID);

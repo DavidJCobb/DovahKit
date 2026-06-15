@@ -81,6 +81,8 @@
      <property name="title">
       <string>Manage form IDs</string>
      </property>
+     <addaction name="actionPrefAvoidBEESFormIDs"/>
+     <addaction name="separator"/>
      <addaction name="actionCompactFormIDs"/>
      <addaction name="actionMoveFormIDsOutOfBEES"/>
     </widget>
@@ -222,6 +224,14 @@
   <action name="actionRegions">
    <property name="text">
     <string>Regions...</string>
+   </property>
+  </action>
+  <action name="actionPrefAvoidBEESFormIDs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Avoid creating forms with IDs in extended ESL range</string>
    </property>
   </action>
  </widget>

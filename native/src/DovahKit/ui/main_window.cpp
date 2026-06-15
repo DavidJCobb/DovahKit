@@ -102,6 +102,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       this->ui.actionEditFileMetadata->setDisabled(false);
       this->ui.menuManageFormIDs->setDisabled(false);
       this->ui.actionSave->setDisabled(false);
+      this->updateAvoidBEESMenuToggle();
+   });
+   QObject::connect(&editor, &DovahKitCore::dataSaveComplete, this, [this]() {
+      this->updateAvoidBEESMenuToggle();
    });
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
       this->ui.actionEditFileMetadata->setDisabled(true);
@@ -326,6 +330,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       });
    #pragma endregion
 
+   QObject::connect(this->ui.actionPrefAvoidBEESFormIDs, &QAction::toggled, this, [this](bool v) {
+      DovahKitCore::get().set_new_forms_avoid_extended_esl_form_id_range(v);
+   });
    QObject::connect(this->ui.actionCompactFormIDs, &QAction::triggered, this, [this]() {
       auto& editor = DovahKitCore::get();
       const auto current_game = editor.get_current_game();
@@ -356,7 +363,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          }
       }
 
-      bool  success = editor.try_compact_form_ids(true, allow_bees, false);
+      bool success = editor.try_compact_form_ids(true, allow_bees, false);
       if (success) {
          QMessageBox::information(this,
             tr("Success", "saving"),
@@ -575,6 +582,31 @@ void MainWindow::updateStatusBarWarningsCount(size_t count, size_t count_unread)
       }
       if (flash) {
          status_bar->flash(info.container);
+      }
+   }
+}
+
+void MainWindow::updateAvoidBEESMenuToggle() {
+   auto* action = this->ui.actionPrefAvoidBEESFormIDs;
+   const auto blocker = QSignalBlocker(action);
+
+   bool was_enabled = action->isEnabled();
+
+   auto& editor = DovahKitCore::get();
+   auto  game   = editor.get_current_game();
+   if (dovah::game_feature_support::hardcoded_form_ids_always_ignore_record_id_prefix(game)) {
+      action->setEnabled(false);
+      action->setChecked(true);
+   } else {
+      action->setEnabled(true);
+      if (was_enabled) {
+         action->setChecked(editor.get_new_forms_avoid_extended_esl_form_id_range());
+      } else {
+         //
+         // Last loaded content was LE; force to SE default.
+         //
+         action->setChecked(false);
+         editor.set_new_forms_avoid_extended_esl_form_id_range(false);
       }
    }
 }

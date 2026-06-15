@@ -1,4 +1,5 @@
 #include "./BipedObjectSlotsToggleModel.h"
+#include <QFont>
 #include "dovah/forms/components/biped_object.h"
 #include "dovah/forms/Race.h"
 #include "editor/core.h"

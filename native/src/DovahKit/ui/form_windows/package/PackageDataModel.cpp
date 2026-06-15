@@ -1,4 +1,5 @@
 #include "./PackageDataModel.h"
+#include <QFont>
 #include "helpers/bitset.h"
 #include "helpers/sort_and_remember.h"
 #include "helpers/qt/strings.h"

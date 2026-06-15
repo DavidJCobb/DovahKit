@@ -267,7 +267,7 @@ void ObjectWindowTreeItem::sort() {
          auto* root = this->_nodes.quests;
          if (!prior.isEmpty())
             this->_removeFilter(root, prior);
-         if (after.isEmpty())
+         if (!after.isEmpty())
             this->_addFilter(root, after, true);
       });
       QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedModelPathChanged, this, [this](const dovah::form_stub& stub, const QString prior, const QString after) {

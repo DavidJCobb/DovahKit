@@ -1,5 +1,6 @@
 #include "core.h"
 #include <fstream>
+#include <QDialog>
 #include <QFile>
 #include <QInputDialog>
 #include <QMessageBox>
@@ -467,6 +468,13 @@ bool DovahKitCore::is_form_defined_in_active_file(dovah::form_stub* stub) const 
    if (!stub)
       return false;
    return this->load_order->is_defined_in_active_file(*stub);
+}
+
+bool DovahKitCore::get_new_forms_avoid_extended_esl_form_id_range() const noexcept {
+   return this->load_order->prefs.new_forms_avoid_extended_esl_form_id_range;
+}
+void DovahKitCore::set_new_forms_avoid_extended_esl_form_id_range(bool v) noexcept {
+   this->load_order->prefs.new_forms_avoid_extended_esl_form_id_range = v;
 }
 
 dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type ft) {
