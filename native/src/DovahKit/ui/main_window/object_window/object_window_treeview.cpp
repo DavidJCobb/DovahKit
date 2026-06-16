@@ -774,8 +774,7 @@ void ObjectWindowTreeItem::sort() {
             if (index < 0) {
                added_to.push_back(node);
                //
-               auto& list = node->children;
-               auto  size = list.size();
+               auto  size = node->children.size();
                this->beginInsertRows(this->_indexOfItem(node), size, size);
                auto* child = &item_type::make_filter(fragment);
                if (node == root) {
@@ -802,6 +801,8 @@ void ObjectWindowTreeItem::sort() {
             //
             // This fragment doesn't exist, so create it.
             //
+            auto  size = node->children.size();
+            this->beginInsertRows(this->_indexOfItem(node), size, size);
             auto* child = &item_type::make_filter(fragment);
             if (node == root) {
                child->full_filter = fragment;
@@ -809,6 +810,8 @@ void ObjectWindowTreeItem::sort() {
                child->full_filter = node->full_filter + '/' + fragment;
             }
             node->appendChild(*child);
+            this->endInsertRows();
+            //
             node = child;
          } else {
             //
