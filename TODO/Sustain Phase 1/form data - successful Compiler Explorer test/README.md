@@ -73,6 +73,101 @@ For a while, I've been considering whether and how DovahKit should handle mistyp
 I've considered having DovahKit silently correct these form uses to `NONE`, or making that an option that form-data classes are templated on. It occurs to me now that I could write a function that uses `visit_fields` to perform that correction, modifying form-data (managed or unmanaged) in place.
 
 
+## Critical missing pieces
+
+Conditions (i.e. `TESCondition`) in DovahKit use a transaction-style model, wherein you can't modify the managed condition data directly; you can only "commit" an unmanaged condition in full, with us asserting that its data is well-formed. This is necessary because condition parameters are basically tagged unions where the function ID and some of the flags collectively function as the parameters' tag, so if we let you store invalid parameters and we try to serialize those to disk, they'll later be loaded improperly and our use info will be hosed.
+
+This is incompatible with the above design, which assumes that you can convert between (un)managed data just by visiting a list of `public` fields. (The design also assumes that it's possible *at all* to visit all the fields in the given object.) So we face two problems: how do we convert between (un)managed data, i.e. how do we implement the transaction "commit" code; and how do we visit fields in managed data, e.g. for clearing form uses?
+
+
+### Conversion
+
+We need to add a special-case system: it needs to be possible to:
+
+* Manually define separate types for the managed versus unmanaged kinds of a given data structure
+* Manually define conversions between those types
+* Have some means of linking these types together *and* some means of detecting *either structure* from within the metaprogramming machinery (visitation, etc.) described above
+
+Possibly we can solve this with a specializable type trait:
+
+```c++
+template<typename T>
+struct managed_type_to_unmanaged_type;
+template<typename T>
+struct unmanaged_type_to_managed_type;
+
+template<typename T>
+using managed_type_to_unmanaged_type_t = typename managed_type_to_unmanaged_type<T>::type;
+template<typename T>
+using unmanaged_type_to_managed_type_t = typename unmanaged_type_to_managed_type<T>::type;
+
+// -----------------------------------------
+
+struct managed_condition;
+struct unmanaged_condition;
+
+template<>
+struct managed_type_to_unmanaged_type<managed_condition> {
+   using type = unmanaged_condition;
+};
+template<>
+struct unmanaged_type_to_managed_type<unmanaged_condition> {
+   using type = managed_condition;
+};
+```
+
+This fails if we ever add additional fields to `form_data_params`, though, because it can only convert between specific specializations of the form data in question (or its containing template). Like, it allows conversion between "managed" and "unmanaged," but if we introduce new "struct colors" (in the same sense as "function colors"), this will fail to account for those colors, or for different combinations of those colors and the existing colors (e.g. "unmanaged+foo type" -> "managed+bar type").
+
+An alternative approach, which avoids that failure, would be to modify the `inl` file that adds metaprogramming stuff to our various form data structs. We could define something like:
+
+```c++
+#define FORM_DATA_PARAMS OtherParams
+template<form_data_params OtherParams>
+using respecialized_type_with_params = TYPENAME<FORM_DATA_PARAMS>;
+#undef FORM_DATA_PARAMS
+```
+
+This would then allow the more typical structs to expose somthing like `my_struct::respecialized_type_with_params<unmanaged_form_params>`, and then `managed_condition` and `unmanaged_condition` could manually offer a similar type alias. This gives us a means to ask for the right type, and then we can implement conversion functions to and from managed transaction-style types based on that templated type alias, e.g. member functions like these on the "managed condition" type:
+
+```c++
+template<form_data_params Params>
+   requires (Params::management_mode == use_info_management_mode::unmanaged)
+struct unmanaged_condition;
+
+template<form_data_params Params>
+   requires (Params::management_mode == use_info_management_mode::managed)
+class managed_condition {
+   public:
+      
+      // ... put whatever boilerplate our visitor metaprogramming needs, HERE ...
+      
+      template<form_data_params OtherParams>
+      using respecialized_type_with_params = std::conditional_t<
+         (OtherParams::management_mode == use_info_management_mode::managed),
+         managed_condition<OtherParams>,
+         unmanaged_condition<OtherParams>
+      >;
+   
+      template<form_data_params DstParams>
+         requires (DstParams::management_mode == use_info_management_mode::unmanaged)
+      respecialized_type_with_params<DstParams> convert_to_unmanaged() const;
+         
+      template<form_data_params SrcParams>
+      void overwrite(const respecialized_type_with_params<SrcParams>&);
+};
+// definitions of those member functions can go in a separate `inl` file, for brevity
+```
+
+
+### Visitation
+
+This... I'm actually not 100% sure about. ~~We may literally have to just special-case these kinds of structs in the individual visitor functions. There aren't many of these structs at all (conditions are the only one I can think of), so for now that may be fine?~~ No, that wouldn't scale. Hm...
+
+* The key thing is that when we're visiting managed form data, a managed transaction-style struct can only be visited via a const reference (because again, the fields can't be individually manipulated), and doing so would require invoking getters for each field (because to prevent individual manipulation of the fields, they must be made non-`public`). For read access only, we could have an optional X-macro of getter names to invoke...
+
+* ...but some visit functions, e.g. "clear uses," require write access. I think the only way to make this work would be to make it so that when these functions are invoked on a managed transaction-style struct, they convert it to unmanaged, make their changes to that, and then commit that unmanaged struct back overtop the original managed struct.
+
+
 ## Potential improvements
 
 In addition to defining "visit" functions, it may be useful to offer a `visit_at_compile_time` function, which would be invoked as `lambda.template operator()<typename FieldType>(std::string_view{field_name})`. This would allow us to run compile-time queries on the types of an object's fields, without needing to default-construct an instance in order to call `visit_fields` on it. Potential uses of these queries include:
