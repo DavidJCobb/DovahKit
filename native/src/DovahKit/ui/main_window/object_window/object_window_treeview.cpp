@@ -798,6 +798,7 @@ void ObjectWindowTreeItem::sort() {
       if (include_trailing && !fragment.isEmpty()) {
          int   index  = node->indexOf(fragment);
          if (index < 0) {
+            added_to.push_back(node);
             //
             // This fragment doesn't exist, so create it.
             //
