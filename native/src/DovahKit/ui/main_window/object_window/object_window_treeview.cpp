@@ -732,27 +732,38 @@ void ObjectWindowTreeItem::sort() {
    void ObjectWindowTreeModel::_removeFilter(item_type* root, const QString& full) {
       if (full.isEmpty())
          return;
-      QString fragment;
-      auto*   node = root;
-      for (int i = 0; i < full.size(); ++i) {
-         QChar c = full[i];
-         if (c == '/' || c == '\\') {
-            if (fragment.isEmpty()) // Treat "Foo//Bar" the same as "Foo/Bar"
+      auto* node = root;
+      {
+         QString fragment;
+         for (int i = 0; i < full.size(); ++i) {
+            QChar c = full[i];
+            if (c == '/' || c == '\\') {
+               if (fragment.isEmpty()) // Treat "Foo//Bar" the same as "Foo/Bar"
+                  continue;
+               auto index = node->indexOf(fragment);
+               fragment.clear();
+               if (index < 0) {
+                  node = nullptr;
+                  break;
+               }
+               node = node->child(index);
+               if (--node->refcount == 0)
+                  break;
                continue;
+            }
+            fragment += c;
+         }
+         if (!fragment.isEmpty() && node) { // trailing fragment doesn't end in a slash
             auto index = node->indexOf(fragment);
-            fragment.clear();
             if (index < 0) {
                node = nullptr;
-               break;
+            } else {
+               node = node->child(index);
+               --node->refcount;
             }
-            node = node->child(index);
-            if (--node->refcount == 0)
-               break;
-            continue;
          }
-         fragment += c;
       }
-      if (node && node != this->_nodes.quests && node->refcount == 0) {
+      if (node && node->type == ObjectWindowTreeItem::type_t::filter && node->refcount == 0) {
          //
          // Destroy the outermost node whose refcount dropped to zero.
          //
