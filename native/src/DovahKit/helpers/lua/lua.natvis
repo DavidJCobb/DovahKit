@@ -250,7 +250,11 @@
       <Expand>
          <Item Name="[metatable]">metatable,na</Item>
          <Item Name="[size]">len</Item>
-         <Item Name="[data]">(uint8_t*)(uv + nuvalue),[len]x</Item>
+         
+         <Item Name="[data]" Condition="nuvalue &gt; 0">(uint8_t*)(&amp;uv[nuvalue]),[len]x</Item>
+         <!-- for some reason, Natvis can't see the `Udata0` type, so we can't use it? do this instead: -->
+         <Item Name="[data]" Condition="nuvalue == 0">(uint8_t*)(&amp;gclist),[len]x</Item>
+         
          <Item Name="[user values]" Condition="nuvalue &gt; 0">uv,[nuvalue]na</Item>
       </Expand>
    </Type>
