@@ -93,7 +93,7 @@ namespace dovah {
             record(record& other) = delete; // no copy
             //
             subrecord& get_current_subrecord() const noexcept;
-            constexpr bool is_skyrim_special() const noexcept { return this->header.version >= 44; }
+            bool is_skyrim_special() const noexcept;
             //
             constexpr operator bool() const noexcept { return this->header.signature != 0; }
             constexpr bool exists() const noexcept { return this->header.signature != 0; }

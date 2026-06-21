@@ -106,9 +106,7 @@ namespace {
          }
          send_script_task(*m);
          if (m->error) {
-            if (!m->error_text)
-               m->error_text = "";
-            cobb::lua::error(L, m->error_text);
+            cobb::lua::error(L, m->error_text.c_str());
          }
          auto* stub = m->result;
          delete m;

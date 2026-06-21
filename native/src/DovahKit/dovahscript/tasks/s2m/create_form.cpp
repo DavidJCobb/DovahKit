@@ -1,5 +1,6 @@
 #include "./create_form.h"
 #include "editor/core.h"
+#include "editor/localize/form_creation_error_code.h"
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/utils/form_type_is_cell_child.h"
 
@@ -14,31 +15,20 @@ namespace {
    using exception  = dovah::exceptions::form_creation_failed;
    using error_code = exception::error_code;
 
-   const char* _explain_error_code(error_code code) {
-      switch (code) {
-         case error_code::wrong_load_order:
-            return "cannot create a new form because something impossible happened (wrong_load_order); contact Dovahit's developer";
+   std::string _explain_error_code(error_code code) {
+      constexpr const std::string_view prefix = "failed to create a new form: ";
 
-         case error_code::invalid_form_type:
-            return "cannot create a new form because this is not a valid form type";
-         case error_code::no_active_file:
-            return "cannot create a new form because there is neither an active file nor any room in the load order for a new file";
-         case error_code::no_form_id_available:
-            return "cannot create a new form because there are no form IDs left in the active file";
-         case error_code::unimplemented_form_type:
-            return "cannot create a new form because DovahKit doesn't yet support loading forms of this type";
-         case error_code::exterior_cell_must_have_grid_coordinates:
-            return "cannot create a new exterior cell because no grid coordinates were specified";
-         case error_code::invalid_parent_child_relationship:
-            return "cannot create a new form because the specified parent form cannot have a child form of this type";
-         case error_code::exterior_grid_coordinates_already_taken:
-            return "cannot create a new cell because the specified parent worldspace already has an exterior cell at the desired grid coordinates";
-         case error_code::cannot_create_reference_with_no_parent_cell:
-            return "cannot create a new reference unless you specify a parent cell";
-         case error_code::cannot_sever_references_to_none_stub:
-            return "cannot create a new form because the form ID that DovahKit wants to use is the target of one or more dangling references, and at least one is outbound from a form that DovahKit doesn't yet know how to load";
+      std::string out;
+      {
+         auto text = editor::localize::terse::form_creation_error_code(code).toUtf8();
+         if (text.isEmpty()) {
+            text = "unknown error";
+         }
+         out.reserve(prefix.size() + text.size());
+         out  = prefix;
+         out += std::string_view(text.data(), text.size());
       }
-      return "cannot create a new form for an unknown reason";
+      return out;
    }
 }
 

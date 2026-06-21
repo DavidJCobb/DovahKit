@@ -78,6 +78,19 @@ namespace dovah {
 
       #pragma region record
       subrecord& record::get_current_subrecord() const noexcept { return this->owner._subrecord; }
+      bool record::is_skyrim_special() const noexcept {
+         if (this->header.version >= 44)
+            return true;
+         //
+         // Some records in Skyrim.esm were given SSE-specific data without having their 
+         // (pre-43) record versions updated; for example, LTEX records have the new-to-SSE 
+         // INAM subrecord added, but still have version numbers like v29.
+         //
+         if (auto& opt = this->owner.options.current_game; opt.has_value()) {
+            return opt.value() == game::skyrim_special;
+         }
+         return false;
+      }
       void record::unchecked_read(void* destination, uint32_t size) {
          auto source = (std::ptrdiff_t)this->data + this->offset;
          memcpy(destination, (void*)source, size);

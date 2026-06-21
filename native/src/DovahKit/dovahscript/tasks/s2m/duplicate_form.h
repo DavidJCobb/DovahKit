@@ -19,8 +19,8 @@ namespace dovahscript::tasks::s2m {
             int32_t y = 0;
          } cell_grid_coordinates; // grid coordinates to use when duplicating an exterior cell
          //
-         bool        error      = false;
-         const char* error_text = nullptr;
+         bool        error = false;
+         std::string error_text;
          //
          virtual bool is_blocking() const noexcept override { return true; }
       protected:

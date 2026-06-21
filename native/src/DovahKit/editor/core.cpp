@@ -52,6 +52,7 @@
 #include "dovah/notices/base_error.h"
 #include "dovah/notices/base_warning.h"
 #include "./helpers/backend_error_to_string.h"
+#include "./localize/form_creation_error_code.h"
 
 namespace {
    void _on_form_created(dovah::form_stub* stub) {
@@ -503,29 +504,10 @@ namespace {
    }
    QString _stringify_duplicate_form_a_posteriori_error(dovah::exceptions::form_creation_failed::error_code code) {
       using error_code = std::decay_t<decltype(code)>;
-      switch (code) {
-         case error_code::invalid_form_type:
-            return QObject::tr("An internal program error occurred: DovahKit tried to create a form but supplied a bad form type.");
-         case error_code::no_active_file:
-            return QObject::tr("There is neither an active file in the load order nor any room in the load order for a new file.");
-         case error_code::no_form_id_available:
-            return QObject::tr("Not enough form IDs are left in the active file to use for the duplicated form(s). (This error was detected late; please report this to DovahKit's developer as a bug.)");
-         case error_code::unimplemented_form_type:
-            return QObject::tr("DovahKit does not support editing this form type.");
-         case error_code::invalid_parent_child_relationship:
-            return QObject::tr("The specified parent form cannot have a child form of this type.");
-         case error_code::exterior_grid_coordinates_already_taken:
-            return QObject::tr("The specified worldspace already has an exterior cell at the desired grid coordinates.");
-         case error_code::cannot_create_reference_with_no_parent_cell:
-            return QObject::tr("References cannot be created outside of a cell.");
-         case error_code::interior_cell_clone_cannot_have_parent:
-            return QObject::tr("Interior cells cannot have a parent worldspace.");
-         case error_code::exterior_cell_clone_must_have_parent:
-            return QObject::tr("Exterior cells must have a parent worldspace.");
-         case error_code::cannot_sever_references_to_none_stub:
-            return QObject::tr("DovahKit needed to select a form ID to use for the new form. The chosen form ID is the target of one or more dangling references, and DovahKit does not know how to sever those references, so the form creation process could not continue.");
+      if (code == error_code::no_form_id_available) {
+         return QObject::tr("Not enough form IDs are left in the active file to use for the duplicated form(s). (This error was detected late; please report this to DovahKit's developer as a bug.)");
       }
-      return "";
+      return editor::localize::form_creation_error_code(code);
    }
 }
 dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidget* dialog_parent) {

@@ -697,7 +697,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       }
 
       if (this->_mouse.is_drag_moving) {
-         auto pos   = event->screenPos().toPoint();
+         auto pos   = event->globalPosition().toPoint();
          auto delta = this->_mouse.mouse_prev_pos - pos; // the order here is not a mistake; panning means that dragging left should scroll right, and vice versa
          this->_mouse.mouse_prev_pos = pos;
          if (this->_mouse.mousedown_on) {
@@ -709,7 +709,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       if (this->_mouse.is_panning) {
          if (!this->_scroll_area)
             return;
-         auto pos   = event->screenPos().toPoint();
+         auto pos   = event->globalPosition().toPoint();
          auto delta = this->_mouse.mouse_prev_pos - pos; // the order here is not a mistake; panning means that dragging left should scroll right, and vice versa
          this->_mouse.mouse_prev_pos = pos;
 
@@ -722,7 +722,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       }
 
       if (lmb || mmb) {
-         this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
+         this->_mouse.mouse_prev_pos = event->globalPosition().toPoint();
          if ((event->pos() - this->_mouse.mousedown_at).manhattanLength() < QApplication::startDragDistance()) {
             this->_update_cursor(event);
             return;

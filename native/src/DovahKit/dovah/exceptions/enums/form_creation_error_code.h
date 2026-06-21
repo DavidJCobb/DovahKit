@@ -33,7 +33,11 @@ namespace dovah::exceptions {
       // it to be placed into.
       exterior_cell_must_have_grid_coordinates,
 
-      // However, no form IDs are available for use right now.
+      // Don't use a worldspace's persistent cell as the parent for a new cell-child form. Pick 
+      // the appropriate parent cell based on the desired coordinates of the to-be-created form.
+      do_not_use_worldspace_persistent_cell_as_parent,
+
+      // No form IDs are available for use right now.
       no_form_id_available,
 
       // You wanted to create an exterior cell in a given worldspace, but the requested exterior 

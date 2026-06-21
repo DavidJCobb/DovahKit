@@ -8,6 +8,7 @@
 #include "editor/open_window_for_form.h"
 #include "editor/helpers/is_form_type_legal_to_create.h"
 #include "editor/helpers/make_editor_id_for_duplicate.h"
+#include "editor/localize/form_creation_error_code.h"
 #include "./form_use_info.h"
 
 namespace {
@@ -27,43 +28,21 @@ namespace {
       return data->stub;
    }
    void _report_form_create_error(QWidget* window, const dovah::exceptions::form_creation_failed::error_code ec) {
-      using error_code = std::decay_t<decltype(ec)>;
-      //
-      QString text;
+      QString text = editor::localize::form_creation_error_code(ec);
+      bool    should_be_impossible = false;
       switch (ec) {
-         case error_code::invalid_form_type:
-            text = QObject::tr("An internal program error occurred: DovahKit tried to create a form but supplied a bad form type.");
+         using enum dovah::exceptions::form_creation_failed::error_code;
+         case invalid_form_type:
+         case invalid_parent_child_relationship:
+         case exterior_grid_coordinates_already_taken:
+         case cannot_create_reference_with_no_parent_cell:
+         case interior_cell_clone_cannot_have_parent:
+         case exterior_cell_clone_must_have_parent:
+            should_be_impossible = true;
             break;
-         case error_code::no_active_file:
-            text = QObject::tr("There is no active file, nor any room in the load order for a new file.");
-            break;
-         case error_code::no_form_id_available:
-            text = QObject::tr("You've used up all of the form IDs available to this file!");
-            break;
-         case error_code::unimplemented_form_type:
-            text = QObject::tr("DovahKit does not support editing this form type.");
-            break;
-         case error_code::invalid_parent_child_relationship:
-            text = QObject::tr("The specified parent form cannot have a child form of this type. (Wait, what? How did you get the Object Window to try to do that?)");
-            break;
-         case error_code::exterior_grid_coordinates_already_taken:
-            text = QObject::tr("The specified worldspace already has an exterior cell at the desired grid coordinates. (Wait, what? How did you get the Object Window to try and create an exterior cell?)");
-            break;
-         case error_code::cannot_create_reference_with_no_parent_cell:
-            text = QObject::tr("References cannot be created outside of a cell. (Wait, what? How did you get the Object Window to try and create a reference?)");
-            break;
-         case error_code::interior_cell_clone_cannot_have_parent:
-            text = QObject::tr("Interior cells cannot have a parent worldspace. (Wait, what? How did you get the Object Window to try and create an interior cell?)");
-            break;
-         case error_code::exterior_cell_clone_must_have_parent:
-            text = QObject::tr("Exterior cells must have a parent worldspace. (Wait, what? How did you get the Object Window to try and create an exterior cell?)");
-            break;
-         case error_code::cannot_sever_references_to_none_stub:
-            text = QObject::tr("DovahKit needed to select a form ID to use for the new form. The chosen form ID is the target of one or more dangling references, and DovahKit does not know how to sever those references, so the form creation process could not continue.");
-            break;
-         case error_code::form_type_unavailable_in_current_game:
-            text = QObject::tr("The desired form type doesn't exist in the version (e.g. Classic/Special) of Skyrim this file was created for. Try converting the file to the target Skyrim version first.");
-            break;
+      }
+      if (should_be_impossible) {
+         text = ObjectWindow::tr("%1 (Wait, what? How did you get the Object Window to try to do that?)").arg(text);
       }
       QMessageBox::critical(
          window,

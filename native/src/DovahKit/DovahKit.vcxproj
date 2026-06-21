@@ -486,6 +486,7 @@
     <ClCompile Include="editor\localize\collision_layer.cpp" />
     <ClCompile Include="editor\localize\dialogue_topic_subtype.cpp" />
     <ClCompile Include="editor\localize\entry_point_function.cpp" />
+    <ClCompile Include="editor\localize\form_creation_error_code.cpp" />
     <ClCompile Include="editor\localize\magic_casting_type.cpp" />
     <ClCompile Include="editor\localize\magic_delivery_type.cpp" />
     <ClCompile Include="editor\helpers\nif_is_valid_master_particle_system.cpp" />
@@ -2357,6 +2358,7 @@
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
+    <ClInclude Include="editor\localize\form_creation_error_code.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set.h" />

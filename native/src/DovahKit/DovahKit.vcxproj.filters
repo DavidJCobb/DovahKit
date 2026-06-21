@@ -4194,6 +4194,9 @@
     <ClCompile Include="dovahscript\wrappers\form\placed_hazard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\localize\form_creation_error_code.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10434,6 +10437,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\wrappers\form\placed_hazard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\form_creation_error_code.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -61,6 +61,13 @@
 #include "../notices/form_load_warnings/form_reference_type_mismatch.h"
 #include "../notices/base_form_load_warning.h"
 
+// For validating creation of REFR forms:
+#include "../form_stubs/helpers/is_worldspace_persistent_cell.h"
+
+// For creating REFR forms in exterior cells, to set sensible default coordinates:
+#include "../core_constants/exterior_cell_side_length.h"
+#include "../forms/ObjectReference.h"
+
 namespace {
    //
    // Several parts of the  backend will double-check that  all forms relevant to a 
@@ -1999,6 +2006,12 @@ namespace dovah {
          }
          if (error)
             return error_code::invalid_parent_child_relationship;
+
+         if (form_type_is_cell_child(child_type)) {
+            if (form_stub_helpers::is_worldspace_persistent_cell(*request.child_of)) {
+               return error_code::do_not_use_worldspace_persistent_cell_as_parent;
+            }
+         }
          
          if (child_type == form_type::cell) { // validate worldspace grid coordinates
             auto& grid_opt = request.cell_grid_coordinates;
@@ -2077,8 +2090,37 @@ namespace dovah {
          this->active_file_forms_by_type[stub->form_type].forms[formID] = stub;
       }
       //
-      if (request.child_of)
+      if (request.child_of) {
          stub->set_parent_form(request.child_of);
+         if (
+            request.child_of->form_type == dovah::form_type::cell
+         && form_type_is_reference(stub->form_type)
+         && request.child_of->is_exterior_cell()
+         ) {
+            //
+            // If placing the ref in an exterior cell, set some reasonable default coordinates, 
+            // so that the ref doesn't have coordinates that place it oustide of its intended 
+            // parent cell.
+            //
+            assert(stub->form != nullptr && "Previous checks already established that we can construct this form type. Why did we receive nullptr when trying?");
+            int32_t gx = 0;
+            int32_t gy = 0;
+            if (request.child_of->get_grid_coordinates(gx, gy)) {
+               //
+               // cell grid coordinates -> world units of point centered within the cell
+               //
+               float wx = gx * core_constants::exterior_cell_side_length;
+               float wy = gy * core_constants::exterior_cell_side_length;
+               wx += (core_constants::exterior_cell_side_length / 2.0F);
+               wy += (core_constants::exterior_cell_side_length / 2.0F);
+               
+               auto* casted = (loaded_forms::ObjectReference*)stub->form;
+               casted->position.x = wx;
+               casted->position.y = wy;
+               casted->position.z = 0;
+            }
+         }
+      }
       //
       if (request.clone_of) {
          auto flags = request.clone_of->get_record_flags();

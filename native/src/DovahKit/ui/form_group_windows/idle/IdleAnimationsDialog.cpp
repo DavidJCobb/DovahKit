@@ -7,6 +7,7 @@
 #include "dovah/form_stub.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
+#include "editor/localize/form_creation_error_code.h"
 #include "editor/open_window_for_form.h"
 #include "ui/utils/set_custom_context_menu.h"
 #include "./IdleAnimationFormsModel.h"
@@ -500,42 +501,23 @@ void IdleAnimationsDialog::_keybind_delete_idle() {
 }
 
 void IdleAnimationsDialog::_report_idle_create_error(const dovah::exceptions::form_creation_failed& ex) {
-   QString text;
+   QString text = editor::localize::form_creation_error_code(ex.code);
+   bool    should_be_impossible = false;
    switch (ex.code) {
       using enum dovah::exceptions::form_creation_failed::error_code;
       case invalid_form_type:
-         text = QObject::tr("An internal program error occurred: DovahKit tried to create a form but supplied a bad form type. (Wait, what? How did you get the Idle Animations Window to try to do that?)");
-         break;
-      case no_active_file:
-         text = QObject::tr("There is no active file, nor any room in the load order for a new file.");
-         break;
-      case no_form_id_available:
-         text = QObject::tr("You've used up all of the form IDs available to this file!");
-         break;
       case unimplemented_form_type:
-         text = QObject::tr("DovahKit does not support editing this form type. (Wait, what? How did you get the Idle Animations Window to try to do that?)");
-         break;
       case invalid_parent_child_relationship:
-         text = QObject::tr("The specified parent form cannot have a child form of this type. (Wait, what? How did you get the Idle Animations Window to try to do that?)");
-         break;
       case exterior_grid_coordinates_already_taken:
-         text = QObject::tr("The specified worldspace already has an exterior cell at the desired grid coordinates. (Wait, what? How did you get the Idle Animations Window to try and create an exterior cell?)");
-         break;
       case cannot_create_reference_with_no_parent_cell:
-         text = QObject::tr("References cannot be created outside of a cell. (Wait, what? How did you get the Idle Animations Window to try and create a reference?)");
-         break;
       case interior_cell_clone_cannot_have_parent:
-         text = QObject::tr("Interior cells cannot have a parent worldspace. (Wait, what? How did you get the Idle Animations Window to try and create an interior cell?)");
-         break;
       case exterior_cell_clone_must_have_parent:
-         text = QObject::tr("Exterior cells must have a parent worldspace. (Wait, what? How did you get the Idle Animations Window to try and create an exterior cell?)");
-         break;
-      case cannot_sever_references_to_none_stub:
-         text = QObject::tr("DovahKit needed to select a form ID to use for the new form. The chosen form ID is the target of one or more dangling references, and DovahKit does not know how to sever those references, so the form creation process could not continue.");
-         break;
       case form_type_unavailable_in_current_game:
-         text = QObject::tr("The desired form type doesn't exist in the version (e.g. Classic/Special) of Skyrim this file was created for. Try converting the file to the target Skyrim version first. (Wait, what? How did you get the Idle Animations Window to try to do that?)");
+         should_be_impossible = true;
          break;
+   }
+   if (should_be_impossible) {
+      text = tr("%1 (Wait, what? How did you get the Idle Animations Window to try to do that?)", "this error should not be possible when creating an idle").arg(text);
    }
    QMessageBox::critical(
       this,
