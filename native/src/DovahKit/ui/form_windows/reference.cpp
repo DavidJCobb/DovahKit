@@ -21,6 +21,8 @@
 #include "dovah/utils/get_computed_location.h"
 #include "dovah/utils/location_is_or_is_inside_of_location.h"
 
+#include "editor/open_window_for_form.h"
+
 namespace {
    constexpr bool render_window_displays_test_radii = false;
 }
@@ -165,7 +167,21 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
    this->initialize(stub);
 
    this->ui.baseForm->setEnabled(false);
-
+   QObject::connect(this->ui.buttonEditBaseForm, &QPushButton::pressed, this, [this]() {
+      auto* base = this->form->base_form.get_form_stub();
+      if (!base)
+         return;
+      open_edit_dialog_for_form(*base);
+   });
+   {
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+         auto* base = this->form->base_form.get_form_stub();
+         if (stub != base)
+            return;
+         this->ui.baseForm->setText(QString::fromStdString(base->editorID));
+      });
+   }
 
    #pragma region Basic Properties
       for (auto* spinbox : std::array{
@@ -435,6 +451,7 @@ void FormDialogObjectReference::_load_impl() {
    if (base_form) {
       base_type   = base_form->form_type;
       loaded_base = base_form->load();
+      this->ui.baseForm->setText(QString::fromStdString(base_form->editorID));
    }
 
    bool has_bounds = false;
