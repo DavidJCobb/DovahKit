@@ -136,17 +136,37 @@ struct unmanaged_condition;
 
 template<form_data_params Params>
    requires (Params::management_mode == use_info_management_mode::managed)
+class managed_condition;
+
+namespace impl {
+   // IIRC can't use `conditional_t` to select the above templates, as their `requires` 
+   // clauses would be failed in some of the `conditional_t` "branches." a type alias 
+   // in a specialized template will work instead.
+   template<form_data_params>
+   struct condition_t;
+   
+   template<form_data_params P>
+      requires (Params::management_mode == use_info_management_mode::unmanaged)
+   struct condition_t<P> {
+      using type = unmanaged_condition<P>;
+   };
+   
+   template<form_data_params P>
+      requires (Params::management_mode == use_info_management_mode::managed)
+   struct condition_t<P> {
+      using type = managed_condition<P>;
+   };
+}
+
+template<form_data_params Params>
+   requires (Params::management_mode == use_info_management_mode::managed)
 class managed_condition {
    public:
       
       // ... put whatever boilerplate our visitor metaprogramming needs, HERE ...
       
       template<form_data_params OtherParams>
-      using respecialized_type_with_params = std::conditional_t<
-         (OtherParams::management_mode == use_info_management_mode::managed),
-         managed_condition<OtherParams>,
-         unmanaged_condition<OtherParams>
-      >;
+      using respecialized_type_with_params = impl::condition_t<OtherParams>::type;
    
       template<form_data_params DstParams>
          requires (DstParams::management_mode == use_info_management_mode::unmanaged)
