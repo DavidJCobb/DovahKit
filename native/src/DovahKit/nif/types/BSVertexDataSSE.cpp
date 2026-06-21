@@ -15,16 +15,17 @@ namespace nifDK {
          size_t count = 0;
          if ((flags & _::vertex) != 0) {
             count += sizeof(float) * 3; // position
-            count += 4; // bitangent X or unknown
+            count += sizeof(float); // bitangent X or unknown
          }
          if ((flags & _::uv) != 0) {
-            count += sizeof(float) * 2; // UVs
+            static_assert(sizeof(Float16) == 2);
+            count += sizeof(Float16) * 2; // UV (float16[2])
          }
          if ((flags & _::normals) != 0) {
-            count += 3;
+            count += 3; // normal (byte vector)
             count += 1; // bitangent Y
             if ((flags & _::tangents) != 0) {
-               count += 3; // tangent
+               count += 3; // tangent (byte vector)
                count += 1; // bitangent Z
             }
          }
