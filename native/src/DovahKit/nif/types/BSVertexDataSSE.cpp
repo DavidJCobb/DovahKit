@@ -10,15 +10,15 @@
 namespace nifDK {
    namespace {
       constexpr size_t _bytes_per_vertex(BSVertexDesc::vertex_flags_t flags) {
+         static_assert(sizeof(Float16) == 2);
          using _ = BSVertexDesc::vertex_flag;
-         //
+         
          size_t count = 0;
          if ((flags & _::vertex) != 0) {
             count += sizeof(float) * 3; // position
             count += sizeof(float); // bitangent X or unknown
          }
          if ((flags & _::uv) != 0) {
-            static_assert(sizeof(Float16) == 2);
             count += sizeof(Float16) * 2; // UV (float16[2])
          }
          if ((flags & _::normals) != 0) {
@@ -33,7 +33,7 @@ namespace nifDK {
             count += 4; // RGBA color as bytes
          }
          if ((flags & _::skinned) != 0) {
-            count += sizeof(float) * 4; // bone weights
+            count += sizeof(Float16) * 4; // bone weights
             count += 4; // bone indices
          }
          if ((flags & _::eye_data) != 0) {
@@ -94,7 +94,9 @@ namespace nifDK {
          this->color.a = (float)components[3] / 255.0F;
       }
       if (desc.has_flag(_::skinned)) {
-         reader.unchecked_read(this->bones.weights);
+         std::array<Float16, 4> halves;
+         reader.unchecked_read(halves);
+         this->bones.weights = { (float)halves[0], (float)halves[1], (float)halves[2], (float)halves[3] };
          reader.unchecked_read(this->bones.indices);
       }
       if (desc.has_flag(_::eye_data)) {
@@ -145,7 +147,9 @@ namespace nifDK {
             item.color.a = (float)components[3] / 255.0F;
          }
          if constexpr ((flags & _::skinned) != 0) {
-            reader.unchecked_read(item.bones.weights);
+            std::array<Float16, 4> halves;
+            reader.unchecked_read(halves);
+            item.bones.weights = { (float)halves[0], (float)halves[1], (float)halves[2], (float)halves[3] };
             reader.unchecked_read(item.bones.indices);
          }
          if constexpr ((flags & _::eye_data) != 0) {

@@ -100,7 +100,7 @@ namespace nifDK::block_types {
          this->remaster.vertex_description.read(reader);
          //
          auto& list = this->remaster.vertices;
-         list.resize(vertex_size / data_size);
+         list.resize(data_size / vertex_size);
          BSVertexDataSSE::parse_all(reader, this->remaster.vertex_description, list);
       }
       this->partitions.resize(count);
