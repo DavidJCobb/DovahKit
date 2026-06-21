@@ -41,9 +41,7 @@ namespace dovahscript {
       define_wrapper_metatable<wrapper_metatable>(L);
       #pragma region Form wrappers
          define_wrapper_metatable<form>(L);
-         define_wrapper_metatable<_placed_projectile>(L);
          #pragma region Form types
-            define_wrapper_metatable<actor>(L);
             define_wrapper_metatable<cell>(L);
                define_wrapper_metatable<cell_grid_coords>(L);
             define_wrapper_metatable<dialogue_branch>(L);
@@ -65,14 +63,19 @@ namespace dovahscript {
             define_wrapper_metatable<objectreference>(L);
                define_wrapper_metatable<objectreference_position>(L);
                define_wrapper_metatable<objectreference_rotation>(L);
-            define_wrapper_metatable<placed_arrow>(L);
-            define_wrapper_metatable<placed_barrier>(L);
-            define_wrapper_metatable<placed_beam>(L);
-            define_wrapper_metatable<placed_cone>(L);
-            define_wrapper_metatable<placed_flame>(L);
-            define_wrapper_metatable<placed_grenade>(L);
-            define_wrapper_metatable<placed_hazard>(L);
-            define_wrapper_metatable<placed_missile>(L);
+               //
+               // REFR subclasses:
+               //
+               define_wrapper_metatable<_placed_projectile>(L);
+                  define_wrapper_metatable<placed_arrow>(L);
+                  define_wrapper_metatable<placed_barrier>(L);
+                  define_wrapper_metatable<placed_beam>(L);
+                  define_wrapper_metatable<placed_cone>(L);
+                  define_wrapper_metatable<placed_flame>(L);
+                  define_wrapper_metatable<placed_grenade>(L);
+                  define_wrapper_metatable<placed_missile>(L);
+               define_wrapper_metatable<actor>(L);
+               define_wrapper_metatable<placed_hazard>(L);
             define_wrapper_metatable<quest>(L);
                define_wrapper_metatable<quest_alias>(L);
                   define_wrapper_metatable<quest_loc_alias>(L);
