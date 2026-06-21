@@ -736,13 +736,23 @@ namespace vulkanDK {
                ++deleted;
             } else {
                if (item.active() && item.recycle_in_progress()) {
+                  if constexpr (debug_log_scene_object_lifetimes) {
+                     qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_entity_deletions] Carrying out recycle for scene %s #%u...", Entity::name_single, i);
+                     if constexpr (scene_entities::concepts::owns_gpu_resources<Entity>) {
+                        qDebug(" - Note: Has current GPU resources? %u. Has outdated GPU resources? %u.", item.owned_gpu_resources.has_current(), item.owned_gpu_resources.has_outdated());
+                     }
+                  }
                   if constexpr (scene_entities::concepts::owns_gpu_resources<Entity>) {
                      item.owned_gpu_resources.destroy_outdated();
                   }
-                  item.lifetime.life_state = scene_entities::life_state::active;
-                  item.lifetime.recycling  = false;
+                  item.lifetime.recycling = false;
                   item.lifetime.sync_state.set_all_out_of_date();
                   ++deleted;
+                  if constexpr (debug_log_scene_object_lifetimes) {
+                     if (item.recycle_in_progress()) {
+                        qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_entity_deletions] Scene %s #%u recycled. The entity is now flagged as \"active.\"", Entity::name_single, i);
+                     }
+                  }
                   recycling = true;
                }
                last_alive = i;
@@ -750,7 +760,7 @@ namespace vulkanDK {
          }
          if constexpr (debug_log_scene_object_lifetimes) {
             if (deleted) {
-               qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_entity_deletions] Deleted %u scene %s.", deleted, Entity::name_plural);
+               qDebug("[vulkanDK::surface_renderer::_execute_pending_scene_entity_deletions] Deleted or recycled %u scene %s.", deleted, Entity::name_plural);
             }
          }
          pending_deletion_count -= deleted;

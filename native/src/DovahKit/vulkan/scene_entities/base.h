@@ -53,6 +53,9 @@ namespace vulkanDK::scene_entities {
             // If true, then the entity was pending deletion, but has been recycled and 
             // made active; the owned GPU-side resources that were pending deletion are 
             // still pending deletion.
+            //
+            // The internals which initiate a recycle must set this to `true` before 
+            // calling `reset()` on this object.
             bool recycling = false;
 
             fif_sync_state sync_state;

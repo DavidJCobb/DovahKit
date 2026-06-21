@@ -25,8 +25,10 @@ namespace vulkanDK::scene_entities {
       auto* self = (Subclass*)this;
       //
       if constexpr (concepts::owns_gpu_resources<Subclass>) {
-         assert(!this->pending_delete() || this->lifetime.sync_state.are_all_up_to_date());
-         self->owned_gpu_resources = {};
+         if (!self->recycle_in_progress()) {
+            assert(!this->pending_delete() || this->lifetime.sync_state.are_all_up_to_date());
+            self->owned_gpu_resources = {};
+         }
       }
       if constexpr (concepts::has_frame_drawing_data<Subclass>) {
          self->frame_drawing_data = {};
