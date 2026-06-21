@@ -22,7 +22,7 @@ namespace dovah::tes_file_writing {
       auto& subrecord = this->get_current_subrecord();
       if (!subrecord.exists())
          return;
-      if (subrecord.pos > std::numeric_limits<decltype(tes_file_subrecord_header::size)>::max()) {
+      if (subrecord.pos > std::numeric_limits<uint16_t>::max()) {
          this->reserve_more(16 + subrecord.data.size()); // we could do data.reserve_more, but if for some godforsaken reason we ever needed to write mid-buffer then that'd break
          //
          this->_write(uint32_t('XXXX'));
