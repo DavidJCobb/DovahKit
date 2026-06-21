@@ -21,7 +21,7 @@ namespace nifDK::block_types {
          };
       public:
          NiBound bounds;
-         BSDismemberSkinInstance* skin = nullptr;
+         NiObject* skin = nullptr; // known valid types: BSDismemberSkinInstance, NiSkinInstance
          struct {
             BSShaderProperty* shader = nullptr;
             NiAlphaProperty* alpha = nullptr;
