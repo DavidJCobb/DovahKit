@@ -254,6 +254,34 @@ namespace {
          }
          if (!form)
             return 0;
+         if (form->form_type == dovah::form_type::reference) {
+            //
+            // The REFR form type is used for 90% of placed objects in the game world; however, 
+            // some specific base form types require subclass forms. For example, a placed actor 
+            // is an ACHR, not a bare REFR. We should enforce that constraint here: don't allow 
+            // changing a bare REFR's base form to any base that would require a dedicated REFR 
+            // subclass (e.g. a REFR's base form cannot be an NPC_, because you'd need an ACHR 
+            // instead of a REFR for that).
+            // 
+            // We check `form->form_type` because while Dovahscript is meant to have dedicated 
+            // APIs for each subclass, overriding the `base_form` setter, Dovahscript internals 
+            // do have a fallback (for future-proofing's sake) to treat forms of an unrecognized 
+            // REFR subclass as if they are REFRs, i.e. to expose the "bare" REFR API. So, we 
+            // only want to enforce these constraints if this API is being called on a genuinely 
+            // "bare" REFR form.
+            //
+            switch (value->form_type) {
+               case dovah::form_type::actor_base:
+                  cobb::lua::argerror(L, 2, "to place an ActorBase in the game world, you must create an Actor reference specifically, not just a generic ObjectReference");
+                  break;
+               case dovah::form_type::hazard:
+                  cobb::lua::argerror(L, 2, "to place a Hazard in the game world, you must create a Placed Hazard specifically, not just a generic ObjectReference");
+                  break;
+               case dovah::form_type::projectile:
+                  cobb::lua::argerror(L, 2, "to place a Projectile in the game world, you must create a ref of the appropriate type (e.g. Placed Arrow, Placed Beam, Placed Grenade), not just a generic ObjectReference");
+                  break;
+            }
+         }
          self.before_edit();
          form->base_form.set(*form, value);
          self.after_edit();

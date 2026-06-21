@@ -148,7 +148,9 @@
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_parameter_type_override.cpp" />
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_run_on.cpp" />
     <ClCompile Include="dovahscript\api_helpers\native_lists\impl\metamethods.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\actor.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\dialogue_branch.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\missile.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_base_forms.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_door_links.cpp" />
@@ -165,10 +167,18 @@
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\placed_arrow.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\placed_barrier.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\placed_beam.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\placed_cone.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\placed_flame.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\placed_grenade.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\placed_hazard.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias_fill_params_at_location.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias_fill_params_create.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias_fill_params_linked_ref.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\topic_info\collection_link_to.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\_placed_projectile.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\collection_conditions.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\collection_ordered_children.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition.cpp" />
@@ -1611,6 +1621,7 @@
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table_for_lua_assignment.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table_late.h" />
     <ClInclude Include="dovahscript\api_helpers\table_contains_expandos.h" />
+    <ClInclude Include="dovahscript\wrappers\form\actor.h" />
     <ClInclude Include="dovahscript\wrappers\form\dialogue_branch.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_base_forms.h" />
@@ -1628,6 +1639,14 @@
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.h" />
+    <ClInclude Include="dovahscript\wrappers\form\placed_arrow.h" />
+    <ClInclude Include="dovahscript\wrappers\form\placed_barrier.h" />
+    <ClInclude Include="dovahscript\wrappers\form\placed_beam.h" />
+    <ClInclude Include="dovahscript\wrappers\form\placed_cone.h" />
+    <ClInclude Include="dovahscript\wrappers\form\placed_flame.h" />
+    <ClInclude Include="dovahscript\wrappers\form\placed_grenade.h" />
+    <ClInclude Include="dovahscript\wrappers\form\placed_hazard.h" />
+    <ClInclude Include="dovahscript\wrappers\form\placed_missile.h" />
     <ClInclude Include="dovahscript\wrappers\form\quest\fill_params_helpers\member_setter.h" />
     <ClInclude Include="dovahscript\wrappers\form\quest\fill_params_helpers\member_spec.h" />
     <ClInclude Include="dovahscript\wrappers\form\quest\fill_params_helpers\overwrite_with_table.h" />
@@ -1637,6 +1656,9 @@
     <ClInclude Include="dovahscript\wrappers\form\quest\ref_alias_fill_params_create.h" />
     <ClInclude Include="dovahscript\wrappers\form\quest\ref_alias_fill_params_linked_ref.h" />
     <ClInclude Include="dovahscript\wrappers\form\topic_info\collection_link_to.h" />
+    <ClInclude Include="dovahscript\wrappers\form\_placed_projectile.h" />
+    <ClInclude Include="dovahscript\wrappers\form\_placed_projectile_macros.define.h" />
+    <ClInclude Include="dovahscript\wrappers\form\_placed_projectile_macros.undef.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\collection_conditions.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\collection_ordered_children.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition.h" />
@@ -4221,6 +4243,10 @@
     <None Include="dovah\data\dialogue\topic_subtype.md" />
     <None Include="dovah\data\face_fx\default_facegen_race_phonemes.inl" />
     <None Include="dovah\data\game.inl" />
+    <None Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\exceptions\_docs\be careful with unique_ptr members.md" />
     <None Include="dovah\files\bsa\bsa_archive.inl" />
     <None Include="dovah\files\bsa\packed_folder_info.inl" />

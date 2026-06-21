@@ -16,24 +16,33 @@
 
 namespace {
    std::array form_classes = {
-      std::pair{ dovah::form_type::none,          dovahscript::wrappers::form::metatable_key },
-      std::pair{ dovah::form_type::cell,          dovahscript::wrappers::cell::metatable_key },
-      std::pair{ dovah::form_type::dialogue_branch, dovahscript::wrappers::dialogue_branch::metatable_key },
-      std::pair{ dovah::form_type::formlist,      dovahscript::wrappers::formlist::metatable_key },
-      std::pair{ dovah::form_type::land,          dovahscript::wrappers::landscape::metatable_key },
-      std::pair{ dovah::form_type::land_texture,  dovahscript::wrappers::land_texture::metatable_key },
-      std::pair{ dovah::form_type::reference,     dovahscript::wrappers::objectreference::metatable_key },
-      std::pair{ dovah::form_type::navmesh,       dovahscript::wrappers::navmesh::metatable_key },
+      std::pair{ dovah::form_type::none,             dovahscript::wrappers::form::metatable_key },
+      std::pair{ dovah::form_type::actor,            dovahscript::wrappers::actor::metatable_key },
+      std::pair{ dovah::form_type::arrow,            dovahscript::wrappers::placed_arrow::metatable_key },
+      std::pair{ dovah::form_type::barrier,          dovahscript::wrappers::placed_barrier::metatable_key },
+      std::pair{ dovah::form_type::beam,             dovahscript::wrappers::placed_beam::metatable_key },
+      std::pair{ dovah::form_type::cell,             dovahscript::wrappers::cell::metatable_key },
+      std::pair{ dovah::form_type::cone,             dovahscript::wrappers::placed_cone::metatable_key },
+      std::pair{ dovah::form_type::dialogue_branch,  dovahscript::wrappers::dialogue_branch::metatable_key },
+      std::pair{ dovah::form_type::flame,            dovahscript::wrappers::placed_flame::metatable_key },
+      std::pair{ dovah::form_type::formlist,         dovahscript::wrappers::formlist::metatable_key },
+      std::pair{ dovah::form_type::grenade,          dovahscript::wrappers::placed_grenade::metatable_key },
+      std::pair{ dovah::form_type::land,             dovahscript::wrappers::landscape::metatable_key },
+      std::pair{ dovah::form_type::land_texture,     dovahscript::wrappers::land_texture::metatable_key },
+      std::pair{ dovah::form_type::reference,        dovahscript::wrappers::objectreference::metatable_key },
+      std::pair{ dovah::form_type::missile,          dovahscript::wrappers::placed_missile::metatable_key },
+      std::pair{ dovah::form_type::navmesh,          dovahscript::wrappers::navmesh::metatable_key },
       std::pair{ dovah::form_type::navmesh_info_map, dovahscript::wrappers::navmesh_info_map::metatable_key },
-      std::pair{ dovah::form_type::quest,         dovahscript::wrappers::quest::metatable_key },
-      std::pair{ dovah::form_type::shout,         dovahscript::wrappers::shout::metatable_key },
-      std::pair{ dovah::form_type::statik,        dovahscript::wrappers::statik::metatable_key },
-      std::pair{ dovah::form_type::texture_set,   dovahscript::wrappers::texture_set::metatable_key },
-      std::pair{ dovah::form_type::topic,         dovahscript::wrappers::topic::metatable_key },
-      std::pair{ dovah::form_type::topic_info,    dovahscript::wrappers::topic_info::metatable_key },
-      std::pair{ dovah::form_type::voicetype,     dovahscript::wrappers::voicetype::metatable_key },
-      std::pair{ dovah::form_type::word_of_power, dovahscript::wrappers::word_of_power::metatable_key },
-      std::pair{ dovah::form_type::worldspace,    dovahscript::wrappers::worldspace::metatable_key },
+      std::pair{ dovah::form_type::placed_hazard,    dovahscript::wrappers::placed_hazard::metatable_key },
+      std::pair{ dovah::form_type::quest,            dovahscript::wrappers::quest::metatable_key },
+      std::pair{ dovah::form_type::shout,            dovahscript::wrappers::shout::metatable_key },
+      std::pair{ dovah::form_type::statik,           dovahscript::wrappers::statik::metatable_key },
+      std::pair{ dovah::form_type::texture_set,      dovahscript::wrappers::texture_set::metatable_key },
+      std::pair{ dovah::form_type::topic,            dovahscript::wrappers::topic::metatable_key },
+      std::pair{ dovah::form_type::topic_info,       dovahscript::wrappers::topic_info::metatable_key },
+      std::pair{ dovah::form_type::voicetype,        dovahscript::wrappers::voicetype::metatable_key },
+      std::pair{ dovah::form_type::word_of_power,    dovahscript::wrappers::word_of_power::metatable_key },
+      std::pair{ dovah::form_type::worldspace,       dovahscript::wrappers::worldspace::metatable_key },
    };
 
    // This should've been able to be a template, but Qt's janky build system causes the linker to puke when I do that
@@ -107,14 +116,21 @@ namespace dovahscript {
          lua_pushnil(L);
          return 1;
       }
-      const char* metatable = wrappers::form::metatable_key;
+      const char* metatable = nullptr;
       for (auto& pair : form_classes) {
          if (pair.first == stub->form_type) {
             metatable = pair.second;
             break;
          }
       }
-      //
+      if (!metatable) {
+         if (dovah::form_type_is_reference(stub->form_type)) { // future-proofing: REFR subclasses fall back to being wrapped as if they were REFRs
+            metatable = wrappers::objectreference::metatable_key;
+         } else {
+            metatable = wrappers::form::metatable_key;
+         }
+      }
+      
       wrapper out;
       out.stub = stub;
       out.type = wrapper_type::form;
@@ -171,10 +187,7 @@ namespace dovahscript {
          return core::subsystems::userdata::get().push(L, out, metatable);
       }
       if (auto* casted = qobject_cast<QButtonGroup*>(object)) {
-         /*//
-         if (!metatable)
-            metatable = wrappers::ui::radio_group::metatable_key;
-         //*/
+         assert(metatable);
          wrapper out;
          out.button_group = casted;
          out.type         = wrapper_type::button_group;

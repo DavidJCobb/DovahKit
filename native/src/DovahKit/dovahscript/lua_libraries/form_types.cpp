@@ -149,13 +149,13 @@ namespace dovahscript::lua_libraries::form_types {
       __dovah_define(cell);
       __dovah_define(reference);
       __dovah_define(actor);
-      __dovah_define(missile);
-      __dovah_define(arrow);
-      __dovah_define(grenade);
-      __dovah_define(beam);
-      __dovah_define(flame);
-      __dovah_define(cone);
-      __dovah_define(barrier);
+      _offer_single_form_type(L, table, "placed_missile", form_type::missile);
+      _offer_single_form_type(L, table, "placed_arrow",   form_type::arrow);
+      _offer_single_form_type(L, table, "placed_grenade", form_type::grenade);
+      _offer_single_form_type(L, table, "placed_beam",    form_type::beam);
+      _offer_single_form_type(L, table, "placed_flame",   form_type::flame);
+      _offer_single_form_type(L, table, "placed_cone",    form_type::cone);
+      _offer_single_form_type(L, table, "placed_barrier", form_type::barrier);
       __dovah_define(placed_hazard);
       __dovah_define(worldspace);
       __dovah_define(land);
@@ -221,7 +221,7 @@ namespace dovahscript::lua_libraries::form_types {
       __dovah_define(collision_layer);
       __dovah_define(color);
       __dovah_define(reverb_parameters);
-      __dovah_define(unk87);
+      //__dovah_define(unk87);
       //
       // Skyrim Special form types:
       //
