@@ -50,21 +50,11 @@ namespace vulkanDK::dds {
       //
       // Fix-ups:
       //
-      if (this->mipmap_count) {
-         //
-         // GIMP-DDS incorrectly exports a mipmap count of 1 when exporting files without mipmaps.
-         //
-         size_t top_level_texture_size = 0;
-         if (this->flags & header::flag::has_linear_size) {
-            top_level_texture_size = this->linear_size;
-         } else if (this->format.is_uncompressed()) {
-            top_level_texture_size = this->width * this->height * this->format.rgb_bitcount;
-         }
-         if (top_level_texture_size) {
-            if (this->size - data_start <= top_level_texture_size) {
-               this->mipmap_count = 0;
-            }
-         }
+      if (!this->mipmap_count) {
+         // NOTE: DirectX 9 just treats a count of 0 as if it were 1, rather 
+         //       than trying to deduce the number of mip levels.
+         // See: https://github.com/microsoft/DirectXTex/issues/43#issuecomment-268435766
+         this->mipmap_count = 1;
       }
    }
    VkFormat header::to_vulkan_format() const {

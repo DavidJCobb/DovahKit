@@ -175,10 +175,8 @@ namespace vulkanDK {
       out.mipmap_count = header.mipmap_count;
       out.mipmap_count = std::min(
          out.mipmap_count,
-         (decltype(out.mipmap_count)) std::min(
-            std::bit_width(header.width),
-            std::bit_width(header.height)
-         )
+         // maximum possible number of mip levels, based on image dimensions:
+         (decltype(out.mipmap_count)) std::bit_width(std::min(header.width, header.height))
       );
       {
          //
@@ -219,7 +217,16 @@ namespace vulkanDK {
                   // Mipmaps probably extend down to 1x1.
                   //
                   out.mipmap_count = std::bit_width(std::min(header.width, header.height));
+               } else {
+                  //
+                  // Ensure at least one usable layer (i.e. the main image).
+                  //
+                  out.mipmap_count = 1;
                }
+               //
+               // NOTE: DirectX 9 just treats a count of 0 as if it were 1, rather 
+               //       than trying to deduce the number of mip levels.
+               // See: https://github.com/microsoft/DirectXTex/issues/43#issuecomment-268435766
             }
          }
       }
@@ -254,6 +261,11 @@ namespace vulkanDK {
 
    void image_metadata::get_mip_level_offsets(std::vector<size_t>& out) {
       out.clear();
+      if (this->mipmap_count == 0) {
+         out.resize(1);
+         out[0] = 0;
+         return;
+      }
       out.resize(this->mipmap_count);
       out[0] = 0;
 
