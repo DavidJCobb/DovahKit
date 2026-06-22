@@ -50,6 +50,7 @@ Some of these will first require support within our NIF loader. Some (e.g. door 
 * Door teleport markers
 * EffectShaders and the underlying NIF effect-shader properties
 * Grass
+* Large reference rendering (render large refs for all cells within `uLargeRefLODGridSize`)
 * Light emitters [partial]
   * Animations (flicker, pulse)
 * LOD levels (some meshes can define geometry to be hidden at different distances)
