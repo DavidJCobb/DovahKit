@@ -23,7 +23,7 @@ This data is coalesced across all non-partial records, i.e. it does not follow t
 The `RNAM` subrecord is only saved by the Creation Kit if: version control is enabled; and the current record isn't partial, *or* the file is being saved for a big-endian target (e.g. Xbox). If `RNAM` is to be saved, it is first rebuilt from scratch:
 
 * All data is cleared.
-* A list or map of candidate refs within the worldspace (all persistent refs?) is iterated. Refs that meet the appropriate criteria are re-added to the large reference data...
+* A list or map of candidate refs within the worldspace (all non-movable persistent refs?) is iterated. Refs that meet the appropriate criteria are re-added to the large reference data...
   * The ref must be "large."
   * The ref must not be flagged as "deleted."
   * The ref must overlap a non-zero number of cells.
