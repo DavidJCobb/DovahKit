@@ -75,12 +75,32 @@ I've considered having DovahKit silently correct these form uses to `NONE`, or m
 
 ## Critical missing pieces
 
+### Idle animation jank and non-severable form uses
+
+There is one known case where it isn't always possible to sever a form use: an Idle setting an Action as its parent. Ordinarily, this would make the Idle the "root" for that Action. However, due to mistakes that Bethesda made when implementing code to load the Idle Animations tree, it's possible for multiple Idles to fight over the same Action, with the winning Idle being whichever one has the latest-loading record that lays claim to the Action; it's also possible for a single Idle to be a candidate for multiple Actions. Thus for every Idle we have to track two lists of "action root candidacies:" one for Idle -> Action uses that come from dependencies, and one for Idle -> Action uses that come from the active file.
+
+We can't sever an Idle's action-root candidacy (i.e. by severing the Idle -> Action use) if that candidacy comes from a dependency file (i.e. a file other than the active file). The current code for the `IdleAnimation` form works around this by violating the contract for the "sever uses of form" function, with the following knowledge:
+
+* Refusing to sever the use of a non-active-file form, in violation of the function's contract, will not lead to a dangling pointer.
+  * The "sever" function is only invoked when "deleting" the used form.
+  * If the used form is not defined in the active file, then "deleting" it just means setting a record flag on it; the used form's `form_stub` continues to exist.
+* By definition, the list of action root candidacies that were loaded from non-active files cannot contain candidacies for an active-file Action. This is the only list for which we may need to refuse, and it can only contain forms that (per the above bullet points) we are allowed to refuse.
+
+Still, this is janky as hell.
+
+For this reason, instead of having a general-purpose `sever_uses_of_form(form_stub&)` function, we should only offer a specific `sever_uses_of_form_pending_deletion(form_stub&, form_deletion_type)` function, given some `enum class form_deletion_type` that defines members `flag_record_as_deleted` and `wholly_delete_form_and_stub`. We should also define a `non_severable_form_use` type for this specific case, which is skipped if the used form is only being flagged, and which fails an assertion if the used form is being wholly deleted.
+
+(I'm actually considering having the backend manage idle trees outside of the forms themselves, e.g. with some `active_idle_tree` struct that would be a sibling to `form_stub_collection` within the `active_load_order`. We could defer all handling of this problem to that struct. However, if the Idle's managed form data doesn't contain the candidacies and the computed hierarchy positions (parent and previous-sibling form), then its Use Info won't list those forms. At the same time, we want the *un*managed form data to only contain the computed positions, on retrieval, and for you to update the requested positions by overwriting that and committing the data. Hm...)
+
+
+### Support for transaction-style structs
+
 Conditions (i.e. `TESCondition`) in DovahKit use a transaction-style model, wherein you can't modify the managed condition data directly; you can only "commit" an unmanaged condition in full, with us asserting that its data is well-formed. This is necessary because condition parameters are basically tagged unions where the function ID and some of the flags collectively function as the parameters' tag, so if we let you store invalid parameters and we try to serialize those to disk, they'll later be loaded improperly and our use info will be hosed.
 
 This is incompatible with the above design, which assumes that you can convert between (un)managed data just by visiting a list of `public` fields. (The design also assumes that it's possible *at all* to visit all the fields in the given object.) So we face two problems: how do we convert between (un)managed data, i.e. how do we implement the transaction "commit" code; and how do we visit fields in managed data, e.g. for clearing form uses?
 
 
-### Conversion
+#### Conversion
 
 We need to add a special-case system: it needs to be possible to:
 
@@ -179,7 +199,7 @@ class managed_condition {
 ```
 
 
-### Visitation
+#### Visitation
 
 This... I'm actually not 100% sure about. ~~We may literally have to just special-case these kinds of structs in the individual visitor functions. There aren't many of these structs at all (conditions are the only one I can think of), so for now that may be fine?~~ No, that wouldn't scale. Hm...
 

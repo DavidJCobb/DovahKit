@@ -1,4 +1,6 @@
 
+**BLUF:** The way we currently handle loaded form data, and manage use info, sucks. See the "form data - successful Compiler Explorer test" folder's readme for details on an implementation of the below concepts, and on features the new design still needs straightened out.
+
 In order to manage use info, we have to retain form-to-form pointers in memory using a small data structure (currently called `form_reference_t`) which enforces special access requirements: you cannot modify the value of a `form_reference_t` (to clear it, or make it point to a different form) unless you provide its containing form (so we can update use info for both the referent and the referrer). When DovahKit was first designed, then, all form-to-form pointers were implemented as `form_reference_t`. We can call these "managed uses."
 
 Now, for relatively simple form-editing UIs, this isn't a problem. Consider, for example, the case of editing a Shout, with a dialog box that has "OK" and "Cancel" buttons. You have six drop-downs: three for Words of Power, and three for Spells. Until you click "OK," we can track all of the state &mdash; all of the changes you've made &mdash; entirely within the states of those UI controls.
