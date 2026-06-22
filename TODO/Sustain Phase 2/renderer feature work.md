@@ -44,6 +44,9 @@ Some of these will first require support within our NIF loader. Some (e.g. door 
   * Skinning/armatures (i.e. for clothing)
   * Weight interpolation
 * Arbitrary text[^render-window-ui]
+* Decals
+  * Decal emitter markers
+  * Emitted decals
 * Door teleport markers
 * EffectShaders and the underlying NIF effect-shader properties
 * Grass
