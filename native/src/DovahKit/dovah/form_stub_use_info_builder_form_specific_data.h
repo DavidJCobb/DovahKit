@@ -6,7 +6,7 @@
 #include "./forms/structs/navmesh_info_map/navmesh_info_collection.h"
 #include "./forms/structs/navmesh_info_map/precomputed_path_collection.h"
 #include "./forms/structs/navmesh_info_map/road_marker_map.h"
-#include "./forms/structs/world_large_ref_data.h"
+#include "./forms/structs/large_ref_index.h"
 #include "./form_id_t.h"
 
 namespace dovah {
@@ -50,7 +50,7 @@ namespace dovah {
             std::optional<for_navmesh_info_map_form>       navmesh_info_map;
          } by_form_type;
          struct {
-            std::optional<loaded_forms::structs::world_large_ref_data::form_specific_use_info_data> world_large_ref_data;
+            std::optional<loaded_forms::structs::large_ref_index::form_specific_use_info_data> large_ref_index;
          } by_form_struct;
 
          void clear();

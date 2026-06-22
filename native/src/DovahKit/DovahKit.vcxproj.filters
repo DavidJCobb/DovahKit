@@ -2595,9 +2595,6 @@
     <ClCompile Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\forms\structs\world_large_ref_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\form_stub_use_info_builder_form_specific_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -4195,6 +4192,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\localize\form_creation_error_code.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\large_ref_index.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\utils\update_large_ref_index.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -8123,9 +8126,6 @@
     <ClInclude Include="dovah\data\form_id_constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\forms\structs\world_large_ref_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\form_stub_use_info_builder_form_specific_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -10442,6 +10442,15 @@
     <ClInclude Include="editor\localize\form_creation_error_code.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\utils\update_large_ref_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\large_ref_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\cell_grid_dword.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12020,6 +12029,7 @@
     <Text Include="dovah\_docs\interior cell coordinate limits.md" />
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how the game handles large refs.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -12519,6 +12529,7 @@
     <None Include="dovahscript\api_helpers\native_lists\README.md" />
     <None Include="dovah\_docs\form working copies (suck, and are bad).md" />
     <None Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.md" />
+    <None Include="dovah\_docs\large references.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

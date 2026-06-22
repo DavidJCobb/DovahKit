@@ -7,6 +7,10 @@
 #include "../notices/base_form_save_warning.h"
 
 namespace dovah::load_order_interfaces {
+   const tes_file_writing::write_config& form_save::get_save_config() const noexcept {
+      return this->writer.config;
+   }
+
    void form_save::log_save_warning(notices::base_form_save_warning& warning) {
       warning.file_info.file_offset = this->writer.get_output_position();
       this->owner._log_warning(warning);

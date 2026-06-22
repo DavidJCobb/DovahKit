@@ -5,6 +5,12 @@
 #include "../../data/game.h"
 
 namespace dovah::tes_file_writing {
+   enum class large_ref_index_policy {
+      retain, // do not update WRLD/RNAM; save it unchanged
+      remove, // do not save WRLD/RNAM at all
+      update, // recompute WRLD/RNAM at save time, and save the updated data
+   };
+
    enum class record_compression_policy {
       never,     // never compress records
       threshold, // compress records that are larger than a certain size
@@ -29,6 +35,7 @@ namespace dovah::tes_file_writing {
       game     output_game       = game::skyrim_classic;
       std::optional<float> use_file_version; // if not set, upgrades the version number only as necessary. if set, save fails if we use features from a newer version
 
+      large_ref_index_policy large_refs = large_ref_index_policy::retain;
       struct {
          bool add_flag_when_needed      = false;
          bool remove_flag_when_unneeded = false;

@@ -1,0 +1,238 @@
+
+#pragma region BGSLargeRefData
+   struct CellLargeRefIDArray {
+      uint32_t size;    // 00
+      FormID   data[1]; // 04, 08, 0C, ...
+   };
+
+   // LE: 4AC610
+   void BGSLargeRefData::OnCellAttachDetach(TESObjectCELL* cell, bool attaching) {
+      if (!cell)
+         return;
+      if (cell->IsInterior())
+         return;
+      if (cell->flags & (1 << 13))
+         return;
+      
+      uint32_t cell_grid_dword; // esp0C, ebx
+      {
+         int16_t esp18;
+         int16_t esp1C;
+         cell->GetGridCoordinates(&esp18, &esp1C);
+         cell_grid_dword = (esp18 << 0x10) | esp1C;
+      }
+      
+      CellLargeRefIDArray* esp24 = nullptr;
+      uint32_t             esp14 = cell_grid_dword;
+      if (!this->sub45A800(&esp14, &esp24))
+         return;
+      if (esp24->size() == 0) // esp24.unk00
+         return;
+      for(FormID ref_id : esp24) { // non-literal translation, for brevity
+         // esp24.data() == &esp24.unk04
+         
+         TESForm* eax = LookupFormByID(ref_id);
+         if (!eax)
+            continue;
+         TESObjectREFR* esi = eax->Unk_2C();
+         if (!esi)
+            continue;
+         ref_handle keep_esi_alive{esi};
+         
+         if (!IsLargeRef(esi)) // at 4AC6E1
+            continue;
+         if (auto* node = esi->GetNiNode()) {
+            if (esi->IsVisibleWhenDistant() && esi->GetFullLODRef()) {
+               uint32_t parent_grid_dword = WorldCoordsToGridCoordsDword(/*NiPoint3&*/esi->pos);
+               if (eax == cell_grid_dword) {
+                  bool should_cull = !attaching; // esp28
+                  if (attaching && esi->IsMarker() && !INI::Display::bShowMarkers)
+                     should_cull = true;
+                  node->SetIsCulled(should_cull);
+                  
+                  if (attaching && node->AsBSFadeNode()) {
+                     BSFadeNode* eax = node->AsBSFadeNode(); // virtual 0x05
+                     eax->m_flags &= ~NiAVObject::Flag::kTopFadeNode; // ~0x4000
+                     eax->currentFade = 0.0F; // current BSFadeNode opacity
+                  }
+               }
+               // at 4AC7BD
+               if (attaching) {
+                  // jumped to 4AC874
+                  if (!CheckLoadedStateUnk18Flags(1)) {
+                     esi->Unk_66(); // TESObjectREFR::InitHavok?
+                  }
+               } else if (esi->CheckLoadedStateUnk18Flags(1)) {
+                  if (!ShouldLargeRefBeVisible(esi)) {
+                     esi->Unk_65(); // TESObjectREFR::DetachHavok? takes an argument in SSE, not in LE?
+                  }
+               }
+            } else if (!attaching) {
+               // at 4AC7FC
+               if (!ShouldLargeRefBeVisible(esi)) {
+                  node->m_flags |= 1; // "culled"
+                  if (!CheckLoadedStateUnk18Flags(1)) {
+                     esi->Unk_65(); // TESObjectREFR::DetachHavok? takes an argument in SSE, not in LE?
+                  }
+               }
+            } else {
+               // at 4AC835
+               bool should_cull = false; // esp14
+               if (esi->IsMarker() && !INI::Display::bShowMarkers)
+                  should_cull = true;
+               node->SetIsCulled(should_cull);
+               
+               // at 4AC874
+               if (!CheckLoadedStateUnk18Flags(1)) {
+                  esi->Unk_66(); // TESObjectREFR::InitHavok?
+               }
+            }
+         }
+         // at 4AC884
+         if (!esi->sub42B130()) // visible when distant && no tree LOD && not a tree
+            continue;
+         if (!Singleton012E3534->ModelStateIs1(esi)
+            continue;
+         TESObjectCELL* containing_cell = g_TES->GetCurrentWorldspace()->GetCellThatContainsPoint(&esi->pos);
+         if (containing_cell == cell) {
+            if (attaching)
+               cell->sub4C2B30(esi);
+            else
+               cell->sub4C2BA0(esi);
+         }
+      }
+   }
+#pragma endregion
+
+#pragma region ExtraLargeRefOwnerCells and friends
+   void ExtraLargeRefOwnerCells::AnyCellIsInCurrentGrid(bool& result) {
+      sLock012E351C.Lock(nullptr);
+      this->unk08.AnyCellIsInCurrentGrid(result);
+      sLock012E351C.Unlock(); // inlined
+   }
+   
+   void ExtraLargeRefOwnerCells::Unk08::AnyCellIsInCurrentGrid(bool& result) {
+      result = false;
+      for(auto it = this->begin(); it != this->end() && !result; ++it) {
+         TESObjectCELL* esi = *it;
+         if (!esi)
+            continue;
+         if (!g_TES->CheckCellLoaded(esi, true)) {
+            if (!g_TES->CellIsInCurrentGrid(esi, false))
+               continue;
+         }
+         result = true;
+      }
+   }
+#pragma endregion
+
+#pragma region TESObjectCELL
+   // Called by BGSLargeRefData machinery when the cell is attaching.
+   // LE: 4C2B30
+   void TESObjectCELL::sub4C2B30(TESObjectREFR* ref) {
+      if (this->flags & (1 << 13)) {
+         bool  cl;
+         auto* esi = this;
+         do {
+            auto* world = esi->GetParentWorld(); // inlined
+            auto* cell  = world->GetCellThatContainsPoint(&ref->pos);
+            if (!cell)
+               return;
+            if (!cell->IsAttached()) // inlined
+               return;
+            cl  = (cell->flags & (1 << 13));
+            esi = cell;
+         } while (cl);
+         //
+         // I don't understand this loop. I don't understand how it wouldn't 
+         // get stuck spinning forever, eternally looking up the same cell 
+         // from the same worldspace. I don't understand what Bethesda was 
+         // going for with this.
+      }
+      InterlockedIncrement(&this->loadedData->unkB8);
+      this->loadedData->unkBC = /*int32_t*/ -1;
+   }
+   
+   // Called by BGSLargeRefData machinery when the cell is detaching.
+   // LE: 4C2BA0
+   void TESObjectCELL::sub4C2BA0(TESObjectREFR* ref) {
+      if (!this->loadedData)
+         return;
+      auto* esi = this;
+      do {
+         if (!(esi->flags & (1 << 13)))
+            goto found;
+         auto* world = esi->GetParentWorld(); // inlined
+         auto* cell  = world->GetCellThatContainsPoint(&ref->pos);
+         if (!cell)
+            return;
+         if (!cell->IsAttached()) // inlined
+            return;
+         esi = cell;
+      } while (esi->loadedState);
+      return;
+   found:
+      InterlockedDecrement(&esi->loadedData->unkB8);
+      if (esi->loadedData->unkB8 < 0)
+         esi->loadedData->unkB8 = 0;
+      if (esi->loadedData->unkB8)
+         return;
+      
+      int32_t edx = *(int32_t*)(0x01B4ADE8);
+      int32_t ecx = (int32_t)(2.0F * -10000F);
+      
+      esi->loadedData->unkBC = edx - ecx;
+   }
+#pragma endregion
+
+#pragma region TESObjectREFR (and non-member functions acting principally upon it)
+   // Essentially the same checks as are run by the Creation Kit.
+   // LE: 4AC1B0
+   bool IsLargeRef(TESObjectREFR*);
+
+   // Checks if any of the cells overlapped by the large ref are inside of the loaded 
+   // cell grid (i.e. uGridsToLoad). Various functions including TESObjectREFR::Load3D 
+   // call this and cull the ref's root node based on what it returns.
+   // LE: 4AC5B0
+   bool ShouldLargeRefBeVisible(TESObjectREFR* large_ref) {
+      if (!large_ref)
+         return false;
+      
+      auto* cell = large_ref->parentCell;
+      if (!cell)
+         return true;
+      
+      // See: TESObjectCELL::sub4C2B30, TESObjectCELL::sub4C2BA0
+      if ((cell->flags & (1 << 13)) == 0)
+         return true;
+      
+      if (large_ref->Unk_43()) // checks health + destruction state
+         return true;
+      
+      auto* eax = large_ref->extraData.GetByType(kExtraData_LargeRefOwnerCells);
+      if (!eax)
+         return false;
+      
+      bool show;
+      eax->AnyCellIsInCurrentGrid(show);
+      return show;
+   }
+   
+   // LE: 4D4FC0
+   bool TESObjectREFR::IsVisibleWhenDistant() {
+      if (this->flags & 0x8000)
+         return true;
+      if (!this->baseForm)
+         return false;
+      return this->baseForm->flags & 0x8000;
+   }
+   
+   // LE: 42B130
+   bool TESObjectREFR::sub42B130() {
+      if (!this->IsVisibleWhenDistant())
+         return false;
+      if (this->baseForm->flags & 0x40) // "Has Tree LOD"
+         return false;
+      return this->baseForm->FormType != FormType::Tree;
+   }
+#pragma endregion

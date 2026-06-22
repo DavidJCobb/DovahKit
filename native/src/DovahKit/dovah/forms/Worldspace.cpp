@@ -3,6 +3,8 @@
 #include "../data/hardcoded_form_ids.h"
 
 #include "../notices/form_load_warnings/by_form_type/worldspace/is_own_parent.h"
+#include "../files/tes_file_writing/config.h"
+#include "../utils/update_large_ref_index.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -70,7 +72,7 @@ namespace dovah::loaded_forms {
                   }
                   break;
                case 'RNAM':
-                  this->large_ref_data.load(subrecord, intfc);
+                  this->large_ref_indices.dependencies.load(subrecord, intfc);
                   break;
                case 'WCTR':
                   subrecord.read(this->center_cell_coordinates.x);
@@ -87,7 +89,7 @@ namespace dovah::loaded_forms {
             continue;
          switch (subrecord.signature()) {
             case 'RNAM':
-               this->large_ref_data.load(subrecord, intfc);
+               this->large_ref_indices.active.load(subrecord, intfc);
                break;
             case 'DATA':
                if (subrecord.size() == 4) { // this is how the game does it
@@ -243,10 +245,13 @@ namespace dovah::loaded_forms {
       if (uib.is_partial_record) // TESWorldSpace::LoadPartial only pays attention to NAM0 and NAM9
          return;
       if (!uib.is_final_file()) {
+         //
+         // This content is coalesced across all records.
+         //
          while (auto& subrecord = record.next_subrecord()) {
             switch (subrecord.signature()) {
-               case 'RNAM': // large references // SSE-only, but we'll still load it if we see it in a Classic file.
-                  structs::world_large_ref_data::generate_use_info(subrecord, uib);
+               case 'RNAM': // large references
+                  structs::large_ref_index::generate_use_info(subrecord, uib);
                   break;
             }
          }
@@ -291,7 +296,7 @@ namespace dovah::loaded_forms {
                subrecord.read(music_type);
                break;
             case 'RNAM': // large references // SSE-only, but we'll still load it if we see it in a Classic file.
-               structs::world_large_ref_data::generate_use_info(subrecord, uib);
+               structs::large_ref_index::generate_use_info(subrecord, uib);
                break;
          }
       }
@@ -317,7 +322,8 @@ namespace dovah::loaded_forms {
       assert(out->type == form_type);
       auto copy = (Worldspace*)out;
       
-      copy->large_ref_data.clone_from(this->large_ref_data, *copy);
+      copy->large_ref_indices.dependencies.clone_from(this->large_ref_indices.dependencies, *copy);
+      copy->large_ref_indices.active.clone_from(this->large_ref_indices.active, *copy);
       copy->name = this->name;
       copy->max_height_data = this->max_height_data;
       copy->center_cell_coordinates = this->center_cell_coordinates;
@@ -360,14 +366,22 @@ namespace dovah::loaded_forms {
       }
       //
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
-      if constexpr (KEEP_WORLDSPACE_LARGE_REFERENCES) {
-         if (!this->large_ref_data.empty()) {
-            auto& subrecord = record.open_next_subrecord('RNAM');
-            this->large_ref_data.save(subrecord, intfc);
-            subrecord.close();
-         }
-      } else {
-         this->large_ref_data.clear(*this);
+      switch (intfc.get_save_config().large_refs) {
+         using enum tes_file_writing::large_ref_index_policy;
+         case remove:
+            this->large_ref_indices.active.clear(*this);
+            break;
+         case retain:
+            this->large_ref_indices.active.save(record, intfc);
+            break;
+         case update:
+            {
+               utils::update_large_ref_index updater;
+               updater.gather(this->stub);
+               updater.apply(*this, this->large_ref_indices.active);
+               this->large_ref_indices.active.save(record, intfc);
+            }
+            break;
       }
       if (auto& opt = this->max_height_data; opt.has_value()) {
          auto& src = opt.value();
@@ -510,7 +524,8 @@ namespace dovah::loaded_forms {
    void Worldspace::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);
       //
-      this->large_ref_data.sever_outbound_references_to(other, *this);
+      this->large_ref_indices.dependencies.sever_outbound_references_to(other, *this);
+      this->large_ref_indices.active.sever_outbound_references_to(other, *this);
       this->climate.clear_if(*this, other);
       this->lighting_template.clear_if(*this, other);
       this->encounter_zone.clear_if(*this, other);
@@ -521,7 +536,8 @@ namespace dovah::loaded_forms {
       this->music.clear_if(*this, other);
    }
    void Worldspace::_clear_impl() noexcept {
-      this->large_ref_data.clear(*this);
+      this->large_ref_indices.dependencies.clear(*this);
+      this->large_ref_indices.active.clear(*this);
       this->name.reset();
       this->max_height_data = {};
       this->center_cell_coordinates = { 0, 0 };

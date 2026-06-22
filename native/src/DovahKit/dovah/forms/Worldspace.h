@@ -8,7 +8,7 @@
 #include "../../helpers/vector3.h"
 #include "components/model.h"
 #include "components/papyrus.h"
-#include "structs/world_large_ref_data.h"
+#include "structs/large_ref_index.h"
 #include "structs/world_max_height_data.h"
 #include "../use_info/entry_flags/worldspace.h"
 
@@ -73,7 +73,10 @@ namespace dovah::loaded_forms {
 
          localized_string name; // FULL
          //
-         structs::world_large_ref_data large_ref_data;  // RNAM (SSE-only)
+         struct {
+            structs::large_ref_index dependencies;
+            structs::large_ref_index active;
+         } large_ref_indices; // RNAM[]
          std::optional<structs::world_max_height_data> max_height_data; // MHDT
          struct {
             int16_t x = 0;

@@ -16,6 +16,59 @@
   <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Compression</string>
+       </property>
+       <property name="buddy">
+        <cstring>compressionPolicy</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="compressionPolicy">
+       <item>
+        <property name="text">
+         <string>None</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Use Threshold</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Mimic Skyrim.esm</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagMaster">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESM&amp;quot; flag are &amp;quot;masters.&amp;quot; The game will always move them to the top of the load order, and will handle various pieces of game data differently.&lt;/p&gt;&lt;p&gt;One of the most notable differences is that if a file &lt;span style=&quot; font-style:italic;&quot;&gt;isn't&lt;/span&gt; a master, then any physical objects that it places in the game world will remain in the game's memory at all times. The game can only keep track of about a million such objects at a time, so mods that define large numbers of objects (e.g. new lands mods) should always be ESMs.&lt;/p&gt;&lt;p&gt;If a file has the *.ESM file extension, then the game will always act as if this flag is set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>ESM</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagUse1Point71FormIDSpace">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Skyrim Special Edition version 1.6.1130 fixed an internal loading bug, making it possible for game data files to use form IDs in the range [xx000000, xx0007FF] as long as they have at least one master. This update also incremented the internal version number for game files from v1.70 to v1.71.&lt;/p&gt;
+&lt;p&gt;The update isn't exclusive to ESL files, but it affects them the most, by doubling the number of forms they can contain. However, v1.71 data files can cause older versions of Skyrim Special Edition to crash, unless they install the Backported Extended ESL Support mod.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>Use extended ESL form ID space</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item row="3" column="0" colspan="2">
       <widget class="QCheckBox" name="flagLight">
        <property name="whatsThis">
@@ -40,13 +93,60 @@
        </item>
       </widget>
      </item>
-     <item row="2" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagMaster">
-       <property name="whatsThis">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESM&amp;quot; flag are &amp;quot;masters.&amp;quot; The game will always move them to the top of the load order, and will handle various pieces of game data differently.&lt;/p&gt;&lt;p&gt;One of the most notable differences is that if a file &lt;span style=&quot; font-style:italic;&quot;&gt;isn't&lt;/span&gt; a master, then any physical objects that it places in the game world will remain in the game's memory at all times. The game can only keep track of about a million such objects at a time, so mods that define large numbers of objects (e.g. new lands mods) should always be ESMs.&lt;/p&gt;&lt;p&gt;If a file has the *.ESM file extension, then the game will always act as if this flag is set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>ESM</string>
+        <string>Compression Threshold</string>
+       </property>
+       <property name="buddy">
+        <cstring>compressionThreshold</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Game</string>
+       </property>
+       <property name="buddy">
+        <cstring>game</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Name</string>
+         </property>
+         <property name="buddy">
+          <cstring>filename</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="filename"/>
+       </item>
+      </layout>
+     </item>
+     <item row="9" column="0" colspan="2">
+      <spacer name="spacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="7" column="0" colspan="2">
+      <widget class="QCheckBox" name="deleteEmptySeq">
+       <property name="text">
+        <string>Delete SEQ file if empty</string>
        </property>
       </widget>
      </item>
@@ -69,95 +169,46 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QComboBox" name="compressionPolicy">
-       <item>
-        <property name="text">
-         <string>None</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Use Threshold</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Mimic Skyrim.esm</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_4">
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Compression Threshold</string>
+        <string>Large Ref Data:</string>
+       </property>
+       <property name="buddy">
+        <cstring>largeRefPolicy</cstring>
        </property>
       </widget>
      </item>
-     <item row="0" column="0" colspan="2">
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Name</string>
-         </property>
-         <property name="buddy">
-          <cstring>filename</cstring>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="filename"/>
-       </item>
-      </layout>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Game</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0" colspan="2">
-      <spacer name="spacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Compression</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagUse1Point71FormIDSpace">
+     <item row="8" column="1">
+      <widget class="QComboBox" name="largeRefPolicy">
        <property name="whatsThis">
-        <string>&lt;p&gt;Skyrim Special Edition version 1.6.1130 fixed an internal loading bug, making it possible for game data files to use form IDs in the range [xx000000, xx0007FF] as long as they have at least one master. This update also incremented the internal version number for game files from v1.70 to v1.71.&lt;/p&gt;
-&lt;p&gt;The update isn't exclusive to ESL files, but it affects them the most, by doubling the number of forms they can contain. However, v1.71 data files can cause older versions of Skyrim Special Edition to crash, unless they install the Backported Extended ESL Support mod.&lt;/p&gt;</string>
+        <string>&lt;p&gt;Worldspaces are capable of storing an index of all &quot;large references,&quot; mapped to their cells. This feature makes it possible for the game to begin rendering these references at greater distances than normal, even before their parent cells are fully loaded. However, the Creation Kit only generates this data when its version control functionality is enabled; most mod authors don't use that functionality.&lt;/p&gt;
+&lt;p&gt;You can here select what you want DovahKit to do with this data:&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;strong&gt;Retain&lt;/strong&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Save the active file's worldspaces without updating their large ref data, if they have any (beyond stripping out mentions of any refs that were deleted during this editing session).&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;strong&gt;Remove&lt;/strong&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Save the active file's worldspaces without including large ref data. If any such data was present in the active file when it was loaded, that data will be lost.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;strong&gt;Update&lt;/strong&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Save the active file's worldspaces with fully-updated large ref data.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;A file will only include data for the large refs that it creates or overrides; the game combines large ref data from all records that define or override a worldspace, without applying the &quot;Rule of One.&quot; Still, updating this data requires looping over every ref, in every cell, in every worldspace, which could impact how long it takes to save your file.&lt;/p&gt;</string>
        </property>
-       <property name="text">
-        <string>Use extended ESL form ID space</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0" colspan="2">
-      <widget class="QCheckBox" name="deleteEmptySeq">
-       <property name="text">
-        <string>Delete SEQ file if empty</string>
-       </property>
+       <item>
+        <property name="text">
+         <string>Retain</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Remove</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Update</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>
@@ -236,6 +287,7 @@
   <tabstop>compressionThreshold</tabstop>
   <tabstop>flagUse1Point71FormIDSpace</tabstop>
   <tabstop>deleteEmptySeq</tabstop>
+  <tabstop>largeRefPolicy</tabstop>
   <tabstop>dependencies</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>

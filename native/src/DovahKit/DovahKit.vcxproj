@@ -331,6 +331,7 @@
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_tree.cpp" />
+    <ClCompile Include="dovah\forms\structs\large_ref_index.cpp" />
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\navmesh_info.cpp" />
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.cpp" />
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\precomputed_path.cpp" />
@@ -423,7 +424,6 @@
     <ClCompile Include="dovah\forms\structs\typed_package_info\use_item_at.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\use_weapon.cpp" />
     <ClCompile Include="dovah\forms\structs\weather_wind_speed.cpp" />
-    <ClCompile Include="dovah\forms\structs\world_large_ref_data.cpp" />
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
     <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp" />
     <ClCompile Include="dovah\forms\TalkingActivator.cpp" />
@@ -468,6 +468,7 @@
     <ClCompile Include="dovah\utils\get_region_worldspace.cpp" />
     <ClCompile Include="dovah\utils\location_is_or_is_inside_of_location.cpp" />
     <ClCompile Include="dovah\utils\subrecord_data_position.cpp" />
+    <ClCompile Include="dovah\utils\update_large_ref_index.cpp" />
     <ClCompile Include="dovah\utils\update_location_content.cpp" />
     <ClCompile Include="dovah\utils\compute_classed_stat_points.cpp" />
     <ClCompile Include="dovah\utils\compute_voice_file_location.cpp" />
@@ -1917,6 +1918,7 @@
     <ClInclude Include="dovah\forms\StoryManagerBranchNode.h" />
     <ClInclude Include="dovah\forms\StoryManagerEventNode.h" />
     <ClInclude Include="dovah\forms\StoryManagerQuestNode.h" />
+    <ClInclude Include="dovah\forms\structs\cell_grid_dword.h" />
     <ClInclude Include="dovah\forms\structs\cell_lighting.h" />
     <ClInclude Include="dovah\forms\structs\color_floats.h" />
     <ClInclude Include="dovah\forms\structs\directional_ambient_lighting_colors.h" />
@@ -1955,6 +1957,7 @@
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\unknown.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_tree.h" />
+    <ClInclude Include="dovah\forms\structs\large_ref_index.h" />
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\navmesh_info.h" />
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.h" />
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\precomputed_path.h" />
@@ -2046,7 +2049,6 @@
     <ClInclude Include="dovah\forms\structs\typed_package_info\_all.h" />
     <ClInclude Include="dovah\forms\structs\weather_transition_threshold.h" />
     <ClInclude Include="dovah\forms\structs\weather_wind_speed.h" />
-    <ClInclude Include="dovah\forms\structs\world_large_ref_data.h" />
     <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\forms\structs\world_max_height_data.h" />
@@ -2351,6 +2353,7 @@
     <ClInclude Include="dovah\utils\subrecord_data_position.h" />
     <ClInclude Include="dovah\utils\text_replacers\do_text_replacement.h" />
     <ClInclude Include="dovah\utils\text_replacers\effect_item_handler.h" />
+    <ClInclude Include="dovah\utils\update_large_ref_index.h" />
     <ClInclude Include="dovah\utils\update_location_content.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
@@ -4166,6 +4169,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how the game handles large refs.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
     <Text Include="dovah\_docs\interior cell coordinate limits.md" />
     <Text Include="editor\subsystems\worldinput\_docs\bind tree.txt" />
@@ -4331,6 +4335,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form working copies (suck, and are bad).md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\large references.md">
       <SubType>
       </SubType>
     </None>

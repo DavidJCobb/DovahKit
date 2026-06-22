@@ -30,6 +30,13 @@ ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
       widget->addItem(tr("Skyrim Classic"), (int)dovah::game::skyrim_classic);
       widget->addItem(tr("Skyrim Special"), (int)dovah::game::skyrim_special);
    }
+   {
+      auto* widget = this->ui.largeRefPolicy;
+      widget->clear();
+      widget->addItem(tr("Remove", "large ref policy"), (int)dovah::tes_file_writing::large_ref_index_policy::remove);
+      widget->addItem(tr("Retain", "large ref policy"), (int)dovah::tes_file_writing::large_ref_index_policy::retain);
+      widget->addItem(tr("Update", "large ref policy"), (int)dovah::tes_file_writing::large_ref_index_policy::update);
+   }
    //
    this->ui.compressionThreshold->setRange(64, std::numeric_limits<decltype(dovah::tes_file_writing::write_config::record_compress_threshold)>::max());
    QObject::connect(this->ui.compressionPolicy, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
@@ -458,6 +465,8 @@ void ActiveFileSaveDialog::commit() {
       case 2: config.record_compression = dovah::tes_file_writing::record_compression_policy::bethesda;  break;
    }
    config.record_compress_threshold = this->ui.compressionThreshold->value();
+
+   config.large_refs = (dovah::tes_file_writing::large_ref_index_policy) this->ui.largeRefPolicy->currentData().toInt();
    
    if (!this->_enforce_cross_game_form_loss_is_deliberate(config.output_game))
       return;
