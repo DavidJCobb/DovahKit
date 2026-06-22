@@ -112,6 +112,10 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       );
    });
    //
+   this->ui.cellList->setDragDropMode(QAbstractItemView::DragOnly);
+   this->ui.cellList->setDragEnabled(true);
+   this->ui.cellList->setDragDropOverwriteMode(false);
+   //
    #pragma region Context menus
       #pragma region Cell
          this->cellContextMenu.create      = new QAction(tr("New...",      "cell view cell actions"), this->ui.cellList);

@@ -1,7 +1,9 @@
 #include "cell_list.h"
 #include <QHeaderView>
+#include <QMimeData>
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/helpers/form_stub_drag_drop.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/form_stub.h"
 #include "widgets/DKHeaderView.h"
@@ -177,7 +179,7 @@ int CellListModel::columnCount(const QModelIndex& item) const {
 Qt::ItemFlags CellListModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
       return Qt::NoItemFlags;
-   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
+   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsDragEnabled;
 }
 QVariant CellListModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
@@ -264,6 +266,38 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
          break;
    }
    return QVariant();
+}
+QMimeData* CellListModel::mimeData(const QModelIndexList& indexes) const {
+   QMimeData* out = new QMimeData;
+
+   std::vector<dovah::form_stub*> stubs;
+
+   auto& list = this->children;
+   auto  size = list.size();
+   for (const QModelIndex& index : indexes) {
+      if (index.column() != 0) // row selection + table with multiple columns = multiple indices that represent the same row, one for each column. skip the extras
+         continue;
+      if (index.isValid()) {
+         auto i = index.row();
+         if (i < 0 || i >= size)
+            continue;
+         auto* item = this->children[index.row()];
+         if (!item->stub)
+            continue;
+
+         stubs.push_back(const_cast<dovah::form_stub*>(item->stub));
+      }
+   }
+
+   editor_helpers::add_form_stubs_to_mime_data(*out, stubs);
+
+   return out;
+}
+QStringList CellListModel::mimeTypes() const {
+   return QStringList({
+      QString(editor_helpers::form_stub_array_mime_type),
+      QString(editor_helpers::single_form_stub_mime_type)
+   });
 }
 //
 QVariant CellListModel::headerData(int section, Qt::Orientation orientation, int role) const {
