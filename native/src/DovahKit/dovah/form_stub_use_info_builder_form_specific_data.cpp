@@ -33,7 +33,7 @@ namespace dovah {
       //
       // Form structs:
       //
-      if (auto& opt = this->by_form_struct.world_large_ref_data; opt.has_value()) {
+      if (auto& opt = this->by_form_struct.large_ref_index; opt.has_value()) {
          auto& data = opt.value();
          for (auto& pair : data.cells_to_refs) {
             for (auto id : pair.second) {

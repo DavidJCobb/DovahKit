@@ -36,7 +36,9 @@ namespace dovah::loaded_forms::structs {
          subrecord.unchecked_read(cell.y);
          subrecord.unchecked_read(cell.x);
          if constexpr (avoid_duplicate_insertions) {
-            auto  it = std::find(cell_info.begin(), cell_info.end(), ref);
+            auto it = std::find_if(cell_info.begin(), cell_info.end(), [&ref](const auto& item) {
+               return item.form == ref;
+            });
             if (it != cell_info.end())
                continue;
          }

@@ -153,7 +153,7 @@ namespace dovah::utils {
                   for (int32_t y = min_y; y <= max_y; ++y) {
                      if (!form_stub_helpers::get_worldspace_cell_by_grid(*this->worldspace, x, y)) // CK skips coords for non-existent cells
                         continue;
-                     cell_grid_dword grid{ .y = y, .x = x };
+                     cell_grid_dword grid{ .y = (int16_t)y, .x = (int16_t)x };
                      auto& list = this->cells_to_refs[grid];
                      auto& item = list.emplace_back();
                      item.ref = &child;
