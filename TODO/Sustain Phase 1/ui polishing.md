@@ -23,6 +23,10 @@
 
 * If `DKFormPicker` has an unnamed exterior cell force-included, it displays the cell's form ID. It should ideally display the cell's grid coordinates and the editor ID of its parent worldspace. This is relevant for the `DKFormPicker` used to pick cells within the `DKObjectReferencePicker`: if you pick an exterior ref in the Render Window, then an exterior cell gets force-included into the cell picker.
 
+## BSA file picker
+
+* It's annoying that you can't paste a file path into the BSA-browse file dialog and hit Enter to use that path. The use case here is copying the file path displayed for a Container form, and pasting it when picking the model for another Container. Note that in that case, the Data\Meshes\ prefix isn't displayed and isn't copied; to handle this properly, the BSA-browse file dialog would have to attempt to resolve paths with every possible stem, preferring the "innermost" stems first.
+
 ## Imagespace Modifier
 
 * Should we allow the user to unset properties on the first or last keyframe?
