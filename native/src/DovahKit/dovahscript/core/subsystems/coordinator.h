@@ -93,7 +93,9 @@ namespace dovahscript::core::subsystems {
          } task_queues;
 
          // Access from the client thread only:
-         std::vector<dovah::form_stub*> expected_deletions;     // Detect when form stubs are deleted out from under the script engine, so we can assert that that never happens.
+         #if _DEBUG
+            std::vector<dovah::form_stub*> expected_deletions; // For debugging, detect when forms (besides none-stubs) are deleted out from under us.
+         #endif
          std::vector<dovah::form_stub*> expected_modifications; // Handle the case of the script being aborted while a form modification is in progress, so we don't leave the form in limbo.
 
          // Parent widget outside of the script engine, which scripted windows should be children of.

@@ -66,14 +66,19 @@ namespace dovahscript::core::subsystems {
       });
       //
       auto& editor = DovahKitCore::get();
-      QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
-         if (!this->running)
-            return;
-         auto& list = this->expected_deletions;
-         auto  it   = std::find(list.begin(), list.end(), stub);
-         assert(it != list.end() && "Form stubs should never be deleted while a script is running, except as the result of a delete_form task!");
-         list.erase(it);
-      });
+      #if _DEBUG
+         QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
+            if (!this->running)
+               return;
+            if (stub->is_none_stub()) // none-stubs can be deleted by the backend, to make room for new forms. don't warn on that.
+               return;
+            auto& list = this->expected_deletions;
+            auto  it   = std::find(list.begin(), list.end(), stub);
+            if (it != list.end())
+               __debugbreak(); // A form was deleted out from under us, or a script API deleted a form improperly (i.e. without appropriate notice to us).
+            list.erase(it);
+         });
+      #endif
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &coordinator::abort);
    }
    coordinator::~coordinator() {
@@ -662,16 +667,21 @@ namespace dovahscript::core::subsystems {
    void coordinator::expect_deletion_of(passkey_to<tasks::s2m::delete_form>, const std::vector<dovah::form_stub*>& append) {
       require_client_thread();
       require_script_thread();
-      //
-      auto& list = this->expected_deletions;
-      list.insert(list.begin(), append.begin(), append.end());
+
+      #if _DEBUG
+         auto& list = this->expected_deletions;
+         list.insert(list.begin(), append.begin(), append.end());
+      #endif
    }
    void coordinator::on_deletion_completion_expected(passkey_to<tasks::s2m::delete_form>) {
       require_client_thread();
       require_script_thread();
-      //
-      auto& list = this->expected_deletions;
-      assert(list.empty() && "A delete_form task didn't delete all of the forms it expected to delete!");
+
+      #if _DEBUG
+         auto& list = this->expected_deletions;
+         if (!list.empty())
+            __debugbreak(); // A "delete form" task didn't delete all of the forms that it expected to delete!
+      #endif
    }
 
 
