@@ -47,9 +47,9 @@ namespace dovah::loaded_forms {
                case 'NAM0':
                   {
                      float temporary;
-                     if (subrecord.read(temporary) && temporary > this->bounds.min.x)
+                     if (subrecord.read(temporary) && temporary < this->bounds.min.x)
                         this->bounds.min.x = temporary;
-                     if (subrecord.read(temporary) && temporary > this->bounds.min.y)
+                     if (subrecord.read(temporary) && temporary < this->bounds.min.y)
                         this->bounds.min.y = temporary;
                   }
                   break;
