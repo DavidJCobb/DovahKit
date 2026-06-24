@@ -12,6 +12,7 @@ namespace dovah::notices::file_load_errors {
       public:
          std::optional<errno_t>  errno_value;
          std::optional<uint32_t> winapi_error;
+         std::string real_filename; // e.g. Foo.esp was read-only, so we saved it to Foo.tes, but then we couldn't even re-open Foo.tes, so this field is "Foo.tes"
    };
 }
 #include "../_util.undef.h"

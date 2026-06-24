@@ -146,7 +146,12 @@ namespace dovah::load_order_processes {
             this->results.filename = desired_filename.filename().string();
          }
          try {
-            active_load_order.active_file->reopen();
+            active_load_order.active_file->reopen(
+               this->results.saved_to_temporary_file ?
+                  temporary_filename
+               :
+                  desired_filename
+            );
          } catch (const exceptions::file_load_failed& ex) {
             //
             // We were unable to reopen the mapped file view after fully updating the active file, 

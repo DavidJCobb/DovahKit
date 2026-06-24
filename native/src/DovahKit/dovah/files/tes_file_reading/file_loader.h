@@ -45,6 +45,7 @@ namespace dovah::tes_file_reading {
          bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any). calling this while a load is already in progress is undefined behavior
          void close(); // intended for use during the save process, with the file then being reopened by the caller upon a successful save
          void reopen(); // reopen the mapped file, without actually loading its contents; intended for use during the save process. can throw.
+         void reopen(const std::filesystem::path&); // reopen with an alternate path (e.g. if we couldn't save to the desired filename)
          
       protected:
          std::filesystem::path path;
@@ -56,7 +57,7 @@ namespace dovah::tes_file_reading {
          std::vector<file_threaded_part_loader_base*> threads; // array elements should never be nullptr after the instance is constructed.
          bool aborted = false; // TODO: make atomic?
          //
-         void _open_mapped_file();
+         void _open_mapped_file(const std::filesystem::path&);
          bool _load_header();
          //
          void _set_filename(const std::filesystem::path& desired, const std::filesystem::path& actual);

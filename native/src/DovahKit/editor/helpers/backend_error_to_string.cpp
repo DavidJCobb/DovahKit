@@ -78,7 +78,7 @@ namespace editor_helpers {
                         detail = QObject::tr("Insufficient memory.", disambig);
                         break;
                      case EISDIR:
-                        detail = QObject::tr("The 'file' is actually a directory and therefore cannot be opened for writing.", disambig);
+                        detail = QObject::tr("The \"file\" is actually a directory and therefore cannot be opened for writing.", disambig);
                         break;
                      case ENOTDIR:
                         detail = QObject::tr("The specified path is not a directory.", disambig);
@@ -92,10 +92,16 @@ namespace editor_helpers {
                   detail = cobb::qt::winapi_code_to_string(code);
                }
 
-               return QObject::tr(
-                  "A filesystem error occurred. %1",
-                  disambig
-               ).arg(detail);
+               QString format = QObject::tr("A filesystem error occurred. %1", disambig);
+               if (casted->real_filename != casted->filename) {
+                  format = QObject::tr("A filesystem error occurred when trying to open %1 after it was relocated to %2. %3", disambig)
+                     .arg(casted->filename)
+                     .arg(casted->real_filename);
+               } else if (!casted->filename.empty()) {
+                  format = QObject::tr("A filesystem error occurred when trying to open %1. %2", disambig)
+                     .arg(casted->filename);
+               }
+               return format.arg(detail);
             }
             if (auto* casted = cobb::dynamic_fast_cast<const file_load_errors::form_id_is_invalid*>(&warning)) {
                auto type = form_type_name_to_string(casted->form.type);

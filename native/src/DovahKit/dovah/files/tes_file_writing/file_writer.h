@@ -66,6 +66,7 @@ namespace dovah {
             bool _write_form(form_stub*, std::optional<form_stub*> previous_child = {});
             void _write_record(form_stub* stub = nullptr); // pass the stub when writing forms, for error reporting purposes
             void _write_child_forms_for_cell(form_stub*);
+            void _write_child_forms_for_worldspace_persistent_cell(form_stub*);
             void _write_child_forms_for_topic(form_stub*);
             void _write_child_forms_for_worldspace(form_stub*);
             void _write_interior_cells();

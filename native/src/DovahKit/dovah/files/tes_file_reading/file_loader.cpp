@@ -133,7 +133,7 @@ namespace dovah::tes_file_reading {
       else if (this->path.empty()) {
          throw dovah::exceptions::file_load_failed(dovah::exceptions::file_load_failed::error_code::no_filename_specified);
       }
-      this->_open_mapped_file();
+      this->_open_mapped_file(this->path);
       //
       if (!this->_load_header()) {
          auto error = std::make_unique<dovah::notices::file_load_errors::malformed_file_header>();
@@ -401,12 +401,15 @@ namespace dovah::tes_file_reading {
       this->loader    = nullptr;
    }
    void file_loader::reopen() {
-      return this->_open_mapped_file();
+      this->reopen(this->path);
+   }
+   void file_loader::reopen(const std::filesystem::path& path_to_open) {
+      this->_open_mapped_file(path_to_open);
    }
 
-   void file_loader::_open_mapped_file() {
+   void file_loader::_open_mapped_file(const std::filesystem::path& path_to_open) {
       this->file = {};
-      this->file.open(this->path.c_str());
+      this->file.open(path_to_open.c_str());
       if (!this->file) {
          auto error = std::make_unique<dovah::notices::file_load_errors::filesystem_error>();
          auto ex    = dovah::exceptions::file_load_failed();

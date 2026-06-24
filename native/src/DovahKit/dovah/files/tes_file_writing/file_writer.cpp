@@ -9,6 +9,7 @@
 #include "../../form_stubs/helpers/for_each_child_form.h"
 #include "../../form_stubs/helpers/for_each_persistent_ref_in_world.h"
 #include "../../form_stubs/helpers/get_worldspace_persistent_cell.h"
+#include "../../form_stubs/helpers/is_worldspace_persistent_cell.h"
 #include "../../form_stubs/helpers/is_persistent.h"
 #include "../../forms/Form.h"
 #include "../../forms/ObjectReference.h"
@@ -283,10 +284,12 @@ namespace dovah::tes_file_writing {
          record._close();
       }
 
-      if (stub->has_child_forms()) {
-         //
-         // Now, we need to write child groups and forms as appropriate:
-         //
+      //
+      // Now, we need to write child groups and forms as appropriate:
+      //
+      if (stub->form_type == dovah::form_type::cell && form_stub_helpers::is_worldspace_persistent_cell(*stub)) {
+         this->_write_child_forms_for_worldspace_persistent_cell(stub);
+      } else if (stub->has_child_forms()) {
          switch (stub->form_type) {
             case form_type::cell:
                this->_write_child_forms_for_cell(stub);
@@ -299,6 +302,7 @@ namespace dovah::tes_file_writing {
                break;
          }
       }
+
       if (stub->form_type == form_type::cell) {
          this->compress_state.containing_cell_is_compressed = false;
       }
@@ -356,56 +360,53 @@ namespace dovah::tes_file_writing {
    void file_writer::_write_child_forms_for_cell(form_stub* stub) {
       assert(stub);
       assert(stub->form_type == dovah::form_type::cell);
-      //
-      form_stub* worldspace      = stub->get_parent_form();
-      form_stub* persistent_cell = nullptr;
-      if (worldspace) {
-         if (worldspace->form_type == dovah::form_type::worldspace) {
-            persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(*worldspace);
-         } else {
-            worldspace = nullptr;
-         }
-      }
-      //
-      std::vector<form_stub*> persistent;
-      std::vector<form_stub*> temporary;
-      if (stub == persistent_cell) {
-         assert(worldspace);
-         form_stub_helpers::for_each_persistent_ref_in_world(*worldspace, [&persistent](form_stub& child) {
-            if (!child.needs_save())
-               return false;
-            persistent.push_back(&child);
-            return false;
-         });
+      
+      bool should_gather_persistent = false;
+      if (!stub->is_exterior_cell()) {
+         should_gather_persistent = true;
       } else {
          //
-         // Exterior cells generally don't store their own persistent REFRs; rather, 
-         // those are sorted under the worldspace's persistent cell. Interior cells, 
-         // however, do store their own persistent REFRs.
+         // If we're saving an exterior cell, AND the parent worldspace has a 
+         // persistent cell, THEN persistent refs inside of this cell should 
+         // not be saved here. They will be found and saved when we process 
+         // the persistent cell.
          // 
-         // Moreover, if we're resaving a malformed file (or the frontend has made 
-         // some sort of mistake) such that a worldspace contains persistent refs 
-         // but no persistent cell, we should ensure that we don't lose those refs, 
-         // even if that means putting them in the wrong GRUP. We may not have the 
-         // option to simply create a persistent cell if e.g. the file has no free 
-         // form IDs remaining or the frontend isn't ready for a form to be created 
-         // during the save process.
+         // If the worldspace has no persistent cell, then we'll gather its 
+         // persistent refs and save them as part of each individual cell. 
+         // That isn't strictly correct, but this is extremely *not* the 
+         // time or place to try and create a persistent cell for them, and 
+         // in any case it may not be possible to (e.g. if the file has no 
+         // available form IDs).
          //
-         bool gather_persistent = !persistent_cell || !stub->is_exterior_cell();
-         form_stub_helpers::for_each_child_form(*stub, [stub, gather_persistent, &persistent, &temporary](form_stub& child) {
-            if (!child.needs_save())
-               return false;
-            if (form_stub_helpers::is_persistent(child)) {
-               if (!gather_persistent)
-                  return false;
-               persistent.push_back(&child);
+         form_stub* worldspace      = stub->get_parent_form();
+         form_stub* persistent_cell = nullptr;
+         if (worldspace) {
+            if (worldspace->form_type == dovah::form_type::worldspace) {
+               persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(*worldspace);
+               assert(stub != persistent_cell); // persistent cells' children should be handled via `_write_child_forms_for_worldspace_persistent_cell`, not here
             } else {
-               temporary.push_back(&child);
+               worldspace = nullptr;
             }
-            return false;
-         });
+         }
+         if (!persistent_cell)
+            should_gather_persistent = true;
       }
-      //
+
+      std::vector<form_stub*> persistent;
+      std::vector<form_stub*> temporary;
+      form_stub_helpers::for_each_child_form(*stub, [stub, should_gather_persistent, &persistent, &temporary](form_stub& child) {
+         if (!child.needs_save())
+            return false;
+         if (form_stub_helpers::is_persistent(child)) {
+            if (!should_gather_persistent)
+               return false;
+            persistent.push_back(&child);
+         } else {
+            temporary.push_back(&child);
+         }
+         return false;
+      });
+
       if (!persistent.empty() || !temporary.empty()) {
          this->open_group(tes_file_group_type::cell_children, stub->formID, 0);
          if (!persistent.empty()) {
@@ -426,6 +427,42 @@ namespace dovah::tes_file_writing {
          }
          this->close_current_group();
       }
+   }
+   void file_writer::_write_child_forms_for_worldspace_persistent_cell(form_stub* stub) {
+      //
+      // In the game's file format, every worldspace has a "persistent cell" that overlaps 
+      // the entire area of the worldspace, and all persistent refs are made children of 
+      // that cell. DovahKit handles things differently at run-time: on load, persistent 
+      // refs are re-parented from the persistent cell into whatever normal cell contains 
+      // their [the refs'] position. Thus, to save these refs back into the persistent 
+      // cell, we have to walk all persistent refs in the worldspace, rather than walking 
+      // children of the cell (because it basically shouldn't *have* any children).
+      //
+      assert(stub);
+      assert(stub->form_type == dovah::form_type::cell);
+      form_stub* worldspace = stub->get_parent_form();
+      assert(worldspace);
+      assert(worldspace->form_type == dovah::form_type::worldspace);
+
+      std::vector<form_stub*> persistent;
+      form_stub_helpers::for_each_persistent_ref_in_world(*worldspace, [&persistent](form_stub& child) {
+         if (!child.needs_save())
+            return false;
+         persistent.push_back(&child);
+         return false;
+      });
+      if (persistent.empty())
+         return;
+      this->open_group(tes_file_group_type::cell_children, stub->formID, 0);
+      if (!persistent.empty()) {
+         this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+         for (auto* child : persistent) {
+            if (!this->_write_form(child))
+               break;
+         }
+         this->close_current_group();
+      }
+      this->close_current_group();
    }
    void file_writer::_write_child_forms_for_topic(form_stub* stub) {
       if (!stub->addenda)
@@ -532,18 +569,6 @@ namespace dovah::tes_file_writing {
       //
       if (auto cell = form_stub_helpers::get_worldspace_persistent_cell(*stub)) {
          if (cell->needs_save()) {
-            //
-            // NOTE: You may be aware that persistent refs need to be handled differently from 
-            //       normal refs. On load, we reparent them from the worldspace persistent cell 
-            //       into whatever cell their coordinates would place them in, so on save, we 
-            //       need to be sure to serialize them into the persistent cell rather than 
-            //       into what DovahKit views as their parent form.
-            // 
-            //       Don't worry about it. We deal with that in `_write_child_forms_for_cell`. 
-            //       The persistent cell reaches into its owning worldspace and looks up all of 
-            //       the persistent refs therein; the non-persistent cells skip persistent refs 
-            //       when serializing their own children; and it all works out.
-            //
             (open_group_if_needed)();
             this->_write_form(cell);
          }
