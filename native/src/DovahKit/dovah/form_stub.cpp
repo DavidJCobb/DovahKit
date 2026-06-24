@@ -17,6 +17,7 @@
 #include "form_stub_heap.h"
 #include "form_stub_use_info_builder.h"
 #include "logging.h"
+#include "./form_stubs/helpers/for_each_persistent_ref_in_world.h"
 
 namespace {
    //
@@ -756,6 +757,28 @@ namespace dovah {
          return true;
       if (this->does_descendant_form_need_save())
          return true;
+      if (this->form_type == dovah::form_type::cell) {
+         auto* world_stub = this->get_parent_form();
+         if (world_stub && world_stub->addenda && world_stub->addenda->persistent_cell == this) {
+            //
+            // The worldspace's persistent cell needs to be saved if any persistent 
+            // refs in the worldspace need to be saved. (We re-parent persistent refs 
+            // on load, placing them in whatever cell their coordinates would place 
+            // them in. Thus the cell won't test as having any descendant forms that 
+            // need to be saved; we need this special-case handling here.)
+            //
+            bool needs_save = false;
+            form_stub_helpers::for_each_persistent_ref_in_world(*world_stub, [&needs_save](form_stub& child) {
+               if (child.needs_save()) {
+                  needs_save = true;
+                  return true; // break
+               }
+               return false; // continue
+            });
+            if (needs_save)
+               return true;
+         }
+      }
       if (this->form_type == form_type::topic) {
          if (auto* addenda = this->addenda) {
             auto& list_d = addenda->ordered_children.get_master_list();
