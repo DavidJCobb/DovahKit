@@ -597,13 +597,15 @@ namespace ui::impl::DKTopicOrSubtypePicker {
          if (emit_model_sync_signals) {
             size_t from_row = _map_form_index_to_row(from);
             size_t to_row   = _map_form_index_to_row(to);
-            this->beginMoveRows(
+            bool allowed = this->beginMoveRows(
                {},
                from_row, // first to move
                from_row, // last  to move
                {},
                to_row
             );
+            if (!allowed) // since we're only moving a single row, the only condition that could cause this is a no-op move (i.e. from N to N)
+               return;
          }
          if (!moving_upward_in_list) {
             //

@@ -606,13 +606,15 @@ namespace ui::impl::DKFormPicker {
             moving_upward_in_list = dst_it < entry_it;
          }
          if (emit_model_sync_signals) {
-            this->beginMoveRows(
+            bool allowed = this->beginMoveRows(
                {},
                from, // first to move
                from, // last  to move
                {},
                to
             );
+            if (!allowed) // since we're only moving a single row, the only condition that could cause this is a no-op move (i.e. from N to N)
+               return;
          }
          if (!moving_upward_in_list) {
             //

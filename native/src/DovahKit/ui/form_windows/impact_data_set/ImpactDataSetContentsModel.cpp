@@ -331,10 +331,9 @@ void ImpactDataSetContentsModel::_re_sort_item(size_t from) {
          return editor_id < QString::fromStdString(b.first->editorID);
       },
       [&moved, this, &list](decltype(_data)::iterator from_it, decltype(_data)::iterator to_it) {
-         moved = true;
          size_t from  = std::distance(list.begin(), from_it);
          size_t to    = std::distance(list.begin(), to_it);
-         this->beginMoveRows(
+         moved = this->beginMoveRows(
             {},
             from, // first to move
             from, // last  to move
