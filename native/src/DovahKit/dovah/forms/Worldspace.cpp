@@ -12,15 +12,6 @@ namespace {
    }
 }
 
-namespace {
-   //
-   // xEdit discards this data when saving, since it should only appear in masters. 
-   // However, if we load it, then we either need to save it or need to clear it at 
-   // save time.
-   //
-   inline constexpr bool KEEP_WORLDSPACE_LARGE_REFERENCES = true;
-}
-
 namespace dovah::loaded_forms {
    void Worldspace::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);

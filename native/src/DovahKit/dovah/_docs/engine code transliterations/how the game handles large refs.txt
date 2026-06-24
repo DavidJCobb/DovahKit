@@ -5,7 +5,8 @@
       FormID   data[1]; // 04, 08, 0C, ...
    };
 
-   // LE: 4AC610
+   // LE address: 4AC610
+   // SSE 1.6.1170.0 Address Library ID: 18223
    void BGSLargeRefData::OnCellAttachDetach(TESObjectCELL* cell, bool attaching) {
       if (!cell)
          return;
@@ -105,6 +106,8 @@
 #pragma endregion
 
 #pragma region ExtraLargeRefOwnerCells and friends
+   // LE address: 4AC520
+   // SSE 1.6.1170.0 Address Library ID: 18241
    void ExtraLargeRefOwnerCells::AnyCellIsInCurrentGrid(bool& result) {
       sLock012E351C.Lock(nullptr);
       this->unk08.AnyCellIsInCurrentGrid(result);
@@ -128,7 +131,8 @@
 
 #pragma region TESObjectCELL
    // Called by BGSLargeRefData machinery when the cell is attaching.
-   // LE: 4C2B30
+   // LE address: 4C2B30
+   // SSE 1.6.1170.0 Address Library ID: 19159
    void TESObjectCELL::sub4C2B30(TESObjectREFR* ref) {
       if (this->flags & (1 << 13)) {
          bool  cl;
@@ -154,7 +158,8 @@
    }
    
    // Called by BGSLargeRefData machinery when the cell is detaching.
-   // LE: 4C2BA0
+   // LE address: 4C2BA0
+   // SSE 1.6.1170.0 Address Library ID: 19160
    void TESObjectCELL::sub4C2BA0(TESObjectREFR* ref) {
       if (!this->loadedData)
          return;
@@ -187,13 +192,15 @@
 
 #pragma region TESObjectREFR (and non-member functions acting principally upon it)
    // Essentially the same checks as are run by the Creation Kit.
-   // LE: 4AC1B0
+   // LE address: 4AC1B0
+   // SSE 1.6.1170.0 Address Library ID: 18219
    bool IsLargeRef(TESObjectREFR*);
 
    // Checks if any of the cells overlapped by the large ref are inside of the loaded 
    // cell grid (i.e. uGridsToLoad). Various functions including TESObjectREFR::Load3D 
    // call this and cull the ref's root node based on what it returns.
-   // LE: 4AC5B0
+   // LE address: 4AC5B0
+   // SSE 1.6.1170.0 Address Library ID: 18222
    bool ShouldLargeRefBeVisible(TESObjectREFR* large_ref) {
       if (!large_ref)
          return false;
@@ -218,7 +225,7 @@
       return show;
    }
    
-   // LE: 4D4FC0
+   // LE address: 4D4FC0
    bool TESObjectREFR::IsVisibleWhenDistant() {
       if (this->flags & 0x8000)
          return true;
@@ -227,7 +234,7 @@
       return this->baseForm->flags & 0x8000;
    }
    
-   // LE: 42B130
+   // LE address: 42B130
    bool TESObjectREFR::sub42B130() {
       if (!this->IsVisibleWhenDistant())
          return false;

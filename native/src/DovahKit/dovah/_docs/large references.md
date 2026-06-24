@@ -114,12 +114,8 @@ The reason large refs may render twice has to do with how the game bakes worldsp
 
 * Files with the path <code>meshes/terrain/<var>worldspace</var>/<var>worldspace</var>.<var>size</var>.<var>x</var>.<var>y</var>.bto</code> are baked LOD meshes for static refs placed in cells. They, too, are NIFs with a changed file extension.
 
-Size-4 `bto` files are the only files I've found that go out of their way to divide the baked LOD for large refs into different shapes.[^large-ref-lod-shapes] These shapes use block type `BSSubIndexTriShape` (SSE) or `BSSegmentedTriShape` (LE), which defines a list of `BSGeometrySegment`s identifying a range of triangles (start index and count) belonging to the segment. It's not clear, however, how these segments correspond to the large refs.
+Size-4 `bto` files are the only files I've found that go out of their way to divide the baked LOD for large refs into different shapes.[^large-ref-lod-shapes] These shapes use block type `BSSubIndexTriShape` (SSE) or `BSSegmentedTriShape` (LE), which defines a list of `BSGeometrySegment`s identifying a range of triangles (start index and count) belonging to the segment. It's not clear, however, how these segments correspond to the large refs. I've done some reverse-engineering, but haven't yet tracked down where or how the game turns segments off, or, in particular, how it even ties a given mesh segment to a given large ref.
 
-This means that the baked LOD for large refs can be hidden, but not individually, and not even per cell; it can only be hidden for 4-cell-aligned 4x4-cell areas.<!--[^large-ref-grid-size-implicit-cap]--> This is why problems that affect one large ref will also affect other, nearby large refs. Somehow, the game fails to switch off visibility of the large ref LOD, while still trying to render the large refs themselves as full-detail models.
-
-[^large-ref-lod-shapes]: Names seen for SSE `bto` files are `objsnow-LargeRef` and `objsnowHD-LargeRef`. Both blocks contained a `BSDistantObjectLargeRefExtraData` child block, name `DOLRED`, containing only a single bool (`true`) identifying the blocks as large ref LOD.
-
-<!--[^large-ref-grid-size-implicit-cap]: This, in turn, would imply that it's not a good idea to make the large ref grid too large. If you tell the game to render large refs at a distance far enough for the game to be rendering baked object LOD in more than 4-cell chunks, then the baked LOD will unavoidably overlap the large ref's full-detail model.-->
+[^large-ref-lod-shapes]: Names seen for SSE `bto` files are `objsnow-LargeRef` and `objsnowHD-LargeRef`. Both blocks contained a `BSDistantObjectLargeRefExtraData` child block, name `DOLRED`, containing only a single bool (`true`) identifying the blocks as large ref LOD. Note that the `BSDistantObjectLargeRefExtraData` block type didn't exist in LE.
 
 
