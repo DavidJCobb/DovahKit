@@ -567,16 +567,17 @@ namespace dovah::tes_file_writing {
          group_opened = true;
       };
       //
-      if (auto cell = form_stub_helpers::get_worldspace_persistent_cell(*stub)) {
-         if (cell->needs_save()) {
-            (open_group_if_needed)();
-            this->_write_form(cell);
-         }
+      auto* persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(*stub);
+      if (persistent_cell && persistent_cell->needs_save()) {
+         (open_group_if_needed)();
+         this->_write_form(persistent_cell);
       }
       //
       std::map<uint32_t, _cell_block> blocks;
-      form_stub_helpers::for_each_child_form(*stub, [&blocks, &open_group_if_needed](form_stub& child) {
+      form_stub_helpers::for_each_child_form(*stub, [&blocks, &open_group_if_needed, persistent_cell](form_stub& child) {
          if (child.form_type != form_type::cell)
+            return false;
+         if (&child == persistent_cell)
             return false;
          if (!child.needs_save())
             return false;
