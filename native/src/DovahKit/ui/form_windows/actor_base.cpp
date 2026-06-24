@@ -187,7 +187,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          widget->addItem(tr("Male"), (int)dovah::sex::male);
       }
       ui::set_unsigned_range<float>(this->ui.height);
-      this->ui.bodyWeight->setRange(0, 1);
+      this->ui.bodyWeight->setRange(0, 100);
       this->ui.farawaySkin->setAllowedFormType(dovah::form_type::armor);
       ui::set_unsigned_range<float>(this->ui.farawayDistance);
       this->ui.voicetype->setAllowedFormType(dovah::form_type::voicetype);
