@@ -1356,6 +1356,7 @@
     <ClCompile Include="ui\utils\painting\paint_single_line_text.cpp" />
     <ClCompile Include="ui\utils\pair_slider_to_spinbox.cpp" />
     <ClCompile Include="ui\utils\set_custom_context_menu.cpp" />
+    <ClCompile Include="ui\utils\show_parent_scoped_modal.cpp" />
     <ClCompile Include="ui\utils\shrink_dialog_on_show.cpp" />
     <ClCompile Include="ui\utils\typical_tableview_config.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
@@ -2384,6 +2385,7 @@
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
     <QtMoc Include="widgets\DKProgressBar.h" />
+    <ClInclude Include="ui\utils\show_parent_scoped_modal.h" />
     <ClInclude Include="xaudio2\core_interface.h" />
     <ClInclude Include="xaudio2\operation_set_handle.h" />
     <QtMoc Include="xaudio2\simple_fuz_sound.h" />

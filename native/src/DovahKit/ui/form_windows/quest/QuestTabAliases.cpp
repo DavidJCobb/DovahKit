@@ -5,6 +5,7 @@
 #include "./FormSubdialogQuestLocAlias.h"
 #include "./FormSubdialogQuestRefAlias.h"
 #include "ui/utils/set_custom_context_menu.h"
+#include "ui/utils/show_parent_scoped_modal.h"
 #include "ui/utils/shrink_dialog_on_show.h"
 #include "ui/utils/size_tableview_columns.h"
 #include "ui/utils/typical_tableview_config.h"
@@ -102,21 +103,33 @@ void QuestTabAliases::edit_selected_alias() {
    if (!alias)
       return;
 
+   //
+   // Use a parent-scoped modal rather than application-scoped or window-hierarchy-scoped. 
+   // There are windows we don't want to block:
+   // 
+   //  - The Render Window, for picking refs to fill a ref-alias with.
+   // 
+   //  - The Object Window, for dragging forms in.
+   //
+   auto _show_dialog = [this]<typename Dialog>(auto&&... args) {
+      auto* parent = this->ui.view->window();
+
+      auto* dialog = new Dialog(args...);
+      ui::shrink_dialog_on_show(*dialog);
+      dialog->load();
+      QObject::connect(dialog, &QDialog::finished, this, [this, dialog](int result) {
+         dialog->deleteLater();
+         if (result == QDialog::DialogCode::Accepted)
+            dialog->save();
+      });
+      ui::show_parent_scoped_modal(*dialog, parent);
+   };
+
    using alias_type = dovah::loaded_forms::Alias::alias_type;
    if (alias->type == alias_type::reference) {
-      FormSubdialogQuestRefAlias dialog(this->working_quest, *(dovah::loaded_forms::ReferenceAlias*)alias);
-      ui::shrink_dialog_on_show(dialog);
-      dialog.load();
-      if (dialog.exec() == QDialog::DialogCode::Rejected)
-         return;
-      dialog.save();
+      _show_dialog.operator()<FormSubdialogQuestRefAlias>(this->working_quest, *(dovah::loaded_forms::ReferenceAlias*)alias);
    } else if (alias->type == alias_type::location) {
-      FormSubdialogQuestLocAlias dialog(this->working_quest, *(dovah::loaded_forms::LocationAlias*)alias);
-      ui::shrink_dialog_on_show(dialog);
-      dialog.load();
-      if (dialog.exec() == QDialog::DialogCode::Rejected)
-         return;
-      dialog.save();
+      _show_dialog.operator()<FormSubdialogQuestLocAlias>(this->working_quest, *(dovah::loaded_forms::LocationAlias*)alias);
    } else {
       return;
    }

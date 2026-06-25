@@ -4200,6 +4200,9 @@
     <ClCompile Include="dovah\utils\update_large_ref_index.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\utils\show_parent_scoped_modal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10449,6 +10452,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\structs\cell_grid_dword.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\show_parent_scoped_modal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

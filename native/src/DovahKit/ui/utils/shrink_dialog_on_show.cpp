@@ -24,17 +24,20 @@ class ShrinkDialogOnShowHelper : public QObject {
 
             QDialog* casted = qobject_cast<QDialog*>(obj);
             if (casted) {
-               QSize size = casted->minimumSize();
-               if (!this->shrink_w || !this->shrink_h) {
+               QSize size     = casted->minimumSize();
+               bool  no_min_w = size.width()  <= 0;
+               bool  no_min_h = size.height() <= 0;
+               if (!this->shrink_w || !this->shrink_h || no_min_w || no_min_h) {
                   auto prior = casted->size();
-                  if (!this->shrink_w) {
+                  if (!this->shrink_w || no_min_w) {
                      size.setWidth(prior.width());
                   }
-                  if (!this->shrink_h) {
+                  if (!this->shrink_h || no_min_h) {
                      size.setHeight(prior.height());
                   }
                }
-               casted->resize(size);
+               if (!size.isEmpty())
+                  casted->resize(size);
             }
          }
          return QObject::eventFilter(obj, event);
