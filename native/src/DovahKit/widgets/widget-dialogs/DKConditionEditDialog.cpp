@@ -310,6 +310,17 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
          //
          this->_update_run_on_ui();
       });
+      QObject::connect(this->ui.runOnDropdown, &QComboBox::currentIndexChanged, this, [this]() {
+         auto  src = this->ui.runOnDropdown->currentData();
+         auto& dst = this->_value.run_on.entity;
+         switch (this->_value.run_on.type) {
+            case run_on_type::event_data:
+            case run_on_type::package_data:
+            case run_on_type::quest_alias:
+               dst.emplace<uint32_t>() = src.toInt();
+               break;
+         }
+      });
       QObject::connect(this->ui.runOnButton, &DKCompactObjectReferencePicker::refChanged, this, [this](dovah::form_stub* stub) {
          if (this->_value.run_on.type != run_on_type::reference)
             return;
