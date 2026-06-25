@@ -1,5 +1,18 @@
 #include "./show_parent_scoped_modal.h"
 
+namespace {
+   // Re-parent a window while maintaining its visibility and position.
+   static void reparent_window(QWidget& subject, QWidget* parent) {
+      auto* focus = subject.focusWidget();
+      auto  geom  = subject.geometry();
+      subject.setParent(parent, subject.windowFlags());
+      subject.show(); // `setParent` hides it
+      subject.setGeometry(geom);
+      if (focus)
+         focus->setFocus(Qt::FocusReason::NoFocusReason);
+   }
+}
+
 namespace ui {
    extern void show_parent_scoped_modal(QDialog& modal) {
       QWidget* parent_widget = modal.parentWidget();
@@ -44,10 +57,9 @@ namespace ui {
          auto* grandparent = qobject_cast<QWidget*>(parent_window->parent());
          if (grandparent) {
             QObject::connect(&modal, &QDialog::finished, parent_window, [parent_window, grandparent]() {
-               parent_window->setParent(grandparent, parent_window->windowFlags());
+               reparent_window(*parent_window, grandparent);
             });
-            parent_window->setParent(nullptr, parent_window->windowFlags());
-            parent_window->show();
+            reparent_window(*parent_window, nullptr);
             modal.setParent(parent_window, modal.windowFlags());
          }
       }
