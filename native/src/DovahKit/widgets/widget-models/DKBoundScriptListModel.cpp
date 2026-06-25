@@ -163,6 +163,24 @@ void DKBoundScriptListModel::commitTo(vmad_data& target, dovah::loaded_forms::Fo
 
       src->model->commitTo(script, working_copy);
    }
+   for (const auto* item : this->_scripts) {
+      auto scriptname = item->name.toStdString();
+      bool is_newly_added = true;
+      for (const auto& script : target.scripts) {
+         if (dovah::papyrus::helpers::name_equals(scriptname, script.name)) {
+            is_newly_added = false;
+            break;
+         }
+      }
+      if (!is_newly_added)
+         continue;
+
+      auto& script = target.scripts.emplace_back();
+      script.name = std::move(scriptname);
+      if (!item->model)
+         continue;
+      item->model->commitTo(script, working_copy);
+   }
    std::erase_if(target.scripts, [](auto& item) {
       return item.name.empty();
    });
