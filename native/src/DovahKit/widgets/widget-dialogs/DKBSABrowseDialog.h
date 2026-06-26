@@ -10,6 +10,8 @@
 #include <QToolButton>
 #include "../DKGameFilePicker.h"
 
+class DKBreadcrumbBar;
+class DKBSACollectionModel;
 class DKBSACollectionModelBackend;
 
 class DKBSABrowseDialogItemDelegate : public QStyledItemDelegate {
@@ -40,7 +42,7 @@ class DKBSABrowseDialog : public QDialog {
       // Options struct for passing BSA-specific dialog options to the static member functions.
       struct DialogOptions {
          DKBSACollectionModelBackend* backend = nullptr;
-         SpecialValidation specialValidation;
+         SpecialValidation specialValidation = SpecialValidation::NoSpecialValidation;
       };
 
    public:
@@ -81,24 +83,31 @@ class DKBSABrowseDialog : public QDialog {
       void offerLooseFile(); // open a QFileDialog and limit it to the proper directory, if that directory exists
       void openNode(const QModelIndex&);
       void openSelectedNode(); // if the selected node is a folder, navigate into it; if it's a file, pick it and accept
-      void selectFileByName(QString);
-      void selectPath(const QString&);
       void setViewMode(QListView::ViewMode);
       void upOneLevel();
+
+   protected:
+      void _breadcrumb_qmi_changed(const QModelIndex&);
+      QModelIndex _current_directory_qmi() const noexcept;
+      QModelIndex _selected_node() const;
+      void _set_current_directory_qmi(const QModelIndex&);
+      void _set_current_directory_qmi(const QModelIndex&, QString path);
+      void _try_navigate(QString);
 
       void _updateFilenameTextFromSelection();
       void _updateIconColumnSpacing(QSize old, QSize now);
 
    protected:
+      DKBSACollectionModel* model = nullptr;
       struct {
-         QToolButton* upOneLevel = nullptr;
-         QToolButton* viewMode   = nullptr;
-         QLineEdit*   path       = nullptr;
-         QListView*   view       = nullptr;
-         QLineEdit*   filename   = nullptr;
-         QPushButton* pickLoose  = nullptr;
-         QPushButton* buttonOK   = nullptr;
-         QPushButton* buttonQuit = nullptr;
+         QToolButton*     upOneLevel = nullptr;
+         QToolButton*     viewMode   = nullptr;
+         DKBreadcrumbBar* path       = nullptr;
+         QListView*       view       = nullptr;
+         QLineEdit*       filename   = nullptr;
+         QPushButton*     pickLoose  = nullptr;
+         QPushButton*     buttonOK   = nullptr;
+         QPushButton*     buttonQuit = nullptr;
       } subwidgets;
       struct {
          QString     pathStem;
@@ -113,4 +122,5 @@ class DKBSABrowseDialog : public QDialog {
       } item_delegates;
 
       virtual bool eventFilter(QObject* watched, QEvent* event) override;
+      virtual void keyPressEvent(QKeyEvent*) override; // disable QDialog "auto-default" functionality
 };

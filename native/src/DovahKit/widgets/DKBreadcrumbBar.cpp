@@ -245,6 +245,22 @@ void DKBreadcrumbBar::setCurrentIndex(const QModelIndex& qmi) {
    }
 }
 
+QModelIndex DKBreadcrumbBar::forcedStem() const noexcept {
+   return this->_data.forced_stem;
+}
+void DKBreadcrumbBar::setForcedStem(const QModelIndex& qmi) {
+   if (this->_data.forced_stem == qmi)
+      return;
+   if (qmi.model() != this->model())
+      return;
+   this->_data.forced_stem = qmi;
+   this->_on_navigated();
+   if (this->isEditingText()) {
+      this->_update_textbox_value();
+      this->_subwidgets.textbox->selectAll();
+   }
+}
+
 void DKBreadcrumbBar::setSegmentNameRole(Qt::ItemDataRole v) {
    if (this->_data.name_role == v)
       return;
@@ -289,6 +305,16 @@ void DKBreadcrumbBar::setTextSeparator(QChar c) {
       this->_subwidgets.textbox->selectAll();
    }
 }
+void DKBreadcrumbBar::setTextSeparatorAlt(QChar c) {
+   auto& prop = this->_text_editing.separator_alt;
+   if (prop == c)
+      return;
+   prop = c;
+}
+
+void DKBreadcrumbBar::setTypedPathsCanBeRelative(bool v) {
+   this->_text_editing.can_be_relative = v;
+}
 
 void DKBreadcrumbBar::setCaseSensitivity(Qt::CaseSensitivity v) {
    this->_text_editing.case_sensitivity = v;
@@ -298,32 +324,39 @@ bool DKBreadcrumbBar::isEditingText() const noexcept {
    return this->_subwidgets.textbox->isVisible();
 }
 
-QString DKBreadcrumbBar::path() const noexcept {
-   size_t size = 0;
-   for (size_t i = 0; i < this->_segments.size(); ++i) {
-      if (i > 0)
-         ++size;
-      size += this->_segments[i].text.size();
-   }
-   QString path;
-   path.reserve(size);
-   for (size_t i = 0; i < this->_segments.size(); ++i) {
-      if (i > 0)
-         path += this->_text_editing.separator;
-      path += this->_segments[i].text;
-   }
-   return path;
-}
-bool DKBreadcrumbBar::setPath(QString path) {
+bool DKBreadcrumbBar::_set_path_relative_to(QString path, const QModelIndex& relative_to) {
    if (!this->_data.model)
       return false;
    const auto cs     = this->caseSensitivity();
-   const auto chunks = QStringView(path).split(this->_text_editing.separator, Qt::SkipEmptyParts, cs);
+   const auto chunks = [this, &path, cs]() {
+      auto view = QStringView(path);
+      if (this->_text_editing.separator_alt != '\0') {
+         QString regex;
+         {
+            const auto s1 = this->_text_editing.separator;
+            const auto s2 = this->_text_editing.separator_alt;
+            if (s1 == '\\') {
+               regex += "\\\\";
+            } else {
+               regex += QRegularExpression::escape(s1);
+            }
+            if (s2 == '\\') {
+               regex += "\\\\";
+            } else {
+               regex += QRegularExpression::escape(s2);
+            }
+            regex = QString("[%1]").arg(regex);
+         }
+         return QStringView(path).split(regex, Qt::SkipEmptyParts, cs);
+      } else {
+         return QStringView(path).split(this->_text_editing.separator, Qt::SkipEmptyParts, cs);
+      }
+   }();
    //
    // Try to see if this matches a subset of the path we're already in. 
    // If so, that saves us some model queries.
    //
-   QModelIndex qmi;
+   QModelIndex qmi = relative_to;
    size_t ci = 0; // chunk index
    {
       size_t max = std::min((size_t)chunks.size(), this->_segments.size());
@@ -357,6 +390,29 @@ bool DKBreadcrumbBar::setPath(QString path) {
    }
    this->setCurrentIndex(qmi);
    return true;
+}
+//
+QString DKBreadcrumbBar::path() const noexcept {
+   size_t size = 0;
+   for (size_t i = 0; i < this->_segments.size(); ++i) {
+      if (i > 0)
+         ++size;
+      size += this->_segments[i].text.size();
+   }
+   QString path;
+   path.reserve(size);
+   for (size_t i = 0; i < this->_segments.size(); ++i) {
+      if (i > 0)
+         path += this->_text_editing.separator;
+      path += this->_segments[i].text;
+   }
+   return path;
+}
+bool DKBreadcrumbBar::setPath(QString path) {
+   return _set_path_relative_to(path, this->_data.forced_stem);
+}
+bool DKBreadcrumbBar::setRelativePath(QString path) {
+   return _set_path_relative_to(path, this->_data.index);
 }
 
 QMenu* DKBreadcrumbBar::rootMenu() const noexcept {
@@ -441,6 +497,8 @@ void DKBreadcrumbBar::_on_navigated() {
                seg.has_menu = true;
             }
          }
+         if (qmi == this->_data.forced_stem)
+            break;
       } while (qmi = model->parent(qmi), basis = false, qmi.isValid());
       std::reverse(list.begin(), list.end());
    }
@@ -453,13 +511,13 @@ void DKBreadcrumbBar::_on_navigated() {
    // is listening for path-related signals.
    //
    if (!this->signalsBlocked()) {
+      const auto qmi = this->currentIndex();
       if (this->isSignalConnected(QMetaMethod::fromSignal(&DKBreadcrumbBar::currentPathChanged))) {
-         auto qmi  = this->currentIndex();
          auto path = this->path();
          emit this->currentIndexChanged(qmi);
          emit this->currentPathChanged(path);
       } else {
-         emit this->currentIndexChanged(this->currentIndex());
+         emit this->currentIndexChanged(qmi);
       }
    }
 }
@@ -510,6 +568,9 @@ bool DKBreadcrumbBar::_on_before_item_deleted(const QModelIndex& qmi) {
       this->_subwidgets.segment_menu.removeAction(action);
    }
    if (!found) {
+      if (qmi == this->_data.forced_stem) {
+         this->_on_navigated();
+      }
       return false;
    }
    this->setCurrentIndex(parent);
@@ -518,13 +579,18 @@ bool DKBreadcrumbBar::_on_before_item_deleted(const QModelIndex& qmi) {
 void DKBreadcrumbBar::_on_items_moved(const QModelIndex& src_parent, int first, int last, const QModelIndex& dst_parent) {
    if (auto size = this->_segments.size(); size > 1) {
       bool hierarchy_changed = false;
-      for (size_t i = 0; i < size - 1; ++i) {
-         const auto& seg = this->_segments[i];
-         if (seg.qmi == src_parent) {
-            hierarchy_changed = true;
-            break;
+      if (src_parent == this->_data.forced_stem) {
+         hierarchy_changed = true;
+      } else {
+         for (size_t i = 0; i < size - 1; ++i) {
+            const auto& seg = this->_segments[i];
+            if (seg.qmi == src_parent) {
+               hierarchy_changed = true;
+               break;
+            }
          }
       }
+
       if (hierarchy_changed) {
          const auto blocker = QSignalBlocker(this); // don't emit index-/path-changed signals
          this->_on_navigated(); // rebuild the hierarchy
@@ -576,8 +642,17 @@ void DKBreadcrumbBar::_build_segment_menu(const QModelIndex& qmi) {
    size_t rows = model->rowCount(qmi);
    for (size_t i = 0; i < rows; ++i) {
       const auto child_qmi = model->index(i, 0, qmi);
-      QString    label     = model->data(child_qmi, Qt::DisplayRole).toString();
-      QVariant   icon      = model->data(child_qmi, Qt::DecorationRole);
+      {  // Skip leaf nodes, disabled nodes, etc.
+         auto flags = model->flags(child_qmi);
+         if (flags & Qt::ItemFlag::ItemNeverHasChildren) {
+            continue;
+         }
+         if (!(flags & Qt::ItemFlag::ItemIsEnabled)) {
+            continue;
+         }
+      }
+      QString  label = model->data(child_qmi, Qt::DisplayRole).toString();
+      QVariant icon  = model->data(child_qmi, Qt::DecorationRole);
       if (label.isEmpty())
          continue;
 
@@ -1701,7 +1776,18 @@ void DKBreadcrumbBar::_recache_icons() {
          return;
       auto* textbox = this->_subwidgets.textbox;
       textbox->setVisible(false);
-      this->setPath(textbox->text());
+      {
+         auto entered_path = textbox->text();
+         if (!entered_path.isEmpty()) {
+            bool found = this->setPath(entered_path);
+            if (!found && this->_text_editing.can_be_relative) {
+               auto c = entered_path[0];
+               if (c != this->_text_editing.separator) { // leading separator = cannot treat as relative
+                  this->setRelativePath(entered_path);
+               }
+            }
+         }
+      }
       this->setFocus();
       this->repaint();
    }

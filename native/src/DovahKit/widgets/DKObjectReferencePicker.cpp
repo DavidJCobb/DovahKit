@@ -47,9 +47,13 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
             task->callbacks.on_complete = [this](dovah::form_stub* ref) {
                this->setRef(ref);
                this->setFocus();
+               if (auto* w = this->window())
+                  w->activateWindow();
             };
             task->callbacks.on_canceled = [this]() {
                this->setFocus();
+               if (auto* w = this->window())
+                  w->activateWindow();
             };
             worldedit.begin_pick_ref(task);
          });

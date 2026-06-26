@@ -11,6 +11,12 @@
    constexpr QChar DKBreadcrumbBar::textSeparator() const noexcept {
       return this->_text_editing.separator;
    }
+   constexpr QChar DKBreadcrumbBar::textSeparatorAlt() const noexcept {
+      return this->_text_editing.separator_alt;
+   }
+   constexpr bool DKBreadcrumbBar::typedPathsCanBeRelative() const noexcept {
+      return this->_text_editing.can_be_relative;
+   }
 #pragma endregion
 #pragma region State
    constexpr bool DKBreadcrumbBar::areAnySegmentsHidden() const noexcept {
