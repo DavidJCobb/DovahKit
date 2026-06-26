@@ -83,6 +83,7 @@ class DKBSABrowseDialog : public QDialog {
       void offerLooseFile(); // open a QFileDialog and limit it to the proper directory, if that directory exists
       void openNode(const QModelIndex&);
       void openSelectedNode(); // if the selected node is a folder, navigate into it; if it's a file, pick it and accept
+      void cycleViewMode();
       void setViewMode(QListView::ViewMode);
       void upOneLevel();
 

@@ -285,6 +285,8 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
             vc->setIcon(style->standardIcon(QStyle::SP_FileDialogListView));
             //
             vc->setPopupMode(QToolButton::ToolButtonPopupMode::MenuButtonPopup);
+
+            QObject::connect(vc, &QToolButton::pressed, this, &DKBSABrowseDialog::cycleViewMode);
          }
          //
          toolbar->addWidget(up);
@@ -517,6 +519,22 @@ void DKBSABrowseDialog::openNode(const QModelIndex& index) {
 }
 void DKBSABrowseDialog::openSelectedNode() {
    this->openNode(this->_selected_node());
+}
+void DKBSABrowseDialog::cycleViewMode() {
+   auto* view = this->subwidgets.view;
+
+   QListView::ViewMode after;
+   switch (view->viewMode()) {
+      using enum QListView::ViewMode;
+      case IconMode:
+      default:
+         after = ListMode;
+         break;
+      case ListMode:
+         after = IconMode;
+         break;
+   }
+   this->setViewMode(after);
 }
 void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
    auto* view = this->subwidgets.view;
