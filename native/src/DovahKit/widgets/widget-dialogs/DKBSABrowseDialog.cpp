@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QResizeEvent>
+#include <QTimer>
 #include <QToolBar>
 #include "../../helpers/cpuinfo.h"
 #include "../widget-models/DKBSACollectionModel.h"
@@ -673,13 +674,22 @@ QModelIndex DKBSABrowseDialog::_selected_node() const {
    auto* sm = this->subwidgets.view->selectionModel();
    if (!sm)
       return {};
-   return sm->currentIndex();
+   auto qmi = sm->currentIndex();
+   if (!qmi.isValid()) {
+      auto sel = sm->selection();
+      if (!sel.empty())
+         qmi = sel[0].topLeft();
+   }
+   return qmi;
 }
 void DKBSABrowseDialog::_set_current_directory_qmi(const QModelIndex& qmi) {
    this->_set_current_directory_qmi(qmi, this->model->fullPathTo(qmi));
 }
 void DKBSABrowseDialog::_set_current_directory_qmi(const QModelIndex& qmi, QString path) {
-   this->subwidgets.view->setRootIndex(qmi);
+   QModelIndex prior = this->_current_directory_qmi();
+
+   auto* view = this->subwidgets.view;
+   view->setRootIndex(qmi);
    {
       auto*      widget  = this->subwidgets.path;
       const auto blocker = QSignalBlocker(widget);
@@ -693,6 +703,39 @@ void DKBSABrowseDialog::_set_current_directory_qmi(const QModelIndex& qmi, QStri
          widget->setToolTip(tr("Up to \"%1\" (Alt + Up Arrow)").arg(name));
       } else {
          widget->setToolTip(tr("Up one level (Alt + Up Arrow)"));
+      }
+   }
+   {  // update scroll position
+      view->scrollToTop();
+      if (prior.isValid()) {
+         //
+         // If navigating from some folder to its parent/ancestor, find the 
+         // ancestor that is a direct child of our destination. We want to 
+         // focus it.
+         //
+         QModelIndex focus = prior;
+         do {
+            auto parent = focus.parent();
+            if (parent == qmi)
+               break;
+            focus = parent;
+         } while (focus.isValid());
+         if (focus.isValid()) {
+            //
+            // Place it at the bottom, and select it.
+            //
+            view->scrollTo(focus, QAbstractItemView::ScrollHint::PositionAtBottom);
+            if (auto* sm = view->selectionModel()) {
+               // have to delay this to the next event tick in order for it to work
+               // because item views can defer layout to the future too
+               QTimer::singleShot(0, [sm, focus, this, qmi]() {
+                  sm->select(
+                     focus,
+                     QItemSelectionModel::SelectionFlag::ClearAndSelect | QItemSelectionModel::SelectionFlag::Rows
+                  );
+               });
+            }
+         }
       }
    }
    emit this->directoryEntered(path);
