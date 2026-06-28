@@ -169,7 +169,7 @@ DKMagicEffectListWidget::DKMagicEffectListWidget(QWidget* parent) : QWidget(pare
       auto* sm    = this->_subwidgets.view->selectionModel();
       if (!this->_state.form || !model || !sm)
          return;
-      size_t insert_at = std::numeric_limits<size_t>::max();
+      size_t insert_at = model->rowCount();
       auto   rows      = sm->selectedRows();
       if (!rows.isEmpty())
          insert_at = rows.back().row() + 1;

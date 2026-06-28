@@ -112,6 +112,13 @@ FormDialogSpell::FormDialogSpell(dovah::form_stub& stub, QWidget* parent) : QDia
       QMessageBox::information(this, tr("Concatenated effect description"), desc);
    });
 
+   QObject::connect(this->ui.casting, &QComboBox::currentIndexChanged, this, [this]() {
+      this->ui.effects->setCastingType((dovah::magic_casting_type)this->ui.casting->currentData().toInt());
+   });
+   QObject::connect(this->ui.delivery, &QComboBox::currentIndexChanged, this, [this]() {
+      this->ui.effects->setDeliveryType((dovah::magic_delivery_type)this->ui.delivery->currentData().toInt());
+   });
+
    this->load(); // this creates the working copy.
 }
 void FormDialogSpell::_load_impl() {
@@ -121,8 +128,14 @@ void FormDialogSpell::_load_impl() {
    ui::bind(this->ui.editorID, this->editor_id());
    this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.type, working.common_data.type);
-   ui::bind(this->ui.casting, working.common_data.casting_type);
-   ui::bind(this->ui.delivery, working.common_data.delivery_type);
+   {
+      const auto blockers = std::array{
+         QSignalBlocker(this->ui.casting),
+         QSignalBlocker(this->ui.delivery),
+      };
+      ui::bind(this->ui.casting, working.common_data.casting_type);
+      ui::bind(this->ui.delivery, working.common_data.delivery_type);
+   }
    ui::bind(this->ui.menuDisplay, working.menu_display_object, working);
    ui::bind(this->ui.equipSlot, working.equip_type, working);
    ui::bind(this->ui.castingPerk, working.common_data.half_cost_perk, working);

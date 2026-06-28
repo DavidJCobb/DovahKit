@@ -96,6 +96,13 @@ FormDialogEnchantment::FormDialogEnchantment(dovah::form_stub& stub, QWidget* pa
       this->ui.cost->setDisabled(checked);
    });
 
+   QObject::connect(this->ui.casting, &QComboBox::currentIndexChanged, this, [this]() {
+      this->ui.effects->setCastingType((dovah::magic_casting_type)this->ui.casting->currentData().toInt());
+   });
+   QObject::connect(this->ui.delivery, &QComboBox::currentIndexChanged, this, [this]() {
+      this->ui.effects->setDeliveryType((dovah::magic_delivery_type)this->ui.delivery->currentData().toInt());
+   });
+
    this->load(); // this creates the working copy.
 }
 void FormDialogEnchantment::_load_impl() {
@@ -108,8 +115,14 @@ void FormDialogEnchantment::_load_impl() {
    ui::bind(this->ui.editorID, this->editor_id());
    this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.type, working.enchantment_type);
-   ui::bind(this->ui.casting, working.casting_type);
-   ui::bind(this->ui.delivery, working.delivery_type);
+   {
+      const auto blockers = std::array{
+         QSignalBlocker(this->ui.casting),
+         QSignalBlocker(this->ui.delivery),
+      };
+      ui::bind(this->ui.casting, working.casting_type);
+      ui::bind(this->ui.delivery, working.delivery_type);
+   }
    ui::bind(this->ui.base, working.base_enchantment, working);
    ui::bind(this->ui.wornRestrictions, working.worn_restrictions, working);
    {
@@ -145,6 +158,7 @@ void FormDialogEnchantment::_save_impl() {
    gls.assign_localized_string(working.name, this->ui.name->text());
 
    this->ui.effects->exportTo(working, working.effects);
+   this->ui.effects->disconnect();
 }
 
 void FormDialogEnchantment::_update_auto_calc() {
