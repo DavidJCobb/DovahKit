@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogArmorAddon</class>
  <widget class="QDialog" name="FormDialogArmorAddon">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>950</width>
+    <height>522</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>ArmorAddon</string>
   </property>
@@ -88,7 +96,11 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="DKFormPicker" name="skinSwapListF"/>
+       <widget class="DKFormPicker" name="skinSwapListF">
+        <property name="whatsThis">
+         <string>This would be used if the skinny and large versions of an NPC had different texture sets.</string>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_9">
@@ -101,10 +113,19 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="DKFormNIFPicker" name="bipedModelF"/>
+       <widget class="DKFormNIFPicker" name="bipedModelF">
+        <property name="whatsThis">
+         <string>&lt;p&gt;The NIF used for actors in general (as opposed to the player in first-person view). If the female model is unspecified, it defaults to the male model.&lt;/p&gt;</string>
+        </property>
+       </widget>
       </item>
       <item row="3" column="1">
-       <widget class="DKFormNIFPicker" name="fpModelF"/>
+       <widget class="DKFormNIFPicker" name="fpModelF">
+        <property name="whatsThis">
+         <string>&lt;p&gt;The NIF used for actors in first-person view.&lt;/p&gt;
+&lt;p&gt;If the female model is unspecified, it defaults to the male model. If the male model is not set, then the third-person model is used.&lt;/p&gt;</string>
+        </property>
+       </widget>
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="label_10">
@@ -169,7 +190,11 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="DKFormPicker" name="skinSwapListM"/>
+       <widget class="DKFormPicker" name="skinSwapListM">
+        <property name="whatsThis">
+         <string>This would be used if the skinny and large versions of an NPC had different texture sets.</string>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
@@ -182,10 +207,19 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="DKFormNIFPicker" name="bipedModelM"/>
+       <widget class="DKFormNIFPicker" name="bipedModelM">
+        <property name="whatsThis">
+         <string>&lt;p&gt;The NIF used for actors in general (as opposed to the player in first-person view). If the female model is unspecified, it defaults to the male model.&lt;/p&gt;</string>
+        </property>
+       </widget>
       </item>
       <item row="3" column="1">
-       <widget class="DKFormNIFPicker" name="fpModelM"/>
+       <widget class="DKFormNIFPicker" name="fpModelM">
+        <property name="whatsThis">
+         <string>&lt;p&gt;The NIF used for actors in first-person view.&lt;/p&gt;
+&lt;p&gt;If the female model is unspecified, it defaults to the male model. If the male model is not set, then the third-person model is used.&lt;/p&gt;</string>
+        </property>
+       </widget>
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="label_5">
@@ -239,6 +273,9 @@
        </item>
        <item row="1" column="1" alignment="Qt::AlignLeft">
         <widget class="QDoubleSpinBox" name="weaponAdjust">
+         <property name="whatsThis">
+          <string>When an actor's equipped weapons are sheathed and rendered on their character model, this value influences how far away the weapons are positioned from the weapon attachment points on that character model.</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>

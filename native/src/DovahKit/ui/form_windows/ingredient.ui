@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogIngredient</class>
  <widget class="QDialog" name="FormDialogIngredient">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1039</width>
+    <height>525</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Ingredient</string>
   </property>
@@ -229,6 +237,19 @@
         </item>
        </layout>
       </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>

@@ -2,12 +2,13 @@
 #include <limits>
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_range.h"
 
 FormDialogCollisionLayer::FormDialogCollisionLayer(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
    this->ui.name->setMaxLength(loaded_form_type::max_name_length);
-   this->ui.layerID->setMaximum(std::numeric_limits<float>::max());
+   ui::set_range<int32_t>(this->ui.layerID);
    this->ui.collidesWith->setAllowedFormTypes({ dovah::form_type::collision_layer });
 
    this->load(); // this creates the working copy.

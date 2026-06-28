@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogMagicEffect</class>
  <widget class="QDialog" name="FormDialogMagicEffect">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1019</width>
+    <height>1007</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Magic Effect</string>
   </property>
@@ -423,7 +431,7 @@
          <widget class="QCheckBox" name="flagRecover">
           <property name="whatsThis">
            <string>&lt;p&gt;If this is checked, then the effect acts as a buff or debuff: the target Actor Value's current and maximum values will be altered once when the effect begins, and those alterations will be undone when the effect expires.&lt;/p&gt;
-&lt;p&gt;If this is unchecekd, then the effect acts as damage or restoration over time: the target Actor Value's current value will be altered once per second until the effect expires, and the alterations will not be undone when the effect expires.&lt;/p&gt;</string>
+&lt;p&gt;If this is unchecked, then the effect acts as damage or restoration over time: the target Actor Value's current value will be altered once per second until the effect expires, and the alterations will not be undone when the effect expires.&lt;/p&gt;</string>
           </property>
           <property name="text">
            <string>Recover</string>

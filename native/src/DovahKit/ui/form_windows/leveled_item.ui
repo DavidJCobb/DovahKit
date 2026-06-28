@@ -31,7 +31,11 @@
        <item row="2" column="1">
         <widget class="QCheckBox" name="flagSpecialLoot">
          <property name="whatsThis">
-          <string>Bethesda intended this checkbox to modify the leveled list calculation based on a &quot;Special Loot&quot; formula, but there's no evidence that such a formula was ever implemented.</string>
+          <string>&lt;p&gt;This checkbox skews the leveled list calculation using a &quot;Special Loot&quot; formula: instead of using the player or Encounter Zone's level directly, they'll feed the level into the formulae below and use the &lt;var&gt;Used Level&lt;/var&gt; value that results.&lt;/p&gt;
+
+&lt;p&gt;&lt;var&gt;C&lt;sub&gt;min&lt;/sub&gt;&lt;/var&gt; = (&lt;var&gt;Player Level&lt;/var&gt; × &lt;code&gt;fSpecialLootMinPCLevelMult&lt;/code&gt;) + &lt;code&gt;fSpecialLootMinPCLevelBase&lt;/codE&gt; + &lt;code&gt;fSpecialLootMinZoneLevelBase&lt;/code&gt; + (&lt;var&gt;Input Level&lt;/var&gt; × &lt;code&gt;fSpecialLootMinZoneLevelMult&lt;/codE&gt;)&lt;/p&gt;
+&lt;p&gt;&lt;var&gt;C&lt;sub&gt;max&lt;/sub&gt;&lt;/var&gt; = (&lt;var&gt;Player Level&lt;/var&gt; × &lt;code&gt;fSpecialLootMaxPCLevelMult&lt;/code&gt;) + &lt;code&gt;fSpecialLootMaxPCLevelBase&lt;/codE&gt; + &lt;code&gt;fSpecialLootMaxZoneLevelBase&lt;/code&gt; + (&lt;var&gt;Input Level&lt;/var&gt; × &lt;code&gt;fSpecialLootMaxZoneLevelMult&lt;/codE&gt;)&lt;/p&gt;
+&lt;p&gt;&lt;var&gt;Used Level&lt;/var&gt; = &lt;var&gt;C&lt;sub&gt;min&lt;/sub&gt;&lt;/var&gt; + (&lt;var&gt;C&lt;sub&gt;max&lt;/sub&gt;&lt;/var&gt; - &lt;var&gt;C&lt;sub&gt;min&lt;/sub&gt;&lt;/var&gt;) × rand(-0.5, 0.5) ^ &lt;code&gt;fSpecialLootWeighting&lt;/code&gt;&lt;/p&gt;</string>
          </property>
          <property name="text">
           <string>Special Loot</string>

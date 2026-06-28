@@ -44,10 +44,10 @@
        <property name="whatsThis">
         <string>&lt;p&gt;Control how the sound influences directional output.&lt;/p&gt;
 &lt;dl&gt;
-   &lt;dt&gt;Uses HRTF (Head-Related Transfer Function)&lt;/dt&gt;
-      &lt;dd&gt;Select this if the sound is mono and will be played back as a point-source sound in the game world, relative to the listener. This will grey out the Defined Speaker Output options below this drop-down box.&lt;/dd&gt;
-   &lt;dt&gt;Defined Speaker Output&lt;/dt&gt;
-      &lt;dd&gt;Choose this for sounds that aren't going to be placed in the world, but rather will have a manually-defined mapping to output channels (e.g. the left and right channels). You'll be able to adjust the channels below, choosing between mono and stereo output and setting the scaling the volume of each possible channel.&lt;/dd&gt;
+   &lt;dt&gt;&lt;p&gt;&lt;strong&gt;Uses HRTF (Head-Related Transfer Function)&lt;/strong&gt;&lt;/p&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Select this if the sound is mono and will be played back as a point-source sound in the game world, relative to the listener. This will grey out the Defined Speaker Output options below this drop-down box.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;p&gt;&lt;strong&gt;Defined Speaker Output&lt;/strong&gt;&lt;/p&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Choose this for sounds that aren't going to be placed in the world, but rather will have a manually-defined mapping to output channels (e.g. the left and right channels). You'll be able to adjust the channels below, choosing between mono and stereo output and setting the scaling the volume of each possible channel.&lt;/p&gt;&lt;/dd&gt;
 &lt;/dl&gt;</string>
        </property>
        <item>
@@ -403,6 +403,9 @@
         <layout class="QGridLayout" name="gridLayout_4">
          <item row="1" column="0">
           <widget class="QSlider" name="attenuateCurve1Slider">
+           <property name="accessibleName">
+            <string>Inner radius</string>
+           </property>
            <property name="maximum">
             <number>100</number>
            </property>
@@ -413,6 +416,9 @@
          </item>
          <item row="0" column="0">
           <widget class="QSlider" name="attenuateCurve0Slider">
+           <property name="accessibleName">
+            <string>Innermost radius</string>
+           </property>
            <property name="maximum">
             <number>100</number>
            </property>
@@ -423,6 +429,9 @@
          </item>
          <item row="2" column="0">
           <widget class="QSlider" name="attenuateCurve2Slider">
+           <property name="accessibleName">
+            <string>Midpoint radius</string>
+           </property>
            <property name="maximum">
             <number>100</number>
            </property>
@@ -433,6 +442,9 @@
          </item>
          <item row="3" column="0">
           <widget class="QSlider" name="attenuateCurve3Slider">
+           <property name="accessibleName">
+            <string>Outer radius</string>
+           </property>
            <property name="maximum">
             <number>100</number>
            </property>
@@ -453,6 +465,9 @@
          </item>
          <item row="4" column="0">
           <widget class="QSlider" name="attenuateCurve4Slider">
+           <property name="accessibleName">
+            <string>Outermost radius</string>
+           </property>
            <property name="maximum">
             <number>100</number>
            </property>

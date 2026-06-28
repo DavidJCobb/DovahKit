@@ -81,12 +81,20 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="resultCount"/>
+        <widget class="QSpinBox" name="resultCount">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
      <item row="2" column="1">
-      <widget class="DKFormPicker" name="workbenchKeyword"/>
+      <widget class="DKFormPicker" name="workbenchKeyword">
+       <property name="whatsThis">
+        <string>A workbench's base form must have this keyword, in order for the player to be able to use this crafting recipe at that workbench.</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
