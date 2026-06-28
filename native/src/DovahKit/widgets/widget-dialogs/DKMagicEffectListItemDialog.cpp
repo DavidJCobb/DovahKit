@@ -136,8 +136,12 @@ void DKMagicEffectListItemDialog::setData(const DKMagicEffectListModel::Item& sr
       .area      = src.area,
       .duration  = src.duration,
    };
-   this->_pull_magic_effect_form_data(src.magic_effect);
-   this->_initial_cost = this->_cost_calculator.effect.form_info.base_cost;
+   if (src.magic_effect) {
+      this->_pull_magic_effect_form_data(src.magic_effect);
+      this->_initial_cost = this->_cost_calculator.effect.form_info.base_cost;
+   } else {
+      this->_initial_cost = 0;
+   }
 
    this->_update_displayed_costs();
    this->_update_displayed_duration();

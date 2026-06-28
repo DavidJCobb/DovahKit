@@ -165,6 +165,7 @@ void FormDialogSpell::_save_impl() {
    gls.assign_localized_string(working.description, this->ui.description->toPlainText());
 
    this->ui.effects->exportTo(working, working.effects);
+   this->ui.effects->disconnect(); // otherwise, it'll be left with a dangling pointer that it'll use when the edit dialog boilerplate emits formModified on the spell
 }
 
 #include "dovah/utils/text_replacers/do_text_replacement.h"

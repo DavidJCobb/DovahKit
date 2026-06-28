@@ -122,6 +122,11 @@ DKMagicEffectListWidget::DKMagicEffectListWidget(QWidget* parent) : QWidget(pare
       });
       QObject::connect(this->_model, &QAbstractItemModel::rowsInserted, this, &DKMagicEffectListWidget::_update_can_add_effect);
       QObject::connect(this->_model, &QAbstractItemModel::rowsRemoved,  this, &DKMagicEffectListWidget::_update_can_add_effect);
+
+      widget->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+      QObject::connect(widget, &QWidget::customContextMenuRequested, &menu, [&menu, widget](const QPoint& pos) {
+         menu.exec(widget->mapToGlobal(pos));
+      });
    }
    #endif
 }
@@ -150,6 +155,12 @@ DKMagicEffectListWidget::DKMagicEffectListWidget(QWidget* parent) : QWidget(pare
    void DKMagicEffectListWidget::exportTo(dovah::loaded_forms::Form& owner, dovah::loaded_forms::components::magic_effect_list& dst) {
       this->_model->commitTo(owner, dst);
    }
+   void DKMagicEffectListWidget::disconnect() {
+      this->_state.form = nullptr;
+      if (this->_state.effect_dialog) {
+         this->_state.effect_dialog->reject();
+      }
+   }
 #endif
 
 #if !defined(QT_PLUGIN)
@@ -172,6 +183,7 @@ DKMagicEffectListWidget::DKMagicEffectListWidget(QWidget* parent) : QWidget(pare
             .spell_total_cost = this->_state.cached.auto_calculated_cost,
          };
          auto* modal = new DKMagicEffectListItemDialog(context, this);
+         this->_state.effect_dialog = modal;
          modal->setData(created);
          QObject::connect(modal, &QDialog::accepted, this, [this, model, modal, insert_at]() {
             if (!model->insertRows(insert_at, 1))
@@ -211,6 +223,7 @@ DKMagicEffectListWidget::DKMagicEffectListWidget(QWidget* parent) : QWidget(pare
             .spell_total_cost = this->_state.cached.auto_calculated_cost,
          };
          auto* modal = new DKMagicEffectListItemDialog(context, this);
+         this->_state.effect_dialog = modal;
          modal->setData(*item);
          QObject::connect(modal, &QDialog::accepted, this, [this, model, modal, row]() {
             model->setData(row, modal->data());
@@ -334,6 +347,8 @@ DKMagicEffectListWidget::DKMagicEffectListWidget(QWidget* parent) : QWidget(pare
    void DKMagicEffectListWidget::_update_cached_data() {
       #if !defined(QT_PLUGIN)
       this->_state.cached = {};
+      if (!this->_state.form)
+         return;
 
       dovah::magic_effect_list_item_cost_calculator calculator;
       calculator.prepare_game_settings(this->_state.form->stub.get_owning_load_order());

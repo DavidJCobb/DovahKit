@@ -2,6 +2,7 @@
 #include <optional>
 #include <QAction>
 #include <QMenu>
+#include <QPointer>
 #include <QTableView>
 #include <QWidget>
 #if !defined(QT_PLUGIN)
@@ -9,6 +10,7 @@
    #include "dovah/data/magic_delivery_type.h"
 #endif
 
+class  DKMagicEffectListItemDialog;
 class  DKMagicEffectListModel;
 struct DKMagicEffectListModelItem;
 #if !defined(QT_PLUGIN)
@@ -37,6 +39,7 @@ class DKMagicEffectListWidget : public QWidget {
 
          void importFrom(dovah::loaded_forms::Form& owner, const dovah::loaded_forms::components::magic_effect_list& target);
          void exportTo(dovah::loaded_forms::Form& owner, dovah::loaded_forms::components::magic_effect_list& target);
+         void disconnect(); // `importFrom` implicitly connects; in the future I should refactor that to be more explicit
 
          void openCreateEffectModal();
          void openEditEffectModal();
@@ -75,6 +78,7 @@ class DKMagicEffectListWidget : public QWidget {
             struct {
                uint32_t auto_calculated_cost = 0;
             } cached;
+            QPointer<DKMagicEffectListItemDialog> effect_dialog;
          } _state;
       #endif
       struct {
