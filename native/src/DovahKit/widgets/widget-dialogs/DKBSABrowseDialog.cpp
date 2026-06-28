@@ -680,6 +680,29 @@ void DKBSABrowseDialog::setSpecialValidation(SpecialValidation o) {
    this->state.specialValidation = o;
 }
 
+std::expected<QModelIndex, DKBSABrowseDialog::path_resolution_failure> DKBSABrowseDialog::_try_resolve_path(const QModelIndex& relative_to, const QList<QStringView>& segments) {
+   auto       qmi =  relative_to;
+   const auto size = segments.size();
+   for (size_t i = 0; i < size - 1; ++i) {
+      auto child_qmi = this->model->indexOfFolder(segments[i].toString().toLower(), qmi);
+      if (!child_qmi.isValid()) {
+         return std::unexpected(path_resolution_failure::folder_does_not_exist);
+      }
+      qmi = child_qmi;
+   }
+
+   const auto last_segment = segments.back().toString().toLower();
+   auto file_qmi = this->model->indexOfFile(last_segment, qmi);
+   if (file_qmi.isValid()) {
+      return file_qmi;
+   }
+   auto folder_qmi = this->model->indexOfFolder(last_segment, qmi);
+   if (folder_qmi.isValid()) {
+      return folder_qmi;
+   }
+   return std::unexpected(path_resolution_failure::file_does_not_exist);
+}
+
 void DKBSABrowseDialog::_breadcrumb_qmi_changed(const QModelIndex& qmi) {
    if (!qmi.isValid())
       return;
@@ -761,53 +784,68 @@ void DKBSABrowseDialog::_set_current_directory_qmi(const QModelIndex& qmi, QStri
 void DKBSABrowseDialog::_try_navigate(QString path) {
    if (path.isEmpty())
       return;
-   const bool   relative = (path[0] != '/' && path[0] != '\\');
+   const bool   can_be_relative = (path[0] != '/' && path[0] != '\\');
    const auto   segments = QStringView(path).split(QRegularExpression("[/\\\\]"), Qt::SkipEmptyParts);
    const size_t size     = segments.size();
    if (size == 0)
       return;
 
-   QModelIndex qmi = relative ? this->_current_directory_qmi() : this->state.pathStemIndex;
-   for (size_t i = 0; i < size - 1; ++i) {
-      auto child_qmi = this->model->indexOfFolder(segments[i].toString().toLower(), qmi);
-      if (!child_qmi.isValid()) {
-         QMessageBox::critical(
-            this,
-            tr("Open"),
-            tr("%1\nPath does not exist.\nCheck the path and try again.")
-               .arg(path)
-         );
+   std::optional<path_resolution_failure> relative_resolution_failure;
+   if (can_be_relative) {
+      auto rel_result = this->_try_resolve_path(this->_current_directory_qmi(), segments);
+      if (rel_result.has_value()) {
+         this->openNode(rel_result.value());
          return;
       }
-      qmi = child_qmi;
+      relative_resolution_failure = rel_result.error();
    }
-   const auto last_segment = segments.back().toString().toLower();
-   auto file_qmi = this->model->indexOfFile(last_segment, qmi);
-   if (file_qmi.isValid()) {
-      auto data = this->model->data(file_qmi, DKBSACollectionModel::FullPathRole);
-      if (data.isValid() && data.typeId() == QMetaType::QString) {
-         this->acceptWithFile(data.toString());
-         return;
-      }
-   }
-   auto folder_qmi = this->model->indexOfFolder(last_segment, qmi);
-   if (folder_qmi.isValid()) {
-      this->_set_current_directory_qmi(folder_qmi);
+   auto abs_result = this->_try_resolve_path(this->state.pathStemIndex, segments);
+   if (abs_result.has_value()) {
+      this->openNode(abs_result.value());
       return;
    }
-   //
-   // All path segments up to the last exist. Navigate to the penultimate 
-   // path segment; then error on the last segment not existing. Behavior 
-   // is consistent with the Windows Open File dialog as of Windows 10.
-   //
-   this->_set_current_directory_qmi(qmi);
-   this->subwidgets.filename->setText(segments.back().toString());
-   QMessageBox::critical(
-      this,
-      tr("Open"),
-      tr("%1\nFile not found.\nCheck the file name and try again.")
-         .arg(path)
-   );
+
+   auto _handle_failure = [this, &path, &segments](path_resolution_failure failure, bool navigate) {
+      switch (failure) {
+         case path_resolution_failure::folder_does_not_exist:
+            QMessageBox::critical(
+               this,
+               tr("Open"),
+               tr("%1\nPath does not exist.\nCheck the path and try again.")
+                  .arg(path)
+            );
+            return;
+         case path_resolution_failure::file_does_not_exist:
+            if (navigate) {
+               //
+               // All path segments up to the last exist. Navigate to the penultimate 
+               // path segment; then error on the last segment not existing. Behavior 
+               // is consistent with the Windows Open File dialog as of Windows 10.
+               //
+               auto ps = segments;
+               ps.pop_back();
+               auto res = this->_try_resolve_path(this->_current_directory_qmi(), ps);
+               assert(res.has_value());
+               auto qmi = res.value();
+               assert(this->model->isFolder(qmi));
+               this->_set_current_directory_qmi(qmi);
+            }
+            this->subwidgets.filename->setText(segments.back().toString());
+            QMessageBox::critical(
+               this,
+               tr("Open"),
+               tr("%1\nFile not found.\nCheck the file name and try again.")
+                  .arg(path)
+            );
+            return;
+      }
+   };
+
+   if (relative_resolution_failure.has_value()) {
+      _handle_failure(relative_resolution_failure.value(), true);
+      return;
+   }
+   _handle_failure(abs_result.error(), false);
 }
 
 void DKBSABrowseDialog::_updateFilenameTextFromSelection() {

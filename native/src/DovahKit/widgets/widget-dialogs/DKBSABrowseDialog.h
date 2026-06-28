@@ -2,6 +2,7 @@
 #if defined(QT_PLUGIN)
    #error This dialog relies on DovahKit to run (dependency in DKBSACollectionModelBackend). Do not include it when compiling the Qt Designer plug-in.
 #endif
+#include <expected>
 #include <QDialog>
 #include <QLineEdit>
 #include <QListView>
@@ -88,6 +89,13 @@ class DKBSABrowseDialog : public QDialog {
       void upOneLevel();
 
    protected:
+
+      enum class path_resolution_failure {
+         folder_does_not_exist,
+         file_does_not_exist,
+      };
+      std::expected<QModelIndex, path_resolution_failure> _try_resolve_path(const QModelIndex& relative_to, const QList<QStringView>& path_segments);
+
       void _breadcrumb_qmi_changed(const QModelIndex&);
       QModelIndex _current_directory_qmi() const noexcept;
       QModelIndex _selected_node() const;

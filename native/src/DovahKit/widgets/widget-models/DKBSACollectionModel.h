@@ -91,10 +91,14 @@ class DKBSACollectionModelBackend : public QObject {
       QVector<const dovah::bsa_archive*> _archives;
       Folder _root;
 
-      void _importFromArchiveInList(const dovah::bsa_archive*);
+      void _import_from_archive(const dovah::bsa_archive&, bool emit_signals, bool sort);
 
       // get or create folder; used when importing an archive's contents
-      Folder* _folderByPath(const QString&);
+      Folder* _get_or_emplace_folder_by_path(const QString&);
+
+      // ensure that e.g. Data/meshes, Data/textures, etc., exist, even if no loaded 
+      // BSAs contain them. (should never normally happen, but never hurts to be safe.)
+      void _ensure_critical_top_level_folders_exist();
 };
 
 //

@@ -1,0 +1,390 @@
+
+namespace RE {
+   struct BSString {
+      char*    data     = nullptr;
+      uint16_t _size     = 0;
+      uint16_t _capacity = 0;
+      
+      // frequently inlined:
+      size_t size() const {
+         if (this->_size != 0xFFFF)
+            return this->_size;
+         if (!this->data)
+            return 0;
+         return strlen(this->data);
+      }
+      
+      void assign(const char*, size_t);
+      
+      BSString& operator+=(const char*);
+      
+      // not a mistake; they used a reference type as the argument type here
+      void set_nth_char(size_t i, const char& c) {
+         if (!this->data)
+            return;
+         if (i >= this->size())
+            return;
+         this->data[i] = c;
+         if (c == '\0')
+            this->_size = i <= 0xFFFF ? i : 0xFFFF;
+      }
+   }
+   
+   // Applies game settings like fDiffMultHPByPC__ and fDiffMultHPToPC__. Each collection of settings 
+   // has one setting per difficulty (e.g. fDiffMultHPByPCVE), with the former being used for damage 
+   // dealt by the player, and the latter used for damage dealt to the player. This function knows 
+   // which to apply based on whether `this == *g_thePlayer`.
+   //
+   // The second argument is a float, but is treated like a bool. If truthy, the function refuses to 
+   // apply any scaling factor lower than 1.
+   float Actor::ApplyDifficultyDamageScale(float damage, float b_never_reduce);
+   
+   extern bool strings_are_different(const char*, const char*);
+   
+   // For brevity; the functions I saw don't use this.
+   static ActorValueInfo* _av_by_index(int avIndex) {
+      return ActorValueList::GetSingleton()->actorValues[avIndex];
+   }
+   
+   template<typename TokenHandler>
+   void DoTextReplacement(BSString& string, TokenHandler& handler) {
+      if (!strchr(string.data ? string.data : "", '<'))
+         return;
+      
+      size_t size   = string.size() + sizeof('\0');
+      char*  buffer = malloc(size);
+      strcpy_s(buffer, size, string.data ? string.data : "");
+      
+      string.assign("", 0);
+      
+      char* search_from = buffer; // esp14
+      if (auto* tag_start = strchr(buffer, '<')) { // tag_start is in edi
+         do {
+            char* tag_end = strchr(tag_start, '>'); // esp18
+            if (tag_end) {
+               *tag_end = '\0';
+               char* subtoken = strchr(tag_start, '.'); // esi
+               if (subtoken && subtoken > tag_end)
+                  subtoken = nullptr;
+               
+               char* target   = strchr(tag_start, '='); // ebp
+               if (target && target > tag_end)
+                  target = nullptr;
+               
+               if (subtoken) {
+                  *subtoken = '\0';
+                  ++subtoken;
+               }
+               if (target) {
+                  *target = '\0';
+                  ++target;
+               }
+               bool capitalize = false; // esp13
+               if (subtoken) {
+                  char* eax = subF521B0(subtoken, "Cap");
+                  if (eax) {
+                     capitalize = true;
+                     *eax = '\0';
+                  }
+               }
+               auto* ebx = handler.DoTokenSubstitution(edi + 1, esi, ebp);
+               if (ebx) {
+                  *tag_start = '\0';
+                  string += search_from; // append everything from `search_from` up to the found '<'
+                  
+                  tag_start = 0;
+                  if (capitalize) {
+                     tag_start = string.size();
+                  }
+                  string += ebx;
+                  if (capitalize) {
+                     char first = ebx[0];
+                     if (first && subF52A85(first)) {
+                        string.set_nth_char(tag_start, toupper(first));
+                     }
+                  }
+                  search_from = tag_end + 1;
+                  continue;
+               }
+               //
+               // Failed to perform a substitution. Put things back the way they were, and 
+               // move on to the next '<'.
+               //
+               *tag_end = '>';
+               if (esi)
+                  *(esi - 1) = '.';
+               if (ebp)
+                  *(ebp - 1) = '=';
+            }
+            //
+            // Copy everything from `search_from` up to and including the found '<', and then move on 
+            // to the next '<' and see if that forms a valid substitution.
+            //
+            *tag_start = '\0';
+            string += search_from;
+            string += "<";
+            ++tag_start;
+            search_from = tag_start;
+         } while (tag_start = strchr(search_from, '<'));
+      }
+      string += search_from;
+      free(buffer);
+   }
+   //
+   // Specialization locations in LE:
+   //  - 0x656620 ActiveEffectDescriptionTokenHandler
+   //  - 0x4266D0 BasenameTokenHandler      
+   //  - 0x673CD0 CrimeTokenHandler
+   //  - 0x86DD80 SpellEffectDescriptionTokenHandler
+   //  - 0x44FBC0 StripperTokenHandler
+   //
+   
+   struct QuestTextTokenHandler {
+      TESQuest*             quest = nullptr; // 00
+      BGSQuestInstanceText* unk04; // 04
+      
+      const char* DoTokenSubstitution(const char* token, const char* subtoken, const char* target) {
+         if (!token || !target)
+            return nullptr;
+         
+         BSFixedString fs_token(token);
+         const char*   result = nullptr;
+         
+         if (token == BSFixedString("Alias")) {
+            result = this->sub551440(token, target);
+         } else if (token == BSFixedString("Global")) {
+            result = this->sub5510D0(token, target);
+         } else if (token == BSFixedString("Relationship")) {
+            result = this->sub550CC0(token, target);
+         } else {
+            return nullptr;
+         }
+         
+         if (!result)
+            result = "[...]";
+         return result;
+      }
+   };
+   
+   struct BasenameTokenHandler {
+      BSString      basename; // 00
+      ActiveEffect* subject;  // 08
+      
+      // handles: "<token.subtoken=target>"
+      const char* DoTokenSubstitution(const char* token, const char* subtoken, const char* target) {
+         if (!token || !this->basename.size())
+            return nullptr;
+         if (!strings_are_different(token, "BaseName")) {
+            if (this->basename.data)
+               return this->basename.data;
+            return "";
+         }
+         return nullptr;
+      }
+   };
+   
+   struct CrimeTokenHandler {
+      Actor* actor;   // 00
+      char   buffer[?]; // 04
+      
+      const char* DoTokenSubstitution(const char* token, const char* subtoken, const char* target) {
+         if (!this->actor || !token)
+            return nullptr;
+         
+         BSFixedString fs_token(token); // esp18
+         char* out = &this->buffer[0];
+         
+         int32_t eax;
+         if (fs_token == BSFixedString("BribeCost")) {
+            eax = this->actor->GetBribeAmount();
+         } else if (fs_token == BSFixedString("CrimeGold")) {
+            return (*g_thePlayer)->Unk_B7(this->actor->GetCrimeFaction());
+         } else if (fs_token == BSFixedString("CrimeGoldViolent")) {
+            return (*g_thePlayer)->Unk_12A(this->actor->GetCrimeFaction());
+         } else if (fs_token == BSFixedString("CrimeGoldNonviolent")) {
+            return (*g_thePlayer)->Unk_12B(this->actor->GetCrimeFaction());
+         } else {
+            return nullptr;
+         }
+         snprintf(out, 32, "%d", eax);
+         return out;
+      }
+   };
+   
+   struct ActiveEffectDescriptionTokenHandler {
+      BSString      result;   // 00
+      ActiveEffect* subject;     // 08
+      const char*   text_before; // 0C // content to prepend to replaced tokens, e.g. "<b>"
+      const char*   text_after;  // 10 // content to append to replaced tokens, e.g. "</b>"
+      
+      // handles: "<token.subtoken=target>"
+      // returns this->completed.data, or "" if that's nullptr
+      const char* DoTokenSubstitution(const char* token, const char* subtoken, const char* target) {
+         this->result.assign("", 0);
+         if (!this->subject)
+            goto exit;
+         
+         auto* magic_effect = this->subject->effect->mgef;
+         
+         if (!strings_are_different(token, "MAG")) {
+            if (magic_effect->flags & kEffectType_NoMagnitude)
+               goto exit;
+            
+            float value   = this->subject->GetMagnitude();
+            auto  avIndex = magic_effect->primaryValue;
+            if (avIndex != -1) {
+               // This is an EffectSetting member function, but I'm inling it for brevity:
+               bool flip = [magic_effect, avIndex]() {
+                  bool al = magic_effect->flags & kEffectType_Recover;
+                  bool cl = _av_by_index(avIndex)->flags & (1 << 9); // invert
+                  return al != cl;
+               }();
+               if (flip)
+                  value = -value;
+               if (_av_by_index(avIndex)->flags & (1 << 21))
+                  value *= 100.0F;
+               if (this->subject->effect->IsHostile()) {
+                  if (_av_by_index(avIndex)->flags & (1 << 0)) {
+                     //
+                     // The player can only see Active Effect descriptions for effects on their 
+                     // own character, not effects on other characters. Therefore, it's safe to 
+                     // just blindly call this function on the player rather than trying to see 
+                     // which actor the effect actually applies to.
+                     //
+                     value = g_thePlayer->ApplyDifficultyDamageScale(value, 0.0F);
+                  }
+               }
+            }
+            sub4034B0(this->result, "%s%d%s", this->text_before, (int32_t)value, this->text_after);
+            goto exit;
+         }
+         
+         if (!strings_are_different(token, "DUR")) {
+            if (magic_effect->flags & kEffectType_NoDuration)
+               goto exit;
+            auto value = magic_effect=>duration;
+            value = RoundToNearestMultipleOf(value, 1.0F);
+            sub4034B0(this->result, "%s%d%s", this->text_before, (int32_t)value, this->text_after);
+            goto exit;
+         }
+         
+         if (!strings_are_different(token, "AREA")) {
+            if (magic_effect->flags & kEffectType_NoArea)
+               goto exit;
+            auto value = this->subject->effect->GetArea();
+            sub4034B0(this->result, "%s%d%s", this->text_before, value, this->text_after);
+            goto exit;
+         }
+         
+         if (!strings_are_different(token, "GLOBAL")) {
+            TESGlobal* form = GetFormByEditorID(target);
+            if (!form || form->formType != FormType::Global)
+               goto exit;
+            auto value = form->value;
+            sub4034B0(this->result, "%s%d%s", this->text_before, (int32_t)value, this->text_after);
+            goto exit;
+         }
+         
+         //
+         // Default case for unrecognized tokens: splice the token name in. Note that we lose the 
+         // subtoken and target, if any were present.
+         //
+         // The CK wiki documentation for Magic Effect descriptions notes that you can abuse the 
+         // token system to bold text, but that text after a period inside of angle brackets will 
+         // be lost. This, right here, is why.
+         //
+         sub4034B0(this->result, "%s%d%s", this->text_before, token, this->text_after);
+         
+      exit:
+         if (this->result.data)
+            return this->result.data);
+         return "";
+      }
+   };
+   
+   struct SpellEffectDescriptionTokenHandler {
+      BSString      result;      // 00
+      EffectItem*   subject;     // 08
+      const char*   text_before; // 0C // content to prepend to replaced tokens, e.g. "<b>"
+      const char*   text_after;  // 10 // content to append to replaced tokens, e.g. "</b>"
+      
+      // handles: "<token.subtoken=target>"
+      // returns this->completed.data, or "" if that's nullptr
+      const char* DoTokenSubstitution(const char* token, const char* subtoken, const char* target) {
+         this->result.assign("", 0);
+         if (!this->subject)
+            goto exit;
+         
+         auto* magic_effect = this->subject->mgef;
+         
+         if (!strings_are_different(token, "MAG")) {
+            float value = this->subject->GetMagnitude(); // esp1C
+            CalculatePerkData(kEntryPoint_Mod_Spell_Magnitude, *g_thePlayer, this->unk14, 0, &value);
+            if (magic_effect->flags & kEffectType_NoMagnitude)
+               goto exit;
+            
+            auto avIndex = magic_effect->primaryValue;
+            if (avIndex != -1) {
+               if (_av_by_index(avIndex)->flags & (1 << 21))
+                  value *= 100.0F;
+            }
+            sub4034B0(this->result, "%s%d%s", this->text_before, (int32_t)value, this->text_after);
+            goto exit;
+         }
+         
+         if (!strings_are_different(token, "DUR")) {
+            float value = this->subject->GetDuration();
+            CalculatePerkData(kEntryPoint_Mod_Spell_Duration, *g_thePlayer, this->unk14, 0, &value);
+            if (magic_effect->flags & kEffectType_NoDuration)
+               goto exit;
+            sub4034B0(this->result, "%s%d%s", this->text_before, (int32_t)value, this->text_after);
+            goto exit;
+         }
+         
+         if (!strings_are_different(token, "AREA")) {
+            if (magic_effect->flags & kEffectType_NoArea)
+               goto exit;
+            auto value = this->subject->GetArea();
+            sub4034B0(this->result, "%s%d%s", this->text_before, value, this->text_after);
+            goto exit;
+         }
+         
+         if (!strings_are_different(token, "GLOBAL")) {
+            TESGlobal* form = GetFormByEditorID(target);
+            if (!form || form->formType != FormType::Global)
+               goto exit;
+            auto value = form->value;
+            sub4034B0(this->result, "%s%d%s", this->text_before, (int32_t)value, this->text_after);
+            goto exit;
+         }
+         
+         //
+         // Default case for unrecognized tokens: splice the token name in. Note that we lose the 
+         // subtoken and target, if any were present.
+         //
+         // The CK wiki documentation for Magic Effect descriptions notes that you can abuse the 
+         // token system to bold text, but that text after a period inside of angle brackets will 
+         // be lost. This, right here, is why.
+         //
+         sub4034B0(this->result, "%s%d%s", this->text_before, token, this->text_after);
+         
+      exit:
+         if (this->result.data)
+            return this->result.data);
+         return "";
+      }
+   };
+   
+   // Strip out all tags entirely.
+   struct StripperTokenHandler {
+      BSString      result;      // 00
+      const char*   text_before; // 08 // content to prepend to replaced tokens, e.g. "<b>"
+      const char*   text_after;  // 1C // content to append to replaced tokens, e.g. "</b>"
+      
+      // handles: "<token.subtoken=target>"
+      // returns this->completed.data, or "" if that's nullptr
+      const char* DoTokenSubstitution(const char* token, const char* subtoken, const char* target) {
+         FormatBSString(this->result, "%s%s%s", this->text_before, token, this->text_after);
+      }
+   };
+}
