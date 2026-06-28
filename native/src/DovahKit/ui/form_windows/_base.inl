@@ -93,7 +93,7 @@ void CLASS_NAME::_load_form_data() {
 CLASS_TEMPLATE_PARAMS
 void CLASS_NAME::initialize(this auto&& self, dovah::form_stub& stub) {
    using self_type = std::decay_t<decltype(self)>;
-   
+
    if constexpr (self_type::form_type == dovah::form_type::reference) {
       assert(dovah::form_type_is_reference(stub.form_type));
    } else {
@@ -105,6 +105,7 @@ void CLASS_NAME::initialize(this auto&& self, dovah::form_stub& stub) {
    
    auto* dialog = self.asDialog();
    assert(dialog != nullptr);
+   dialog->setWindowFlags(dialog->windowFlags() | Qt::WindowContextHelpButtonHint); // force "What's This?" button to show by default
    QObject::connect(dialog, &QDialog::accepted, dialog, [&self]() {
       self.save();
    });
