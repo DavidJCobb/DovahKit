@@ -224,10 +224,12 @@ namespace {
             });
          } else if constexpr (data_with_one_subrecord_includes<FormType>()) {
             data_with_one_subrecord::for_each([&cache, &stub, &subrecord, signature]<typename T>() {
-               if (signature == T::subrecords_of_interest[0]) {
-                  T info;
-                  info.skim_subrecord(subrecord);
-                  _cache_by_form_type<T::form_types_of_interest[0]>(cache).threaded_insert(stub, info);
+               if constexpr (T::form_type_is_of_interest(FormType)) {
+                  if (signature == T::subrecords_of_interest[0]) {
+                     T info;
+                     info.skim_subrecord(subrecord);
+                     _cache_by_form_type<T::form_types_of_interest[0]>(cache).threaded_insert(stub, info);
+                  }
                }
             });
          }

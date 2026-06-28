@@ -12,7 +12,7 @@ namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
          case 'DATA':
             subrecord.skip_bytes(0x0C);
             subrecord.read(this->magic_school);  // 0C
-            subrecord.skip_bytes(0x40);
+            subrecord.skip_bytes(0x40);          // 10
             subrecord.read(this->casting_type);  // 50
             subrecord.read(this->delivery_type); // 54
             break;
