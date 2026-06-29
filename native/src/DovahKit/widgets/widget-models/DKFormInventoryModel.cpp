@@ -5,9 +5,14 @@
 #include "dovah/forms/components/container.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
+#include "editor/helpers/form_stub_drag_drop.h"
 
 namespace {
    static const QVector<int> typical_roles_to_notify_changes_for = { Qt::DisplayRole, Qt::ToolTipRole };
+
+   // Set to `true` to insert dropped items adjacent to whatever existing list item 
+   // the user dropped them at. Set to `false` to always append dropped items.
+   constexpr const bool do_we_care_about_drop_position = false;
 }
 
 #include "dovah/forms/Light.h"
@@ -243,6 +248,55 @@ DKFormInventoryModel::~DKFormInventoryModel() {
          this->endRemoveRows();
          return true;
       }
+      #pragma region Drag-and-drop
+         bool DKFormInventoryModel::canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) const {
+            if (!data->hasFormat(editor_helpers::form_stub_array_mime_type))
+               return false;
+            return true;
+         }
+         bool DKFormInventoryModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) {
+            if (!this->canDropMimeData(data, action, row, column, parent))
+               return false;
+            if (action == Qt::IgnoreAction)
+               return true;
+            if (row == -1) {
+               row = this->_items.size();
+               if constexpr (do_we_care_about_drop_position) {
+                  if (parent.isValid())
+                     row = parent.row();
+               }
+            }
+
+            auto dropped_stubs = editor_helpers::form_stubs_from_mime_data(*data);
+            std::erase_if(dropped_stubs, [this](dovah::form_stub* stub) {
+               if (!stub)
+                  return true;
+               if (!this->_item_type_is_allowed(stub->form_type))
+                  return true;
+               return false;
+            });
+            const size_t size = dropped_stubs.size();
+            if (size) {
+               this->beginInsertRows({}, row, row + size - 1);
+               this->_items.insert(this->_items.begin() + row, size, nullptr);
+               for(size_t i = 0; i < size; ++i) {
+                  auto* stub = dropped_stubs[i];
+                  auto* item = this->_items[row + i] = new InventoryObject;
+                  item->form = stub;
+                  item->cached.value    = _get_form_value(*stub);
+                  item->cached.editorID = QString::fromStdString(stub->editorID);
+               }
+               this->endInsertRows();
+            }
+            return true;
+         }
+         QStringList DKFormInventoryModel::mimeTypes() const {
+            return QStringList(QString(editor_helpers::form_stub_array_mime_type));
+         }
+         Qt::DropActions DKFormInventoryModel::supportedDropActions() const {
+            return Qt::CopyAction;
+         }
+      #pragma endregion
    #pragma endregion
 #pragma endregion
 

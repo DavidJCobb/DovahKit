@@ -35,6 +35,38 @@ namespace {
       });
       return out;
    })();
+
+   // For quick and easy reference, to see if we have any unimplemented form types.
+   // If any are unimplemented, produces `{ false, the_form_type_in_question }`.
+   // If all are implemented, produces `{ true, dovah::form_type::none }`.
+   // Mouseover it to preview it with IntelliSense and see.
+   constexpr auto can_construct_all = []() {
+      std::pair<bool, dovah::form_type> out = {};
+      out.first = true; // "all"
+      for (size_t i = 0; i < form_types.size(); ++i) {
+         switch ((dovah::form_type)i) {
+            case dovah::form_type::none:
+            case dovah::form_type::file_header:
+            case dovah::form_type::file_record_group:
+            case dovah::form_type::setting:
+            case dovah::form_type::skill: // doesn't even exist in the CK anymore
+            case dovah::form_type::tlod:
+            case dovah::form_type::toft:
+            case dovah::form_type::unk87: // TODO: this isn't actually a thing; delete it. CK doesn't have it in its list of form type names
+            case dovah::form_type::alias:
+            case dovah::form_type::reference_alias:
+            case dovah::form_type::location_alias:
+            case dovah::form_type::active_magic_effect:
+               continue;
+         }
+         if (!function_table[i].construct) {
+            out.first  = false;
+            out.second = (dovah::form_type)i;
+            break;
+         }
+      }
+      return out;
+   }();
 }
 namespace dovah {
    form_loader_function_t get_form_loader_function(form_type ft) noexcept {

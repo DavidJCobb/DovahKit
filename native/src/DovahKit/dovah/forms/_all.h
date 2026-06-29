@@ -19,6 +19,7 @@
    #include "ArmorAddon.h"
    #include "ArtObject.h"
    #include "AssociationType.h"
+   #include "BodyPartData.h"
    #include "Book.h"
    #include "CameraPath.h"
    #include "CameraShot.h"
@@ -33,6 +34,7 @@
    #include "Debris.h"
    #include "DefaultObjectManager.h"
    #include "DialogueBranch.h"
+   #include "DialogueView.h"
    #include "Door.h"
    #include "DualCastData.h"
    #include "EffectShader.h"
@@ -105,6 +107,7 @@
    #include "Relationship.h"
    #include "ReverbParameters.h"
    #include "Scene.h"
+   #include "Script.h"
    #include "Scroll.h"
    #include "ShaderParticleGeometry.h"
    #include "Shout.h"
@@ -152,6 +155,7 @@ namespace dovah {
       loaded_forms::ArmorAddon,
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
+      loaded_forms::BodyPartData,
       loaded_forms::Book,
       loaded_forms::CameraPath,
       loaded_forms::CameraShot,
@@ -166,6 +170,7 @@ namespace dovah {
       loaded_forms::Debris,
       loaded_forms::DefaultObjectManager,
       loaded_forms::DialogueBranch,
+      loaded_forms::DialogueView,
       loaded_forms::Door,
       loaded_forms::DualCastData,
       loaded_forms::EffectShader,
@@ -238,6 +243,7 @@ namespace dovah {
       loaded_forms::Relationship,
       loaded_forms::ReverbParameters,
       loaded_forms::Scene,
+      loaded_forms::Script,
       loaded_forms::Scroll,
       loaded_forms::ShaderParticleGeometry,
       loaded_forms::Shout,

@@ -4203,6 +4203,21 @@
     <ClCompile Include="ui\utils\show_parent_scoped_modal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="qt\utils\icon_for_file_extension.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\utils\handlers\remove_rows_on_del_key.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\BodyPartData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Script.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\DialogueView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10457,6 +10472,21 @@
     <ClInclude Include="ui\utils\show_parent_scoped_modal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="qt\utils\icon_for_file_extension.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\BodyPartData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\limbs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\DialogueView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10952,6 +10982,12 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_group_windows\region\region.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\body_part_data\FormSubdialogBodyPartDataBodyPart.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\body_part_data.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -11970,6 +12006,9 @@
     <QtMoc Include="qt\DKWinTaskbarProgress.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\utils\handlers\remove_rows_on_del_key.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -12036,6 +12075,7 @@
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game handles large refs.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\text replacement.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />

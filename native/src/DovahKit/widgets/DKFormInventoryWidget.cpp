@@ -4,6 +4,7 @@
 #include <QBoxLayout>
 #include <QGridLayout>
 #include <QHeaderView>
+#include <QKeyEvent>
 #include <QRadioButton>
 #include "./DKHeaderView.h"
 #if !defined(QT_PLUGIN)
@@ -14,6 +15,7 @@
    #include "dovah/utils/leveled_list_preview.h"
    #include "./widget-dialogs/DKLeveledListPreviewDialog.h"
    #include "./widget-models/DKFormInventoryModel.h"
+   #include "ui/utils/handlers/remove_rows_on_del_key.h"
 #endif
 
 #if defined(QT_PLUGIN)
@@ -299,6 +301,7 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
       auto* view = ui.view;
       #if !defined(QT_PLUGIN)
          view->setModel(this->_model);
+         ui::utils::handlers::remove_rows_on_del_key::install(*view);
       #else
          view->setModel(new _DummyModel(view));
       #endif
@@ -308,7 +311,8 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
          view->setHorizontalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel);
          view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
          view->setCornerButtonEnabled(false);
-         view->setAcceptDrops(false);
+         view->setAcceptDrops(true);
+         view->setDragDropOverwriteMode(false);
 
          if (auto* vh = view->verticalHeader()) {
             vh->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -342,17 +346,17 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
    }
 
    #if !defined(QT_PLUGIN)
-   QObject::connect(this->_subwidgets.preview_button, &QPushButton::clicked, this, &DKFormInventoryWidget::_preview);
-   //
-   QObject::connect(this->_subwidgets.view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DKFormInventoryWidget::_pullEntryFromModel);
-   //
-   QObject::connect(this->_subwidgets.current_item,           &DKFormPicker::formChanged,                  this, &DKFormInventoryWidget::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_count,          QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_health,         QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_actor,    &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_faction,  &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_global,   &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_rank,     QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
+      QObject::connect(this->_subwidgets.preview_button, &QPushButton::clicked, this, &DKFormInventoryWidget::_preview);
+      //
+      QObject::connect(this->_subwidgets.view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DKFormInventoryWidget::_pullEntryFromModel);
+      //
+      QObject::connect(this->_subwidgets.current_item,           &DKFormPicker::formChanged,                  this, &DKFormInventoryWidget::_writeEntryToModel);
+      QObject::connect(this->_subwidgets.current_count,          QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
+      QObject::connect(this->_subwidgets.current_health,         QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
+      QObject::connect(this->_subwidgets.current_owner_actor,    &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
+      QObject::connect(this->_subwidgets.current_owner_faction,  &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
+      QObject::connect(this->_subwidgets.current_owner_global,   &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
+      QObject::connect(this->_subwidgets.current_owner_rank,     QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
    #endif
 
    this->_rebuildLayout();

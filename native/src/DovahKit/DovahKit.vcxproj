@@ -206,6 +206,7 @@
     <ClCompile Include="dovah\datastores\story_manager.cpp" />
     <ClCompile Include="dovah\datastores\story_manager\branch_node.cpp" />
     <ClCompile Include="dovah\datastores\story_manager\node.cpp" />
+    <ClCompile Include="dovah\forms\BodyPartData.cpp" />
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
@@ -286,10 +287,12 @@
     <ClCompile Include="dovah\forms\components\extra_data\types\w\water_data.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\use_info_state.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\utils\extra_data_type_has_post_load_validation.cpp" />
+    <ClCompile Include="dovah\forms\DialogueView.cpp" />
     <ClCompile Include="dovah\forms\LensFlare.cpp" />
     <ClCompile Include="dovah\forms\mixins\StoryManagerNode.cpp" />
     <ClCompile Include="dovah\forms\Navmesh.cpp" />
     <ClCompile Include="dovah\forms\Region.cpp" />
+    <ClCompile Include="dovah\forms\Script.cpp" />
     <ClCompile Include="dovah\forms\StoryManagerBranchNode.cpp" />
     <ClCompile Include="dovah\forms\StoryManagerEventNode.cpp" />
     <ClCompile Include="dovah\forms\StoryManagerQuestNode.cpp" />
@@ -1014,6 +1017,7 @@
     <ClCompile Include="qt\DKWinTaskbarButton.cpp" />
     <ClCompile Include="qt\DKWinTaskbarButtonPrivate.cpp" />
     <ClCompile Include="qt\DKWinTaskbarProgress.cpp" />
+    <ClCompile Include="qt\utils\icon_for_file_extension.cpp" />
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathFormsModel.cpp" />
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathsDialog.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.cpp" />
@@ -1350,6 +1354,7 @@
     <ClCompile Include="ui\utils\enum_dropdown_configs\detection_loudness.cpp" />
     <ClCompile Include="ui\utils\enum_dropdown_configs\skill.cpp" />
     <ClCompile Include="ui\utils\form_list_pane_columns\music_track_type.cpp" />
+    <ClCompile Include="ui\utils\handlers\remove_rows_on_del_key.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
     <ClCompile Include="ui\utils\painting\paint_arrow.cpp" />
     <ClCompile Include="ui\utils\painting\paint_multiline_text.cpp" />
@@ -1753,6 +1758,7 @@
     <ClInclude Include="dovah\data\game\min_file_version.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\headparts.h" />
+    <ClInclude Include="dovah\data\limbs.h" />
     <ClInclude Include="dovah\data\magic_casting_type.h" />
     <ClInclude Include="dovah\data\magic_delivery_type.h" />
     <ClInclude Include="dovah\data\magic_effect_archetypes.h" />
@@ -1808,6 +1814,7 @@
     <ClInclude Include="dovah\forms\ArmorAddon.h" />
     <ClInclude Include="dovah\forms\ArtObject.h" />
     <ClInclude Include="dovah\forms\AssociationType.h" />
+    <ClInclude Include="dovah\forms\BodyPartData.h" />
     <ClInclude Include="dovah\forms\Book.h" />
     <ClInclude Include="dovah\forms\CameraPath.h" />
     <ClInclude Include="dovah\forms\CameraShot.h" />
@@ -1904,6 +1911,7 @@
     <ClInclude Include="dovah\forms\components\extra_data\types\w\water_environment_map.h" />
     <ClInclude Include="dovah\forms\components\extra_data\use_info_state.h" />
     <ClInclude Include="dovah\forms\components\extra_data\utils\extra_data_type_has_post_load_validation.h" />
+    <ClInclude Include="dovah\forms\DialogueView.h" />
     <ClInclude Include="dovah\forms\LensFlare.h" />
     <ClInclude Include="dovah\forms\mixins\StoryManagerNode.h" />
     <ClInclude Include="dovah\forms\Navmesh.h" />
@@ -1916,6 +1924,7 @@
     <ClInclude Include="dovah\forms\PlacedHazard.h" />
     <ClInclude Include="dovah\forms\PlacedMissile.h" />
     <ClInclude Include="dovah\forms\Region.h" />
+    <ClInclude Include="dovah\forms\Script.h" />
     <ClInclude Include="dovah\forms\StoryManagerBranchNode.h" />
     <ClInclude Include="dovah\forms\StoryManagerEventNode.h" />
     <ClInclude Include="dovah\forms\StoryManagerQuestNode.h" />
@@ -2377,6 +2386,7 @@
     <QtMoc Include="qt\DKWinTaskbarButton.h" />
     <QtMoc Include="qt\DKWinTaskbarProgress.h" />
     <ClInclude Include="qt\DKWinTaskbarButtonPrivate.h" />
+    <ClInclude Include="qt\utils\icon_for_file_extension.h" />
     <ClInclude Include="ui\form_windows\quest\QuestObjectiveTargetsModel.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabStages.h" />
     <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h" />
@@ -2385,6 +2395,7 @@
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
     <QtMoc Include="widgets\DKProgressBar.h" />
+    <QtMoc Include="ui\utils\handlers\remove_rows_on_del_key.h" />
     <ClInclude Include="ui\utils\show_parent_scoped_modal.h" />
     <ClInclude Include="xaudio2\core_interface.h" />
     <ClInclude Include="xaudio2\operation_set_handle.h" />
@@ -3990,6 +4001,8 @@
     <QtUic Include="ui\form_windows\armor_addon.ui" />
     <QtUic Include="ui\form_windows\art_object.ui" />
     <QtUic Include="ui\form_windows\association_type.ui" />
+    <QtUic Include="ui\form_windows\body_part_data.ui" />
+    <QtUic Include="ui\form_windows\body_part_data\FormSubdialogBodyPartDataBodyPart.ui" />
     <QtUic Include="ui\form_windows\book.ui" />
     <QtUic Include="ui\form_windows\camera_shot.ui" />
     <QtUic Include="ui\form_windows\cell.ui" />
@@ -4173,6 +4186,7 @@
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game handles large refs.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\text replacement.txt" />
     <Text Include="dovah\_docs\interior cell coordinate limits.md" />
     <Text Include="editor\subsystems\worldinput\_docs\bind tree.txt" />
     <Text Include="dovah\_docs\form stub addenda.txt" />
