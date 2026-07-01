@@ -26,6 +26,8 @@ class FormDialogBodyPartData :
       virtual void _load_impl() override;
       virtual void _save_impl() override;
 
+      bool _can_edit_parts() const;
+
    public:
       void create_part();
       void edit_part();

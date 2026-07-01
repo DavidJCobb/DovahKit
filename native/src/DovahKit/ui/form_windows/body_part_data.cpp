@@ -1,4 +1,5 @@
 #include "./body_part_data.h"
+#include <QMessageBox>
 #include "editor/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/handlers/remove_rows_on_del_key.h"
@@ -77,7 +78,23 @@ void FormDialogBodyPartData::_save_impl() {
    this->models.parts->exportData(working);
 }
 
+bool FormDialogBodyPartData::_can_edit_parts() const {
+   if (this->ui.skeleton->value().empty())
+      return false;
+   if (this->models.bones->rowCount() == 0)
+      return false;
+   return true;
+}
+
 void FormDialogBodyPartData::create_part() {
+   if (!_can_edit_parts()) {
+      QMessageBox::critical(
+         this,
+         tr("Error"),
+         tr("It is not possible to edit body parts without first setting an animation skeleton.")
+      );
+      return;
+   }
    auto* modal = new FormSubdialogBodyPartDataBodyPart(this);
    modal->setBonesModel(this->models.bones);
    QObject::connect(modal, &QDialog::accepted, this, [this, modal]() {
@@ -90,6 +107,14 @@ void FormDialogBodyPartData::create_part() {
    ui::show_parent_scoped_modal(*modal, this);
 }
 void FormDialogBodyPartData::edit_part() {
+   if (!_can_edit_parts()) {
+      QMessageBox::critical(
+         this,
+         tr("Error"),
+         tr("It is not possible to edit body parts without first setting an animation skeleton.")
+      );
+      return;
+   }
    auto* sm  = this->ui.parts->selectionModel();
    auto  sel = sm->selection();
    if (sel.empty())
