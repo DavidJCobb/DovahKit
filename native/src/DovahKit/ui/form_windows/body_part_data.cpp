@@ -1,7 +1,9 @@
 #include "./body_part_data.h"
 #include "editor/core.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/handlers/remove_rows_on_del_key.h"
 #include "ui/utils/show_parent_scoped_modal.h"
+#include "ui/utils/typical_tableview_config.h"
 #include "./body_part_data/BodyPartDataPartsModel.h"
 #include "./body_part_data/FormSubdialogBodyPartDataBodyPart.h"
 #include "./body_part_data/SkeletonBonesModel.h"
@@ -23,10 +25,20 @@ FormDialogBodyPartData::FormDialogBodyPartData(dovah::form_stub& stub, QWidget* 
    {
       auto* view = this->ui.parts;
       view->setModel(this->models.parts);
+      ui::typical_tableview_config(view);
+      ui::utils::handlers::remove_rows_on_del_key::install(*view);
 
       QObject::connect(this->ui.buttonPartNew,    &QPushButton::pressed, this, &FormDialogBodyPartData::create_part);
       QObject::connect(this->ui.buttonPartEdit,   &QPushButton::pressed, this, &FormDialogBodyPartData::edit_part);
       QObject::connect(this->ui.buttonPartDelete, &QPushButton::pressed, this, &FormDialogBodyPartData::delete_selected_part);
+
+      QObject::connect(view, &QAbstractItemView::doubleClicked, this, [this](const QModelIndex& qmi) {
+         auto* sm = this->ui.parts->selectionModel();
+         if (!sm)
+            return;
+         sm->select(qmi, QItemSelectionModel::SelectionFlag::ClearAndSelect | QItemSelectionModel::SelectionFlag::Rows);
+         this->edit_part();
+      });
    }
 
    this->load(); // this creates the working copy.

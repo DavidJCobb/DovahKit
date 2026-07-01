@@ -289,6 +289,7 @@ void BodyPartDataPartsModel::replaceBodyPart(size_t row, const loaded_item_type&
          this->beginRemoveRows(parent, row, row + count - 1);
          list.erase(list.begin() + row, list.begin() + row + count);
          this->endRemoveRows();
+         return true;
       }
    #pragma endregion
 #pragma endregion

@@ -384,6 +384,10 @@ namespace dovah::loaded_forms {
          switch (subrecord.signature()) {
             case 'EDID': // already read by the FormStub
                break;
+            case 'MODL':
+            case 'MODT':
+               this->model.load(subrecord, intfc);
+               break;
             case 'RAGA':
                if (auto& dst = this->ragdoll; subrecord.read(dst))
                   intfc.warn_if_ref_is_wrong_type(dst, form_type::ragdoll, subrecord.signature());
@@ -529,8 +533,20 @@ namespace dovah::loaded_forms {
 
       copy->model.clone_from(this->model);
       copy->ragdoll.set(*copy, this->ragdoll);
-      for (size_t i = 0; i < this->parts.size(); ++i) {
-         copy->parts[i].clone_from(*copy, this->parts[i]);
+      {
+         auto& src_list = this->parts;
+         auto& dst_list = copy->parts;
+         size_t size_prior = dst_list.size();
+         size_t size_after = src_list.size();
+         if (size_prior < size_after)
+            dst_list.resize(size_after);
+         for (size_t i = 0; i < size_after; ++i)
+            dst_list[i].clone_from(*copy, src_list[i]);
+         if (size_prior > size_after) {
+            for (size_t i = size_after; i < size_prior; ++i)
+               dst_list[i].clear(*copy);
+            dst_list.resize(size_after);
+         }
       }
    }
    void BodyPartData::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {

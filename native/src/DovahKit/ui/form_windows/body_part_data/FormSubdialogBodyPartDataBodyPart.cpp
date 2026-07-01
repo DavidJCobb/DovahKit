@@ -9,6 +9,8 @@
 
 FormSubdialogBodyPartDataBodyPart::FormSubdialogBodyPartDataBodyPart(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
+   QObject::connect(this->ui.buttonOK,     &QPushButton::pressed, this, &QDialog::accept);
+   QObject::connect(this->ui.buttonCancel, &QPushButton::pressed, this, &QDialog::reject);
 
    {  // Limbs
       auto* widget = this->ui.limb;
