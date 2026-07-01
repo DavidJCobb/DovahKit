@@ -4233,6 +4233,9 @@
     <ClCompile Include="ui\form_windows\body_part_data\FormSubdialogBodyPartDataBodyPart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneProperties.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -12049,6 +12052,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\body_part_data\FormSubdialogBodyPartDataBodyPart.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneProperties.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

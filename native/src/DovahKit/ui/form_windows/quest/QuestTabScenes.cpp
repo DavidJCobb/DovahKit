@@ -5,6 +5,7 @@
 #include "dovah/forms/Scene.h"
 #include "dovah/forms/Quest.h"
 #include "editor/core.h"
+#include "../scene/FormSubdialogSceneProperties.h"
 #include "../scene/SceneFormVisualEditor.h"
 
 #include <QBoxLayout>
@@ -49,6 +50,16 @@ void QuestTabScenes::setupUi() {
    });
    QObject::connect(this->ui.current_scene.buttons.actor_behavior,      &QPushButton::clicked, scene_edit_widget, &SceneFormVisualEditor::popBehaviorFlagDialog);
    QObject::connect(this->ui.current_scene.buttons.actor_participation, &QPushButton::clicked, scene_edit_widget, &SceneFormVisualEditor::popParticipationFlagDialog);
+   QObject::connect(this->ui.current_scene.buttons.scene_properties,    &QPushButton::clicked, this, [this]() {
+      if (!this->_state.loaded_scene) {
+         return;
+      }
+      auto dialog = FormSubdialogSceneProperties(this->ui.current_scene.buttons.scene_properties->window());
+      dialog.importData(*this->_state.loaded_scene);
+      if (dialog.exec() == QDialog::Accepted) {
+         dialog.exportData(*this->_state.loaded_scene);
+      }
+   });
 
    QObject::connect(this->ui.buttons.zoom_in, &QPushButton::clicked, this, [this]() {
       auto* widget = this->ui.current_scene.editor;

@@ -1209,6 +1209,7 @@
     <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.cpp" />
     <ClCompile Include="ui\form_windows\scene\FormSubdialogScenePackageAction.cpp" />
     <ClCompile Include="ui\form_windows\scene\FormSubdialogScenePhase.cpp" />
+    <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneProperties.cpp" />
     <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneTimerAction.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneActorBehaviorModel.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneActorParticipationModel.cpp" />
@@ -2405,6 +2406,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestTabStages.h" />
     <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h" />
     <ClInclude Include="ui\form_windows\quest\QuestStageLogEntriesModel.h" />
+    <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneProperties.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />

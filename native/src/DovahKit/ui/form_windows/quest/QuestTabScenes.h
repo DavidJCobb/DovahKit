@@ -43,6 +43,7 @@ class QuestTabScenes : public QObject {
             struct {
                QPushButton* actor_behavior      = nullptr;
                QPushButton* actor_participation = nullptr;
+               QPushButton* scene_properties    = nullptr;
             } buttons;
             QLineEdit* editor_id = nullptr;
             struct {

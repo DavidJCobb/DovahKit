@@ -221,6 +221,7 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
                .buttons = {
                   .actor_behavior      = this->ui.buttonSceneActorBehavior,
                   .actor_participation = this->ui.buttonSceneActorParticipation,
+                  .scene_properties    = this->ui.buttonSceneProperties,
                },
                .editor_id = this->ui.sceneEditorID,
                .flags = {
