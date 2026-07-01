@@ -34,17 +34,14 @@ void BodyPartDataPartsModel::_reset_invalid_bone_names(bool silent) {
    for (size_t i = 0; i < parts.size(); ++i) {
       auto& part    = parts[i];
       bool  changed = false;
-      for (auto& dst : std::array<std::string&, 4>{
-         part.nodes.gore_effect,
-         part.nodes.ik_start,
-         part.nodes.main,
-         part.nodes.vats_target,
-      }) {
-         if (this->_data.bones_model->hasBone(dst))
-            continue;
-         dst     = base_node;
-         changed = true;
-      }
+
+      #define CASE(n) if (!this->_data.bones_model->hasBone(part.nodes.n)) { changed = true; part.nodes.n = base_node; }
+      CASE(gore_effect);
+      CASE(ik_start);
+      CASE(main);
+      CASE(vats_target);
+      #undef CASE
+
       if (changed && !silent) {
          emit dataChanged(this->index(i, 0), this->index(i, ColumnCount - 1));
       }
