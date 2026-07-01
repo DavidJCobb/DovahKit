@@ -20,6 +20,7 @@ FormSubdialogQuestRefAlias::FormSubdialogQuestRefAlias(loaded_form_type& quest, 
    _data{ quest, alias }
 {
    this->ui.setupUi(this);
+   this->setWindowFlags(this->windowFlags() | Qt::WindowContextHelpButtonHint); // show "What's This?" button in title bar
    
    for (auto* widget : std::array{
       this->ui.fillTypePredefined,

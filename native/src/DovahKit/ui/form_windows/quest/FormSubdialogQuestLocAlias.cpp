@@ -20,6 +20,7 @@ FormSubdialogQuestLocAlias::FormSubdialogQuestLocAlias(loaded_form_type& quest, 
    _data{ quest, alias }
 {
    this->ui.setupUi(this);
+   this->setWindowFlags(this->windowFlags() | Qt::WindowContextHelpButtonHint); // show "What's This?" button in title bar
 
    this->ui.fillFromPredefined->setAllowedFormType(dovah::form_type::location);
    this->ui.fillFromSiblingAliasParentKeyword->setAllowedFormType(dovah::form_type::keyword);

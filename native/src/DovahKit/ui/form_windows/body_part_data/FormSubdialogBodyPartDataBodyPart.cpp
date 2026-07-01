@@ -9,6 +9,7 @@
 
 FormSubdialogBodyPartDataBodyPart::FormSubdialogBodyPartDataBodyPart(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
+   this->setWindowFlags(this->windowFlags() | Qt::WindowContextHelpButtonHint); // show "What's This?" button in title bar
    QObject::connect(this->ui.buttonOK,     &QPushButton::pressed, this, &QDialog::accept);
    QObject::connect(this->ui.buttonCancel, &QPushButton::pressed, this, &QDialog::reject);
 

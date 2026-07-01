@@ -13,6 +13,7 @@ namespace {
 
 FormSubdialogTopicInfoResponse::FormSubdialogTopicInfoResponse(QWidget* parent) {
    this->ui.setupUi(this);
+   this->setWindowFlags(this->windowFlags() | Qt::WindowContextHelpButtonHint); // show "What's This?" button in title bar
 
    this->ui.animSpeaker->setAllowedFormType(dovah::form_type::idle);
    this->ui.animListener->setAllowedFormType(dovah::form_type::idle);

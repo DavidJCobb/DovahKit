@@ -39,6 +39,7 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
 {
    this->ui.setupUi(this);
    this->ui.tabWidget->setCurrentWidget(this->ui.tabGeneral);
+   this->setWindowFlags(this->windowFlags() | Qt::WindowContextHelpButtonHint); // show "What's This?" button in title bar
 
    #pragma region Set up canvas widget
       this->canvas = new RegionCanvasWidget(this);
