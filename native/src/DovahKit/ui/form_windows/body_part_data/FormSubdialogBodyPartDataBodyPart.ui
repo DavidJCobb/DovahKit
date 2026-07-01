@@ -38,6 +38,13 @@
          </property>
         </widget>
        </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="vatsNode">
+         <property name="whatsThis">
+          <string>In Fallout, this would've been the animation skeleton node that VATS used to identify the body part.</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="1">
         <widget class="QLineEdit" name="name">
          <property name="whatsThis">
@@ -55,6 +62,13 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="limb">
+         <property name="whatsThis">
+          <string>The hardcoded limb type that describes this body part.</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
@@ -65,39 +79,8 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Actor Value:</string>
-         </property>
-         <property name="buddy">
-          <cstring>actorValue</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="limb">
-         <property name="whatsThis">
-          <string>The hardcoded limb type that describes this body part.</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="1">
         <widget class="QComboBox" name="partNode"/>
-       </item>
-       <item row="3" column="1">
-        <widget class="QComboBox" name="vatsNode">
-         <property name="whatsThis">
-          <string>In Fallout, this would've been the animation skeleton node that VATS used to identify the body part.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="DKFormPicker" name="actorValue">
-         <property name="whatsThis">
-          <string>Unused; a Fallout leftover. An Actor Value which tracks the condition of this body part's associated limb.</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </item>
@@ -110,7 +93,20 @@
         <string>Combat data (unused)</string>
        </property>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="1" column="0">
+        <item row="3" column="1">
+         <widget class="QSpinBox" name="chanceToHit">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="suffix">
+           <string>%</string>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
          <widget class="QLabel" name="label_7">
           <property name="text">
            <string>Health Percent:</string>
@@ -120,30 +116,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Damage Mult:</string>
-          </property>
-          <property name="buddy">
-           <cstring>damageMult</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QDoubleSpinBox" name="damageMult">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="decimals">
-           <number>4</number>
-          </property>
-          <property name="maximum">
-           <double>10000.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
+        <item row="3" column="0">
          <widget class="QLabel" name="label_8">
           <property name="text">
            <string>Base Chance to Hit:</string>
@@ -153,7 +126,17 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Damage Mult:</string>
+          </property>
+          <property name="buddy">
+           <cstring>damageMult</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
          <widget class="QSpinBox" name="healthPerc">
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -166,16 +149,33 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QSpinBox" name="chanceToHit">
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="damageMult">
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
-          <property name="suffix">
-           <string>%</string>
+          <property name="decimals">
+           <number>4</number>
           </property>
           <property name="maximum">
-           <number>100</number>
+           <double>10000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Actor Value:</string>
+          </property>
+          <property name="buddy">
+           <cstring>actorValue</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="actorValue">
+          <property name="whatsThis">
+           <string>Unused; a Fallout leftover. An Actor Value which tracks the condition of this body part's associated limb.</string>
           </property>
          </widget>
         </item>
@@ -259,7 +259,7 @@
        </property>
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="0">
-         <widget class="DKGameFilePicker" name="filePicker">
+         <widget class="DKGameFilePicker" name="poseMatching">
           <property name="allowedFileExtensions">
            <stringlist>
             <string>.psa</string>
@@ -864,7 +864,7 @@
   <tabstop>flagHeadtracking</tabstop>
   <tabstop>headtrackMaxAngle</tabstop>
   <tabstop>headtrackStartNode</tabstop>
-  <tabstop>filePicker</tabstop>
+  <tabstop>poseMatching</tabstop>
   <tabstop>flagSeverable</tabstop>
   <tabstop>severExplosion</tabstop>
   <tabstop>severDebris</tabstop>

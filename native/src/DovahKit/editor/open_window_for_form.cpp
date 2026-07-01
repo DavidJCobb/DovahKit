@@ -18,6 +18,7 @@
 #include "../ui/form_windows/armor_addon.h"
 #include "../ui/form_windows/art_object.h"
 #include "../ui/form_windows/association_type.h"
+#include "../ui/form_windows/body_part_data.h"
 #include "../ui/form_windows/book.h"
 #include "../ui/form_windows/camera_shot.h"
 #include "../ui/form_windows/cell.h"
@@ -140,6 +141,7 @@ namespace {
       std::pair{ dovah::form_type::armor_addon,       _make<FormDialogArmorAddon> },
       std::pair{ dovah::form_type::art_object,        _make<FormDialogArtObject> },
       std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
+      std::pair{ dovah::form_type::body_part_data,    _make<FormDialogBodyPartData> },
       std::pair{ dovah::form_type::book,              _make<FormDialogBook> },
       std::pair{ dovah::form_type::camera_shot,       _make<FormDialogCameraShot> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },

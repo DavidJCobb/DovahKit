@@ -1,6 +1,17 @@
 #include "BodyPartData.h"
 #include "_common_cpp.h"
 
+#include "../notices/form_load_warnings/by_form_type/body_part_data/multiple_parts_for_the_same_limb.h"
+#include "../notices/form_load_warnings/by_form_type/body_part_data/part_has_invalid_limb.h"
+#include "../notices/form_load_warnings/by_form_type/body_part_data/part_has_no_main_node_name.h"
+#include "../notices/form_load_warnings/by_form_type/body_part_data/two_parts_have_the_same_main_node.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::body_part_data;
+   }
+}
+
 namespace dovah::loaded_forms {
    #pragma region BodyPartData::part
       bool BodyPartData::part::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -20,7 +31,7 @@ namespace dovah::loaded_forms {
 
          if (subrecord.signature() != 'BPNN')
             return false;
-         subrecord.read(this->nodes.part);
+         subrecord.read(this->nodes.main);
          if (!record.next_subrecord())
             return false;
 
@@ -120,7 +131,7 @@ namespace dovah::loaded_forms {
          }
          if (!this->pose_matching.empty())
             record.write_string_subrecord('PNAM', this->pose_matching);
-         record.write_string_subrecord('BPNN', this->nodes.part);
+         record.write_string_subrecord('BPNN', this->nodes.main);
          record.write_string_subrecord('BPNT', this->nodes.vats_target);
          record.write_string_subrecord('BPNI', this->nodes.ik_start);
          {
@@ -231,13 +242,19 @@ namespace dovah::loaded_forms {
          this->nodes = {};
          this->pose_matching = {};
       }
-      void BodyPartData::part::sever_outbound_references_to(BodyPartData& owner, form_stub& other) noexcept {
-         this->gore.explodable.debris.clear_if(owner, other);
-         this->gore.explodable.explosion.clear_if(owner, other);
-         this->gore.severable.debris.clear_if(owner, other);
-         this->gore.severable.explosion.clear_if(owner, other);
-         this->gore.severable.impact_data_set.clear_if(owner, other);
-         this->gore.explodable.impact_data_set.clear_if(owner, other);
+      bool BodyPartData::part::sever_outbound_references_to(BodyPartData& owner, form_stub& other) noexcept {
+         bool changed = false;
+
+         #define CASE(n) if (this->n == &other) { changed = true; this->n.set(owner, nullptr); }
+         CASE(gore.explodable.debris);
+         CASE(gore.explodable.explosion);
+         CASE(gore.explodable.impact_data_set);
+         CASE(gore.severable.debris);
+         CASE(gore.severable.explosion);
+         CASE(gore.severable.impact_data_set);
+         #undef CASE
+
+         return changed;
       }
    #pragma endregion
    #pragma region BodyPartData::part_use_info
@@ -344,14 +361,22 @@ namespace dovah::loaded_forms {
       }
    #pragma endregion
 
+   std::string BodyPartData::base_node_name() const {
+      auto& path = this->model.model_path;
+      if (path.empty())
+         return {};
+      return std::string("BASE Meshes\\") + path;
+   }
+
    void BodyPartData::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
       if (!intfc.is_winning_record)
          return;
       //
-      bool  already_in_next_subrecord = false;
-      auto& subrecord = record.get_current_subrecord();
+      bool   already_in_next_subrecord = false;
+      auto&  subrecord    = record.get_current_subrecord();
+      size_t parts_loaded = 0;
       while ((already_in_next_subrecord && record.get_current_subrecord()) || record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -372,11 +397,16 @@ namespace dovah::loaded_forms {
                {
                   part temporary;
                   if (temporary.load(record, intfc)) {
-                     size_t limb_id = (size_t)temporary.limb;
-                     if (limb_id < limbs_count) {
-                        auto& dst = this->parts[limb_id];
-                        dst.clear(*this);
+                     if ((size_t)temporary.limb < dovah::limbs_count) {
+                        auto& dst = this->parts.emplace_back();
                         dst = std::move(temporary);
+                     } else {
+                        specific_load_warnings::part_has_invalid_limb notice(
+                           this->stub,
+                           parts_loaded, // can't use `this->parts.size()` because we don't retain invalid-limb parts
+                           (uint8_t)temporary.limb
+                        );
+                        intfc.log_load_warning(notice);
                      }
                      switch (subrecord.signature()) {
                         case 'BPNN':
@@ -395,12 +425,58 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+
+      for (size_t i = 0; i < dovah::limbs_count; ++i) {
+         size_t count = 0;
+         for (auto& part : this->parts)
+            if (part.limb == (dovah::limb)i)
+               ++count;
+         if (count > 1) {
+            specific_load_warnings::multiple_parts_for_the_same_limb notice(
+               this->stub,
+               (dovah::limb)i,
+               count
+            );
+            intfc.log_load_warning(notice);
+         }
+      }
+      {
+         const size_t      size = this->parts.size();
+         std::vector<bool> warned_on_dupes;
+         warned_on_dupes.resize(size);
+         for (size_t i = 0; i < size; ++i) {
+            const auto& a = this->parts[i];
+            if (a.nodes.main.empty()) {
+               specific_load_warnings::part_has_no_main_node_name notice(
+                  this->stub,
+                  i
+               );
+               intfc.log_load_warning(notice);
+               continue;
+            }
+            if (warned_on_dupes[i])
+               continue;
+            for (size_t j = i + 1; j < size; ++j) {
+               const auto& b = this->parts[j];
+               if (b.nodes.main == a.nodes.main) {
+                  warned_on_dupes[i] = true;
+                  warned_on_dupes[j] = true;
+                  specific_load_warnings::two_parts_have_the_same_main_node notice(
+                     this->stub,
+                     i,
+                     j
+                  );
+                  intfc.log_load_warning(notice);
+               }
+            }
+         }
+      }
    }
    /*static*/ void BodyPartData::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (!uib.is_final_file())
          return;
       
-      std::array<part_use_info, limbs_count> parts;
+      std::vector<part_use_info> parts;
       form_id_t ragdoll = {};
 
       bool  already_in_next_subrecord = false;
@@ -421,9 +497,8 @@ namespace dovah::loaded_forms {
                {
                   part_use_info temporary;
                   if (temporary.load(record)) {
-                     size_t limb_id = (size_t)temporary.limb;
-                     if (limb_id < limbs_count) {
-                        parts[limb_id] = temporary;
+                     if ((size_t)temporary.limb < dovah::limbs_count) {
+                        parts.emplace_back() = std::move(temporary);
                      }
                      switch (subrecord.signature()) {
                         case 'BPNN':

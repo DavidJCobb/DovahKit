@@ -27,6 +27,10 @@
 #pragma region by form type
    #include "./by_form_type/actor_value_info/unexpected_subrecord_in_perk_tree_node.h"
    #include "./by_form_type/actor_value_info/unterminated_perk_tree_node.h"
+   #include "./by_form_type/body_part_data/multiple_parts_for_the_same_limb.h"
+   #include "./by_form_type/body_part_data/part_has_invalid_limb.h"
+   #include "./by_form_type/body_part_data/part_has_no_main_node_name.h"
+   #include "./by_form_type/body_part_data/two_parts_have_the_same_main_node.h"
    #include "./by_form_type/cell/cell_type_not_yet_known.h"
    #include "./by_form_type/cell/data_for_wrong_cell_type.h"
    #include "./by_form_type/dialogue_branch/mishandled_owning_quest_id.h"

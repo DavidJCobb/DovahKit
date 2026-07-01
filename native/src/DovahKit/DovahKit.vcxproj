@@ -491,6 +491,7 @@
     <ClCompile Include="editor\localize\dialogue_topic_subtype.cpp" />
     <ClCompile Include="editor\localize\entry_point_function.cpp" />
     <ClCompile Include="editor\localize\form_creation_error_code.cpp" />
+    <ClCompile Include="editor\localize\limb.cpp" />
     <ClCompile Include="editor\localize\magic_casting_type.cpp" />
     <ClCompile Include="editor\localize\magic_delivery_type.cpp" />
     <ClCompile Include="editor\helpers\nif_is_valid_master_particle_system.cpp" />
@@ -1049,6 +1050,7 @@
     <ClCompile Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_value_info.cpp" />
     <ClCompile Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.cpp" />
+    <ClCompile Include="ui\form_windows\body_part_data\FormSubdialogBodyPartDataBodyPart.cpp" />
     <ClCompile Include="ui\form_windows\actor_value_info\SkillTreeVisualEditor.cpp" />
     <ClCompile Include="ui\form_windows\addon_node.cpp" />
     <ClCompile Include="ui\form_windows\ammo.cpp" />
@@ -1059,6 +1061,9 @@
     <ClCompile Include="ui\form_windows\armor_addon\ArmorAddonAdditionalRacesModel.cpp" />
     <ClCompile Include="ui\form_windows\art_object.cpp" />
     <ClCompile Include="ui\form_windows\association_type.cpp" />
+    <ClCompile Include="ui\form_windows\body_part_data.cpp" />
+    <ClCompile Include="ui\form_windows\body_part_data\BodyPartDataPartsModel.cpp" />
+    <ClCompile Include="ui\form_windows\body_part_data\SkeletonBonesModel.cpp" />
     <ClCompile Include="ui\form_windows\book.cpp" />
     <ClCompile Include="ui\form_windows\camera_shot.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
@@ -2174,6 +2179,10 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\vmad_too_large.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unexpected_subrecord_in_perk_tree_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unterminated_perk_tree_node.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\body_part_data\multiple_parts_for_the_same_limb.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\body_part_data\part_has_invalid_limb.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\body_part_data\part_has_no_main_node_name.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\body_part_data\two_parts_have_the_same_main_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.h" />
@@ -2372,6 +2381,7 @@
     <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
     <ClInclude Include="editor\localize\form_creation_error_code.h" />
+    <ClInclude Include="editor\localize\limb.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set.h" />
@@ -2387,6 +2397,10 @@
     <QtMoc Include="qt\DKWinTaskbarProgress.h" />
     <ClInclude Include="qt\DKWinTaskbarButtonPrivate.h" />
     <ClInclude Include="qt\utils\icon_for_file_extension.h" />
+    <QtMoc Include="ui\form_windows\body_part_data\BodyPartDataPartsModel.h" />
+    <QtMoc Include="ui\form_windows\body_part_data\SkeletonBonesModel.h" />
+    <QtMoc Include="ui\form_windows\body_part_data.h" />
+    <QtMoc Include="ui\form_windows\body_part_data\FormSubdialogBodyPartDataBodyPart.h" />
     <ClInclude Include="ui\form_windows\quest\QuestObjectiveTargetsModel.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabStages.h" />
     <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h" />
@@ -4323,6 +4337,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\a\actor base.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\b\body part data.md">
       <SubType>
       </SubType>
     </None>

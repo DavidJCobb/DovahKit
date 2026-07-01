@@ -7,6 +7,7 @@
 #include "./face_fx_phoneme_name.h"
 #include "./form_identifiers_to_string.h"
 #include "./form_type_name_to_string.h"
+#include "../localize/limb.h"
 #include "../localize/package_data_type.h"
 #include "../localize/package_interrupt_override_type.h"
 #include "../localize/package_legacy_type.h"
@@ -832,6 +833,34 @@ namespace editor_helpers {
                      "Actor Value Info %1 contains an unterminated perk tree node (for %2), i.e. a node missing "
                      "its INAM subrecord."
                   ).arg(subject).arg(perk);
+               }
+            #pragma endregion
+            #pragma region body part data
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::body_part_data::multiple_parts_for_the_same_limb*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "BodyPartData %1 contains %2 parts for the same limb (%4). There should only be one body part "
+                     "per hardcoded limb."
+                  ).arg(subject).arg(casted->count).arg(editor::localize::limb(casted->limb));
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::body_part_data::part_has_invalid_limb*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "BodyPartData %1 contains a body part that specified invalid limb %2. (It was part #%3 in the "
+                     "raw data, but malformed body parts are discarded during load.)"
+                  ).arg(subject).arg(casted->limb).arg(casted->which_part);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::body_part_data::part_has_no_main_node_name*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "The %2th loaded body part in BodyPartData %1 has no main node name."
+                  ).arg(subject).arg(casted->which_part);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::body_part_data::two_parts_have_the_same_main_node*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "BodyPartData %1 contains two body parts, #%2 and #%3, that target the same main node."
+                  ).arg(subject).arg(casted->part_a).arg(casted->part_b);
                }
             #pragma endregion
             #pragma region cell

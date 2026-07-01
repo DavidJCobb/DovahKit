@@ -43,6 +43,12 @@
      </item>
      <item row="1" column="1">
       <widget class="DKGameFilePicker" name="skeleton">
+       <property name="displaysDataDirectory">
+        <bool>false</bool>
+       </property>
+       <property name="displaysStem">
+        <bool>false</bool>
+       </property>
        <property name="presetConfiguration">
         <enum>DKGameFilePicker::Meshes</enum>
        </property>
