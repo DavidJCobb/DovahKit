@@ -21,5 +21,6 @@ class FormDialogSpell :
       QString _make_concatenated_description() const;
       void _update_auto_calc();
       void _update_condition_explanation();
+      void _update_effect_consistency(dovah::form_stub* changed = nullptr);
       void _update_effect_parameters_enable_states();
 };

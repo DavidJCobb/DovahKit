@@ -99,6 +99,7 @@ FormDialogSpell::FormDialogSpell(dovah::form_stub& stub, QWidget* parent) : QDia
       this->ui.school->setText(text);
 
       this->_update_auto_calc();
+      this->_update_effect_consistency();
       this->_update_effect_parameters_enable_states();
    });
 
@@ -114,10 +115,20 @@ FormDialogSpell::FormDialogSpell(dovah::form_stub& stub, QWidget* parent) : QDia
 
    QObject::connect(this->ui.casting, &QComboBox::currentIndexChanged, this, [this]() {
       this->ui.effects->setCastingType((dovah::magic_casting_type)this->ui.casting->currentData().toInt());
+      this->_update_effect_consistency();
    });
    QObject::connect(this->ui.delivery, &QComboBox::currentIndexChanged, this, [this]() {
       this->ui.effects->setDeliveryType((dovah::magic_delivery_type)this->ui.delivery->currentData().toInt());
+      this->_update_effect_consistency();
    });
+   {
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+         if (!stub || stub->form_type != dovah::form_type::magic_effect)
+            return;
+         this->_update_effect_consistency(stub);
+      });
+   }
 
    this->load(); // this creates the working copy.
 }
@@ -229,6 +240,35 @@ void FormDialogSpell::_update_condition_explanation() {
    } else {
       this->ui.conditionExplanationStack->setCurrentWidget(this->ui.conditionExplanationNormal);
    }
+}
+void FormDialogSpell::_update_effect_consistency(dovah::form_stub* changed) {
+   auto effect_stubs = this->ui.effects->magicEffects();
+   if (effect_stubs.empty()) {
+      this->ui.casting->setEnabled(true);
+      this->ui.delivery->setEnabled(true);
+      return;
+   }
+   if (changed) {
+      if (!effect_stubs.contains(changed))
+         return;
+   }
+
+   bool inconsistent = false;
+   {
+      auto casting  = (dovah::magic_casting_type)  this->ui.casting->currentData().toInt();
+      auto delivery = (dovah::magic_delivery_type) this->ui.delivery->currentData().toInt();
+      for (auto* effect : effect_stubs) {
+         auto loaded = effect->load().ptr_cast<dovah::loaded_forms::MagicEffect>();
+         if (!loaded)
+            continue;
+         if (casting != loaded->casting_type || delivery != loaded->delivery_type) {
+            inconsistent = true;
+            break;
+         }
+      }
+   }
+   this->ui.casting->setEnabled(inconsistent);
+   this->ui.delivery->setEnabled(inconsistent);
 }
 void FormDialogSpell::_update_effect_parameters_enable_states() {
    bool enable = this->ui.effects->effectCount() == 0;
