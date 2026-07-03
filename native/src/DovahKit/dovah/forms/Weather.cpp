@@ -2,7 +2,6 @@
 #include "_common_cpp.h"
 
 #include "../notices/form_load_warnings/by_form_type/weather/extra_directional_ambient_lighting_params.h"
-#include "../notices/form_load_warnings/by_form_type/weather/too_much_layer_data.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -16,8 +15,6 @@ namespace dovah::loaded_forms {
       if (!intfc.is_winning_record)
          return;
 
-      uint32_t current_layer_alpha  = 0;
-      uint32_t current_layer_color  = 0;
       uint32_t current_dalc         = 0;
       uint32_t layers_with_textures = 0;
       while (auto& subrecord = record.next_subrecord()) {
@@ -80,24 +77,20 @@ namespace dovah::loaded_forms {
                   subrecord.read(layer.speed.y.raw);
                break;
             case 'PNAM':
-               if (current_layer_color < max_cloud_layer_count) {
-                  auto& layer = this->clouds.layers[current_layer_color];
+               for (auto& layer : this->clouds.layers) {
                   layer.time_of_day.sunrise.color.load(subrecord);
                   layer.time_of_day.day.color.load(subrecord);
                   layer.time_of_day.sunset.color.load(subrecord);
                   layer.time_of_day.night.color.load(subrecord);
                }
-               ++current_layer_color;
                break;
             case 'JNAM':
-               if (current_layer_alpha < max_cloud_layer_count) {
-                  auto& layer = this->clouds.layers[current_layer_alpha];
+               for (auto& layer : this->clouds.layers) {
                   subrecord.read(layer.time_of_day.sunrise.alpha);
                   subrecord.read(layer.time_of_day.day.alpha);
                   subrecord.read(layer.time_of_day.sunset.alpha);
                   subrecord.read(layer.time_of_day.night.alpha);
                }
-               ++current_layer_alpha;
                break;
             case 'NAM0':
                for (auto& color : this->colors.list) {
@@ -226,22 +219,6 @@ namespace dovah::loaded_forms {
       }
       this->clouds.disabled_layers |= ~layers_with_textures;
 
-      if (current_layer_alpha > max_cloud_layer_count) {
-         specific_load_warnings::too_much_layer_data notice(
-            this->stub,
-            specific_load_warnings::too_much_layer_data::data_type::alpha,
-            current_layer_alpha
-         );
-         intfc.log_load_warning(notice);
-      }
-      if (current_layer_color > max_cloud_layer_count) {
-         specific_load_warnings::too_much_layer_data notice(
-            this->stub,
-            specific_load_warnings::too_much_layer_data::data_type::color,
-            current_layer_alpha
-         );
-         intfc.log_load_warning(notice);
-      }
       if (current_dalc > this->directional_ambient_lighting.list.size()) {
          specific_load_warnings::extra_directional_ambient_lighting_params notice(
             this->stub,
@@ -423,20 +400,24 @@ namespace dovah::loaded_forms {
             subrecord.write(layer.speed.x.raw);
          subrecord.close();
       }
-      for (auto& layer : this->clouds.layers) {
+      {
          auto& subrecord = record.open_next_subrecord('PNAM');
-         layer.time_of_day.sunrise.color.save(subrecord);
-         layer.time_of_day.day.color.save(subrecord);
-         layer.time_of_day.sunset.color.save(subrecord);
-         layer.time_of_day.night.color.save(subrecord);
+         for (auto& layer : this->clouds.layers) {
+            layer.time_of_day.sunrise.color.save(subrecord);
+            layer.time_of_day.day.color.save(subrecord);
+            layer.time_of_day.sunset.color.save(subrecord);
+            layer.time_of_day.night.color.save(subrecord);
+         }
          subrecord.close();
       }
-      for (auto& layer : this->clouds.layers) {
+      {
          auto& subrecord = record.open_next_subrecord('JNAM');
-         subrecord.write(layer.time_of_day.sunrise.alpha);
-         subrecord.write(layer.time_of_day.day.alpha);
-         subrecord.write(layer.time_of_day.sunset.alpha);
-         subrecord.write(layer.time_of_day.night.alpha);
+         for (auto& layer : this->clouds.layers) {
+            subrecord.write(layer.time_of_day.sunrise.alpha);
+            subrecord.write(layer.time_of_day.day.alpha);
+            subrecord.write(layer.time_of_day.sunset.alpha);
+            subrecord.write(layer.time_of_day.night.alpha);
+         }
          subrecord.close();
       }
       {

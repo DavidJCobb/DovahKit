@@ -2297,7 +2297,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weapon\invalid_resistance.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weapon\invalid_skill.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weather\extra_directional_ambient_lighting_params.h" />
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weather\too_much_layer_data.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\worldspace\is_own_parent.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\form_reference_type_mismatch.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\invalid_actor_value_index.h" />

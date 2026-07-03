@@ -8963,9 +8963,6 @@
     <ClInclude Include="dovah\forms\structs\directional_ambient_lighting_colors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weather\too_much_layer_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weather\extra_directional_ambient_lighting_params.h">
       <Filter>Header Files</Filter>
     </ClInclude>
