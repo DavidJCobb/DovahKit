@@ -681,8 +681,10 @@ void DKBSABrowseDialog::setSpecialValidation(SpecialValidation o) {
 }
 
 std::expected<QModelIndex, DKBSABrowseDialog::path_resolution_failure> DKBSABrowseDialog::_try_resolve_path(const QModelIndex& relative_to, const QList<QStringView>& segments) {
-   auto       qmi =  relative_to;
    const auto size = segments.size();
+   if (size == 0)
+      return relative_to;
+   auto qmi = relative_to;
    for (size_t i = 0; i < size - 1; ++i) {
       auto child_qmi = this->model->indexOfFolder(segments[i].toString().toLower(), qmi);
       if (!child_qmi.isValid()) {
@@ -824,11 +826,13 @@ void DKBSABrowseDialog::_try_navigate(QString path) {
                //
                auto ps = segments;
                ps.pop_back();
-               auto res = this->_try_resolve_path(this->_current_directory_qmi(), ps);
-               assert(res.has_value());
-               auto qmi = res.value();
-               assert(this->model->isFolder(qmi));
-               this->_set_current_directory_qmi(qmi);
+               if (!ps.empty()) {
+                  auto res = this->_try_resolve_path(this->_current_directory_qmi(), ps);
+                  assert(res.has_value());
+                  auto qmi = res.value();
+                  assert(this->model->isFolder(qmi));
+                  this->_set_current_directory_qmi(qmi);
+               }
             }
             this->subwidgets.filename->setText(segments.back().toString());
             QMessageBox::critical(
