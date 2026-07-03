@@ -99,7 +99,6 @@ FormDialogSpell::FormDialogSpell(dovah::form_stub& stub, QWidget* parent) : QDia
       this->ui.school->setText(text);
 
       this->_update_auto_calc();
-      this->_update_effect_consistency();
       this->_update_effect_parameters_enable_states();
    });
 
@@ -115,18 +114,18 @@ FormDialogSpell::FormDialogSpell(dovah::form_stub& stub, QWidget* parent) : QDia
 
    QObject::connect(this->ui.casting, &QComboBox::currentIndexChanged, this, [this]() {
       this->ui.effects->setCastingType((dovah::magic_casting_type)this->ui.casting->currentData().toInt());
-      this->_update_effect_consistency();
+      this->_update_effect_parameters_enable_states();
    });
    QObject::connect(this->ui.delivery, &QComboBox::currentIndexChanged, this, [this]() {
       this->ui.effects->setDeliveryType((dovah::magic_delivery_type)this->ui.delivery->currentData().toInt());
-      this->_update_effect_consistency();
+      this->_update_effect_parameters_enable_states();
    });
    {
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
          if (!stub || stub->form_type != dovah::form_type::magic_effect)
             return;
-         this->_update_effect_consistency(stub);
+         this->_update_effect_parameters_enable_states(stub);
       });
    }
 
@@ -241,7 +240,7 @@ void FormDialogSpell::_update_condition_explanation() {
       this->ui.conditionExplanationStack->setCurrentWidget(this->ui.conditionExplanationNormal);
    }
 }
-void FormDialogSpell::_update_effect_consistency(dovah::form_stub* changed) {
+void FormDialogSpell::_update_effect_parameters_enable_states(dovah::form_stub* changed) {
    auto effect_stubs = this->ui.effects->magicEffects();
    if (effect_stubs.empty()) {
       this->ui.casting->setEnabled(true);
@@ -269,9 +268,4 @@ void FormDialogSpell::_update_effect_consistency(dovah::form_stub* changed) {
    }
    this->ui.casting->setEnabled(inconsistent);
    this->ui.delivery->setEnabled(inconsistent);
-}
-void FormDialogSpell::_update_effect_parameters_enable_states() {
-   bool enable = this->ui.effects->effectCount() == 0;
-   this->ui.casting->setEnabled(enable);
-   this->ui.delivery->setEnabled(enable);
 }

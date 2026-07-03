@@ -24,6 +24,5 @@ class FormDialogEnchantment :
       virtual void _save_impl() override;
 
       void _update_auto_calc();
-      void _update_effect_consistency(dovah::form_stub* changed = nullptr);
-      void _update_effect_parameters_enable_states();
+      void _update_effect_parameters_enable_states(dovah::form_stub* changed = nullptr);
 };
