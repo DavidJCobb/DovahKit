@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogWeapon</class>
  <widget class="QDialog" name="FormDialogWeapon">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>739</width>
+    <height>949</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Weapon</string>
   </property>
@@ -807,7 +815,11 @@
             </widget>
            </item>
            <item>
-            <widget class="QPlainTextEdit" name="description"/>
+            <widget class="QPlainTextEdit" name="description">
+             <property name="whatsThis">
+              <string>An optional description for this item, which will be displayed in the &quot;item card&quot; widget in the inventory menu. If no description is provided and the weapon has (or gains) an enchantment, then the description from that enchantment will be used.</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>

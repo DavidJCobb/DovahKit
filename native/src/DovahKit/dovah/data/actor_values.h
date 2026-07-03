@@ -20,6 +20,7 @@ namespace dovah {
          enum type : uint32_t {
             hostile_effects_scale_with_difficulty = 1 <<  1, // used for combat-related magic skills
             special_stat_clamps_as_nonzero        = 1 <<  2, // only does anything if `clamp_as_special_stat` is set
+            is_magic_school_skill                 = 1 <<  2, // overlaps `special_stat_clamps_as_nonzero`. used by the CK to decide what skills to show in Magic Effect schools drop-down
             clamp_as_special_stat                 = 1 <<  3, // range is [0, 10] or, if `special_stat_clamps_as_nonzero` is set, [1, 10]
             clamp_as_skill                        = 1 <<  4, // range is [0, 100]
             can_have_modifiers                    = 1 <<  5, // the value can have "permanent," "temporary," and "damage" modifiers
@@ -29,6 +30,7 @@ namespace dovah {
             enumeration                           = 1 <<  8, // the values are an enumeration -- predefined names, rather than arbitrary numbers
             inverted                              = 1 <<  9, // damaging the AV increases its value; restoring the AV decreases its value. used for AVs for which higher values = bad
             base_value_computed_from_race         = 1 << 11, // base value computed from each individual actor. AI process cached values are updated on race change.
+            is_limb_system_stat                   = 1 << 13, // hidden from most AV/skill drop-downs in the CK; only set on limb condition AVs and IgnoreCrippledLimbs
             cannot_be_altered_by_scripts          = 1 << 14, // Papyrus functions throw an error if asked to modify the value
             base_value_is_always_zero             = 1 << 15,
             base_value_is_always_one              = 1 << 16, // used for some multipliers, but not all of them, because Bethesda made some mistakes
@@ -296,6 +298,7 @@ namespace dovah {
       actor_value_info{ // Alteration
          .flags  = (
             actor_value_info::flag::hostile_effects_scale_with_difficulty | 
+            actor_value_info::flag::is_magic_school_skill | 
             actor_value_info::flag::clamp_as_skill | 
             actor_value_info::flag::ai_process_caches_current_value | 
             actor_value_info::flag::ai_process_caches_max_value
@@ -307,7 +310,8 @@ namespace dovah {
       },
       actor_value_info{ // Conjuration
          .flags  = (
-            actor_value_info::flag::hostile_effects_scale_with_difficulty | 
+            actor_value_info::flag::hostile_effects_scale_with_difficulty |
+            actor_value_info::flag::is_magic_school_skill | 
             actor_value_info::flag::clamp_as_skill | 
             actor_value_info::flag::ai_process_caches_current_value | 
             actor_value_info::flag::ai_process_caches_max_value
@@ -320,6 +324,7 @@ namespace dovah {
       actor_value_info{ // Destruction
          .flags  = (
             actor_value_info::flag::hostile_effects_scale_with_difficulty | 
+            actor_value_info::flag::is_magic_school_skill | 
             actor_value_info::flag::clamp_as_skill | 
             actor_value_info::flag::ai_process_caches_current_value | 
             actor_value_info::flag::ai_process_caches_max_value
@@ -332,6 +337,7 @@ namespace dovah {
       actor_value_info{ // Illusion
          .flags  = (
             actor_value_info::flag::hostile_effects_scale_with_difficulty | 
+            actor_value_info::flag::is_magic_school_skill | 
             actor_value_info::flag::clamp_as_skill | 
             actor_value_info::flag::ai_process_caches_current_value | 
             actor_value_info::flag::ai_process_caches_max_value
@@ -344,6 +350,7 @@ namespace dovah {
       actor_value_info{ // Restoration
          .flags  = (
             actor_value_info::flag::hostile_effects_scale_with_difficulty | 
+            actor_value_info::flag::is_magic_school_skill | 
             actor_value_info::flag::clamp_as_skill | 
             actor_value_info::flag::ai_process_caches_current_value | 
             actor_value_info::flag::ai_process_caches_max_value
@@ -554,6 +561,7 @@ namespace dovah {
          .flags  = (
             actor_value_info::flag::can_have_modifiers | 
             actor_value_info::flag::base_value_computed_from_race | 
+            actor_value_info::flag::is_limb_system_stat | 
             actor_value_info::flag::base_value_is_always_one_hundred
          ),
          .formID = 0x5D5,
@@ -565,6 +573,7 @@ namespace dovah {
          .flags  = (
             actor_value_info::flag::can_have_modifiers | 
             actor_value_info::flag::base_value_computed_from_race | 
+            actor_value_info::flag::is_limb_system_stat | 
             actor_value_info::flag::base_value_is_always_one_hundred
          ),
          .formID = 0x5D6,
@@ -576,6 +585,7 @@ namespace dovah {
          .flags  = (
             actor_value_info::flag::can_have_modifiers | 
             actor_value_info::flag::base_value_computed_from_race | 
+            actor_value_info::flag::is_limb_system_stat | 
             actor_value_info::flag::base_value_is_always_one_hundred
          ),
          .formID = 0x5D7,
@@ -587,6 +597,7 @@ namespace dovah {
          .flags  = (
             actor_value_info::flag::can_have_modifiers | 
             actor_value_info::flag::base_value_computed_from_race | 
+            actor_value_info::flag::is_limb_system_stat | 
             actor_value_info::flag::base_value_is_always_one_hundred
          ),
          .formID = 0x5D8,
@@ -598,6 +609,7 @@ namespace dovah {
          .flags  = (
             actor_value_info::flag::can_have_modifiers | 
             actor_value_info::flag::base_value_computed_from_race | 
+            actor_value_info::flag::is_limb_system_stat | 
             actor_value_info::flag::base_value_is_always_one_hundred
          ),
          .formID = 0x5D9,
@@ -609,6 +621,7 @@ namespace dovah {
          .flags  = (
             actor_value_info::flag::can_have_modifiers | 
             actor_value_info::flag::base_value_computed_from_race | 
+            actor_value_info::flag::is_limb_system_stat | 
             actor_value_info::flag::base_value_is_always_one_hundred
          ),
          .formID = 0x5DA,
@@ -620,6 +633,7 @@ namespace dovah {
          .flags  = (
             actor_value_info::flag::can_have_modifiers | 
             actor_value_info::flag::base_value_computed_from_race | 
+            actor_value_info::flag::is_limb_system_stat | 
             actor_value_info::flag::base_value_is_always_one_hundred
          ),
          .formID = 0x5DB,
@@ -676,7 +690,10 @@ namespace dovah {
          .type   = actor_value_type::status,
       },
       actor_value_info{ // IgnoreCrippledLimbs
-         .flags  = actor_value_info::flag::base_value_is_always_zero,
+         .flags  = (
+            actor_value_info::flag::base_value_is_always_zero | 
+            actor_value_info::flag::is_limb_system_stat
+         ),
          .formID = 0x5E2,
          .index  = 59,
          .name   = "IgnoreCrippledLimbs",

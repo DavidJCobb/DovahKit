@@ -93,11 +93,13 @@ FormDialogMagicEffect::FormDialogMagicEffect(dovah::form_stub& stub, QWidget* pa
       auto* widget = this->ui.skill;
       widget->clear();
       widget->addItem(tr("NONE"), -1);
-      widget->addItem(tr("Alteration"), (int)dovah::skill::alteration);
-      widget->addItem(tr("Conjuration"), (int)dovah::skill::conjuration);
-      widget->addItem(tr("Destruction"), (int)dovah::skill::destruction);
-      widget->addItem(tr("Illusion"), (int)dovah::skill::illusion);
-      widget->addItem(tr("Restoration"), (int)dovah::skill::restoration);
+      for (auto& av_info : dovah::all_actor_value_info) {
+         if (av_info.type != dovah::actor_value_type::skill)
+            continue;
+         if (!(av_info.flags & dovah::actor_value_info::flag::is_magic_school_skill))
+            continue;
+         widget->addItem(av_info.name.data(), (int)av_info.index);
+      }
    }
    this->ui.minSkill->setRange(0, 100);
    this->ui.assocItem1->setAllowedFormTypes({ dovah::form_type::file_header }); // Deliberately using an impossible form type here, to force the picker to empty.
