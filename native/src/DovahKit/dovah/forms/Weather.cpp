@@ -379,7 +379,7 @@ namespace dovah::loaded_forms {
          auto& path  = layer.texture;
          if (path.empty())
             continue;
-         record.write_string_subrecord('00TX' + i, path);
+         record.write_string_subrecord('00TX' + (i << 24), path);
       }
       {
          auto& subrecord = record.open_next_subrecord('LNAM');
