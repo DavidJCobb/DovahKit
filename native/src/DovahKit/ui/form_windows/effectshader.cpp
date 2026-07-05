@@ -6,7 +6,7 @@
 FormDialogEffectShader::FormDialogEffectShader(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
-   ui::shrink_dialog_on_show(*this);
+   ui::shrink_dialog_height_on_show(*this);
 
    this->ui.particleDebris->setAllowedFormType(dovah::form_type::debris);
    this->ui.soundAmbient->setAllowedFormType(dovah::form_type::sound_descriptor);

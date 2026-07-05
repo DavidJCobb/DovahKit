@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>619</width>
+    <width>864</width>
     <height>886</height>
    </rect>
   </property>
@@ -136,7 +136,11 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QComboBox" name="membraneBlendModeSrc"/>
+          <widget class="QComboBox" name="membraneBlendModeSrc">
+           <property name="whatsThis">
+            <string>When the EffectShader is applied to an object, this is the blend mode for the EffectShader's color. The blend mode is a value that the EffectShader's color will be multiplied by, before that color and the object's original color are combined together.</string>
+           </property>
+          </widget>
          </item>
          <item row="1" column="4">
           <widget class="QComboBox" name="membraneBlendZTest"/>
@@ -152,7 +156,11 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QComboBox" name="membraneBlendModeDst"/>
+          <widget class="QComboBox" name="membraneBlendModeDst">
+           <property name="whatsThis">
+            <string>When the EffectShader is applied to an object, this is the blend mode for the object's original color. The blend mode is a value that the original color will be multiplied by, before that color and the EffectShader's color are combined together.</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="3">
           <widget class="QLabel" name="label_4">
@@ -175,7 +183,11 @@
           </widget>
          </item>
          <item row="0" column="4">
-          <widget class="QComboBox" name="membraneBlendOp"/>
+          <widget class="QComboBox" name="membraneBlendOp">
+           <property name="whatsThis">
+            <string>When the EffectShader is applied to an object, this is the math operation that will be used to combine the EffectShader's color and the object's original color, after the colors are multiplied by whatever factors were specified as their blend modes. For this math operation, the EffectShader's color (the &quot;source color&quot;) is on the left, and the object's original color (the &quot;destination color&quot;) is on the right.</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="2">
           <spacer name="horizontalSpacer">
@@ -269,6 +281,12 @@
            </item>
            <item row="0" column="2" rowspan="5">
             <widget class="QFrame" name="frame">
+             <property name="minimumSize">
+              <size>
+               <width>315</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
              </property>
@@ -296,7 +314,7 @@
 
 If the Persistent Alpha Ratio is greater than the Full Alpha Ratio, then the shader will instantly switch from the Full Alpha Ratio to the Persistent Alpha Ratio after the Full Alpha Time elapses.
 
-The Alpha Pulse settings allow the alpha to fluctuate over the full lifetime of the shader, including during any fades. The Alpha Pulse Ratio defines the maximum ratio (multiplied by the Full or Persistent Alpha Ratio) by which the alpha can vary. The Alpha Pulse Frequency determines the length of the time period over which the alpha varies by ± the Alpha Pulse Ratio.</string>
+The Alpha Pulse settings allow the alpha to fluctuate over the full lifetime of the shader, including during any fades. The Alpha Pulse Amplitude defines the maximum magnitude (multiplied by the Full or Persistent Alpha Ratio) by which the alpha can vary. The Alpha Pulse Frequency determines the length of the time period over which the alpha varies by ± the Alpha Pulse Ratio.</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
