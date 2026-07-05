@@ -15,6 +15,7 @@ namespace dovah::notices::form_load_warnings::by_type::perk {
          )
          :
             base_form_load_warning(stub),
+            which_effect(which_effect),
             group_index(group_index),
             expected_group_count(expected_group_count)
          {}

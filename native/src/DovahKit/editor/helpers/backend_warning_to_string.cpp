@@ -1667,7 +1667,7 @@ namespace editor_helpers {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   return  QObject::tr(
                      "Perk %1 effect %2 claims to have only %3 condition groups, but data was loaded for "
-                     "condition group %4."
+                     "condition group %4 (numbered from 0, not 1)."
                   ).arg(subject).arg(casted->which_effect).arg(casted->expected_group_count).arg(casted->group_index);
                }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::entry_point_data_for_effect_of_other_type*>(&warning)) {
@@ -1716,7 +1716,7 @@ namespace editor_helpers {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   QString entry   = editor::localize::perk_entry_point(casted->entry_point);
                   QString format;
-                  if (casted->condition_group_counts.actual != casted->condition_group_counts.declared) {
+                  if (casted->condition_group_counts.actual != casted->condition_group_counts.expected) {
                      format = QObject::tr(
                         "Perk %1 effect %2 uses the \"%3\" entry point. Based on this, it should have %6 condition "
                         "groups. However, its DATA subrecord claimed to have at most %5 condition groups, and it "
