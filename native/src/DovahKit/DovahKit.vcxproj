@@ -2240,11 +2240,14 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\effect_entry_point_has_mismatched_type_for_function.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\effect_entry_point_params_specify_an_invalid_av.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\effect_header_has_invalid_size.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\entry_point_condition_group_out_of_bounds.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\entry_point_data_for_effect_of_other_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\invalid_effect_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\invalid_entry_point.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\orphaned_effect_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\orphaned_entry_point_conditions.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\unterminated_perk_effect.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\wrong_condition_group_count_for_entry_point.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_belongs_to_missing_alias.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_specifies_wrong_quest.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\papyrus_fragment_belongs_to_missing_log_entry.h" />
@@ -2314,6 +2317,7 @@
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\landscape\heightmap_contains_too_steep_a_slope.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\package\too_many_package_data_values.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\package\too_many_procedure_tree_branch_children.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_type\perk\too_many_condition_groups_for_perk_entry.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_log_entry_papyrus_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_scripted_aliases.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\race\biped_object_name_is_too_long.h" />
@@ -2411,7 +2415,9 @@
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
     <QtMoc Include="widgets\DKProgressBar.h" />
     <QtMoc Include="ui\utils\handlers\remove_rows_on_del_key.h" />
+    <ClInclude Include="ui\utils\replace_view_selected_rows.h" />
     <ClInclude Include="ui\utils\show_parent_scoped_modal.h" />
+    <ClInclude Include="ui\utils\with_view_selected_row.h" />
     <ClInclude Include="xaudio2\core_interface.h" />
     <ClInclude Include="xaudio2\operation_set_handle.h" />
     <QtMoc Include="xaudio2\simple_fuz_sound.h" />

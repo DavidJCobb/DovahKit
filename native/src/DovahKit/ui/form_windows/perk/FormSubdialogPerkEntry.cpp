@@ -73,6 +73,9 @@ FormSubdialogPerkEntry::FormSubdialogPerkEntry(dovah::loaded_forms::Perk& perk, 
    QObject::connect(this->ui.type, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormSubdialogPerkEntry::_update_options);
 }
 
+void FormSubdialogPerkEntry::setScriptListWidget(DKPapyrusBoundScriptListPane* widget) {
+   this->ui.entryPointParamsActivateChoice_Fragment->setSourceWidget(widget);
+}
 
 FormSubdialogPerkEntry::value_type FormSubdialogPerkEntry::value() const {
    value_type dst;
@@ -160,7 +163,7 @@ FormSubdialogPerkEntry::value_type FormSubdialogPerkEntry::value() const {
                auto* widget = qobject_cast<DKConditionList*>(this->ui.entryPointConditionsTabbox->widget(i));
                if (!widget)
                   break;
-               widget->exportTo(this->_state.form, dst_casted.conditions_by_entity[i].conditions);
+               widget->exportTo(this->_state.form, dst_casted.conditions_by_entity[i]);
             }
          }
          break;
@@ -224,7 +227,7 @@ void FormSubdialogPerkEntry::setValue(const value_type& src) {
          auto* widget = qobject_cast<DKConditionList*>(this->ui.entryPointConditionsTabbox->widget(i));
          if (!widget)
             break;
-         widget->importFrom(this->_state.form, casted->conditions_by_entity[i].conditions);
+         widget->importFrom(this->_state.form, casted->conditions_by_entity[i]);
       }
    }
 }
@@ -255,13 +258,23 @@ void FormSubdialogPerkEntry::_rebuild_entry_point_condition_tabs(const dovah::pe
       size = info->arg_count();
       for (size_t i = 0; i < size; ++i) {
          auto& subject = info->args[i];
-         auto* tab     = new DKConditionList(this);
+
+         // DKConditionList needs a "context" so it can actually allow editing of conditions. 
+         // If we're editing a Perk Entry that already exists, the context is set when we 
+         // import its data. However, if we're creating a new Perk Entry (such that this 
+         // dialog isn't pulling from something that already exists), we have to tell the 
+         // DKConditionList what form "owns" the conditions, so it can compute the context 
+         // from that information.
+         auto* tab = new DKConditionList(this);
+         tab->overrideOwningForm(this->_state.form);
+
          tabview->addTab(tab, QString(subject.name));
       }
    }
    if (!size) {
       auto* tab = new DKConditionList(this);
       tab->setEnabled(false);
+      tab->overrideOwningForm(this->_state.form);
       tabview->addTab(tab, "Perk Owner");
       tabview->setTabEnabled(0, false);
    }

@@ -17,6 +17,7 @@
    #include "./by_form_type/landscape/heightmap_contains_too_steep_a_slope.h"
    #include "./by_form_type/package/too_many_package_data_values.h"
    #include "./by_form_type/package/too_many_procedure_tree_branch_children.h"
+   #include "./by_form_type/perk/too_many_condition_groups_for_perk_entry.h"
    #include "./by_form_type/quest/too_many_log_entry_papyrus_fragments.h"
    #include "./by_form_type/quest/too_many_scripted_aliases.h"
    #include "./by_form_type/race/biped_object_name_is_too_long.h"

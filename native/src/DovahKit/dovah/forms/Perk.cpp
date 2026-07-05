@@ -167,8 +167,9 @@ namespace dovah::loaded_forms {
          subrecord.close();
       }
       record.write_formID_subrecord('NNAM', this->next_perk, true);
-      for (auto& effect : this->effects)
-         effect.save(record, intfc);
+      for (size_t i = 0; i < this->effects.size(); ++i) {
+         this->effects[i].save(record, intfc, i);
+      }
    }
    void Perk::_clear_impl() noexcept {
       this->script_data.clear(*this);

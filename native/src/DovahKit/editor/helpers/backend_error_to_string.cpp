@@ -403,6 +403,15 @@ namespace editor_helpers {
                      ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
                   }
                #pragma endregion
+               #pragma region perk
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_type::perk::too_many_condition_groups_for_perk_entry*>(&warning)) {
+                     return QObject::tr(
+                        "Perk %1 Entry #%2 attempts to define %3 condition groups. The file format can only encode up to "
+                        "%4 condition groups for a single perk entry.",
+                        disambig
+                     ).arg(subject).arg(casted->which_effect).arg(casted->size).arg(casted->max_serializable_size);
+                  }
+               #pragma endregion
                #pragma region quest
                   if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_type::quest::too_many_log_entry_papyrus_fragments*>(&warning)) {
                      return QObject::tr(

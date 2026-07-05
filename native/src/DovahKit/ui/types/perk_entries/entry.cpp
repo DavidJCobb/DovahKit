@@ -119,15 +119,14 @@ namespace ui::types::perk_entries {
                   }
                   for (size_t i = 0; i < src_data.condition_groups.size(); ++i) {
                      auto& src_group = src_data.condition_groups[i];
-                     auto  index     = src_group.which;
-                     if (index >= dst_data.conditions_by_entity.size())
+                     if (i >= dst_data.conditions_by_entity.size())
                         break;
-                     auto& dst_group = dst_data.conditions_by_entity[index];
-                     size_t size = src_group.conditions.size();
-                     dst_group.conditions.clear();
-                     dst_group.conditions.resize(size);
+                     auto& dst_group = dst_data.conditions_by_entity[i];
+                     size_t size = src_group.size();
+                     dst_group.clear();
+                     dst_group.resize(size);
                      for (size_t i = 0; i < size; ++i) {
-                        dst_group.conditions[i] = src_group.conditions[i];
+                        dst_group[i] = src_group[i];
                      }
                   }
                }
@@ -225,15 +224,23 @@ namespace ui::types::perk_entries {
          //
          auto& src_groups = casted_src.conditions_by_entity;
          auto& dst_groups = casted_dst.condition_groups;
-         for (size_t i = 0; i < src_groups.size(); ++i) {
+         size_t size_prior = dst_groups.size();
+         size_t size_after = src_groups.size();
+         if (size_prior < size_after)
+            dst_groups.resize(size_after);
+         for (size_t i = 0; i < size_after; ++i) {
+            auto& dst_group = dst_groups[i];
             auto& src_group = src_groups[i];
-            if (src_group.conditions.empty())
+            if (src_group.empty())
                continue;
-            auto& dst_group = dst_groups.emplace_back();
-            dst_group.which = i;
-            dst_group.conditions.reserve(src_group.conditions.size());
-            for (auto& cnd : src_group.conditions)
-               dst_group.conditions.append(perk, cnd);
+            dst_group.reserve(src_group.size());
+            for (auto& cnd : src_group)
+               dst_group.append(perk, cnd);
+         }
+         if (size_prior > size_after) {
+            for (size_t i = size_after; i < size_prior; ++i)
+               dst_groups[i].clear(perk);
+            dst_groups.resize(size_after);
          }
       }
    }
@@ -265,7 +272,7 @@ namespace ui::types::perk_entries {
             }
          }
          for (auto& cnd_list : casted_ptr->conditions_by_entity) {
-            for (auto& cnd : cnd_list.conditions)
+            for (auto& cnd : cnd_list)
                if (cnd.sever_outbound_references_to(&stub))
                   changed = true;
          }

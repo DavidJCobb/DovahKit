@@ -58,11 +58,8 @@ namespace ui::types::perk_entries {
    class entry_point_entry {
       public:
          constexpr bool operator==(const entry_point_entry&) const noexcept = default;
-         struct condition_group {
-            constexpr bool operator==(const condition_group&) const noexcept = default;
-            int8_t index = 0;
-            std::vector<ui::types::conditions::condition> conditions;
-         };
+
+         using condition_group = std::vector<ui::types::conditions::condition>;
 
       public:
          dovah::perk_entry_point     entry_point = dovah::perk_entry_point::activate;

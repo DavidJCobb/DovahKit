@@ -183,11 +183,12 @@ void PerkEntriesModel::setItem(size_t row, const value_type& src) {
 
    this->_re_sort_item(dst);
 }
-void PerkEntriesModel::addItem(const value_type& src) {
+QModelIndex PerkEntriesModel::addItem(const value_type& src) {
    Entry item;
    item.data = src;
    this->_recache_data(item);
-   this->_insert_item(item, true);
+   auto row = this->_insert_item(item, true);
+   return this->index(row, 0, {});
 }
 void PerkEntriesModel::deleteItem(size_t row) {
    if (row >= this->_data.size())
@@ -197,16 +198,17 @@ void PerkEntriesModel::deleteItem(size_t row) {
    this->endRemoveRows();
 }
 
-void PerkEntriesModel::_insert_item(const Entry& item, bool emit_model_sync_signals) {
+int PerkEntriesModel::_insert_item(const Entry& item, bool emit_model_sync_signals) {
    auto dst_it = this->_insertion_point_for(item);
+   auto row   = std::distance(this->_data.begin(), dst_it);
    if (emit_model_sync_signals) {
-      auto index = std::distance(this->_data.begin(), dst_it);
-      this->beginInsertRows({}, index, index);
+      this->beginInsertRows({}, row, row);
    }
    this->_data.insert(dst_it, item);
    if (emit_model_sync_signals) {
       this->endInsertRows();
    }
+   return row;
 }
 decltype(PerkEntriesModel::_data)::iterator PerkEntriesModel::_insertion_point_for(const Entry& item) {
    return std::upper_bound(

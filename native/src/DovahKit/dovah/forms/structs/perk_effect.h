@@ -13,16 +13,13 @@ namespace dovah::loaded_forms::structs {
          static constexpr const uint32_t subrecord_conditions = 'PRKC';
          static constexpr const uint32_t subrecord_end        = 'PRKF';
 
+         static constexpr const size_t max_available_condition_groups = std::numeric_limits<uint8_t>::max();
+
       public:
          enum class type : uint8_t {
             quest_and_stage,
             ability,
             entry_point,
-         };
-
-         struct condition_group {
-            int8_t which = 0; // PRKC
-            components::condition_list conditions; // CTDA[]
          };
 
          struct data_types { // poor man's namespace
@@ -38,7 +35,7 @@ namespace dovah::loaded_forms::structs {
             struct entry_point {
                perk_entry_point      entry = static_cast<perk_entry_point>(0);
                perk_entry_point_data function;
-               std::vector<condition_group> condition_groups;
+               std::vector<components::condition_list> condition_groups; // (PRKC+CTDA[])[]
             };
          };
 
@@ -58,7 +55,7 @@ namespace dovah::loaded_forms::structs {
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc, size_t which); // call when you see PRKE
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         void save(tes_record_writer&, load_order_interfaces::form_save& intfc);
+         void save(tes_record_writer&, load_order_interfaces::form_save& intfc, size_t which);
          
          void clone_from(const perk_effect& src, Form& my_owner) noexcept;
          void clear(Form& my_owner) noexcept;

@@ -3,11 +3,13 @@
 #include <string>
 #include <vector>
 #include <QDialog>
+#include <QPointer>
 #include "ui_FormSubdialogPerkEntry.h" // generated
 #include "ui/types/perk_entries/entry.h"
 namespace dovah::loaded_forms {
    class Perk;
 }
+class DKPapyrusBoundScriptListPane;
 
 class FormSubdialogPerkEntry : public QDialog {
    Q_OBJECT;
@@ -17,6 +19,8 @@ class FormSubdialogPerkEntry : public QDialog {
    public:
       FormSubdialogPerkEntry(dovah::loaded_forms::Perk&, QWidget* parent = nullptr);
 
+      void setScriptListWidget(DKPapyrusBoundScriptListPane*);
+
       value_type value() const;
       void setValue(const value_type&);
       
@@ -24,6 +28,7 @@ class FormSubdialogPerkEntry : public QDialog {
       Ui::FormSubdialogPerkEntry ui;
       struct {
          dovah::loaded_forms::Perk& form;
+         QPointer<DKPapyrusBoundScriptListPane> script_list_widget;
       } _state;
 
       void _update_options();

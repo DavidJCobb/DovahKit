@@ -11,6 +11,7 @@
 #include "../localize/package_data_type.h"
 #include "../localize/package_interrupt_override_type.h"
 #include "../localize/package_legacy_type.h"
+#include "../localize/perk_entry_point.h"
 #include "helpers/qt/strings.h"
 
 #include "dovah/form_stub.h"
@@ -1662,6 +1663,13 @@ namespace editor_helpers {
                      "The header is size %3, but the game will only accept size %4."
                   ).arg(subject).arg(casted->which_effect).arg(casted->size_seen).arg(casted->size_expected);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::entry_point_condition_group_out_of_bounds*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return  QObject::tr(
+                     "Perk %1 effect %2 claims to have only %3 condition groups, but data was loaded for "
+                     "condition group %4."
+                  ).arg(subject).arg(casted->which_effect).arg(casted->expected_group_count).arg(casted->group_index);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::entry_point_data_for_effect_of_other_type*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
                   QString signature = cobb::qt::four_cc_to_string(casted->subrecord);
@@ -1675,6 +1683,12 @@ namespace editor_helpers {
                   return  QObject::tr(
                      "Perk %1 effect %2 uses invalid effect type %3."
                   ).arg(subject).arg(casted->which_effect).arg(casted->seen_type);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::invalid_entry_point*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return  QObject::tr(
+                     "Perk %1 effect %2 uses invalid entry point index %3."
+                  ).arg(subject).arg(casted->which_effect).arg(casted->seen_entry_point);
                }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::orphaned_effect_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
@@ -1697,6 +1711,31 @@ namespace editor_helpers {
                      "Perk %1 effect %2 is missing its closing PRKF subrecord.",
                      disambig
                   ).arg(subject).arg(casted->which_effect);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::wrong_condition_group_count_for_entry_point*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString entry   = editor::localize::perk_entry_point(casted->entry_point);
+                  QString format;
+                  if (casted->condition_group_counts.actual != casted->condition_group_counts.declared) {
+                     format = QObject::tr(
+                        "Perk %1 effect %2 uses the \"%3\" entry point. Based on this, it should have %6 condition "
+                        "groups. However, its DATA subrecord claimed to have at most %5 condition groups, and it "
+                        "actually had %4 condition groups."
+                     );
+                  } else {
+                     format = QObject::tr(
+                        "Perk %1 effect %2 uses the \"%3\" entry point. Based on this, it should have %6 condition "
+                        "groups. However, it only has %5 condition groups."
+                     );
+                  }
+                  return format
+                     .arg(subject)
+                     .arg(casted->which_effect)
+                     .arg(entry)
+                     .arg(casted->condition_group_counts.actual)
+                     .arg(casted->condition_group_counts.declared)
+                     .arg(casted->condition_group_counts.expected)
+                  ;
                }
             #pragma endregion
             #pragma region quest

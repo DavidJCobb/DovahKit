@@ -58,7 +58,7 @@ class PerkEntriesModel : public QAbstractItemModel {
 
       value_type item(size_t row) const;
       void setItem(size_t row, const value_type&);
-      void addItem(const value_type&);
+      QModelIndex addItem(const value_type&);
       void deleteItem(size_t row);
 
    protected:
@@ -73,7 +73,7 @@ class PerkEntriesModel : public QAbstractItemModel {
       };
       std::vector<Entry> _data;
 
-      void _insert_item(const Entry& item, bool emit_model_sync_signals);
+      int _insert_item(const Entry& item, bool emit_model_sync_signals); // returns row index
       decltype(_data)::iterator _insertion_point_for(const Entry&);
       void _re_sort_item(const Entry&);
       void _re_sort_item(size_t row);

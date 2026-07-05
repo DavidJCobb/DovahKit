@@ -96,14 +96,7 @@ namespace ui::types::perk_entries {
       this->_set_function_type(info.value_type);
       if (prior != ep) {
          this->conditions_by_entity.clear();
-
-         size_t size = 0;
-         for (auto& arg : info.args) {
-            if (!arg.name || arg.name[0] == '\0')
-               break;
-            ++size;
-         }
-         this->conditions_by_entity.resize(size);
+         this->conditions_by_entity.resize(info.arg_count());
       }
    }
    void entry_point_entry::set_function(dovah::entry_point_function f) {

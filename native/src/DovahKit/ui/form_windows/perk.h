@@ -22,4 +22,8 @@ class FormDialogPerk :
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
+
+      void _try_add_entry();
+      void _edit_selected_row();
+      void _delete_selected_row();
 };

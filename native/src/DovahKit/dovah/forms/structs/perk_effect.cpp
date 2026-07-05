@@ -2,14 +2,23 @@
 #include "../_common_cpp.h"
 
 #include "../../notices/form_load_warnings/by_form_type/perk/effect_header_has_invalid_size.h"
+#include "../../notices/form_load_warnings/by_form_type/perk/entry_point_condition_group_out_of_bounds.h"
 #include "../../notices/form_load_warnings/by_form_type/perk/entry_point_data_for_effect_of_other_type.h"
 #include "../../notices/form_load_warnings/by_form_type/perk/invalid_effect_type.h"
+#include "../../notices/form_load_warnings/by_form_type/perk/invalid_entry_point.h"
 #include "../../notices/form_load_warnings/by_form_type/perk/orphaned_entry_point_conditions.h"
 #include "../../notices/form_load_warnings/by_form_type/perk/unterminated_perk_effect.h"
+#include "../../notices/form_load_warnings/by_form_type/perk/wrong_condition_group_count_for_entry_point.h"
+#include "../../notices/form_save_errors/by_form_type/perk/too_many_condition_groups_for_perk_entry.h"
+
+#include "../../data/perk_entry_points.h"
 
 namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_type::perk;
+   }
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_type::perk;
    }
 }
 
@@ -90,7 +99,9 @@ namespace dovah::loaded_forms::structs {
             break;
       }
       bool    terminated = false;
+      bool    in_a_condition_tab       = false;
       uint8_t perk_condition_tab_count = 0;
+      uint8_t current_condition_tab    = 0;
       size_t  orphaned_condition_count = 0;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -123,6 +134,15 @@ namespace dovah::loaded_forms::structs {
                         subrecord.read(casted.entry);
                         subrecord.read(casted.function.function);
                         subrecord.read(perk_condition_tab_count);
+
+                        if ((size_t)casted.entry >= all_perk_entry_points.size()) {
+                           specific_load_warnings::invalid_entry_point notice(
+                              intfc.target_stub,
+                              which,
+                              (size_t)casted.entry
+                           );
+                           intfc.log_load_warning(notice);
+                        }
                      }
                      break;
                }
@@ -130,8 +150,22 @@ namespace dovah::loaded_forms::structs {
             case subrecord_conditions:
                if (this->get_type() == type::entry_point) {
                   auto& casted = std::get<data_types::entry_point>(this->data);
-                  auto& group  = casted.condition_groups.emplace_back();
-                  subrecord.read(group.which);
+
+                  in_a_condition_tab = true;
+                  subrecord.read(current_condition_tab);
+                  if (current_condition_tab >= perk_condition_tab_count) {
+                     specific_load_warnings::entry_point_condition_group_out_of_bounds notice(
+                        intfc.target_stub,
+                        which,
+                        current_condition_tab,
+                        perk_condition_tab_count
+                     );
+                     intfc.log_load_warning(notice);
+
+                     if (current_condition_tab >= casted.condition_groups.size()) {
+                        casted.condition_groups.resize(current_condition_tab + 1);
+                     }
+                  }
                } else {
                   specific_load_warnings::entry_point_data_for_effect_of_other_type notice(
                      intfc.target_stub,
@@ -144,11 +178,15 @@ namespace dovah::loaded_forms::structs {
             case 'CTDA':
                if (this->get_type() == type::entry_point) {
                   auto& casted = std::get<data_types::entry_point>(this->data);
-                  if (casted.condition_groups.empty()) {
+                  if (!in_a_condition_tab) {
                      ++orphaned_condition_count;
+                     if (casted.condition_groups.empty()) {
+                        casted.condition_groups.resize(1);
+                     }
                      break;
                   }
-                  casted.condition_groups.back().conditions.read_next(record, intfc);
+                  assert(current_condition_tab <= casted.condition_groups.size());
+                  casted.condition_groups[current_condition_tab].read_next(record, intfc);
                } else {
                   specific_load_warnings::entry_point_data_for_effect_of_other_type notice(
                      intfc.target_stub,
@@ -185,6 +223,25 @@ namespace dovah::loaded_forms::structs {
             orphaned_condition_count
          );
          intfc.log_load_warning(notice);
+      }
+      if (this->get_type() == type::entry_point) {
+         auto& casted = std::get<data_types::entry_point>(this->data);
+         if ((size_t)casted.entry < all_perk_entry_points.size()) {
+            const auto&  entry_point_info = all_perk_entry_points[(size_t)casted.entry];
+            const size_t actual_count     = casted.condition_groups.size();
+            const auto   expected_count   = entry_point_info.arg_count();
+            if (perk_condition_tab_count != expected_count || (actual_count > perk_condition_tab_count && actual_count != expected_count)) {
+               specific_load_warnings::wrong_condition_group_count_for_entry_point notice(
+                  intfc.target_stub,
+                  which,
+                  casted.entry,
+                  actual_count,
+                  perk_condition_tab_count,
+                  expected_count
+               );
+               intfc.log_load_warning(notice);
+            }
+         }
       }
       if (!terminated) {
          specific_load_warnings::unterminated_perk_effect notice(
@@ -231,8 +288,8 @@ namespace dovah::loaded_forms::structs {
             case 'CTDA':
                if (effect_type != type::entry_point)
                   break;
-               if (!has_any_condition_groups)
-                  break;
+               //if (!has_any_condition_groups)
+               //   break;
                components::condition::generate_use_info(record, uib);
                break;
             case perk_entry_point_data::subrecord_function_type:
@@ -247,7 +304,7 @@ namespace dovah::loaded_forms::structs {
       }
       uib.add_outbound_reference(quest_or_ability);
    }
-   void perk_effect::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void perk_effect::save(tes_record_writer& record, load_order_interfaces::form_save& intfc, size_t which) {
       {
          auto& subrecord = record.open_next_subrecord(subrecord_start);
          subrecord.write(this->get_type());
@@ -282,22 +339,24 @@ namespace dovah::loaded_forms::structs {
                   subrecord.write(casted.entry);
                   subrecord.write(casted.function.function);
 
-                  uint8_t group_count = 0;
-                  for (auto& group : casted.condition_groups) {
-                     if (group.conditions.empty())
-                        continue;
-                     ++group_count;
+                  if (casted.condition_groups.size() > max_available_condition_groups) {
+                     auto notice = specific_save_errors::too_many_condition_groups_for_perk_entry(
+                        *intfc.target_stub,
+                        which,
+                        casted.condition_groups.size()
+                     );
+                     intfc.throw_save_error(notice);
                   }
+                  uint8_t group_count = casted.condition_groups.size();
                   subrecord.write(group_count);
                   subrecord.close();
                }
-               for (auto& group : casted.condition_groups) { // PRKC+CTDA[]
-                  if (group.conditions.empty())
-                     continue;
+               for (size_t i = 0; i < casted.condition_groups.size(); ++i) {
+                  auto& group     = casted.condition_groups[i];
                   auto& subrecord = record.open_next_subrecord(subrecord_conditions);
-                  subrecord.write(group.which);
+                  subrecord.write((uint8_t)i);
                   subrecord.close();
-                  for (auto& cnd : group.conditions)
+                  for (auto& cnd : group)
                      cnd.save(record, intfc);
                }
                casted.function.save(record, intfc);
@@ -334,14 +393,13 @@ namespace dovah::loaded_forms::structs {
 
                size_t size = src_data.condition_groups.size();
                for (auto& group : dst_data.condition_groups)
-                  group.conditions.clear(my_owner);
+                  group.clear(my_owner);
                dst_data.condition_groups.clear();
                dst_data.condition_groups.resize(size);
                for (size_t i = 0; i < size; ++i) {
                   auto& src_group = src_data.condition_groups[i];
                   auto& dst_group = dst_data.condition_groups[i];
-                  dst_group.which = src_group.which;
-                  dst_group.conditions.append_all_of(my_owner, src_group.conditions);
+                  dst_group.append_all_of(my_owner, src_group);
                }
             }
             break;
@@ -376,7 +434,7 @@ namespace dovah::loaded_forms::structs {
                auto& casted = std::get<data_types::entry_point>(this->data);
                casted.function.sever_outbound_references_to(other, my_owner);
                for (auto& group : casted.condition_groups)
-                  for (auto& cnd : group.conditions)
+                  for (auto& cnd : group)
                      cnd.sever_outbound_references_to(other, my_owner);
             }
             break;

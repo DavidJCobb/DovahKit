@@ -2,9 +2,11 @@
 #include "dovah/forms/components/papyrus/fragment_data/perk_fragment_data.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/replace_view_selected_rows.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
+#include "ui/utils/with_view_selected_row.h"
 #include "./perk/FormSubdialogPerkEntry.h"
 #include "./perk/PerkEntriesModel.h"
 
@@ -35,6 +37,13 @@ FormDialogPerk::FormDialogPerk(dovah::form_stub& stub, QWidget* parent) : QDialo
          header.setColumnFlex(PerkEntriesModel::Column::Data3,    1, 0, widths[5]);
          header.setColumnFlex(PerkEntriesModel::Column::Data4,    1, 0, widths[6]);
       });
+
+      QObject::connect(widget, &QAbstractItemView::doubleClicked, this, [this](const QModelIndex& qmi) {
+         if (!qmi.isValid())
+            return;
+         ui::replace_view_selected_rows(*this->ui.entries, qmi);
+         this->_edit_selected_row();
+      });
       
       auto* sel_model = widget->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, model](const QItemSelection& sel) {
@@ -46,32 +55,9 @@ FormDialogPerk::FormDialogPerk(dovah::form_stub& stub, QWidget* parent) : QDialo
          this->ui.buttonEntriesEdit->setEnabled(true);
          this->ui.buttonEntriesRemove->setEnabled(true);
       });
-      QObject::connect(this->ui.buttonEntriesAdd, &QPushButton::clicked, this, [this, model, sel_model]() {
-         FormSubdialogPerkEntry modal(*this->form, this);
-         if (modal.exec() == QDialog::Accepted) {
-            model->addItem(modal.value());
-         }
-      });
-      QObject::connect(this->ui.buttonEntriesEdit, &QPushButton::clicked, this, [this, model, sel_model]() {
-         auto sel = sel_model->selectedRows();
-         if (sel.empty())
-            return;
-         auto row   = sel[0].row();
-         auto value = model->item(row);
-         FormSubdialogPerkEntry modal(*this->form, this);
-         modal.setValue(value);
-         if (modal.exec() == QDialog::Accepted) {
-            value = modal.value();
-            model->setItem(row, value);
-         }
-      });
-      QObject::connect(this->ui.buttonEntriesRemove, &QPushButton::clicked, this, [this, model, sel_model]() {
-         auto sel = sel_model->selectedRows();
-         if (sel.empty())
-            return;
-         auto row = sel[0].row();
-         model->deleteItem(row);
-      });
+      QObject::connect(this->ui.buttonEntriesAdd, &QPushButton::clicked, this, &FormDialogPerk::_try_add_entry);
+      QObject::connect(this->ui.buttonEntriesEdit, &QPushButton::clicked, this, &FormDialogPerk::_edit_selected_row);
+      QObject::connect(this->ui.buttonEntriesRemove, &QPushButton::clicked, this, &FormDialogPerk::_delete_selected_row);
    }
 
    this->load(); // this creates the working copy.
@@ -138,4 +124,38 @@ void FormDialogPerk::_save_impl() {
    }
 
    this->ui.scriptListPane->commit();
+}
+
+void FormDialogPerk::_try_add_entry() {
+   FormSubdialogPerkEntry modal(*this->form, this);
+   modal.setScriptListWidget(this->ui.scriptListPane);
+   if (modal.exec() == QDialog::Accepted) {
+     auto qmi = this->_models.entries->addItem(modal.value());
+     if (qmi.isValid())
+        ui::replace_view_selected_rows(*this->ui.entries, qmi);
+   }
+}
+void FormDialogPerk::_edit_selected_row() {
+   ui::with_view_selected_row(
+      *this->ui.entries,
+      [this](int row) {
+         auto* model = this->_models.entries;
+         auto  value = model->item(row);
+         FormSubdialogPerkEntry modal(*this->form, this);
+         modal.setScriptListWidget(this->ui.scriptListPane);
+         modal.setValue(value);
+         if (modal.exec() == QDialog::Accepted) {
+            value = modal.value();
+            model->setItem(row, value);
+         }
+      }
+   );
+}
+void FormDialogPerk::_delete_selected_row() {
+   ui::with_view_selected_row(
+      *this->ui.entries,
+      [this](int row) {
+         this->_models.entries->deleteItem(row);
+      }
+   );
 }
