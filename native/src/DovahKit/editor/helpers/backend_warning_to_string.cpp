@@ -7,6 +7,7 @@
 #include "./face_fx_phoneme_name.h"
 #include "./form_identifiers_to_string.h"
 #include "./form_type_name_to_string.h"
+#include "../localize/entry_point_function.h"
 #include "../localize/limb.h"
 #include "../localize/package_data_type.h"
 #include "../localize/package_interrupt_override_type.h"
@@ -1566,60 +1567,9 @@ namespace editor_helpers {
                }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::effect_entry_point_has_mismatched_type_for_function*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
-                  QString function;
+                  QString function  = editor::localize::entry_point_function(casted->function);
                   QString type_seen;
                   QString type_expected;
-
-                  switch (casted->function) {
-                     case dovah::entry_point_function::absolute_value:
-                        function = QObject::tr("Absolute Value", "entry point function");
-                        break;
-                     case dovah::entry_point_function::add_activate_choice:
-                        function = QObject::tr("Add Activate Choice", "entry point function");
-                        break;
-                     case dovah::entry_point_function::add_actor_value_mult:
-                        function = QObject::tr("Add Actor Value Mult", "entry point function");
-                        break;
-                     case dovah::entry_point_function::add_leveled_list:
-                        function = QObject::tr("Add Leveled List", "entry point function");
-                        break;
-                     case dovah::entry_point_function::add_range_to_value:
-                        function = QObject::tr("Add Range to Value", "entry point function");
-                        break;
-                     case dovah::entry_point_function::add_value:
-                        function = QObject::tr("Add Value", "entry point function");
-                        break;
-                     case dovah::entry_point_function::multiply_actor_value_mult:
-                        function = QObject::tr("Absolute Value", "entry point function");
-                        break;
-                     case dovah::entry_point_function::multiply_one_plus_av_mult:
-                        function = QObject::tr("Multiply 1 + Actor Value Mult", "entry point function");
-                        break;
-                     case dovah::entry_point_function::multiply_value:
-                        function = QObject::tr("Multiply Value", "entry point function");
-                        break;
-                     case dovah::entry_point_function::negative_absolute_value:
-                        function = QObject::tr("Negative Absolute Value", "entry point function");
-                        break;
-                     case dovah::entry_point_function::none:
-                        function = QObject::tr("None", "entry point function");
-                        break;
-                     case dovah::entry_point_function::select_spell:
-                        function = QObject::tr("Select Spell", "entry point function");
-                        break;
-                     case dovah::entry_point_function::select_text:
-                        function = QObject::tr("Select Text", "entry point function");
-                        break;
-                     case dovah::entry_point_function::set_text:
-                        function = QObject::tr("Set Text", "entry point function");
-                        break;
-                     case dovah::entry_point_function::set_to_actor_value_mult:
-                        function = QObject::tr("Set to Actor Value Mult", "entry point function");
-                        break;
-                     case dovah::entry_point_function::set_value:
-                        function = QObject::tr("Set Value", "entry point function");
-                        break;
-                  }
 
                   auto _type_to_string = [](dovah::entry_point_function_type t) -> QString {
                      switch (t) {

@@ -10,6 +10,8 @@
 
 #pragma region EffectFilter
    /*virtual*/ bool DKMagicEffectListItemDialog::EffectFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
+      if (&stub == this->_do_not_filter_this_stub)
+         return true;
       auto& fic  = dovahkit::subsystems::form_info_cache::core::get();
       auto* info = fic.get_magic_effect_info(stub);
       if (!info)
@@ -29,6 +31,16 @@
       this->_casting_type  = c;
       this->_delivery_type = d;
       this->_refilter_all_forms();
+   }
+   void DKMagicEffectListItemDialog::EffectFilter::set_exempted_stub(dovah::form_stub* stub) {
+      auto* prior = this->_do_not_filter_this_stub;
+      if (prior == stub)
+         return;
+      this->_do_not_filter_this_stub = stub;
+      if (prior)
+         this->_refilter_form(*prior);
+      if (stub)
+         this->_refilter_form(*stub);
    }
 #pragma endregion
 
@@ -124,6 +136,7 @@ void DKMagicEffectListItemDialog::setData(const DKMagicEffectListModel::Item& sr
    };
 
    this->ui.form->setFormStub(src.magic_effect);
+   this->_effect_filter.set_exempted_stub(src.magic_effect);
 
    this->ui.area->setValue(src.area);
    this->ui.durationUnit->setCurrentIndex(0);

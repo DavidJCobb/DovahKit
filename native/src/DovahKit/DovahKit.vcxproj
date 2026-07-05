@@ -1357,6 +1357,7 @@
     <ClCompile Include="ui\utils\bind.cpp" />
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="ui\utils\enable_inbound_drag_and_drop_insertions.cpp" />
+    <ClCompile Include="ui\utils\enum_dropdown_configs\actor_value_index.cpp" />
     <ClCompile Include="ui\utils\enum_dropdown_configs\detection_loudness.cpp" />
     <ClCompile Include="ui\utils\enum_dropdown_configs\skill.cpp" />
     <ClCompile Include="ui\utils\form_list_pane_columns\music_track_type.cpp" />
@@ -2415,6 +2416,9 @@
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
     <QtMoc Include="widgets\DKProgressBar.h" />
     <QtMoc Include="ui\utils\handlers\remove_rows_on_del_key.h" />
+    <ClInclude Include="ui\utils\enum_dropdown_configs\actor_value_index.h" />
+    <ClInclude Include="ui\utils\enum_dropdown_configs\magic_school_av_index.h" />
+    <ClInclude Include="ui\utils\enum_dropdown_configs\resistance_av_index.h" />
     <ClInclude Include="ui\utils\replace_view_selected_rows.h" />
     <ClInclude Include="ui\utils\show_parent_scoped_modal.h" />
     <ClInclude Include="ui\utils\with_view_selected_row.h" />

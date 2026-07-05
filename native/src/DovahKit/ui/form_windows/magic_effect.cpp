@@ -2,6 +2,8 @@
 #include <limits>
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/enum_dropdown_configs/detection_loudness.h"
+#include "ui/utils/enum_dropdown_configs/magic_school_av_index.h"
+#include "ui/utils/enum_dropdown_configs/resistance_av_index.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "./magic_effect/MagicEffectSummonableActorPickerFilter.h"
@@ -89,32 +91,12 @@ FormDialogMagicEffect::FormDialogMagicEffect(dovah::form_stub& stub, QWidget* pa
          this->ui.flagSnapToNavmesh->setEnabled(delivery == dovah::magic_delivery_type::target_location);
       });
    }
-   {
-      auto* widget = this->ui.skill;
-      widget->clear();
-      widget->addItem(tr("NONE"), -1);
-      for (auto& av_info : dovah::all_actor_value_info) {
-         if (av_info.type != dovah::actor_value_type::skill)
-            continue;
-         if (!(av_info.flags & dovah::actor_value_info::flag::is_magic_school_skill))
-            continue;
-         widget->addItem(av_info.name.data(), (int)av_info.index);
-      }
-   }
+   ui::enum_dropdown_configs::magic_school_av_index(this->ui.skill);
    this->ui.minSkill->setRange(0, 100);
    this->ui.assocItem1->setAllowedFormTypes({ dovah::form_type::file_header }); // Deliberately using an impossible form type here, to force the picker to empty.
    this->ui.assocItem2->setAllowedFormTypes({ dovah::form_type::file_header }); // Deliberately using an impossible form type here, to force the picker to empty.
    ui::set_range<float>(this->ui.secondAVWeight);
-   {
-      auto* widget = this->ui.resistAV;
-      widget->clear();
-      widget->addItem(tr("NONE"), -1);
-      for (auto& av_info : dovah::all_actor_value_info) {
-         if (av_info.type != dovah::actor_value_type::resistance)
-            continue;
-         widget->addItem(av_info.name.data(), (int)av_info.index);
-      }
-   }
+   ui::enum_dropdown_configs::resistance_av_index(this->ui.resistAV);
    this->ui.perkToApply->setAllowedFormType(dovah::form_type::perk);
    ui::set_unsigned_range<float>(this->ui.taperDuration);
    ui::set_range<float>(this->ui.taperWeight);

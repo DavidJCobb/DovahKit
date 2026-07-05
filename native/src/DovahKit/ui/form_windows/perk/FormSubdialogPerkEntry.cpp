@@ -3,6 +3,7 @@
 #include "dovah/forms/Perk.h"
 #include "editor/localize/entry_point_function.h"
 #include "editor/localize/perk_entry_point.h"
+#include "ui/utils/enum_dropdown_configs/actor_value_index.h"
 #include "ui/utils/set_range.h"
 #include "widgets/DKConditionList.h"
 
@@ -32,13 +33,10 @@ FormSubdialogPerkEntry::FormSubdialogPerkEntry(dovah::loaded_forms::Perk& perk, 
 
    this->ui.abilityForm->setAllowedFormType(dovah::form_type::spell);
 
-   {
-      auto* widget = this->ui.entryPointParamsOneAVOneFloat_AV;
-      widget->clear();
-      for (auto& av_info : dovah::all_actor_value_info) {
-         widget->addItem(av_info.name.data(), (int)av_info.index);
-      }
-   }
+   ui::enum_dropdown_configs::actor_value_index<ui::enum_dropdown_configs::actor_value_index_options{
+      .allow_none = false,
+      .sorted     = true,
+   }>(this->ui.entryPointParamsOneAVOneFloat_AV);
    this->ui.entryPointParamsActivateChoice_Spell->setAllowedFormType(dovah::form_type::spell);
 
    QObject::connect(this->ui.entryPointType, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
@@ -67,6 +65,7 @@ FormSubdialogPerkEntry::FormSubdialogPerkEntry(dovah::loaded_forms::Perk& perk, 
          auto name = editor::localize::perk_entry_point(info.id);
          widget->addItem(name, (int)info.id);
       }
+      widget->model()->sort(0);
    }
 
    this->_update_options();

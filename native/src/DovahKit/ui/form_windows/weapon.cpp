@@ -4,6 +4,9 @@
 #include "dovah/data/skills.h"
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/game_localized_strings/core.h"
+#include "ui/utils/enum_dropdown_configs/actor_value_index.h"
+#include "ui/utils/enum_dropdown_configs/resistance_av_index.h"
+#include "ui/utils/enum_dropdown_configs/skill.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 
@@ -26,25 +29,9 @@ FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QD
       ui::set_unsigned_range<float>(this->ui.stagger);
       ui::set_unsigned_range<float>(this->ui.weight);
 
-      {
-         auto* widget = this->ui.skill;
-         widget->clear();
-         widget->addItem(tr("None", "skill"), -1);
-         for (size_t i = 0; i < dovah::skill_count; ++i) {
-            widget->addItem(editor_helpers::skill_name_to_string((dovah::skill)i), (int)i);
-         }
-      }
+      ui::enum_dropdown_configs::skill(this->ui.skill, true);
       this->ui.equipType->setAllowedFormType(dovah::form_type::equip_slot);
-      {
-         auto* widget = this->ui.resist;
-         widget->clear();
-         widget->addItem(tr("None", "damage resistance AV"), -1);
-         for (auto& info : dovah::all_actor_value_info) {
-            if (info.type != dovah::actor_value_type::resistance)
-               continue;
-            widget->addItem(QString::fromLatin1(QByteArray(info.name.data(), info.name.size())), (int)info.index);
-         }
-      }
+      ui::enum_dropdown_configs::resistance_av_index(this->ui.resist);
       {
          auto* widget = this->ui.onHitCalc;
          widget->clear();
@@ -69,16 +56,15 @@ FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QD
       #pragma endregion
 
       #pragma region Embedded weapon
-         {
-            auto* widget = this->ui.embeddedAV;
-            widget->clear();
-            widget->addItem(tr("None", "embedded node AV"), -1);
-            for (auto& info : dovah::all_actor_value_info) {
-               if (info.type != dovah::actor_value_type::limb_condition)
-                  continue;
-               widget->addItem(QString::fromLatin1(QByteArray(info.name.data(), info.name.size())), (int)info.index);
+         ui::enum_dropdown_configs::actor_value_index<ui::enum_dropdown_configs::actor_value_index_options{
+            .allow_none = true,
+            .sorted     = true,
+         }>(
+            this->ui.embeddedAV,
+            [](const dovah::actor_value_info& av_info) {
+               return av_info.type == dovah::actor_value_type::limb_condition;
             }
-         }
+         );
       #pragma endregion
    #pragma endregion
 

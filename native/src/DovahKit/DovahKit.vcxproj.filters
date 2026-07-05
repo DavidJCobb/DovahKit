@@ -4236,6 +4236,9 @@
     <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneProperties.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\utils\enum_dropdown_configs\actor_value_index.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10533,6 +10536,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\utils\with_view_selected_row.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\enum_dropdown_configs\magic_school_av_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\enum_dropdown_configs\actor_value_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\enum_dropdown_configs\resistance_av_index.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
