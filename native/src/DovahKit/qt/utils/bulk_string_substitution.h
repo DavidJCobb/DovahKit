@@ -1,9 +1,11 @@
 #pragma once
+#include <cstdint>
 #include <type_traits>
 #include <variant>
 #include <vector>
 #include <QLocale>
 #include <QString>
+#include "helpers/small_vector.h"
 
 namespace dovahkit::qt::utils {
    namespace impl::_bulk_string_substitution {
@@ -44,20 +46,24 @@ namespace dovahkit::qt::utils {
    //
    class bulk_string_substitution {
       protected:
-         static constexpr const QChar  marker_start = '%';
-         static constexpr const size_t no_marker    = (size_t)-1;
+         using index_type               = uint32_t;
+         using stored_marker_index_type = uint16_t;
+         using stored_size_type         = uint32_t;
+
+         static constexpr const QChar marker_start = '%';
+         static constexpr const auto  no_marker    = (stored_marker_index_type)-1;
 
          // By convention, QString substitution tokens begin at %1, not %0.
          static constexpr const size_t minimum_marker_index = 1;
 
          struct marker_index_info {
-            size_t count_normal = 0;
-            size_t count_locale = 0; // e.g. "%L1"
-            size_t total_length = 0; // e.g. strlen("%99") + strlen("%00099")
+            stored_size_type count_normal = 0;
+            stored_size_type count_locale = 0; // e.g. "%L1"
+            stored_size_type total_length = 0; // e.g. strlen("%99") + strlen("%00099")
             struct {
+               bool allow_locale = false;
                std::variant<QStringView, QString> normal;
                QString locale;
-               bool allow_locale = false;
             } stringified;
          };
 
@@ -70,16 +76,16 @@ namespace dovahkit::qt::utils {
          // "no marker" marker index.
          struct fragment {
             struct {
-               size_t begin = 0;
-               size_t end   = 0;
+               index_type begin = 0;
+               index_type end   = 0;
             } span_before;
-            size_t marker_index = no_marker;
-            bool   locale       = false;
+            stored_marker_index_type marker_index = no_marker;
+            bool locale = false;
          };
 
          QString source;
-         std::vector<marker_index_info> marker_stats;
-         std::vector<fragment> fragments;
+         cobb::small_vector<marker_index_info, 6, true> marker_stats;
+         cobb::small_vector<fragment,          6, true> fragments;
 
          void _identify_markers();
 

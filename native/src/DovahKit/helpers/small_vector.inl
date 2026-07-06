@@ -59,7 +59,7 @@ namespace cobb {
             } else {
                for (size_type i = 0; i < _size; ++i) {
                   _transfer(dst[i], _data.local.list[i]);
-                  std::destroy(&_data.local.list[i]);
+                  std::destroy_at(&_data.local.list[i]);
                }
                src = _data.local.list.data();
             }

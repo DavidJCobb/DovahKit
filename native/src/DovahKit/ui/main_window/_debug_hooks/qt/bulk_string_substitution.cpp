@@ -79,11 +79,16 @@ namespace DovahKitDebug::features::qt {
          -5
       );
       run_test(
-         QString("Test 11: mixed values, use 1 and 3, skip 2"),
+         QString("Test 12: mixed values, use 1 and 3, skip 2"),
          QString("The values are %1 and %3."),
          QString("A"),
          -5,
          10
+      );
+      run_test(
+         QString("Test 13: several values"),
+         QString("%1 %2 %3 %4 %5 %6 %7 %8 %9 %10 ... %1"),
+         1, 2, 3, 4, 5, 6, 7, 8, 9, 10
       );
    }
 }

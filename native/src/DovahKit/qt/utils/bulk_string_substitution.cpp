@@ -1,5 +1,6 @@
 #include "./bulk_string_substitution.h"
 #include <cstring>
+#include <limits>
 #include <QLocale>
 
 namespace dovahkit::qt::utils {
@@ -40,6 +41,8 @@ namespace dovahkit::qt::utils {
             if (index < minimum_marker_index)
                goto next_escape;
             index -= minimum_marker_index;
+            if (index >= std::numeric_limits<stored_marker_index_type>::max())
+               goto next_escape;
 
             {  // Marker stats by index
                auto& list = this->marker_stats;
@@ -56,7 +59,7 @@ namespace dovahkit::qt::utils {
 
             // Fragment
             auto& frag = this->fragments.emplace_back();
-            frag.span_before  = { (size_t)last_fragment_end, (size_t)i };
+            frag.span_before  = { (stored_size_type)last_fragment_end, (stored_size_type)i };
             frag.marker_index = index;
             frag.locale       = locale;
          }
@@ -67,7 +70,7 @@ namespace dovahkit::qt::utils {
       }
       if (last_fragment_end < size) {
          auto& frag = this->fragments.emplace_back();
-         frag.span_before  = { (size_t)last_fragment_end, (size_t)size };
+         frag.span_before  = { (stored_size_type)last_fragment_end, (stored_size_type)size };
          frag.marker_index = no_marker;
       }
    }
