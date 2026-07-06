@@ -4245,6 +4245,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\localize\perk_entry_point_explanation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10557,6 +10560,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\perk_entry_point_explanation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,6 +3,7 @@
 #include "dovah/forms/Perk.h"
 #include "editor/localize/entry_point_function.h"
 #include "editor/localize/perk_entry_point.h"
+#include "editor/localize/perk_entry_point_explanation.h"
 #include "ui/utils/enum_dropdown_configs/actor_value_index.h"
 #include "ui/utils/set_range.h"
 #include "widgets/DKConditionList.h"
@@ -19,6 +20,7 @@ FormSubdialogPerkEntry::FormSubdialogPerkEntry(dovah::loaded_forms::Perk& perk, 
    this->ui.setupUi(this);
    QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
+   this->setWindowFlags(this->windowFlags() | Qt::WindowContextHelpButtonHint); // show "What's This?" button in title bar
 
    {
       auto* widget = this->ui.type;
@@ -44,11 +46,15 @@ FormSubdialogPerkEntry::FormSubdialogPerkEntry(dovah::loaded_forms::Perk& perk, 
       auto  entry  = (dovah::perk_entry_point)widget->currentData().toInt();
       if ((size_t)entry >= dovah::all_perk_entry_points.size()) {
          this->_rebuild_entry_point_condition_tabs(nullptr);
+         this->ui.entryPointExplanation->setText("");
+         this->ui.entryPointExplanation->setWhatsThis("");
          return;
       }
       const auto& info = dovah::all_perk_entry_points[(size_t)entry];
       this->_rebuild_entry_point_function_type_combobox(info.value_type);
       this->_rebuild_entry_point_condition_tabs(&info);
+      this->ui.entryPointExplanation->setText(editor::localize::perk_entry_point_explanation(entry));
+      this->ui.entryPointExplanation->setWhatsThis(editor::localize::elaborated::perk_entry_point_explanation(entry));
    });
    QObject::connect(this->ui.entryPointFunction, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
       this->_update_entry_point_arguments((dovah::entry_point_function)this->ui.entryPointFunction->currentData().toInt());

@@ -15,7 +15,7 @@ FormDialogPerk::FormDialogPerk(dovah::form_stub& stub, QWidget* parent) : QDialo
 
    this->ui.nextPerk->setAllowedFormType(dovah::form_type::perk);
    ui::set_range<decltype(decltype(loaded_form_type::data)::level)>(this->ui.level);
-   ui::set_range<decltype(decltype(loaded_form_type::data)::rank_count)>(this->ui.ranks);
+   this->ui.ranks->setRange(1, 255);
 
    {
       auto* model  = this->_models.entries = new PerkEntriesModel(this);

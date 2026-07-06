@@ -506,6 +506,7 @@
     <ClCompile Include="editor\localize\package_procedure_tree_branch_type.cpp" />
     <ClCompile Include="editor\localize\package_procedure_type.cpp" />
     <ClCompile Include="editor\localize\perk_entry_point.cpp" />
+    <ClCompile Include="editor\localize\perk_entry_point_explanation.cpp" />
     <ClCompile Include="editor\open_window_for_form_type.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
@@ -2389,6 +2390,7 @@
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
     <ClInclude Include="editor\localize\form_creation_error_code.h" />
     <ClInclude Include="editor\localize\limb.h" />
+    <ClInclude Include="editor\localize\perk_entry_point_explanation.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set.h" />

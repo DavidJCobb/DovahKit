@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormSubdialogPerkEntry</class>
  <widget class="QDialog" name="FormSubdialogPerkEntry">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>532</height>
+   </rect>
+  </property>
   <property name="minimumSize">
    <size>
     <width>800</width>
@@ -26,6 +34,9 @@
      </item>
      <item row="0" column="4">
       <widget class="QSpinBox" name="priority">
+       <property name="whatsThis">
+        <string>If multiple Perk Entries (across all of an actor's Perks) conflict, the one with the highest priority wins.</string>
+       </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
@@ -37,7 +48,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Rank:</string>
+        <string>Minimum Rank:</string>
        </property>
        <property name="buddy">
         <cstring>rank</cstring>
@@ -69,6 +80,9 @@
      </item>
      <item row="0" column="1">
       <widget class="QSpinBox" name="rank">
+       <property name="whatsThis">
+        <string>This Perk Entry will only take effect for actors who have the Perk at at least this rank.</string>
+       </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
@@ -142,14 +156,14 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>Quest:</string>
+             <string>Quest to Start:</string>
             </property>
            </widget>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_5">
             <property name="text">
-             <string>Stage:</string>
+             <string>Quest Stage:</string>
             </property>
            </widget>
           </item>
@@ -186,14 +200,11 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label_6">
             <property name="text">
-             <string>Spell:</string>
+             <string>Spell to Add:</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="DKFormPicker" name="abilityForm"/>
-          </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <spacer name="verticalSpacer_2">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -206,29 +217,34 @@
             </property>
            </spacer>
           </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="abilityForm"/>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Note: If this Perk is later removed, the spell will be, too.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="optionsEntryPoint">
-         <layout class="QGridLayout" name="gridLayout_5" columnstretch="0,0,0,0">
+         <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,0,0,1,0" columnstretch="0,0,0,0">
+          <item row="0" column="1">
+           <widget class="QComboBox" name="entryPointType"/>
+          </item>
           <item row="1" column="1">
            <widget class="QComboBox" name="entryPointFunction"/>
           </item>
-          <item row="0" column="3" rowspan="4">
-           <widget class="QGroupBox" name="groupBox_2">
-            <property name="title">
-             <string>Conditions</string>
+          <item row="2" column="0" colspan="2">
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-            <layout class="QGridLayout" name="gridLayout_9">
-             <item row="0" column="0">
-              <widget class="QTabWidget" name="entryPointConditionsTabbox">
-               <widget class="QWidget" name="entryPointConditionsTabboxDummy">
-                <attribute name="title">
-                 <string>Perk Owner</string>
-                </attribute>
-               </widget>
-              </widget>
-             </item>
-            </layout>
            </widget>
           </item>
           <item row="0" column="0">
@@ -241,21 +257,11 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Function:</string>
-            </property>
-            <property name="buddy">
-             <cstring>entryPointFunction</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="entryPointType"/>
-          </item>
           <item row="3" column="0" colspan="2">
            <widget class="QStackedWidget" name="entryPointParamsStack">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
             <widget class="QWidget" name="entryPointParamsNone">
              <layout class="QGridLayout" name="gridLayout_7">
               <property name="leftMargin">
@@ -743,14 +749,45 @@
             </widget>
            </widget>
           </item>
-          <item row="2" column="0" colspan="2">
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Function:</string>
+            </property>
+            <property name="buddy">
+             <cstring>entryPointFunction</cstring>
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
+          <item row="0" column="3" rowspan="5">
+           <widget class="QGroupBox" name="groupBox_2">
+            <property name="title">
+             <string>Conditions</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_9">
+             <item row="0" column="0">
+              <widget class="QTabWidget" name="entryPointConditionsTabbox">
+               <widget class="QWidget" name="entryPointConditionsTabboxDummy">
+                <attribute name="title">
+                 <string>Perk Owner</string>
+                </attribute>
+               </widget>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QLabel" name="entryPointExplanation">
+            <property name="text">
+             <string>...</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2" rowspan="5">
            <spacer name="horizontalSpacer_9">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>

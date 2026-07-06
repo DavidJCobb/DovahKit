@@ -60,6 +60,10 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="whatsThis">
+        <string>&lt;p&gt;In Skyrim, some of the Perks that the player can unlock have multiple &quot;tiers.&quot; For example, the player can spend up to four skill points on the &quot;Overdraw&quot; Perk in the Archery skill tree.&lt;/p&gt;
+&lt;p&gt;What's happening under the hood is that each of these &quot;tiers&quot; is actually a wholly separate Perk form: &lt;code&gt;Overdraw00&lt;/code&gt;, &lt;code&gt;Overdraw01&lt;/code&gt;, &lt;code&gt;Overdraw02&lt;/code&gt;, and &lt;code&gt;Overdraw03&lt;/code&gt;. The lowest Overdraw tier was placed in the Archery skill tree, and each Overdraw tier lists the next as its &quot;Next Tier.&quot;&lt;/p&gt;</string>
+       </property>
        <property name="splitTypesWhenMany">
         <bool>false</bool>
        </property>
@@ -106,22 +110,6 @@
         </item>
        </layout>
       </widget>
-     </item>
-     <item row="1" column="2" rowspan="7">
-      <spacer name="horizontalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>8</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
      </item>
      <item row="1" column="1">
       <widget class="QLineEdit" name="name"/>
@@ -177,7 +165,7 @@
        <item>
         <widget class="QLabel" name="label_4">
          <property name="text">
-          <string>Ranks:</string>
+          <string>Max Rank:</string>
          </property>
          <property name="buddy">
           <cstring>ranks</cstring>
@@ -187,10 +175,19 @@
        <item>
         <widget class="QSpinBox" name="ranks">
          <property name="whatsThis">
-          <string>Unused.</string>
+          <string>&lt;p&gt;Perk ranks in Skyrim are... confusing. In order to understand them, we must first clarify some terms.&lt;/p&gt;
+&lt;p&gt;In games prior to Skyrim, some Perks had multiple &quot;ranks:&quot; you could spend multiple skill points on the Perk to get a stronger version of that Perk. Under the hood, the way this works is that adding the same Perk to the player multiple times will increase its rank (i.e. you either &lt;em&gt;have&lt;/em&gt; or &lt;em&gt;do not have&lt;/em&gt; a Perk, but you could think of the Perk's current rank as reflecting &quot;how many of it&quot; you have). NPCs, of course, could be pre-assigned Perks as well, and could have different ranks set for each pre-assigned Perk.&lt;/p&gt;
+&lt;p&gt;Skyrim uses the same design, but it's implemented differently and it has a different name. In Skyrim, Perks like those are called &quot;Tiered Perks&quot; (per the &lt;i&gt;The Elder Scrolls V: Skyrim: Prima Official Game Guide&lt;/i&gt;). They don't use the engine-level rank system; instead, each tier is a wholly separate Perk as far as the game engine is concerned; the tiers each have only one rank, and they're all linked together using the &quot;Next Tier&quot; drop-down below.&lt;/p&gt;
+&lt;p&gt;However, the old rank system still exists: &quot;tiers&quot; and &quot;ranks&quot; look the same to the player, but they are different pieces of functionality. Ranks' main effect is to influence which of a Perk's entries (see further below) are active for any given actor.&lt;/p&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>255</number>
          </property>
         </widget>
        </item>
@@ -222,7 +219,7 @@
      <item row="7" column="0">
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Next Perk:</string>
+        <string>Next Tier:</string>
        </property>
        <property name="buddy">
         <cstring>nextPerk</cstring>
@@ -249,6 +246,22 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="2" rowspan="8">
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>8</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </item>
    <item row="1" column="0" colspan="2">
@@ -258,7 +271,11 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="0" column="0">
-       <widget class="DKConditionList" name="conditions"/>
+       <widget class="DKConditionList" name="conditions">
+        <property name="whatsThis">
+         <string>For Perks that are placed in a skill tree (and higher tiers thereof), these conditions must be met before the player will be allowed to unlock the perk.</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
