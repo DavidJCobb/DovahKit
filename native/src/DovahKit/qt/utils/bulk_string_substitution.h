@@ -67,6 +67,7 @@ namespace dovahkit::qt::utils {
             count_type count_normal = 0;
             count_type count_locale = 0; // e.g. occurrences of "%L1"
             bool       allow_locale = false;
+            bool       unfilled     = false;
             struct {
                QString normal; // maybe-owning; if value to substitute is a string, this will be a view (via QString::fromRawData), not a copy
                QString locale; // always owning; created from scratch via QLocale
@@ -139,6 +140,9 @@ namespace dovahkit::qt::utils {
                ),
                ...
             );
+            for (size_t i = sizeof...(Args); i < this->place_indices.size(); ++i)
+               this->place_indices[i].unfilled = true;
+
             return this->_execute_substitutions();
          }
    };

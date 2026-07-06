@@ -85,14 +85,32 @@ namespace dovahkit::qt::utils {
    }
 
    size_t bulk_string_substitution::_result_length() const {
-      size_t size = this->source.size() - this->placeholder_character_count;
+      size_t size         = this->source.size() - this->placeholder_character_count;
+      bool   any_unfilled = false;
       for (auto& subst : this->place_indices) {
+         if (subst.unfilled) {
+            //
+            // If no value has been supplied for this substitution index, then 
+            // we'll just write the original placeholders back in. We'll need to 
+            // find the original placeholders and pull their lengths.
+            //
+            any_unfilled = true;
+            continue;
+         }
          size_t size_normal = subst.stringified.normal.size();
          size_t size_locale = subst.stringified.locale.size();
          if (!subst.allow_locale)
             size_locale = size_normal;
          size += subst.count_normal * size_normal;
          size += subst.count_locale * size_locale;
+      }
+      if (any_unfilled) {
+         for (auto& placeholder : this->placeholders) {
+            auto& subst = this->place_indices[placeholder.replace_with];
+            if (!subst.unfilled)
+               continue;
+            size += placeholder.length;
+         }
       }
       return size;
    }
@@ -109,12 +127,21 @@ namespace dovahkit::qt::utils {
          const auto&  subst  = this->place_indices[here.replace_with];
          const QChar* src    = nullptr;
          size_t       length = 0;
-         if (here.locale && subst.allow_locale) {
-            src    = subst.stringified.locale.unicode();
-            length = subst.stringified.locale.size();
+         if (subst.unfilled) {
+            //
+            // If no value has been supplied for this substitution index, then just 
+            // write the original placeholder back in.
+            //
+            src    = this->source.unicode() + here.begin;
+            length = here.length;
          } else {
-            src    = subst.stringified.normal.unicode();
-            length = subst.stringified.normal.size();
+            if (here.locale && subst.allow_locale) {
+               src    = subst.stringified.locale.unicode();
+               length = subst.stringified.locale.size();
+            } else {
+               src    = subst.stringified.normal.unicode();
+               length = subst.stringified.normal.size();
+            }
          }
          if (length) {
             memcpy(dst, src, length * sizeof(QChar));
