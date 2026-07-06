@@ -43,12 +43,19 @@ namespace dovahkit::qt::utils {
    //    indices, even if an index has no marker present in the string. If you 
    //    pass four arguments and your string only has %1, %2, and %4 in it, 
    //    those will substitute to arguments 1, 2, and 4, not 1, 2, and 3.
+   // 
+   // Current implementation limits:
+   // 
+   //  - Placeholder indices above 65534 can't be replaced.
+   // 
+   //  - No more than 65535 instances of a single placeholder index can be 
+   //    replaced at a time.
    //
    class bulk_string_substitution {
       protected:
-         using index_type               = uint32_t;
+         using count_type    = uint16_t;
+         using position_type = uint32_t;
          using stored_marker_index_type = uint16_t;
-         using stored_size_type         = uint32_t;
 
          static constexpr const QChar marker_start = '%';
          static constexpr const auto  no_marker    = (stored_marker_index_type)-1;
@@ -57,9 +64,8 @@ namespace dovahkit::qt::utils {
          static constexpr const size_t minimum_marker_index = 1;
 
          struct marker_index_info {
-            stored_size_type count_normal = 0;
-            stored_size_type count_locale = 0; // e.g. "%L1"
-            stored_size_type total_length = 0; // e.g. strlen("%99") + strlen("%00099")
+            count_type count_normal = 0;
+            count_type count_locale = 0; // e.g. "%L1"
             struct {
                bool allow_locale = false;
                std::variant<QStringView, QString> normal;
@@ -76,8 +82,8 @@ namespace dovahkit::qt::utils {
          // "no marker" marker index.
          struct fragment {
             struct {
-               index_type begin = 0;
-               index_type end   = 0;
+               position_type begin = 0;
+               position_type end   = 0;
             } span_before;
             stored_marker_index_type marker_index = no_marker;
             bool locale = false;
@@ -86,6 +92,7 @@ namespace dovahkit::qt::utils {
          QString source;
          cobb::small_vector<marker_index_info, 6, true> marker_stats;
          cobb::small_vector<fragment,          6, true> fragments;
+         size_t marker_character_count = 0; // total length in QChars of all to-be-replaced markers in the source string
 
          void _identify_markers();
 

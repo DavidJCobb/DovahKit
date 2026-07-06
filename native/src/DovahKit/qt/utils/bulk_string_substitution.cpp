@@ -54,12 +54,12 @@ namespace dovahkit::qt::utils {
                   ++item.count_locale;
                else
                   ++item.count_normal;
-               item.total_length += (j - i);
             }
+            this->marker_character_count += (j - i);
 
             // Fragment
             auto& frag = this->fragments.emplace_back();
-            frag.span_before  = { (stored_size_type)last_fragment_end, (stored_size_type)i };
+            frag.span_before  = { (position_type)last_fragment_end, (position_type)i };
             frag.marker_index = index;
             frag.locale       = locale;
          }
@@ -70,7 +70,7 @@ namespace dovahkit::qt::utils {
       }
       if (last_fragment_end < size) {
          auto& frag = this->fragments.emplace_back();
-         frag.span_before  = { (stored_size_type)last_fragment_end, (stored_size_type)size };
+         frag.span_before  = { (position_type)last_fragment_end, (position_type)size };
          frag.marker_index = no_marker;
       }
    }
@@ -81,7 +81,7 @@ namespace dovahkit::qt::utils {
    }
 
    size_t bulk_string_substitution::_result_length() const {
-      size_t size = this->source.size();
+      size_t size = this->source.size() - this->marker_character_count;
       for (auto& marker : this->marker_stats) {
          size_t size_normal = 0;
          size_t size_locale = marker.stringified.locale.size();
@@ -92,7 +92,6 @@ namespace dovahkit::qt::utils {
          }
          size += marker.count_normal * size_normal;
          size += marker.count_locale * size_locale;
-         size -= marker.total_length;
       }
       return size;
    }
