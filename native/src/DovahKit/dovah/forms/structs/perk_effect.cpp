@@ -134,6 +134,9 @@ namespace dovah::loaded_forms::structs {
                         subrecord.read(casted.entry);
                         subrecord.read(casted.function.function);
                         subrecord.read(perk_condition_tab_count);
+                        if (casted.condition_groups.size() < perk_condition_tab_count) {
+                           casted.condition_groups.resize(perk_condition_tab_count);
+                        }
 
                         if ((size_t)casted.entry >= all_perk_entry_points.size()) {
                            specific_load_warnings::invalid_entry_point notice(
