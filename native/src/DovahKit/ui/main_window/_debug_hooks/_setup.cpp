@@ -30,6 +30,7 @@
 #include "./renderwin/worldinput2_input_seq_ui.h"
 #include "./renderwin/worldinput2_control_scheme_ui.h"
 #include "./renderwin/worldinput2_control_scheme_rebuild.h"
+#include "./qt/bulk_string_substitution.h"
 #include "./qt/paint_ellipse_tests.h"
 #include "./qt/qpalette.h"
 #include "./qt/qt_3d_tests.h"
@@ -65,7 +66,8 @@ namespace DovahKitDebug {
       features::renderwin::worldinput2_control_scheme_ui,
       features::renderwin::worldinput2_control_scheme_rebuild
    >;
-   using qt_tests = cobb::class_list<
+   using qt_tests = cobb::class_list <
+      features::qt::bulk_string_substitution,
       features::qt::paint_ellipse_tests,
       features::qt::qt_3d_tests,
       features::qt::qpalette

@@ -1018,6 +1018,7 @@
     <ClCompile Include="qt\DKWinTaskbarButton.cpp" />
     <ClCompile Include="qt\DKWinTaskbarButtonPrivate.cpp" />
     <ClCompile Include="qt\DKWinTaskbarProgress.cpp" />
+    <ClCompile Include="qt\utils\bulk_string_substitution.cpp" />
     <ClCompile Include="qt\utils\icon_for_file_extension.cpp" />
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathFormsModel.cpp" />
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathsDialog.cpp" />
@@ -1271,6 +1272,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt\paint_ellipse_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt\qpalette.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt\qt_3d_tests.cpp" />
@@ -2401,6 +2403,7 @@
     <QtMoc Include="qt\DKWinTaskbarButton.h" />
     <QtMoc Include="qt\DKWinTaskbarProgress.h" />
     <ClInclude Include="qt\DKWinTaskbarButtonPrivate.h" />
+    <ClInclude Include="qt\utils\bulk_string_substitution.h" />
     <ClInclude Include="qt\utils\icon_for_file_extension.h" />
     <QtMoc Include="ui\form_windows\body_part_data\BodyPartDataPartsModel.h" />
     <QtMoc Include="ui\form_windows\body_part_data\SkeletonBonesModel.h" />
@@ -2411,6 +2414,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h" />
     <ClInclude Include="ui\form_windows\quest\QuestStageLogEntriesModel.h" />
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneProperties.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />

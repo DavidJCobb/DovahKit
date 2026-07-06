@@ -17,6 +17,8 @@
 
 #include "dovah/form_stub.h"
 
+#include "qt/utils/bulk_string_substitution.h"
+
 namespace {
    namespace file_load_warnings {
       using namespace dovah::notices::file_load_warnings;
@@ -732,7 +734,12 @@ namespace editor_helpers {
                         disambig
                      );
                   }
-                  return format.arg(subject).arg(casted->effects_contained).arg(casted->effects_allowed).arg(casted->hard_maximum);
+                  return dovahkit::qt::utils::bulk_string_substitution(format).exec(
+                     subject,
+                     casted->effects_contained,
+                     casted->effects_allowed,
+                     casted->hard_maximum
+                  );
                }
             #pragma endregion
             #pragma region navmesh_pathing_cell
@@ -778,7 +785,11 @@ namespace editor_helpers {
                         disambig
                      );
                   }
-                  return format.arg(subject).arg(navmesh).arg(cell);
+                  return dovahkit::qt::utils::bulk_string_substitution(format).exec(
+                     subject,
+                     navmesh,
+                     cell
+                  );
                }
             #pragma endregion
             #pragma region package event dialogue
@@ -1678,14 +1689,14 @@ namespace editor_helpers {
                         "groups. However, it only has %5 condition groups."
                      );
                   }
-                  return format
-                     .arg(subject)
-                     .arg(casted->which_effect)
-                     .arg(entry)
-                     .arg(casted->condition_group_counts.actual)
-                     .arg(casted->condition_group_counts.declared)
-                     .arg(casted->condition_group_counts.expected)
-                  ;
+                  return dovahkit::qt::utils::bulk_string_substitution(format).exec(
+                     subject,
+                     casted->which_effect,
+                     entry,
+                     casted->condition_group_counts.actual,
+                     casted->condition_group_counts.declared,
+                     casted->condition_group_counts.expected
+                  );
                }
             #pragma endregion
             #pragma region quest
