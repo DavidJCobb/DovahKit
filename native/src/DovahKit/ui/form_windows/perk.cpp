@@ -100,10 +100,6 @@ void FormDialogPerk::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
-
-   // Easiest way to add the perk entries in is to just clear the whole form 
-   // and then write everything back in.
-   working.clear();
    
    gls.assign_localized_string(working.name, this->ui.name->text());
    {
@@ -115,6 +111,12 @@ void FormDialogPerk::_save_impl() {
 
    this->ui.conditions->exportTo(working, working.conditions);
 
+   {
+      auto& list = working.effects;
+      for (auto& item : list)
+         item.clear(working);
+      list.clear();
+   }
    {
       const size_t count = this->_models.entries->rowCount();
       for (size_t i = 0; i < count; ++i) {
