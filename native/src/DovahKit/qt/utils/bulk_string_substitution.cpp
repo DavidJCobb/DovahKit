@@ -1,17 +1,16 @@
 #include "./bulk_string_substitution.h"
 #include <cstring>
 #include <limits>
-#include <QLocale>
 
 namespace dovahkit::qt::utils {
-   void bulk_string_substitution::_identify_markers() {
+   void bulk_string_substitution::_identify_placeholders() {
       const QChar* data = this->source.constData();
       const size_t size = this->source.size();
 
       int last_fragment_end = 0;
       int after_last_escape = 0;
 
-      int i = this->source.indexOf(marker_start);
+      int i = this->source.indexOf(escape_character);
       while (i >= 0 && i + 1 < size) {
          size_t begin  = i;
          bool   locale = false;
@@ -29,6 +28,7 @@ namespace dovahkit::qt::utils {
             goto next_escape;
 
          {
+            // Get the index of the value to substitute in, e.g. "%0001" -> 1
             int index = digit;
             while (++j < size) {
                c     = data[j];
@@ -41,11 +41,15 @@ namespace dovahkit::qt::utils {
             if (index < minimum_marker_index)
                goto next_escape;
             index -= minimum_marker_index;
-            if (index >= std::numeric_limits<stored_marker_index_type>::max())
+            if (index > std::numeric_limits<param_index_type>::max())
                goto next_escape;
 
-            {  // Marker stats by index
-               auto& list = this->marker_stats;
+            const size_t placeholder_length = j - i;
+            if (placeholder_length > std::numeric_limits<placeholder_length_type>::max())
+               goto next_escape;
+
+            {
+               auto& list = this->place_indices;
                if (index >= list.size()) {
                   list.resize(index + 1);
                }
@@ -55,86 +59,112 @@ namespace dovahkit::qt::utils {
                else
                   ++item.count_normal;
             }
-            this->marker_character_count += (j - i);
+            this->placeholder_character_count += placeholder_length;
 
-            // Fragment
-            auto& frag = this->fragments.emplace_back();
-            frag.span_before  = { (position_type)last_fragment_end, (position_type)i };
-            frag.marker_index = index;
-            frag.locale       = locale;
+            this->placeholders.push_back(placeholder{
+               .begin        = (position_type)i,
+               .length       = (placeholder_length_type)placeholder_length,
+               .locale       = locale,
+               .replace_with = (param_index_type)index,
+            });
          }
          last_fragment_end = j;
       next_escape:
          after_last_escape = j;
-         i = this->source.indexOf(marker_start, after_last_escape);
-      }
-      if (last_fragment_end < size) {
-         auto& frag = this->fragments.emplace_back();
-         frag.span_before  = { (position_type)last_fragment_end, (position_type)size };
-         frag.marker_index = no_marker;
+         i = this->source.indexOf(escape_character, after_last_escape);
       }
    }
 
+   void bulk_string_substitution::_stringify_substitution(size_t index, QString v) {
+      auto& s = this->place_indices[index].stringified;
+      s.normal = v; // implicitly share
+   }
    void bulk_string_substitution::_stringify_substitution(size_t index, QStringView v) {
-      auto& s = this->marker_stats[index].stringified;
-      s.normal = v;
+      auto& s = this->place_indices[index].stringified;
+      s.normal = QString::fromRawData(v.data(), v.size()); // don't copy
    }
 
    size_t bulk_string_substitution::_result_length() const {
-      size_t size = this->source.size() - this->marker_character_count;
-      for (auto& marker : this->marker_stats) {
-         size_t size_normal = 0;
-         size_t size_locale = marker.stringified.locale.size();
-         if (std::holds_alternative<QStringView>(marker.stringified.normal)) {
-            size_normal = std::get<QStringView>(marker.stringified.normal).size();
-         } else {
-            size_normal = std::get<QString>(marker.stringified.normal).size();
-         }
-         size += marker.count_normal * size_normal;
-         size += marker.count_locale * size_locale;
+      size_t size = this->source.size() - this->placeholder_character_count;
+      for (auto& subst : this->place_indices) {
+         size_t size_normal = subst.stringified.normal.size();
+         size_t size_locale = subst.stringified.locale.size();
+         if (!subst.allow_locale)
+            size_locale = size_normal;
+         size += subst.count_normal * size_normal;
+         size += subst.count_locale * size_locale;
       }
       return size;
    }
 
    QString bulk_string_substitution::_execute_substitutions() const {
-      auto result = QString(this->_result_length(), Qt::Uninitialized);
+      if (this->placeholders.empty()) {
+         return this->source;
+      }
 
-      QChar* dst = result.data();
-      for (auto& fragment : this->fragments) {
-         if (fragment.span_before.end > fragment.span_before.begin) {
-            size_t frag_length = fragment.span_before.end - fragment.span_before.begin;
+      QString result = QString(this->_result_length(), Qt::Uninitialized);
+      QChar*  dst    = result.data();
+
+      const auto _insert_replacement = [this, &dst](const placeholder& here) {
+         const auto&  subst  = this->place_indices[here.replace_with];
+         const QChar* src    = nullptr;
+         size_t       length = 0;
+         if (here.locale && subst.allow_locale) {
+            src    = subst.stringified.locale.unicode();
+            length = subst.stringified.locale.size();
+         } else {
+            src    = subst.stringified.normal.unicode();
+            length = subst.stringified.normal.size();
+         }
+         if (length) {
+            memcpy(dst, src, length * sizeof(QChar));
+            dst += length;
+         }
+      };
+
+      {
+         const auto& p = this->placeholders[0];
+         if (p.begin > 0) {
             memcpy(
                dst,
-               this->source.unicode() + fragment.span_before.begin,
-               frag_length * sizeof(QChar)
+               this->source.unicode(),
+               p.begin * sizeof(QChar)
             );
-            dst += frag_length;
+            dst += p.begin;
          }
-         if (fragment.marker_index != no_marker) {
-            const auto&  marker = this->marker_stats[fragment.marker_index];
-            const QChar* src    = nullptr;
-            size_t       length = 0;
-            if (fragment.locale && marker.stringified.allow_locale) {
-               src    = marker.stringified.locale.unicode();
-               length = marker.stringified.locale.size();
-            } else {
-               const auto& v = marker.stringified.normal;
-               if (std::holds_alternative<QStringView>(v)) {
-                  const auto& casted = std::get<QStringView>(v);
-                  src    = casted.data();
-                  length = casted.size();
-               } else {
-                  const auto& casted = std::get<QString>(v);
-                  src    = casted.unicode();
-                  length = casted.size();
-               }
-            }
-            if (length) {
-               memcpy(dst, src, length * sizeof(QChar));
-               dst += length;
-            }
+         _insert_replacement(p);
+      }
+      for (size_t i = 1; i < this->placeholders.size(); ++i) {
+         const auto& prev = this->placeholders[i - 1];
+         const auto& here = this->placeholders[i];
+
+         size_t prev_end       = prev.begin + prev.length;
+         size_t between_length = here.begin - prev_end;
+         if (between_length) {
+            memcpy(
+               dst,
+               this->source.unicode() + prev_end,
+               between_length * sizeof(QChar)
+            );
+            dst += between_length;
+         }
+
+         _insert_replacement(here);
+      }
+      {
+         const auto& p = this->placeholders[this->placeholders.size() - 1];
+         size_t end = p.begin + p.length;
+         if (end < this->source.size()) {
+            size_t after_length = this->source.size() - end;
+            memcpy(
+               dst,
+               this->source.unicode() + end,
+               after_length * sizeof(QChar)
+            );
+            dst += after_length;
          }
       }
+
       assert(dst == result.constData() + result.size());
       return result;
    }

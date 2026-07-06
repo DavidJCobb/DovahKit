@@ -1,8 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <type_traits>
-#include <variant>
-#include <vector>
 #include <QLocale>
 #include <QString>
 #include "helpers/small_vector.h"
@@ -46,57 +44,51 @@ namespace dovahkit::qt::utils {
    // 
    // Current implementation limits:
    // 
-   //  - Placeholder indices above 65534 can't be replaced.
+   //  - Strings whose lengths can't bit in a four-byte integer are unsupported.
+   // 
+   //  - Placeholder indices above 65535 can't be replaced.
    // 
    //  - No more than 65535 instances of a single placeholder index can be 
    //    replaced at a time.
    //
    class bulk_string_substitution {
       protected:
-         using count_type    = uint16_t;
-         using position_type = uint32_t;
-         using stored_marker_index_type = uint16_t;
+         using count_type              = uint16_t;
+         using placeholder_length_type = uint8_t;
+         using position_type           = uint32_t;
+         using param_index_type        = uint16_t;
 
-         static constexpr const QChar marker_start = '%';
-         static constexpr const auto  no_marker    = (stored_marker_index_type)-1;
+         static constexpr const QChar escape_character = '%';
 
          // By convention, QString substitution tokens begin at %1, not %0.
          static constexpr const size_t minimum_marker_index = 1;
 
-         struct marker_index_info {
+         struct placeholder_index {
             count_type count_normal = 0;
-            count_type count_locale = 0; // e.g. "%L1"
+            count_type count_locale = 0; // e.g. occurrences of "%L1"
+            bool       allow_locale = false;
             struct {
-               bool allow_locale = false;
-               std::variant<QStringView, QString> normal;
-               QString locale;
+               QString normal; // maybe-owning; if value to substitute is a string, this will be a view (via QString::fromRawData), not a copy
+               QString locale; // always owning; created from scratch via QLocale
             } stringified;
          };
 
-         // Tracks the area between two markers, and indices the index of the 
-         // marker that follows that area.
-         //
-         // If a marker appears at the very start of the string, there'll be a 
-         // zero-length fragment indicating its presence. If a marker doesn't 
-         // appear at the end of the string, there'll be a fragment with the 
-         // "no marker" marker index.
-         struct fragment {
-            struct {
-               position_type begin = 0;
-               position_type end   = 0;
-            } span_before;
-            stored_marker_index_type marker_index = no_marker;
-            bool locale = false;
+         struct placeholder {
+            position_type           begin  = 0;
+            placeholder_length_type length = 0;
+            bool                    locale = false;
+            param_index_type        replace_with = 0;
          };
 
          QString source;
-         cobb::small_vector<marker_index_info, 6, true> marker_stats;
-         cobb::small_vector<fragment,          6, true> fragments;
-         size_t marker_character_count = 0; // total length in QChars of all to-be-replaced markers in the source string
+         cobb::small_vector<placeholder_index, 4, true> place_indices;
+         cobb::small_vector<placeholder,       4, true> placeholders; // in order from earliest (within source string) to latest
+         size_t placeholder_character_count = 0; // total length in QChars of all to-be-replaced markers in the source string
 
-         void _identify_markers();
+         void _identify_placeholders();
 
          #pragma region _stringify_substitution
+            void _stringify_substitution(size_t index, QString);
             void _stringify_substitution(size_t index, QStringView);
 
             template<typename T>
@@ -105,16 +97,16 @@ namespace dovahkit::qt::utils {
                   impl::_bulk_string_substitution::locale_stringifiable<T>
                )
             void _stringify_substitution(size_t index, T v) {
-               auto& marker = this->marker_stats[index];
-               if (marker.count_normal) {
+               auto& subst = this->place_indices[index];
+               if (subst.count_normal) {
                   auto locale = QLocale::c();
                   locale.setNumberOptions(QLocale::OmitGroupSeparator);
-                  marker.stringified.normal = locale.toString(v);
+                  subst.stringified.normal = locale.toString(v);
                }
-               if (marker.count_locale) {
-                  marker.stringified.locale = QLocale().toString(v);
+               if (subst.count_locale) {
+                  subst.stringified.locale = QLocale().toString(v);
                }
-               marker.stringified.allow_locale = true;
+               subst.allow_locale = true;
             }
 
             template<typename T>
@@ -133,15 +125,15 @@ namespace dovahkit::qt::utils {
 
       public:
          bulk_string_substitution(QStringView source) : source(source) {
-            this->_identify_markers();
+            this->_identify_placeholders();
          }
 
          template<typename... Args>
          QString exec(Args&&... args) {
             size_t i = 0;
             (
-               (i < this->marker_stats.size() ?
-                  this->_stringify_substitution(i, args),++i
+               (i < this->place_indices.size() ?
+                  this->_stringify_substitution(i, std::forward<Args>(args)),++i
                :
                   ++i
                ),
