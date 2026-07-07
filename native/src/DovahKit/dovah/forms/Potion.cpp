@@ -207,6 +207,7 @@ namespace dovah::loaded_forms {
       copy->bounds = this->bounds;
       copy->effects.clone_from(this->effects, *copy);
       copy->keywords.clone_from(this->keywords, *copy);
+      copy->model.clone_from(this->model, *copy);
       copy->script_data.clone_from(this->script_data, *copy);
 
       copy->name = this->name;

@@ -79,7 +79,10 @@ void FormDialogPotion::_save_impl() {
    
    gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.destructionData->commitTo(working.destruction_data, working);
+
    this->ui.effects->exportTo(working, working.effects);
+   this->ui.effects->disconnect(); // otherwise, it'll be left with a dangling pointer that it'll use when the edit dialog boilerplate emits formModified on the potion
+
    this->ui.keywords->commitStubs(working.keywords.forms, working);
    this->ui.model->commitTo(working.model, working);
 
