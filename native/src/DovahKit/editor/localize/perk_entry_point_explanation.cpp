@@ -9,18 +9,16 @@
 namespace editor::localize {
    extern QString perk_entry_point_explanation(ENUMERATION_TYPE v) {
       using enum ENUMERATION_TYPE;
-      bool conditions_on_spell           = false;
-      bool conditions_on_enchantment     = false;
-      bool number_result_treated_as_bool = false;
 
+      bool    number_result_treated_as_bool = false;
+      bool    player_perk_owner_only        = false;
       QString result;
       switch (v) {
          case add_leveled_item_on_death:
-            //
-            // TODO: Is this only for Targets killed by the Perk Owner?
-            //
+            player_perk_owner_only = true;
             result = STRING(
-               "<p>Adds a Leveled Item to the Target when they die.</p>"
+               "<p>Adds a Leveled Item to the Target when they're killed by the Perk Owner. This entry point is only "
+               "checked for perks owned by the player.</p>"
             );
             break;
          case apply_bash_spell:
@@ -51,7 +49,12 @@ namespace editor::localize {
             );
             break;
          case calc_mine_explode_chance:
-            return STRING("<p>Apparently unused.</p>");
+            player_perk_owner_only = true;
+            result = STRING(
+               "<p>If the Perk Owner is the player and they enter a landmine's trigger radius, this modifies the "
+               "percentage chance that the landmine will detonate. The default value is 100.</p>"
+            );
+            break;
          case calc_my_crit_chance:
             return STRING(
                "<p>Modifies the Perk Owner's percentage chance to land a critical hit on the Target when using a "
@@ -74,13 +77,13 @@ namespace editor::localize {
             ).arg(perk_entry_point(dovah::perk_entry_point::mod_attack_damage));
             break;
          case can_dual_cast_spell:
-            conditions_on_spell = true;
-            number_result_treated_as_bool  = true;
+            number_result_treated_as_bool = true;
             result = STRING(
                "<p>Controls whether the Perk Owner can dual-cast spells.</p>"
             );
             break;
          case can_pickpocket_equipped_item:
+            player_perk_owner_only        = true;
             number_result_treated_as_bool = true;
             result = STRING(
                "<p>Controls whether the Perk Owner can pickpocket an equipped item from the Target. (By default, "
@@ -89,6 +92,7 @@ namespace editor::localize {
             );
             break;
          case filter_activation:
+            player_perk_owner_only        = true;
             number_result_treated_as_bool = true;
             result = STRING(
                "<p>Controls whether the Perk Owner can activate the Target, and whether they see an activation "
@@ -96,10 +100,13 @@ namespace editor::localize {
             );
             break;
          case get_max_carry_weight:
+            // TODO: UNKNOWN
             break;
          case get_should_attack:
+            // TODO: UNKNOWN
             break;
          case ignore_broken_lock:
+            // TODO: UNKNOWN
             break;
          case ignore_running_during_detection:
             number_result_treated_as_bool = true;
@@ -119,6 +126,7 @@ namespace editor::localize {
                "an Enchanting Table. The default is 1.</p>"
             );
          case mod_armor_weight:
+            // TODO: UNKNOWN
             break;
          case mod_attack_damage:
             //
@@ -136,13 +144,14 @@ namespace editor::localize {
             );
             break;
          case mod_bribe_amount:
+            // TODO: UNKNOWN
             break;
          case mod_detection_light:
             return STRING(
                "<p>Modifies the influence of lighting conditions on how easily the Perk Owner can be detected.</p>"
                "<p>The input value is computed from the actor's light level, detection lines of sight, and various "
-               "Game Settings including <code>fDetectionNightEyeBonus</code>, <code>iLightLevelExteriorMod</code>, "
-               "<code>iLightLevelInteriorMod</code>, and <code>iLightLevelMax</code>. The final result value (after "
+               "Game Settings including <code>fDetection<wbr/>NightEye<wbr/>Bonus</code>, <code>iLightLevel<wbr/>Exterior<wbr/>Mod</code>, "
+               "<code>iLightLevel<wbr/>Interior<wbr/>Mod</code>, and <code>iLightLevel<wbr/>Max</code>. The final result value (after "
                "applying all Perks) will be adjusted as per the Perk Owner's Sneak and Invisibility actor values, "
                "and rounded to a signed integer.</p>"
             );
@@ -151,19 +160,18 @@ namespace editor::localize {
                "<p>Modifies how the influence of the Perk Owner's movement on how easily they can be detected.</p>"
             );
          case mod_favor_points:
+            // TODO: UNKNOWN
             break;
          case mod_incoming_damage:
             return STRING(
                "<p>Modifies how much physical damage the Perk Owner takes from a given Attacker using a given weapon.</p>"
             );
          case mod_incoming_spell_duration:
-            conditions_on_spell = true;
             result = STRING(
                "<p>Modifies the duration of Magic Effects applied to the Perk Owner.</p>"
             );
             break;
          case mod_incoming_spell_magnitude:
-            conditions_on_spell = true;
             result = STRING(
                "<p>Modifies the magnitude of Magic Effects applied to the Perk Owner.</p>"
             );
@@ -183,12 +191,12 @@ namespace editor::localize {
                "mathematical formulae.</p>"
             );
          case mod_player_reputation:
+            // TODO: UNKNOWN
             break;
          case mod_poison_dose_count:
             //
             // TODO: What exactly is the "Spell" that gets tested here?
             //
-            conditions_on_spell = true;
             result = STRING(
                "<p>Modifies the number of times the Perk Owner's poisoned weapon will apply its poison on hit, before "
                "the poison wears off.</p>"
@@ -204,7 +212,6 @@ namespace editor::localize {
                "<p>Modifies the total Stamina cost of the Perk Owner's power attacks with a given Weapon.</p>"
             );
          case mod_magic_second_av_weight:
-            conditions_on_spell = true;
             result = STRING(
                "<p>Modifies the effect of \"Dual Value Modifier\"-archetype Magic Effects upon their second Actor Value, "
                "when those Magic Effects (belonging to a given Spell) are applied by the Perk Owner to the Target.</p>"
@@ -222,7 +229,6 @@ namespace editor::localize {
             );
             break;
          case mod_soul_gem_enchanting:
-            conditions_on_enchantment = true;
             result = STRING(
                "<p>Modifies the amount of energy Soul Gems provide when the Perk Owner is applying a given Enchantment to "
                "a given weapon at an Enchanting Table.</p>"
@@ -234,26 +240,22 @@ namespace editor::localize {
                "enchantment.</p>"
             );
          case mod_spell_casting_sound_event:
-            conditions_on_spell = true;
             result = STRING(
                "<p>Scales the noise made when the Perk Owner casts the given Spell. The default is 1.0; change to 0.0 to "
                "prevent NPCs from hearing the spell.</p>"
             );
             break;
          case mod_spell_cost:
-            conditions_on_spell = true;
             result = STRING(
                "<p>Modifies the amount of Magicka the Perk Owner must spend to cast the given Spell.</p>"
             );
             break;
          case mod_outgoing_spell_duration:
-            conditions_on_spell = true;
             result = STRING(
                "<p>Modifies the duration of a Magic Effect applied to a given Target when the Perk Owner casts a given Spell.</p>"
             );
             break;
          case mod_outgoing_spell_magnitude:
-            conditions_on_spell = true;
             result = STRING(
                "<p>Modifies the magnitude of a Magic Effect applied to a given Target when the Perk Owner casts a given Spell.</p>"
             );
@@ -266,6 +268,7 @@ namespace editor::localize {
                "<p>Modifies the Armor Rating of a Target attacked by the Perk Owner.</p>"
             );
          case mod_addiction_chance:
+            // TODO: UNKNOWN
             break;
          case mod_alchemy_effectiveness:
             return STRING(
@@ -304,6 +307,7 @@ namespace editor::localize {
                "retroactive.</p>"
             );
          case mod_enemy_crit_chance:
+            // TODO: UNKNOWN
             break;
          case mod_fall_damage:
             return STRING(
@@ -319,6 +323,7 @@ namespace editor::localize {
                "<p>Modifies how many of an ingredient's Magic Effects the Perk Owner can learn by eating the ingredient.</p>"
             );
          case mod_lockpick_level_allowed:
+            // TODO: UNKNOWN
             break;
          case mod_lockpick_sweet_spot:
             return STRING(
@@ -344,8 +349,10 @@ namespace editor::localize {
             );
             break;
          case mod_player_magic_slowdown:
+            // TODO: UNKNOWN
             break;
          case mod_positive_chem_duration:
+            // TODO: UNKNOWN
             break;
          case mod_alchemy_potions_created:
             return STRING(
@@ -359,6 +366,7 @@ namespace editor::localize {
                "integer between 0 and 100.</p>"
             );
          case mod_recovered_health:
+            // TODO: UNKNOWN
             break;
          case mod_sell_prices:
             return STRING(
@@ -381,7 +389,6 @@ namespace editor::localize {
                "be used to recharge the Perk Owner's weapon.</p>"
             );
          case mod_spell_range:
-            conditions_on_spell = true;
             result = STRING(
                "<p>Modifies the maximum range of \"Target Location\" spells cast by the Perk Owner.</p>"
             );
@@ -398,6 +405,7 @@ namespace editor::localize {
                "base damage using the Mod Telekinesis Damage entry point.</p>"
             );
          case mod_telekinesis_distance:
+            // TODO: UNKNOWN
             break;
          case mod_tempering_health:
             return STRING(
@@ -418,12 +426,14 @@ namespace editor::localize {
             );
             break;
          case set_activate_label:
+            // TODO: UNKNOWN
             break;
          case set_boolean_graph_variable:
             return STRING(
                "<p>Sets a boolean-type variable in the Perk Owner's animation graph to <code>true</code>.</p>"
             );
          case set_lockpick_starting_arc: // unknown, except that the value appears to be measured in degrees?
+            // TODO: UNKNOWN
             break;
          case set_sweep_attack:
             number_result_treated_as_bool = true;
@@ -443,24 +453,10 @@ namespace editor::localize {
             break;
       }
 
-      //
-      // Explain conditions run on unusual form types:
-      //
-      if (conditions_on_enchantment) {
-         result += QCoreApplication::translate(
-            "perk entry point explanation - boilerplate",
-            "<p>Under the hood, \"Enchantment\" conditions are run on a throwaway ObjectReference whose base form "
-            "is set to a Magic Effect (something not normally possible). This allows conditions that check the base "
-            "form, like <code>Subject.GetIsID</code> and <code>Subject.HasKeyword</code>, to be used.</p>"
-         );
-      }
-      if (conditions_on_spell) {
-         result += QCoreApplication::translate(
-            "perk entry point explanation - boilerplate",
-            "<p>Under the hood, conditions for the Spell are run on a throwaway ObjectReference whose base form is set "
-            "to the Spell (something not normally possible). This allows conditions that check the base form, like "
-            "<code>Subject.GetIsID</code>, to be used. Several specific condition functions are also designed for this "
-            "situation, such as the ones whose names start with <code>EPMagic_</code>.</p>"
+      if (player_perk_owner_only) {
+         result += QCoreApplication::translate("perk entry point explanation - boilerplate",
+            "\n"
+            "<p>This entry point is only used when the Perk Owner is the player.</p>"
          );
       }
 

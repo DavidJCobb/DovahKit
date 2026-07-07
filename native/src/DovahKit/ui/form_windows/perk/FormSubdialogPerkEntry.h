@@ -6,6 +6,7 @@
 #include <QPointer>
 #include "ui_FormSubdialogPerkEntry.h" // generated
 #include "ui/types/perk_entries/entry.h"
+#include "widgets/DKConditionList.h"
 namespace dovah::loaded_forms {
    class Perk;
 }
@@ -29,6 +30,7 @@ class FormSubdialogPerkEntry : public QDialog {
       struct {
          dovah::loaded_forms::Perk& form;
          QPointer<DKPapyrusBoundScriptListPane> script_list_widget;
+         std::vector<QPointer<DKConditionList>> entry_point_condition_groups;
       } _state;
 
       void _update_options();

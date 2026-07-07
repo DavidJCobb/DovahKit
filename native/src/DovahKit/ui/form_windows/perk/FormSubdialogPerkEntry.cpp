@@ -162,10 +162,11 @@ FormSubdialogPerkEntry::value_type FormSubdialogPerkEntry::value() const {
                   break;
             }
 
-            const size_t size = this->ui.entryPointConditionsTabbox->count();
+            auto& cnd_group_widgets = this->_state.entry_point_condition_groups;
+            const size_t size = cnd_group_widgets.size();
             dst_casted.conditions_by_entity.resize(size);
             for (size_t i = 0; i < size; ++i) {
-               auto* widget = qobject_cast<DKConditionList*>(this->ui.entryPointConditionsTabbox->widget(i));
+               auto* widget = cnd_group_widgets[i].get();
                if (!widget)
                   break;
                widget->exportTo(this->_state.form, dst_casted.conditions_by_entity[i]);
@@ -229,7 +230,7 @@ void FormSubdialogPerkEntry::setValue(const value_type& src) {
 
       const size_t size = casted->conditions_by_entity.size();
       for (size_t i = 0; i < size; ++i) {
-         auto* widget = qobject_cast<DKConditionList*>(this->ui.entryPointConditionsTabbox->widget(i));
+         auto* widget = this->_state.entry_point_condition_groups[i].get();
          if (!widget)
             break;
          widget->importFrom(this->_state.form, casted->conditions_by_entity[i]);
@@ -251,6 +252,8 @@ void FormSubdialogPerkEntry::_update_options() {
    }
 }
 void FormSubdialogPerkEntry::_rebuild_entry_point_condition_tabs(const dovah::perk_entry_point_info* info) {
+   auto& widget_list = this->_state.entry_point_condition_groups;
+
    auto* tabview = this->ui.entryPointConditionsTabbox;
    size_t size = tabview->count();
    for (size_t i = 0; i < size; ++i) {
@@ -258,6 +261,8 @@ void FormSubdialogPerkEntry::_rebuild_entry_point_condition_tabs(const dovah::pe
       tabview->removeTab(0);
       tab->deleteLater();
    }
+   widget_list.clear();
+
    size = 0;
    if (info) {
       size = info->arg_count();
@@ -270,10 +275,39 @@ void FormSubdialogPerkEntry::_rebuild_entry_point_condition_tabs(const dovah::pe
          // dialog isn't pulling from something that already exists), we have to tell the 
          // DKConditionList what form "owns" the conditions, so it can compute the context 
          // from that information.
-         auto* tab = new DKConditionList(this);
-         tab->overrideOwningForm(this->_state.form);
+         auto* cnd_list = new DKConditionList(this);
+         cnd_list->overrideOwningForm(this->_state.form);
+         widget_list.push_back(cnd_list);
 
-         tabview->addTab(tab, QString(subject.name));
+         QString explanatory;
+         switch (subject.type) {
+            case dovah::form_type::enchantment:
+               explanatory = tr(
+                  "<p>The Subject is the Enchantment: the game pretends to be working with a ref whose "
+                  "base form is the Enchantment, so conditions that operate on the base form, like "
+                  "<code>GetIsID</code>, will see the Enchantment.</p>"
+               );
+               break;
+            case dovah::form_type::spell:
+               explanatory = tr(
+                  "<p>The Subject is the Spell: the game pretends to be working with a ref whose base "
+                  "form is the Spell, so conditions that operate on the base form, like "
+                  "<code>GetIsID</code>, will see the Enchantment. There also exist conditions "
+                  "specifically made for entry points like this, with names beginning with "
+                  "<code>EPMagic_</code>.</p>"
+               );
+               break;
+         }
+         auto* wrap   = new QWidget(this);
+         auto* layout = new QVBoxLayout(wrap);
+         layout->addWidget(cnd_list, 1);
+         if (!explanatory.isEmpty()) {
+            auto* text = new QLabel(this);
+            text->setWordWrap(true);
+            text->setText(explanatory);
+            layout->addWidget(text);
+         }
+         tabview->addTab(wrap, QString(subject.name));
       }
    }
    if (!size) {
@@ -282,6 +316,7 @@ void FormSubdialogPerkEntry::_rebuild_entry_point_condition_tabs(const dovah::pe
       tab->overrideOwningForm(this->_state.form);
       tabview->addTab(tab, "Perk Owner");
       tabview->setTabEnabled(0, false);
+      widget_list.push_back(tab);
    }
 }
 void FormSubdialogPerkEntry::_rebuild_entry_point_function_type_combobox(dovah::entry_point_value_type vt) {

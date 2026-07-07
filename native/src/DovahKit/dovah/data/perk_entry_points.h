@@ -512,7 +512,7 @@ namespace dovah {
             perk_entry_point_info::perk_owner_condition_subject,
             perk_entry_point_info::condition_subject{
                .name = "Item",
-               .type = dovah::form_type::soul_gem, // TODO: verify
+               .type = dovah::form_type::weapon, // TODO: verify
             },
          },
       },
