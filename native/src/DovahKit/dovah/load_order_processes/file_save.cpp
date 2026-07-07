@@ -245,11 +245,13 @@ namespace dovah::load_order_processes {
       }
    }
    void file_save::_post_save_form_stub_file_info_update(writer_type& writer) {
+      auto& active_file = *active_load_order.active_file;
       for (auto& pair : writer.fixup_data.form_stubs) {
          auto& info = pair.second;
          auto* stub = info.stub;
-         stub->_set_source_file_offset(*active_load_order.active_file, info.offset);
-         stub->_modify_source_file_record_flags(*active_load_order.active_file, tes_file_record_header::flag::partial, info.partial);
+         stub->_set_source_file_offset(active_file, info.offset);
+         stub->_modify_source_file_record_flags(active_file, 0xFFFFFFFF,        false); // clear...
+         stub->_modify_source_file_record_flags(active_file, info.record_flags, true);  // ...so we can replace
          if (!stub->is_edited()) {
             //
             // If the form stub was written to the file despite not having been flagged as edited, 

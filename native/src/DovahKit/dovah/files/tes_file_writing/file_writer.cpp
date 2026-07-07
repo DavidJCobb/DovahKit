@@ -264,9 +264,8 @@ namespace dovah::tes_file_writing {
       this->_current_target = nullptr;
       {
          auto& write_info = this->fixup_data.form_stubs[stub->formID];
-         write_info.stub    = stub;
-         write_info.offset  = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
-         write_info.partial = (record.header.flags & tes_file_record_header::flag::partial);
+         write_info.stub   = stub;
+         write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
          for (auto& pair : stub->outbound) {
             auto  id    = pair.first;
             auto& entry = pair.second;
@@ -281,6 +280,7 @@ namespace dovah::tes_file_writing {
             this->compress_state.containing_cell_is_compressed = record.header.body_is_compressed();
          }
          //
+         write_info.record_flags = record.header.flags;
          record._close();
       }
 
