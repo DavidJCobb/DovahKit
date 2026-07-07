@@ -10,8 +10,10 @@ namespace editor::localize {
    extern QString perk_entry_point_explanation(ENUMERATION_TYPE v) {
       using enum ENUMERATION_TYPE;
 
+      bool    is_actually_completely_unused = false; // if, per my disassembler, no calls to CalculatePerkData pertain to the entry point
       bool    number_result_treated_as_bool = false;
-      bool    player_perk_owner_only        = false;
+      bool    player_perk_owner_only        = false; // game only checks the entry point on the player
+      bool    obviously_player_only         = false; // e.g. a perk that involves UI interactions
       QString result;
       switch (v) {
          case add_leveled_item_on_death:
@@ -21,6 +23,14 @@ namespace editor::localize {
                "checked for perks owned by the player.</p>"
             );
             break;
+         case adjust_limb_damage:
+            return STRING(
+               "<p>A Fallout 3 leftover. Modifies the damage dealt to the Perk Owner's limbs. Skyrim still checks "
+               "this, but only when the Perk Owner has a Body Part (defined in BodyPartData) that associates an "
+               "Actor Value with whatever hardcoded limb ID was hit. The Creation Kit doesn't ordinarily allow you "
+               "to tie Body Parts to Actor Values, and Skyrim's hardcoded limb IDs mostly aren't useful (i.e. they're "
+               "things like \"Saddle\" and \"Fly Grab\").</p>"
+            );
          case apply_bash_spell:
             result = STRING(
                "<p>Applies a spell to the Target when the Perk Owner sucessfully bashes them with a shield or weapon.</p>"
@@ -34,7 +44,8 @@ namespace editor::localize {
             break;
          case apply_reanimate_spell:
             result = STRING(
-               "<p>Applies a spell to the Target when the Perk Owner sucessfully reanimates them from the dead.</p>"
+               "<p>Applies a spell to the Target when the Perk Owner sucessfully reanimates them from the dead. "
+               "You can check conditions against the spell that was used to reanimate the target.</p>"
             );
             break;
          case apply_sneak_spell:
@@ -58,7 +69,7 @@ namespace editor::localize {
          case calc_my_crit_chance:
             return STRING(
                "<p>Modifies the Perk Owner's percentage chance to land a critical hit on the Target when using a "
-               "given Weapon. The player's base chance (absent any perks) is zero.</p>"
+               "given Weapon.</p>"
             );
          case calc_my_crit_damage:
             return STRING(
@@ -84,6 +95,7 @@ namespace editor::localize {
             break;
          case can_pickpocket_equipped_item:
             player_perk_owner_only        = true;
+            obviously_player_only         = true;
             number_result_treated_as_bool = true;
             result = STRING(
                "<p>Controls whether the Perk Owner can pickpocket an equipped item from the Target. (By default, "
@@ -104,14 +116,25 @@ namespace editor::localize {
             break;
          case get_should_attack:
             // TODO: UNKNOWN
+            // Influences the behavior of the functionality underlying the GetShouldAttack condition, 
+            // but I'd have to RE a whole ton of other checks to figure out the surrounding context.
             break;
          case ignore_broken_lock:
-            // TODO: UNKNOWN
+            player_perk_owner_only        = true;
+            obviously_player_only         = true;
+            number_result_treated_as_bool = true;
+            result = STRING(
+               "<p>Controls whether the player is able to try to pick broken locks. This is a Fallout 3 leftover; "
+               "the game still checks it, but because Skyrim doesn't allow the player to break locks in the first "
+               "place, this is effectively unused.</p>"
+            );
             break;
          case ignore_running_during_detection:
             number_result_treated_as_bool = true;
             result = STRING(
-               "<p>Controls whether the Perk Owner is able to run without becoming easier to detect.</p>"
+               "<p>Controls whether the Perk Owner is able to run without becoming easier to detect. Note that "
+               "\"running\" and \"sprinting\" are not the same thing; \"running\" refers to an actor moving on land "
+               "at or near their fastest non-sprinting speeds.</p>"
             );
             break;
          case set_lockpicks_unbreakable:
@@ -126,7 +149,9 @@ namespace editor::localize {
                "an Enchanting Table. The default is 1.</p>"
             );
          case mod_armor_weight:
-            // TODO: UNKNOWN
+            result = STRING(
+               "<p>Modifies the weight of each equipped piece of armor worn by the Perk Owner.</p>"
+            );
             break;
          case mod_attack_damage:
             //
@@ -160,7 +185,7 @@ namespace editor::localize {
                "<p>Modifies how the influence of the Perk Owner's movement on how easily they can be detected.</p>"
             );
          case mod_favor_points:
-            // TODO: UNKNOWN
+            is_actually_completely_unused = true;
             break;
          case mod_incoming_damage:
             return STRING(
@@ -191,7 +216,7 @@ namespace editor::localize {
                "mathematical formulae.</p>"
             );
          case mod_player_reputation:
-            // TODO: UNKNOWN
+            is_actually_completely_unused = true;
             break;
          case mod_poison_dose_count:
             //
@@ -223,23 +248,35 @@ namespace editor::localize {
                "Owner isn't actively blocking. The final result will be clamped to the range [0, 100].</p>"
             );
          case mod_shout_okay:
+            player_perk_owner_only        = true;
             number_result_treated_as_bool = true;
             result = STRING(
                "<p>Controls whether the Perk Owner can Shout. The default is 1.</p>"
             );
             break;
          case mod_soul_gem_enchanting:
+            player_perk_owner_only = true;
+            obviously_player_only  = true;
             result = STRING(
                "<p>Modifies the amount of energy Soul Gems provide when the Perk Owner is applying a given Enchantment to "
                "a given weapon at an Enchanting Table.</p>"
             );
             break;
          case mod_soul_gem_recharge:
+            player_perk_owner_only = true;
+            obviously_player_only  = true;
             return STRING(
                "<p>Modifies the amount of energy Soul Gems provide when the Perk Owner uses them to recharge a weapon's "
                "enchantment.</p>"
             );
          case mod_spell_casting_sound_event:
+            //
+            // TODO: RE suggests that this is a boolean?
+            // 
+            // TODO: RE suggests that this is backwards, i.e. 0 creates a detection event and 1 skips?? But it 
+            //       still defaults to 1??? Did Bethesda make mistakes when implementing it? Are my tools not 
+            //       interpreting the floating-point comparison correctly?
+            //
             result = STRING(
                "<p>Scales the noise made when the Perk Owner casts the given Spell. The default is 1.0; change to 0.0 to "
                "prevent NPCs from hearing the spell.</p>"
@@ -268,18 +305,19 @@ namespace editor::localize {
                "<p>Modifies the Armor Rating of a Target attacked by the Perk Owner.</p>"
             );
          case mod_addiction_chance:
-            // TODO: UNKNOWN
+            return STRING(
+               "<p>In Fallout 3, this modified the chance of an actor developing an addiction to a chem. Skyrim still "
+               "checks this entry point, but it's not yet known whether the relevant codepath ever ends up running "
+               "during normal play.</p>"
+            );
             break;
          case mod_alchemy_effectiveness:
             return STRING(
                "<p>Modifies the Magic Effect magnitudes of new potions and poisons crafted by the Perk Owner.</p>"
             );
          case mod_armor_rating:
-            //
-            // TODO: This can run conditions on an Item. Can Armor Rating be influenced per individual piece of apparel?
-            //
             return STRING(
-               "<p>Modifies the Perk Owner's overall Armor Rating.</p>"
+               "<p>Modifies the Armor Rating of each equipped piece of armor worn by the Perk Owner.</p>"
             );
          case mod_bow_zoom:
             return STRING(
@@ -307,7 +345,10 @@ namespace editor::localize {
                "retroactive.</p>"
             );
          case mod_enemy_crit_chance:
-            // TODO: UNKNOWN
+            result = STRING(
+               "<p>Modifies the Attacker's chance to land a critical hit on the Perk Owner. If the Attacker has any \"%1\" "
+               "Perks, that entry point will run before this one.</p>"
+            ).arg(perk_entry_point(dovah::perk_entry_point::calc_my_crit_chance));
             break;
          case mod_fall_damage:
             return STRING(
@@ -323,7 +364,7 @@ namespace editor::localize {
                "<p>Modifies how many of an ingredient's Magic Effects the Perk Owner can learn by eating the ingredient.</p>"
             );
          case mod_lockpick_level_allowed:
-            // TODO: UNKNOWN
+            is_actually_completely_unused = true;
             break;
          case mod_lockpick_sweet_spot:
             return STRING(
@@ -339,9 +380,12 @@ namespace editor::localize {
                "to a lock if they successfully pick that lock.</p>"
             );
          case mod_max_placeable_mines:
-            return STRING(
-               "<p>Modifies the number of landmines (e.g. Rune spells) that the Perk Owner can place at once.</p>"
+            player_perk_owner_only = true;
+            result = STRING(
+               "<p>Modifies the number of landmines (e.g. Rune spells) that the Perk Owner can place at once. The default "
+               "value is the value of the <code>iMaxPlayerRunes</code> Game Setting.</p>"
             );
+            break;
          case mod_pickpocket_chance: // "Modify Max Pickpocket Chance" on CK wiki
             return STRING(
                "<p>Modifies the percentage chance that the Perk Owner will successfully pickpocket the Item from "
@@ -352,7 +396,7 @@ namespace editor::localize {
             // TODO: UNKNOWN
             break;
          case mod_positive_chem_duration:
-            // TODO: UNKNOWN
+            is_actually_completely_unused = true;
             break;
          case mod_alchemy_potions_created:
             return STRING(
@@ -366,7 +410,7 @@ namespace editor::localize {
                "integer between 0 and 100.</p>"
             );
          case mod_recovered_health:
-            // TODO: UNKNOWN
+            is_actually_completely_unused = true;
             break;
          case mod_sell_prices:
             return STRING(
@@ -396,16 +440,22 @@ namespace editor::localize {
          case mod_telekinesis_damage:
             return STRING(
                "<p>Modifies the base damage dealt by the Perk Owner when they fling an object at a target using a "
-               "Telekinesis-archetype spell. The default damage is always 3.</p>"
+               "Telekinesis-archetype spell. The default is the value of the <code>fMagic<wbr/>Telekinesis<wbr/>DamageBase</code> "
+               "Game Setting.</p>"
             );
          case mod_telekinesis_damage_mult:
             return STRING(
                "<p>Modifies a multiplier applied to the base damage dealt by the Perk Owner when they fling an object "
-               "at a target using a Telekinesis-archetype spell. This is functionally identical to multiplying the "
-               "base damage using the Mod Telekinesis Damage entry point.</p>"
+               "at a target using a Telekinesis-archetype spell. The default is the value of the <code>fMagic<wbr/>Telekinesis<wbr/>DamageMult</code> "
+               "Game Setting.</p>"
             );
          case mod_telekinesis_distance:
-            // TODO: UNKNOWN
+            player_perk_owner_only = true;
+            return STRING(
+               "<p>Modifies the max distance from which the Perk Owner can grab an object using a Telekinesis-archetype "
+               "spell. The default value is the value of the <code>fMagic<wbr/>Telekinesis<wbr/>BaseDistance</code> Game "
+               "Setting.</p>"
+            );
             break;
          case mod_tempering_health:
             return STRING(
@@ -426,7 +476,11 @@ namespace editor::localize {
             );
             break;
          case set_activate_label:
-            // TODO: UNKNOWN
+            player_perk_owner_only = true;
+            obviously_player_only  = true;
+            result = STRING(
+               "<p>Changes the text of the activation prompt shown when the Perk Owner aims at the Target.</p>"
+            );
             break;
          case set_boolean_graph_variable:
             return STRING(
@@ -453,10 +507,16 @@ namespace editor::localize {
             break;
       }
 
-      if (player_perk_owner_only) {
+      if (player_perk_owner_only && !obviously_player_only) {
          result += QCoreApplication::translate("perk entry point explanation - boilerplate",
             "\n"
             "<p>This entry point is only used when the Perk Owner is the player.</p>"
+         );
+      }
+
+      if (is_actually_completely_unused) {
+         result += QCoreApplication::translate("perk entry point explanation - boilerplate",
+            "<p>This appears to be completely unused. No uses of it have been discovered through reverse-engineering.</p>"
          );
       }
 
