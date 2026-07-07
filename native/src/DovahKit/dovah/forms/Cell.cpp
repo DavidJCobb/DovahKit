@@ -213,9 +213,11 @@ namespace dovah::loaded_forms {
       bool is_exterior = this->stub.is_exterior_cell();
       //
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
-      auto& FULL = record.open_next_subrecord('FULL');
-      FULL.write(this->name);
-      FULL.close();
+      if (!this->name.empty()) {
+         auto& FULL = record.open_next_subrecord('FULL');
+         FULL.write(this->name);
+         FULL.close();
+      }
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->cell_flags);
       DATA.close();
@@ -253,9 +255,11 @@ namespace dovah::loaded_forms {
       auto& XCLW = record.open_next_subrecord('XCLW');
       XCLW.write(this->water.height);
       XCLW.close();
-      auto& XNAM = record.open_next_subrecord('XNAM');
-      XNAM.write(this->water.noise_texture);
-      XNAM.close();
+      if (!this->water.noise_texture.empty()) {
+         auto& XNAM = record.open_next_subrecord('XNAM');
+         XNAM.write(this->water.noise_texture);
+         XNAM.close();
+      }
       //
       this->extra_data.save(record, intfc);
    }

@@ -63,6 +63,7 @@ void FormDialogPotion::_load_impl() {
    this->ui.effects->importFrom(working, working.effects);
    this->ui.keywords->pullStubs(working.keywords.forms);
    this->ui.model->initializeFrom(working.model);
+   this->ui.scriptListPane->setFormWorkingCopy(&working);
 
    this->_update_auto_calc();
 }
@@ -85,6 +86,7 @@ void FormDialogPotion::_save_impl() {
 
    this->ui.keywords->commitStubs(working.keywords.forms, working);
    this->ui.model->commitTo(working.model, working);
+   this->ui.scriptListPane->commit();
 
    cobb::edit_bit(this->record_flags(), loaded_form_type::form_flag::medicine, (working.flags & loaded_form_type::flag::medicine));
 }
