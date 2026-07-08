@@ -5,6 +5,7 @@
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/enum_dropdown_configs/actor_value_index.h"
+#include "ui/utils/enum_dropdown_configs/detection_loudness.h"
 #include "ui/utils/enum_dropdown_configs/resistance_av_index.h"
 #include "ui/utils/enum_dropdown_configs/skill.h"
 #include "ui/utils/bind.h"
@@ -128,6 +129,7 @@ FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QD
          this->ui.soundUnequip->setAllowedFormType(dovah::form_type::sound_descriptor);
          this->ui.soundTake->setAllowedFormType(dovah::form_type::sound_descriptor);
          this->ui.soundDrop->setAllowedFormType(dovah::form_type::sound_descriptor);
+         ui::enum_dropdown_configs::detection_loudness(this->ui.detectionSoundLevel);
       #pragma endregion
 
       #pragma region Rumble
@@ -260,6 +262,7 @@ void FormDialogWeapon::_load_impl() {
          ui::bind(this->ui.soundIdle, working.sounds.idle, working);
          ui::bind(this->ui.soundEquip, working.sounds.equip, working);
          ui::bind(this->ui.soundUnequip, working.sounds.unequip, working);
+         ui::bind(this->ui.detectionSoundLevel, working.loudness);
       #pragma endregion
 
       ui::bind(this->ui.rumbleStrengthL, working.rumble.left_motor);
