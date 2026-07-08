@@ -615,6 +615,7 @@ namespace dovah::loaded_forms {
       copy->ai_ranges = this->ai_ranges;
       copy->animation = this->animation;
       copy->base_vats_hit_chance = this->base_vats_hit_chance;
+      copy->damage        = this->damage;
       copy->description   = this->description;
       copy->flags         = this->flags;
       copy->hit_gore_behavior = this->hit_gore_behavior;

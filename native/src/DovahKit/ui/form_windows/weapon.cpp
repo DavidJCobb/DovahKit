@@ -172,10 +172,8 @@ void FormDialogWeapon::_load_impl() {
          auto* widget = this->ui.skill;
          {
             int i = -1;
-            if (working.skill.has_value()) {
+            if (working.skill.has_value())
                i = widget->findData((int)working.skill.value());
-            }
-            i = widget->findData(i);
             if (i < 0)
                i = widget->findData(-1);
             widget->setCurrentIndex(i);
