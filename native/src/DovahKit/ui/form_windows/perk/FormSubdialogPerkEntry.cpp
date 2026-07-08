@@ -22,6 +22,7 @@ FormSubdialogPerkEntry::FormSubdialogPerkEntry(dovah::loaded_forms::Perk& perk, 
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
    this->setWindowFlags(this->windowFlags() | Qt::WindowContextHelpButtonHint); // show "What's This?" button in title bar
 
+   this->ui.rank->setRange(0, perk.data.rank_count);
    {
       auto* widget = this->ui.type;
       widget->clear();
