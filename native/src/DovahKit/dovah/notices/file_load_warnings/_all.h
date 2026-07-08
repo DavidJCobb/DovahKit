@@ -1,4 +1,5 @@
 #pragma once
+#include "./apparent_persistent_cell_not_flagged_as_persistent.h"
 #include "./esl_defined_an_interior_cell.h"
 #include "./esl_defined_interior_cell_is_overridden.h"
 #include "./form_initial_record_is_partial.h"

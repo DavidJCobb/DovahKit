@@ -2144,6 +2144,7 @@
     <ClInclude Include="dovah\notices\file_load_errors\record_is_too_large.h" />
     <ClInclude Include="dovah\notices\file_load_errors\unexpected_nested_group_in_simple_top_group.h" />
     <ClInclude Include="dovah\notices\file_load_errors\_all.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\apparent_persistent_cell_not_flagged_as_persistent.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\esl_defined_an_interior_cell.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\esl_defined_interior_cell_is_overridden.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\form_initial_record_is_partial.h" />

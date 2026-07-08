@@ -10565,6 +10565,9 @@
     <ClInclude Include="editor\localize\perk_entry_point_explanation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\file_load_warnings\apparent_persistent_cell_not_flagged_as_persistent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

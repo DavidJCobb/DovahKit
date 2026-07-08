@@ -9,6 +9,7 @@
 #include "../../notices/file_load_errors/interior_cell_block_group_badly_nested.h"
 #include "../../notices/file_load_errors/interior_cell_block_has_no_parent_group.h"
 #include "../../notices/file_load_errors/malformed_file_header.h"
+#include "../../notices/file_load_warnings/apparent_persistent_cell_not_flagged_as_persistent.h"
 #include "../../notices/file_load_warnings/record_found_in_wrong_top_level_group.h"
 
 namespace dovah::tes_file_reading {
@@ -334,8 +335,34 @@ namespace dovah::tes_file_reading {
                auto* stub = this->make_stub_for_record();
                switch (group.header.type) {
                   case group::type::world_children:
-                     this->set_stub_parent(stub, last_worldspace_id);
-                     last_world_cell_id = stub->formID;
+                     if (stub->form_type == form_type::cell) {
+                        //
+                        // Loading (probable) persistent cell.
+                        //
+                        this->set_stub_parent(stub, last_worldspace_id);
+                        last_world_cell_id = stub->formID;
+
+                        if (!stub->test_record_flags(tes_file_record_header::flag::persistent)) {
+                           stub->edit_record_flags(tes_file_record_header::flag::persistent, true); // auto-correct
+                           notices::file_load_warnings::apparent_persistent_cell_not_flagged_as_persistent notice(
+                              stub->get_parent_form(),
+                              *stub,
+                              true
+                           );
+                           notice.source_file = this->get_file_loader().get_filename();
+                           this->get_file_loader().get_load_interface(*this).log_warning(notice);
+                        }
+                     } else {
+                        notices::file_load_warnings::record_found_in_wrong_top_level_group notice;
+                        notice.top_level_group_label = _byteswap_ulong(group.header.label);
+                        notice.record = {
+                           .local_id  = record.formID(),
+                           .global_id = stub->formID,
+                           .signature = record.signature(),
+                        };
+                        notice.source_file = this->get_file_loader().get_filename();
+                        this->get_file_loader().get_load_interface(*this).log_warning(notice);
+                     }
                      break;
                }
                if (!this->commit_stub(stub)) {
@@ -357,7 +384,7 @@ namespace dovah::tes_file_reading {
                         .global_id = stub->formID,
                         .signature = record.signature(),
                      };
-                     //
+                     notice.source_file = this->get_file_loader().get_filename();
                      this->get_file_loader().get_load_interface(*this).log_warning(notice);
                   }
                }

@@ -257,7 +257,9 @@ The term [temporary](#temporary) is the antonym.
 ### persistent cell
 A [cell](#cell) that exists as a special case within the [data file](#data%20file) format, acting as a parent [record](#record) for all [persistent](#persistent) [refs](#ref) within a given worldspace.
 
-Within the game engine, cells and their contents can be loaded and unloaded individually and on-demand. Cells exist "semantically" within gameplay as slices of physical space, and "mechanically" within the file format as containers for forms that can be loaded in bulk. Persistent cells fulfill the latter function only: they exist so that the game can bulk-load all persistent refs, instead of having to scan through every single cell in search of them. You can think of a worldspace's persistent cell as overlapping all of the worldspace's ordinary cells.
+Within the game engine, cells and their contents can be loaded and unloaded individually and on-demand. Cells exist "semantically" within gameplay as slices of physical space, and "mechanically" within the file format as containers for forms that can be loaded in bulk. Persistent cells fulfill both of those functions on behalf of an entire worldspace: persistent refs anywhere in a worldspace are listed in data files as children of the worldspace's persistent cell; and when a worldspace isn't currently loaded, any persistent refs located inside of that worldspace will have their parent cell set to the worldspace's persistent cell. (The alternative would be to risk these refs having a null "parent cell" pointer.)
+
+You can think of a worldspace's persistent cell as overlapping all of the worldspace's ordinary cells.
 
 ### plug-in
 See [data file](#data%20file).

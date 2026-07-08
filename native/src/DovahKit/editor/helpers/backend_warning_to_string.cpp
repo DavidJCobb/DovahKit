@@ -36,6 +36,45 @@ namespace editor_helpers {
       constexpr const char* disambig = "backend warnings";
 
       #pragma region file load warnings
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::apparent_persistent_cell_not_flagged_as_persistent*>(&warning)) {
+            QString format;
+
+            QString file = QString::fromStdString(casted->source_file);
+            QString cell = form_identifiers_to_string(&casted->persistent_cell);
+            QString world;
+            if (casted->worldspace) {
+               world  = form_identifiers_to_string(casted->worldspace);
+               format = QObject::tr(
+                  "File %1 contains %2, which appears to be the persistent cell for worldspace %3. "
+                  "However, the cell isn't actually flagged as persistent. This can cause major "
+                  "game instability, including objects failing to spawn if the player drops them "
+                  "while in the affected worldspace, and the game crashing when auto-saving if a "
+                  "persistent ref has been moved into the worldspace."
+               );
+            } else {
+               format = QObject::tr(
+                  "File %1 contains %2, which appears to be the persistent cell for some worldspace. "
+                  "However, the cell isn't actually flagged as persistent. This can cause major "
+                  "game instability, including objects failing to spawn if the player drops them "
+                  "while in the affected worldspace, and the game crashing when auto-saving if a "
+                  "persistent ref has been moved into the worldspace."
+               );
+            }
+            if (casted->problem_auto_corrected) {
+               format += QObject::tr(
+                  " DovahKit is going to pretend that the \"persistent\" flag is set; if this cell (or "
+                  "any persistent ref in this worldspace) is modified in the active file, then saving "
+                  "the active file should set the flag."
+               );
+            }
+
+            dovahkit::qt::utils::bulk_string_substitution bss(format);
+            return bss.exec(
+               file,
+               cell,
+               world
+            );
+         }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::esl_defined_an_interior_cell*>(&warning)) {
             auto form = QString("[CELL:%2]")
                .arg(editor_helpers::form_id_to_string(casted->form_ids.global));
