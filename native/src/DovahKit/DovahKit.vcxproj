@@ -184,6 +184,9 @@
     <ClCompile Include="dovahscript\wrappers\form_components\condition.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\comparison.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\parameter_set.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\form_extra_data.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\form_extra_data\p\primitive.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\form_extra_data\p\primitive\primitive_bounds.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\papyrus.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\papyrus\collection_array_property_values.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\papyrus\collection_fragments_indexed.cpp" />
@@ -1657,6 +1660,7 @@
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\form_extra_data.h" />
     <ClInclude Include="dovahscript\wrappers\form\placed_arrow.h" />
     <ClInclude Include="dovahscript\wrappers\form\placed_barrier.h" />
     <ClInclude Include="dovahscript\wrappers\form\placed_beam.h" />
@@ -1682,6 +1686,8 @@
     <ClInclude Include="dovahscript\wrappers\form_components\condition.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\comparison.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\parameter_set.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\form_extra_data\p\primitive.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\form_extra_data\p\primitive\primitive_bounds.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\papyrus.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\papyrus\collection_array_property_values.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\papyrus\collection_fragments_indexed.h" />

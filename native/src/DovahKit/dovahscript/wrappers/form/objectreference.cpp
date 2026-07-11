@@ -22,12 +22,13 @@
 #include "dovah/forms/ObjectReference.h"
 #include "./objectreference/position.h"
 #include "./objectreference/rotation.h"
+#include "../form_components/form_extra_data.h"
 
 #include "../../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_script_apis, "The Lua API for ObjectReferences is incomplete.");
 //
 // - Missing:
-//    - All extra data
+//    - Some extra data
 //    - Door open state
 //    - Position setter (individual axes; see objectreference_position)
 //    - Position setter (overwriting the whole "position" member)
@@ -115,6 +116,15 @@ namespace {
             return 0;
          auto* base = dovah::form_stub_helpers::get_base_form(*self.stub);
          return push_native_object(base);
+      }
+      int extra_data(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         wrapper out = self;
+         out.append_part(wrappers::form_extra_data::wrapper_part_type);
+         return core::subsystems::userdata::get().push(L, out, wrappers::form_extra_data::metatable_key);
       }
       int hide_from_local_map(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -517,6 +527,7 @@ namespace dovahscript::wrappers {
          #pragma endregion
       #pragma endregion
       { "base_form",           &_getters::base_form },
+      { "extra_data",          &_getters::extra_data },
       { "hide_from_local_map", &_getters::hide_from_local_map },
       { "is_full_lod",         &_getters::is_full_lod },
       { "is_sky_marker",       &_getters::is_sky_marker },

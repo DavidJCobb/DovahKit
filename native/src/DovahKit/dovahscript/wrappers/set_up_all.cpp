@@ -103,6 +103,9 @@ namespace dovahscript {
                define_wrapper_metatable<condition_comparison>(L);
                define_wrapper_metatable<condition_parameter_set>(L);
          wrapper_likes::native_lists::form_ordered_children::define_metatable(L);
+         define_wrapper_metatable<form_extra_data>(L);
+            define_wrapper_metatable<form_extra_data_types::primitive>(L);
+               define_wrapper_metatable<form_extra_data_types::primitive__bounds>(L);
          define_wrapper_metatable<papyrus_root>(L);
             define_collection_metatable(L, collections::papyrus_scripts);
                define_wrapper_metatable<papyrus_script>(L);
