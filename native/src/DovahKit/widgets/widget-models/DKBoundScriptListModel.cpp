@@ -135,6 +135,7 @@ void DKBoundScriptListModel::initializeFrom(vmad_data& local, vmad_data& inherit
    this->endResetModel();
 }
 void DKBoundScriptListModel::commitTo(vmad_data& target, dovah::loaded_forms::Form& working_copy) {
+   std::vector<std::string> scripts_to_remove;
    for (auto& script : target.scripts) {
       if (script.name.empty()) {
          //
@@ -155,6 +156,7 @@ void DKBoundScriptListModel::commitTo(vmad_data& target, dovah::loaded_forms::Fo
       }
       if (!src) {
          script.clear(working_copy);
+         scripts_to_remove.push_back(script.name);
          continue;
       }
 
@@ -162,6 +164,11 @@ void DKBoundScriptListModel::commitTo(vmad_data& target, dovah::loaded_forms::Fo
          continue;
 
       src->model->commitTo(script, working_copy);
+   }
+   for (const auto& name : scripts_to_remove) {
+      std::erase_if(target.scripts, [&name](const auto& script) {
+         return script.name == name;
+      });
    }
    for (const auto* item : this->_scripts) {
       auto scriptname = item->name.toStdString();
