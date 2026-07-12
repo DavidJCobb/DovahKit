@@ -1,0 +1,123 @@
+
+// NifSkope represents this as the Layer, Flags and Part Number, and Group 
+// fields on bhkPhantoms.
+//
+struct collision_info {
+   public:
+      static constexpr const uint8_t no_body_part = 0b11111;
+   
+   public:
+      uint32_t data;
+      
+   public:
+      constexpr uint8_t body_part() const noexcept {
+         return (this->data >> 8) & 0x1F;
+      }
+      constexpr uint8_t layer_uid() const noexcept { // i.e. COLL/BNAM
+         return this->data & 0x7F;
+      }
+      
+      // Various entities in the game world are given different system groups. These 
+      // are used to prevent bipeds' bones from colliding with each other, among 
+      // other things.
+      //
+      // Known constant system groups:
+      //
+      //  - 0x0002: Water
+      //  - 0x000B: Trigger volumes (via ExtraPrimitive)
+      //
+      constexpr uint16_t system_group() const noexcept {
+         return this->data >> 16;
+      }
+   
+      constexpr bool only_allow_custom_pick_2() const noexcept {
+         return this->data & (1 << 14);
+      }
+      constexpr bool noncollidable() const noexcept {
+         return this->data & (1 << 15);
+      }
+};
+
+bool bhkCollisionFilter::CanFilterInfosCollide(collision_info a, collision_info b) {
+   uint32_t a_layer_uid = a.layer_uid();
+   uint32_t b_layer_uid = b.layer_uid();
+   if (a_layer_uid != 44) { // L_CUSTOMPICK2
+      if (a.only_allow_custom_pick_2())
+         return false;
+      if (b.only_allow_custom_pick_2())
+         return false;
+   }
+   if (!a.system_group())
+      return true;
+   if (!b.system_group())
+      return true;
+   
+   if (a.system_group() != b.system_group()) {
+      if (b_layer_uid != a_layer_uid) {
+         //
+         // If an L_CHARCONTROLLER shape overlaps a shape of another layer, 
+         // from another object, only register a collision if the former 
+         // shape has an associated body part.
+         //
+         if (a_layer_uid == 30) { // L_CHARCONTROLLER
+            if (a.body_part() == collision_info::no_body_part)
+               return false;
+         }
+         if (b_layer_uid == 30) { // L_CHARCONTROLLER
+            if (b.body_part() == collision_info::no_body_part)
+               return false;
+         }
+      }
+      if (
+         (a_layer_uid == 30 && a.noncollidable()) // L_CHARCONTROLLER
+      || (b_layer_uid == 30 && b.noncollidable()) // L_CHARCONTROLLER
+      ) {
+         //
+         // If a non-collidable L_CHARCONTROLLER shape is a trigger volume, 
+         // don't allow it to collide with any other trigger volume.
+         //
+         bool cl = this->triggerField & (1 << b_layer_uid); // is `b` a trigger volume?
+         bool al = this->triggerField & (1 << a_layer_uid); // is `a` a trigger volume?
+         if (al & cl)
+            return false;
+      }
+      // COLL-to-COLL relationships per COLL/CNAM:
+      return this->layerBitfields[a_layer_uid] & (1 << b_layer_uid);
+   }
+   
+   //
+   // Collisions within a system group (which seems to only apply to bipeds?):
+   //
+   
+   // COLL-to-COLL relationships per COLL/CNAM:
+   if (!(this->layerBitfields[a_layer_uid] & (1 << b_layer_uid)))
+      return false;
+   
+   if (a_layer_uid == 30 && a.noncollidable()) // L_CHARCONTROLLER
+      return false;
+   if (b_layer_uid == 30 && b.noncollidable()) // L_CHARCONTROLLER
+      return false;
+   
+   // If neither layer is 0 (L_UNIDENTIFIED), 16 (L_CLOUD_TRAP), 32 (L_DEADBIP), etc.:
+   if ((a & b) & 0xF) {
+      //
+      // Don't allow adjacent body parts to collide:
+      //
+      uint32_t u = a.body_part(); // info A value Ua
+      uint32_t v = b.body_part(); // info B value Ua
+      return abs(u - v) != 1;
+   }
+   
+   //
+   // "Dead biped" and "biped, no character controller" shapes don't check 
+   // the cross-body-part collision mask.
+   //
+   if (a_layer_uid != 8) // L_BIPED
+      if (a_layer_uid != 32 && a_layer_uid != 33) // L_DEADBIP and L_BIPED_NO_CC
+         return false;
+   if (b_layer_uid != 8) // L_BIPED
+      if (b_layer_uid != 32 && b_layer_uid != 33) // L_DEADBIP and L_BIPED_NO_CC
+         return false;
+   
+   return !!(this->bipedBitfields[a.body_part()] & b.body_part());
+}
