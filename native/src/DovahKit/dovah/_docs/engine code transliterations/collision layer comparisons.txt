@@ -1,6 +1,7 @@
 
 // NifSkope represents this as the Layer, Flags and Part Number, and Group 
-// fields on bhkPhantoms.
+// fields on bhkPhantoms. This struct is written for exposition purposes 
+// only; I suspect the game itself always uses a uint32_t.
 //
 struct collision_info {
    public:

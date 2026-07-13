@@ -30,11 +30,19 @@ class CellRefListModelItem {
       const form_stub* stub     = nullptr;
       const form_stub* base     = nullptr;
       form_type        baseType = dovah::form_type::none;
-      bare_form_id_t   formID   = 0;
-      QString          editorID;
+      struct {
+         QString display;
+         QString filter;
+         bare_form_id_t raw = 0;
+      } formID;
+      struct {
+         QString display;
+         QString raw;
+      } editorID;
       //
-      bool is_active   = false;
-      bool is_injected = false;
+      bool is_active     = false;
+      bool is_injected   = false;
+      bool is_persistent = false;
       
       CellRefListModelItem() {}
       CellRefListModelItem(const form_stub*);

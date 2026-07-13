@@ -255,17 +255,20 @@ void DKPapyrusBoundScriptListPane::_updateGroupbox() {
          }
       }
       if (!script_qmi.isValid()) {
-         this->subwidgets.buttons.wrapper->setEnabled(false);
+         this->subwidgets.buttons.toggle_delete->setEnabled(false);
+         this->subwidgets.buttons.properties->setEnabled(false);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
          return;
       }
 
       auto opt = this->model->status(script_qmi);
       if (!opt.has_value()) {
-         this->subwidgets.buttons.wrapper->setEnabled(false);
+         this->subwidgets.buttons.toggle_delete->setEnabled(false);
+         this->subwidgets.buttons.properties->setEnabled(false);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
          return;
       }
+      this->subwidgets.buttons.toggle_delete->setEnabled(true);
       if (opt.value() != vmad::script_status::removed) {
          this->subwidgets.buttons.properties->setEnabled(true);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));

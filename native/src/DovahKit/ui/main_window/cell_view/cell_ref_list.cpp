@@ -7,6 +7,7 @@
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/helpers/form_type_name_to_string.h"
 #include "editor/open_window_for_form.h"
+#include "editor/form_stub_meta_type.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stubs/helpers/for_each_child_form.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
@@ -23,20 +24,20 @@ dovah::form_type CellRefListModelItem::formType() const noexcept {
 }
 void CellRefListModelItem::update() {
    auto stub = this->stub;
-   this->base     = dovah::form_stub_helpers::get_base_form(*stub);
-   this->editorID = QString::fromUtf8(stub->get_editor_id());
-
+   this->base         = dovah::form_stub_helpers::get_base_form(*stub);
+   this->formID.raw   = stub->formID;
+   this->editorID.raw = QString::fromUtf8(stub->get_editor_id());
    if (this->base) {
       this->baseType = this->base->form_type;
-      if (this->editorID.isEmpty())
-         this->editorID = QString::fromUtf8(this->base->get_editor_id());
+      if (this->editorID.raw.isEmpty())
+         this->editorID.raw = QString::fromUtf8(this->base->get_editor_id());
    } else {
       switch (stub->form_type) {
          case dovah::form_type::land:
          case dovah::form_type::navmesh:
             this->baseType = stub->form_type;
-            if (this->editorID.isEmpty()) {
-               this->editorID = editor_helpers::form_type_name_to_string(stub->form_type);
+            if (this->editorID.raw.isEmpty()) {
+               this->editorID.raw = editor_helpers::form_type_name_to_string(stub->form_type);
             }
             break;
          default:
@@ -44,10 +45,29 @@ void CellRefListModelItem::update() {
       }
    }
    
-   this->formID = stub->formID;
+   this->is_active     = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
+   this->is_injected   = stub->is_injected();
+   this->is_persistent = stub->test_record_flags(dovah::tes_file_record_header::flag::persistent);
    
-   this->is_active   = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
-   this->is_injected = stub->is_injected();
+   {
+      bool  deleted = stub->is_deleted();
+      auto& dst     = this->formID.display;
+      dst = editor_helpers::form_id_to_string(this->formID.raw);
+      this->formID.filter = dst;
+      if (this->is_persistent)
+         dst += CellRefListModel::tr("(P)", "form ID marker: persistent forms");
+      if (this->is_active || deleted)
+         dst += CellRefListModel::tr(" *", "form ID marker: edited or deleted forms");
+      if (deleted)
+         dst += CellRefListModel::tr(" D", "form ID marker: deleted forms");
+   }
+   {
+      bool  deleted = stub->is_deleted();
+      auto& dst     = this->editorID.display;
+      dst = this->editorID.raw;
+      if (this->is_active || deleted)
+         dst += CellRefListModel::tr(" *", "form ID marker: edited or deleted forms");
+   }
 }
 
 #pragma region CellRefListModel
@@ -163,17 +183,12 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
    bool deleted = (item->stub && item->stub->is_deleted());
    switch (role) {
       case Qt::ToolTipRole:
-         if (column != 0)
-            break;
-         [[fallthrough]];
       case Qt::DisplayRole:
          switch (column) {
             case ColumnName:
-               return tr("%1%2")
-                  .arg(item->editorID)
-                  .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
+               return item->editorID.display;
             case ColumnFormID:
-               return editor_helpers::form_id_to_string(item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
+               return item->formID.display;
             case ColumnFormType:
                return editor_helpers::form_type_name_to_string(item->baseType);
          }
@@ -195,20 +210,20 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
          break;
       case SortingRole: // used for sorting
          switch (column) {
-            case ColumnName:     return item->editorID;
-            case ColumnFormID:   return item->formID;
+            case ColumnName:     return item->editorID.raw;
+            case ColumnFormID:   return item->formID.raw;
             case ColumnFormType: return editor_helpers::form_type_name_to_string(item->baseType);
          }
          break;
       case FilteringRole: // used for filtering
          switch (column) {
-            case ColumnName:     return item->editorID;
-            case ColumnFormID:   return editor_helpers::form_id_to_string(item->formID);
-            case ColumnFormType: return QVariant();
+            case ColumnName:     return item->editorID.raw;
+            case ColumnFormID:   return item->formID.filter;
+            case ColumnFormType: return {};
          }
          break;
       case FormStubRole:
-         return QVariant::fromValue<void*>(const_cast<dovah::form_stub*>(item->stub));
+         return QVariant::fromValue(const_cast<dovah::form_stub*>(item->stub));
    }
    return QVariant();
 }
