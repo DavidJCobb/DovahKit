@@ -1,11 +1,20 @@
 #include "CollisionLayer.h"
 #include "_common_cpp.h"
 
+#include "../notices/form_load_warnings/by_form_type/collision_layer/invalid_uid.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::collision_layer;
+   }
+}
+
 namespace dovah::loaded_forms {
    void CollisionLayer::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
-      if (!intfc.is_winning_record)
+      if (!intfc.is_winning_record) {
          return;
+      }
 
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
@@ -51,6 +60,13 @@ namespace dovah::loaded_forms {
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
+      }
+      if (this->unique_id > max_functional_collision_layer_uid) {
+         specific_load_warnings::invalid_uid notice(
+            this->stub,
+            this->unique_id
+         );
+         intfc.log_load_warning(notice);
       }
    }
    /*static*/ void CollisionLayer::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {

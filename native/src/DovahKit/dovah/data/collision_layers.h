@@ -1,7 +1,11 @@
 #pragma once
 #include <array>
+#include <cstdint>
 
 namespace dovah {
+   constexpr const uint32_t max_functional_collision_layer_uid = 63;
+   constexpr const uint32_t max_safe_collision_layer_uid       = 127;
+
    enum class collision_layer {
       unidentified           =  0,
       statik                 =  1,

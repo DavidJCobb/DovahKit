@@ -26,18 +26,19 @@ namespace dovah::loaded_forms {
             };
          };
 
+      public:
          components::papyrus_attachment_data script_data; // VMAD
          //
          localized_string description = localized_string(localized_string_type::description); // DESC
-         int32_t  unique_id   = 0; // BNAM
+         uint32_t unique_id   = 0; // BNAM
          color_t  debug_color;     // FNAM
          uint32_t layer_flags = 0; // GNAM
          std::string name; // MNAM
          std::vector<form_reference_t> collides_with; // CNAM
 
+      public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
       protected:
          virtual void _clone_impl(Form* out) const noexcept override;
          virtual void _save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) override;

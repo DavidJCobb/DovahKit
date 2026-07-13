@@ -8,5 +8,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
       public:
          constexpr collision_layer get_layer_id() const noexcept { return (collision_layer)this->value; };
          constexpr void set_layer_id(collision_layer l) noexcept { this->value = (uint32_t)l; }
+
+         virtual subrecord_load_result load(tes_file_reading::subrecord&, load_interface_t&) override;
    };
 }

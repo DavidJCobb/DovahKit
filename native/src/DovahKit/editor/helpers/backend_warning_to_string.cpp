@@ -7,6 +7,7 @@
 #include "./face_fx_phoneme_name.h"
 #include "./form_identifiers_to_string.h"
 #include "./form_type_name_to_string.h"
+#include "../localize/collision_layer.h"
 #include "../localize/entry_point_function.h"
 #include "../localize/limb.h"
 #include "../localize/package_data_type.h"
@@ -583,6 +584,34 @@ namespace editor_helpers {
                }
             #pragma endregion
             #pragma region extra data
+               #pragma region collision layer
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::collision_layer_insensible_uid*>(&warning)) {
+                     QString subject    = form_identifiers_to_string(&casted->subject);
+                     QString label_name = editor::localize::collision_layer((dovah::collision_layer)casted->uid);
+                     return QObject::tr(
+                        "%1 specifies collision layer %2 (UID %3). This layer's settings are forcibly overridden by "
+                        "the game during play, so you shouldn't expect it to behave consistently during a play session.",
+                        disambig
+                     ).arg(subject).arg(label_name).arg(casted->uid);
+                  }
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::collision_layer_invalid_uid*>(&warning)) {
+                     QString subject = form_identifiers_to_string(&casted->subject);
+                     if (casted->is_unsafe_uid()) {
+                        return QObject::tr(
+                           "%1 specifies invalid collision layer UID %2. This value is dangerously high and should "
+                           "be considered corrupt; it may lead to game instability or performance issues during play. "
+                           "The maximum valid value is %3.",
+                           disambig
+                        ).arg(subject).arg(casted->uid).arg(dovah::max_functional_collision_layer_uid);
+                     } else {
+                        return QObject::tr(
+                           "%1 specifies invalid collision layer UID %2. This value is out of bounds; no Collision "
+                           "Layer form can supply data for it. The maximum valid value is %3.",
+                           disambig
+                        ).arg(subject).arg(casted->uid).arg(dovah::max_functional_collision_layer_uid);
+                     }
+                  }
+               #pragma endregion
                #pragma region linked_ref
                   if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::linked_refs_duplicate_keyword*>(&warning)) {
                      QString subject = form_identifiers_to_string(&casted->subject);
@@ -941,6 +970,15 @@ namespace editor_helpers {
                      "%1 contained subrecord %2, which is only valid for interior cells. This cell is an exterior.",
                      disambig
                   ).arg(form).arg(subrecord);
+               }
+            #pragma endregion
+            #pragma region collision layer
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::collision_layer::invalid_uid*>(&warning)) {
+                  QString form = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Collision layer %1 has an invalid UID (%4). The maximum usable UID is %2; the maximum safe UID is %3.",
+                     disambig
+                  ).arg(form).arg(dovah::max_functional_collision_layer_uid).arg(dovah::max_safe_collision_layer_uid).arg(casted->uid);
                }
             #pragma endregion
             #pragma region dialogue branch
@@ -1689,6 +1727,12 @@ namespace editor_helpers {
                   return  QObject::tr(
                      "Perk %1 effect %2 uses invalid entry point index %3."
                   ).arg(subject).arg(casted->which_effect).arg(casted->seen_entry_point);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::no_ranks*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return  QObject::tr(
+                     "Perk %1 had its number of ranks set to 0. This will prevent adding the perk to any actors."
+                  ).arg(subject);
                }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::orphaned_effect_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);

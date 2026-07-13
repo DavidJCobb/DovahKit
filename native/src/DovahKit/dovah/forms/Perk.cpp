@@ -1,6 +1,7 @@
 #include "Perk.h"
 #include "_common_cpp.h"
 
+#include "../notices/form_load_warnings/by_form_type/perk/no_ranks.h"
 #include "../notices/form_load_warnings/by_form_type/perk/orphaned_effect_subrecord.h"
 
 namespace {
@@ -44,6 +45,10 @@ namespace dovah::loaded_forms {
                subrecord.read(this->data.rank_count);
                subrecord.read(this->data.playable);
                subrecord.read(this->data.hidden);
+               if (this->data.rank_count == 0) {
+                  specific_load_warnings::no_ranks notice(intfc.target_stub);
+                  intfc.log_load_warning(notice);
+               }
                break;
             case 'NNAM':
                if (auto& form = this->next_perk; subrecord.read(icon))

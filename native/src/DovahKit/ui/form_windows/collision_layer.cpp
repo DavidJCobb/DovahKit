@@ -1,5 +1,6 @@
 #include "./collision_layer.h"
 #include <limits>
+#include "dovah/data/collision_layers.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
@@ -8,7 +9,7 @@ FormDialogCollisionLayer::FormDialogCollisionLayer(dovah::form_stub& stub, QWidg
    this->initialize(stub);
 
    this->ui.name->setMaxLength(loaded_form_type::max_name_length);
-   ui::set_range<int32_t>(this->ui.layerID);
+   this->ui.layerID->setRange(0, dovah::max_functional_collision_layer_uid);
    this->ui.collidesWith->setAllowedFormTypes({ dovah::form_type::collision_layer });
 
    this->load(); // this creates the working copy.
