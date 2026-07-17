@@ -376,7 +376,13 @@ The Alpha Pulse settings allow the alpha to fluctuate over the full lifetime of 
              <item row="0" column="2">
               <widget class="QCheckBox" name="membraneFillFlagGreyscaleToPaletteColor">
                <property name="whatsThis">
-                <string>Control whether the RGB values within the palette texture are used or ignored.</string>
+                <string>&lt;p&gt;This controls whether the Palette Texture influences the red, green, and blue channels of each final rendered pixel for the shaded object.&lt;/p&gt;
+&lt;p&gt;Bethesda has not documented precisely how this option works, but the developer of NifSkope, a community-made model editor, has worked to reconstruct how the game renders effect shaders. Per NifSkope source code, the behavior of this option is as follows: the RGB of any given pixel is copied from a texel in the palette texture. The texel coordinate is &lt;code&gt;(u,v)&lt;/code&gt;, where:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;&lt;p&gt;&lt;code&gt;u&lt;/code&gt; is the green channel of the relevant texel in the Fill Texture, clamped to the range [0, 1].&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;&lt;code&gt;v&lt;/code&gt; is the green channel of the destination color, times the computed falloff multiplier for the pixel being rendered, times the source color's red channel, with the final result of these multiplications clamped to the range [0, 1].&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In other words, the final rendered color is chosen from a single pixel in the Palette Texture. The brighter the Fill Texture is, the further to the right that pixel will be; and the brighter the destination color is, the further to the bottom that pixel will be.&lt;/p&gt;</string>
                </property>
                <property name="text">
                 <string>Greyscale to Palette - Color</string>
@@ -386,7 +392,14 @@ The Alpha Pulse settings allow the alpha to fluctuate over the full lifetime of 
              <item row="1" column="2">
               <widget class="QCheckBox" name="membraneFillFlagGreyscaleToPaletteAlpha">
                <property name="whatsThis">
-                <string>Control whether alpha transparency within the palette texture is used or ignored.</string>
+                <string>&lt;p&gt;This controls whether the Palette Texture influences the alpha channel of the effect color.&lt;/p&gt;
+&lt;p&gt;Bethesda has not documented precisely how this option works, but the developer of NifSkope, a community-made model editor, has worked to reconstruct how the game renders effect shaders. Per NifSkope source code, the behavior of this option is as follows: for any given pixel, the effect's alpha channell is copied from the alpha channel of a texel in the palette texture. The texel coordinate is &lt;code&gt;(u,v)&lt;/code&gt;, where:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;&lt;p&gt;&lt;code&gt;u&lt;/code&gt; is the alpha channel of the relevant texel in the Fill Texture, clamped to the range [0, 1].&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;&lt;code&gt;v&lt;/code&gt; is the alpha channel of the destination color, times the computed falloff multiplier for the pixel being rendered, times the source color's alpha channel, with the final result of these multiplications clamped to the range [0, 1].&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In other words, the final rendered alpha is chosen from a single pixel in the Palette Texture. The more opaque the Fill Texture is, the further to the right that pixel will be; and the more opaque the destination color is, the further to the bottom that pixel will be.&lt;/p&gt;
+&lt;p&gt;(EffectShaders don't play nice with alpha-blended meshes, but the same shader behavior is used for &lt;code&gt;BS­Effect­Shader­Property&lt;/code&gt; blocks in a NIF, and gradients used for &lt;em&gt;those&lt;/em&gt; can take advantage of vertex colors having an alpha channel. Vanilla gradients meant exclusively for EffectShaders tend to be &quot;horizontal,&quot; i.e. the alpha only varies from top to bottom, and not from left to right.)&lt;/p&gt;</string>
                </property>
                <property name="text">
                 <string>Greyscale to Palette - Alpha</string>
