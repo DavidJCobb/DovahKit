@@ -2,7 +2,7 @@
 #include "../file.h"
 
 #include "../blocks/BSLightingShaderProperty.h"
-#include "../blocks/BSShaderTextureSet.h"
+#include "../blocks/BSTriShape.h"
 #include "../blocks/NiAVObject.h"
 #include "../blocks/NiGeometry.h"
 #include "../blocks/NiNode.h"
@@ -21,15 +21,22 @@ namespace nifDK::utils {
             return;
          }
 
-         if (auto* geom = dynamic_cast<const block_types::NiGeometry*>(current_block)) {
-            if (geom->properties.shader) {
-               auto* bslp = dynamic_cast<const block_types::BSLightingShaderProperty*>(geom->properties.shader);
-               if (bslp) {
-                  if (bslp->shader_flags[0] & SkyrimShaderPropertyFlagA::remappable_textures) {
-                     out.push_back({ current_leaf_index, geom->name });
-                  }
+         const auto _pull_bslp = [&out, &current_leaf_index](const auto& geom) {
+            if (!geom.properties.shader)
+               return;
+            if (auto* bslp = dynamic_cast<const block_types::BSLightingShaderProperty*>(geom.properties.shader)) {
+               if (bslp->shader_flags[0] & SkyrimShaderPropertyFlagA::remappable_textures) {
+                  out.push_back({ current_leaf_index, geom.name });
                }
             }
+         };
+
+         if (auto* geom = dynamic_cast<const block_types::NiGeometry*>(current_block)) {
+            _pull_bslp(*geom);
+         }
+
+         if (auto* geom = dynamic_cast<const block_types::BSTriShape*>(current_block)) {
+            _pull_bslp(*geom);
          }
 
          ++current_leaf_index;

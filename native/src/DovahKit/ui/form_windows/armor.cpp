@@ -90,6 +90,8 @@ void FormDialogArmor::_save_impl() {
    gls.assign_localized_string(working.name, this->ui.name->text());
    gls.assign_localized_string(working.description, this->ui.description->toPlainText());
    this->_models.biped_objects->exportFlags(working.biped_object);
+   this->ui.modelM->commitTo(working.world_models[dovah::sex::male].model, working);
+   this->ui.modelF->commitTo(working.world_models[dovah::sex::female].model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
    this->ui.armorAddons->commitStubs(working.armor_addons, working);
    this->ui.keywords->commitStubs(working.keywords.forms, working);
