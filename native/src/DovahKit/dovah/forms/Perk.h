@@ -31,7 +31,7 @@ namespace dovah::loaded_forms {
          struct {
             bool    is_trait   = false;
             uint8_t level      = 0;
-            uint8_t rank_count = 0;
+            uint8_t rank_count = 1;
             bool    playable   = false;
             bool    hidden     = false;
          } data; // DATA
