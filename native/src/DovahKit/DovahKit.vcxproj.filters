@@ -4257,6 +4257,12 @@
     <ClCompile Include="dovahscript\wrappers\form_components\form_extra_data\p\primitive\primitive_bounds.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\c\collision_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_stubs\helpers\needs_to_be_saved.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10586,6 +10592,21 @@
     <ClInclude Include="dovahscript\wrappers\form_components\form_extra_data\p\primitive\primitive_bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\collision_layer\invalid_uid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\collision_layer_insensible_uid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\collision_layer_invalid_uid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\no_ranks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\helpers\needs_to_be_saved.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12190,6 +12211,7 @@
     <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game handles large refs.txt" />
     <Text Include="dovah\_docs\engine code transliterations\text replacement.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\collision layer comparisons.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -12691,6 +12713,7 @@
     <None Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.md" />
     <None Include="dovah\_docs\large references.md" />
     <None Include="dovah\_docs\form types\b\body part data.md" />
+    <None Include="dovah\_docs\collision layers.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

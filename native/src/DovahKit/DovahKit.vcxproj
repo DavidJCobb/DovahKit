@@ -250,6 +250,7 @@
     <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_music_override.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_region_list.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_water_type.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\types\c\collision_data.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\types\d\distant_data.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\types\e\emittance_source.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\types\e\enable_state_parent.cpp" />
@@ -452,6 +453,7 @@
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_cell_by_grid.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\needs_to_be_saved.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\winning_record_loads_after.cpp" />
     <ClCompile Include="dovah\form_stub_addenda\ordered_child_collection.cpp" />
     <ClCompile Include="dovah\form_stub_use_info_builder_form_specific_data.cpp" />
@@ -2110,6 +2112,7 @@
     <ClInclude Include="dovah\form_stubs\helpers\is_persistent.h" />
     <ClInclude Include="dovah\form_stubs\helpers\is_used_by.h" />
     <ClInclude Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\needs_to_be_saved.h" />
     <ClInclude Include="dovah\form_stubs\helpers\winning_record_loads_after.h" />
     <ClInclude Include="dovah\form_stubs\passkeys\do_custom_parse_during_load.h" />
     <ClInclude Include="dovah\form_stub_addenda\ordered_child_collection.h" />
@@ -2173,6 +2176,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\attack_data\expected_event_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\container\item_has_bad_owner_form_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\destruction\stage_serialized_index_out_of_bounds.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\collision_layer_insensible_uid.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\collision_layer_invalid_uid.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\linked_refs_duplicate_keyword.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\primitive_is_zero_size.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_insufficient_rooms.h" />
@@ -2197,6 +2202,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\body_part_data\two_parts_have_the_same_main_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\collision_layer\invalid_uid.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\footstep_set\footstep_count_mismatch.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h" />
@@ -2255,6 +2261,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\entry_point_data_for_effect_of_other_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\invalid_effect_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\invalid_entry_point.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\no_ranks.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\orphaned_effect_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\orphaned_entry_point_conditions.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\unterminated_perk_effect.h" />
@@ -4221,6 +4228,7 @@
     <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="dovah\_docs\engine code transliterations\collision layer comparisons.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game handles large refs.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
@@ -4350,6 +4358,10 @@
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
     <None Include="dovah\utils\cell_grid_position.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
+    <None Include="dovah\_docs\collision layers.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\common form flags.md" />
     <None Include="dovah\_docs\compiled script files.md" />
     <None Include="dovah\_docs\enchanting.md">

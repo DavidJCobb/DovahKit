@@ -8,6 +8,7 @@
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../form_stubs/helpers/get_worldspace_cell_by_grid.h"
+#include "../form_stubs/helpers/needs_to_be_saved.h"
 #include "../game_change_failure_reason.h"
 #include "./tes_file_reading/file_loader.h"
 #include "./tes_file_reading/file_header.h"
@@ -1835,7 +1836,7 @@ namespace dovah {
             auto* stub = it->second;
             if (!stub)
                continue;
-            if (stub->needs_save())
+            if (form_stub_helpers::needs_to_be_saved(*stub))
                if (functor(stub))
                   return true;
          }

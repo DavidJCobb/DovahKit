@@ -11,6 +11,7 @@
 #include "../../form_stubs/helpers/get_worldspace_persistent_cell.h"
 #include "../../form_stubs/helpers/is_worldspace_persistent_cell.h"
 #include "../../form_stubs/helpers/is_persistent.h"
+#include "../../form_stubs/helpers/needs_to_be_saved.h"
 #include "../../forms/Form.h"
 #include "../../forms/ObjectReference.h"
 #include "../common.h"
@@ -395,7 +396,7 @@ namespace dovah::tes_file_writing {
       std::vector<form_stub*> persistent;
       std::vector<form_stub*> temporary;
       form_stub_helpers::for_each_child_form(*stub, [stub, should_gather_persistent, &persistent, &temporary](form_stub& child) {
-         if (!child.needs_save())
+         if (!form_stub_helpers::needs_to_be_saved(child))
             return false;
          if (form_stub_helpers::is_persistent(child)) {
             if (!should_gather_persistent)
@@ -446,7 +447,7 @@ namespace dovah::tes_file_writing {
 
       std::vector<form_stub*> persistent;
       form_stub_helpers::for_each_persistent_ref_in_world(*worldspace, [&persistent](form_stub& child) {
-         if (!child.needs_save())
+         if (!form_stub_helpers::needs_to_be_saved(child))
             return false;
          persistent.push_back(&child);
          return false;
@@ -484,7 +485,7 @@ namespace dovah::tes_file_writing {
          for (dovah::form_stub* child : list_a) {
             if (child->form_type != form_type::topic_info)
                continue;
-            if (!child->needs_save())
+            if (!form_stub_helpers::needs_to_be_saved(*child))
                continue;
             this->_write_form(child);
          }
@@ -535,7 +536,7 @@ namespace dovah::tes_file_writing {
                   this->_write_form(child, previous);
                } else {
                   if (child == list_d[id]) {
-                     if (child->needs_save())
+                     if (form_stub_helpers::needs_to_be_saved(*child))
                         this->_write_form(child);
                   } else {
                      child->set_edited(true); // because we have to serialize a potentially different INFO/PNAM
@@ -568,7 +569,7 @@ namespace dovah::tes_file_writing {
       };
       //
       auto* persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(*stub);
-      if (persistent_cell && persistent_cell->needs_save()) {
+      if (persistent_cell && form_stub_helpers::needs_to_be_saved(*persistent_cell)) {
          (open_group_if_needed)();
          this->_write_form(persistent_cell);
       }
@@ -579,7 +580,7 @@ namespace dovah::tes_file_writing {
             return false;
          if (&child == persistent_cell)
             return false;
-         if (!child.needs_save())
+         if (!form_stub_helpers::needs_to_be_saved(child))
             return false;
          (open_group_if_needed)();
          auto b  = child.get_cell_block();

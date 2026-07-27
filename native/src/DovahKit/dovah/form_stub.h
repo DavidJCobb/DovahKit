@@ -271,10 +271,6 @@ namespace dovah {
          void set_parent_form(form_stub* p) noexcept;
          #pragma endregion
 
-         [[nodiscard]] bool is_any_descendant_form_edited() const noexcept;
-         [[nodiscard]] bool does_descendant_form_need_save() const noexcept;
-         [[nodiscard]] bool needs_save() const noexcept;
-         //
          [[nodiscard]] bool is_exterior_cell() const noexcept; // checks whether we have a parent form. can't check cell flags, since the form may not be loaded
          [[nodiscard]] uint32_t get_cell_block() const noexcept;
          [[nodiscard]] uint32_t get_cell_sub_block() const noexcept;
