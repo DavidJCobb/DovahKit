@@ -22,6 +22,14 @@ FormDialogArmor::FormDialogArmor(dovah::form_stub& stub, QWidget* parent) : QDia
    this->ui.templateForm->setAllowedFormType(loaded_form_type::form_type);
    ui::set_unsigned_range<decltype(loaded_form_type::weight)>(this->ui.weight);
    ui::set_unsigned_range<decltype(loaded_form_type::rating)>(this->ui.rating);
+   {
+      using enumeration = decltype(dovah::loaded_forms::components::biped_object::armor_type);
+      auto* widget = this->ui.armorSkill;
+      widget->clear();
+      widget->addItem(tr("Light Armor"), (int)enumeration::light_armor);
+      widget->addItem(tr("Heavy Armor"), (int)enumeration::heavy_armor);
+      widget->addItem(tr("Clothing"),    (int)enumeration::clothing);
+   }
    this->ui.equipType->setAllowedFormType(dovah::form_type::equip_slot);
    this->ui.impactDataSetBlockBash->setAllowedFormType(dovah::form_type::impact_data_set);
    this->ui.alternateBlockMaterial->setAllowedFormType(dovah::form_type::material_type);

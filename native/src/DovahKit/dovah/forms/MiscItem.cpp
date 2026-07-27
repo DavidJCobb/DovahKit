@@ -151,6 +151,8 @@ namespace dovah::loaded_forms {
       copy->message_icon = this->message_icon;
       copy->drop_sound.set(*copy, this->drop_sound);
       copy->take_sound.set(*copy, this->take_sound);
+      copy->weight = this->weight;
+      copy->value  = this->value;
    }
    void MiscItem::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

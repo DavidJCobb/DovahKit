@@ -176,6 +176,8 @@ namespace dovah::loaded_forms {
       copy->message_icon = this->message_icon;
       copy->drop_sound.set(*copy, this->drop_sound);
       copy->take_sound.set(*copy, this->take_sound);
+      copy->weight = this->weight;
+      copy->value  = this->value;
 
       copy->initial_soul_size = this->initial_soul_size;
       copy->maximum_soul_size = this->maximum_soul_size;

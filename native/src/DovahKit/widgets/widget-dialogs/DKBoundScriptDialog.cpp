@@ -519,8 +519,11 @@ void DKBoundScriptDialog::_refresh_property_ui() {
    //*/
 
    auto value_opt = this->script_model->getPropertyValue(qmi);
-   if (!value_opt.has_value())
+   if (!value_opt.has_value()) {
+      this->ui.arrayButtonsLayout->setEnabled(false);
+      this->ui.arrayEditingLayout->setEnabled(false);
       return;
+   }
    this->_populate_array_table(value_opt.value());
    this->_update_array_element_buttons();
    if (info.is_array) {

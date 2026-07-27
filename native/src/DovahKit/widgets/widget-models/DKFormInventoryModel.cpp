@@ -231,6 +231,7 @@ DKFormInventoryModel::~DKFormInventoryModel() {
          assert(list[row + count - 1] == nullptr);
          for (size_t i = 0; i < count; ++i) {
             auto* item = list[row + i] = new InventoryObject;
+            item->count = 1;
          }
          this->endInsertRows();
          return true;
@@ -282,7 +283,8 @@ DKFormInventoryModel::~DKFormInventoryModel() {
                for(size_t i = 0; i < size; ++i) {
                   auto* stub = dropped_stubs[i];
                   auto* item = this->_items[row + i] = new InventoryObject;
-                  item->form = stub;
+                  item->form  = stub;
+                  item->count = 1;
                   item->cached.value    = _get_form_value(*stub);
                   item->cached.editorID = QString::fromStdString(stub->editorID);
                }

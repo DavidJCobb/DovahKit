@@ -16,6 +16,7 @@
 #include "widgets/DKFormPicker.h"
 #include "widgets/DKHeaderView.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/enable_inbound_drag_and_drop_insertions.h"
 #include "ui/utils/set_range.h"
 
 #include "dovah/utils/leveled_list_preview.h"
@@ -105,6 +106,8 @@ struct LeveledListEditDialogHelpers {
             self.ui.entryForm->setAllowNone(false);
          }
          self._model->importFrom(working.leveled_list_data);
+
+         write_model_to_ui(self);
       }
 
       template<typename Dialog>
@@ -161,6 +164,114 @@ struct LeveledListEditDialogHelpers {
             QItemSelection{ tl, br },
             QItemSelectionModel::SelectionFlag::ClearAndSelect
          );
+      }
+
+      // Takes values from the currently selected row, and pulls them into the UI 
+      // widgets for editing the currently selected row.
+      template<typename Dialog>
+      static void write_model_to_ui(Dialog& self) {
+         using ui_type = std::decay_t<decltype(self.ui)>;
+
+         auto blockers = std::array{
+            QSignalBlocker(self.ui.entryForm),
+            QSignalBlocker(self.ui.entryLevel),
+            QSignalBlocker(self.ui.entryCount),
+         };
+         auto blockers_for_coed = std::array<QSignalBlocker, 7>{
+            QSignalBlocker(nullptr),
+            QSignalBlocker(nullptr),
+            QSignalBlocker(nullptr),
+            QSignalBlocker(nullptr),
+            QSignalBlocker(nullptr),
+            QSignalBlocker(nullptr),
+            QSignalBlocker(nullptr),
+         };
+         if constexpr (impl::has_coed_widgets<ui_type>) {
+            blockers_for_coed = {
+               QSignalBlocker(self.ui.entryHealth),
+               QSignalBlocker(self.ui.entryOwnerTypeActorBase),
+               QSignalBlocker(self.ui.entryOwnerTypeFaction),
+               QSignalBlocker(self.ui.entryOwnerActorBase),
+               QSignalBlocker(self.ui.entryOwnerFaction),
+               QSignalBlocker(self.ui.entryOwnerGlobal),
+               QSignalBlocker(self.ui.entryOwnerRank),
+            };
+         }
+
+         QModelIndex qmi;
+         if (QItemSelectionModel* sel_model = self.ui.view->selectionModel()) {
+            auto sel = sel_model->selection();
+            if (!sel.empty())
+               qmi = sel[0].topLeft();
+         }
+
+         const auto* data = self._model->data(qmi.row());
+         {
+            const bool has_data = data != nullptr;
+
+            self.ui.entryForm->setEnabled(has_data);
+            self.ui.entryLevel->setEnabled(has_data);
+            self.ui.entryCount->setEnabled(has_data);
+            if constexpr (impl::has_coed_widgets<ui_type>) {
+               self.ui.entryHealth->setEnabled(has_data);
+               self.ui.entryOwnerGroupbox->setEnabled(has_data);
+            }
+            if (!has_data) {
+               return;
+            }
+         }
+         
+         self.ui.entryForm->setFormStub(data->form);
+         self.ui.entryLevel->setValue(data->level);
+         self.ui.entryCount->setValue(data->count);
+
+         if constexpr (impl::has_coed_widgets<ui_type>) {
+            if (data->form) {
+               bool has_health = false;
+               bool has_owner = true;
+               switch (data->form->form_type) {
+                  case dovah::form_type::leveled_item:
+                  case dovah::form_type::leveled_character:
+                  case dovah::form_type::leveled_spell:
+                     has_owner = false;
+                     break;
+                  case dovah::form_type::armor:
+                  case dovah::form_type::weapon:
+                     has_health = true;
+                     break;
+               }
+               self.ui.entryHealth->setEnabled(has_health);
+               self.ui.entryOwnerGroupbox->setEnabled(has_owner);
+            } else {
+               self.ui.entryHealth->setEnabled(false);
+               self.ui.entryOwnerGroupbox->setEnabled(false);
+            }
+
+            self.ui.entryHealth->setValue(data->health * LeveledListModel::health_display_mult);
+            {
+               auto  type = dovah::form_type::none;
+               auto* stub = data->ownership.owner;
+               if (stub)
+                  type = stub->form_type;
+               //
+               switch (type) {
+                  case dovah::form_type::actor_base:
+                     self.ui.entryOwnerTypeActorBase->setChecked(true);
+                     self.ui.entryOwnerActorBase->setFormStub(stub);
+                     break;
+                  case dovah::form_type::faction:
+                     self.ui.entryOwnerTypeFaction->setChecked(true);
+                     self.ui.entryOwnerFaction->setFormStub(stub);
+                     break;
+                  default:
+                     self.ui.entryOwnerTypeActorBase->setChecked(true);
+                     self.ui.entryOwnerActorBase->setFormStub(nullptr);
+                     break;
+               }
+            }
+            self.ui.entryOwnerGlobal->setFormStub(data->ownership.global);
+            self.ui.entryOwnerRank->setValue(data->ownership.rank);
+         }
       }
 
       // Event filter. Used to allow us to delete a selected row when the Del key 
@@ -251,99 +362,10 @@ struct LeveledListEditDialogHelpers {
          view->setSelectionBehavior(QAbstractItemView::SelectRows);
          view->setSelectionMode(QAbstractItemView::SingleSelection);
          view->setCornerButtonEnabled(false);
+         ui::enable_inbound_drag_and_drop_insertions(view);
       
-         QObject::connect(sel_model, &QItemSelectionModel::currentChanged, &self, [&self, model](const QModelIndex& current, const QModelIndex& previous) {
-            auto blockers = std::array{
-               QSignalBlocker(self.ui.entryForm),
-               QSignalBlocker(self.ui.entryLevel),
-               QSignalBlocker(self.ui.entryCount),
-            };
-            auto blockers_for_coed = std::array<QSignalBlocker, 7>{
-               QSignalBlocker(nullptr),
-               QSignalBlocker(nullptr),
-               QSignalBlocker(nullptr),
-               QSignalBlocker(nullptr),
-               QSignalBlocker(nullptr),
-               QSignalBlocker(nullptr),
-               QSignalBlocker(nullptr),
-            };
-            if constexpr (impl::has_coed_widgets<ui_type>) {
-               blockers_for_coed = {
-                  QSignalBlocker(self.ui.entryHealth),
-                  QSignalBlocker(self.ui.entryOwnerTypeActorBase),
-                  QSignalBlocker(self.ui.entryOwnerTypeFaction),
-                  QSignalBlocker(self.ui.entryOwnerActorBase),
-                  QSignalBlocker(self.ui.entryOwnerFaction),
-                  QSignalBlocker(self.ui.entryOwnerGlobal),
-                  QSignalBlocker(self.ui.entryOwnerRank),
-               };
-            }
-
-            const auto* data = model->data(current.row());
-            bool enable = data != nullptr;
-
-            self.ui.entryForm->setEnabled(enable);
-            self.ui.entryLevel->setEnabled(enable);
-            self.ui.entryCount->setEnabled(enable);
-            if constexpr (impl::has_coed_widgets<ui_type>) {
-               self.ui.entryHealth->setEnabled(enable);
-               self.ui.entryOwnerGroupbox->setEnabled(enable);
-            }
-            if (!data) {
-               return;
-            }
-
-            self.ui.entryForm->setFormStub(data->form);
-            self.ui.entryLevel->setValue(data->level);
-            self.ui.entryCount->setValue(data->count);
-
-            if constexpr (impl::has_coed_widgets<ui_type>) {
-               if (data->form) {
-                  bool has_health = false;
-                  bool has_owner = true;
-                  switch (data->form->form_type) {
-                     case dovah::form_type::leveled_item:
-                     case dovah::form_type::leveled_character:
-                     case dovah::form_type::leveled_spell:
-                        has_owner = false;
-                        break;
-                     case dovah::form_type::armor:
-                     case dovah::form_type::weapon:
-                        has_health = true;
-                        break;
-                  }
-                  self.ui.entryHealth->setEnabled(has_health);
-                  self.ui.entryOwnerGroupbox->setEnabled(has_owner);
-               } else {
-                  self.ui.entryHealth->setEnabled(false);
-                  self.ui.entryOwnerGroupbox->setEnabled(false);
-               }
-
-               self.ui.entryHealth->setValue(data->health * LeveledListModel::health_display_mult);
-               {
-                  auto  type = dovah::form_type::none;
-                  auto* stub = data->ownership.owner;
-                  if (stub)
-                     type = stub->form_type;
-                  //
-                  switch (type) {
-                     case dovah::form_type::actor_base:
-                        self.ui.entryOwnerTypeActorBase->setChecked(true);
-                        self.ui.entryOwnerActorBase->setFormStub(stub);
-                        break;
-                     case dovah::form_type::faction:
-                        self.ui.entryOwnerTypeFaction->setChecked(true);
-                        self.ui.entryOwnerFaction->setFormStub(stub);
-                        break;
-                     default:
-                        self.ui.entryOwnerTypeActorBase->setChecked(true);
-                        self.ui.entryOwnerActorBase->setFormStub(nullptr);
-                        break;
-                  }
-               }
-               self.ui.entryOwnerGlobal->setFormStub(data->ownership.global);
-               self.ui.entryOwnerRank->setValue(data->ownership.rank);
-            }
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, &self, [&self, model](const QItemSelection& selected, const QItemSelection& deselected) {
+            write_model_to_ui(self);
          });
          QObject::connect(self.ui.entryForm,  &DKFormPicker::formChanged,                  &self, &Dialog::_overwrite_selected_leveled_object);
          QObject::connect(self.ui.entryLevel, QOverload<int>::of(&QSpinBox::valueChanged), &self, &Dialog::_overwrite_selected_leveled_object);
@@ -359,7 +381,7 @@ struct LeveledListEditDialogHelpers {
          }
 
          // force UI enable state updates:
-         sel_model->currentChanged({}, {});
+         write_model_to_ui(self);
 
          {
             auto* menu = self._view_context = new QMenu(&self);
