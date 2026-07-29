@@ -151,10 +151,10 @@ namespace dovah::loaded_forms {
 
       copy->name = this->name;
       copy->imagespace_modifier.set(*copy, this->imagespace_modifier);
-      copy->impact_data_set.set(*copy, this->imagespace_modifier);
-      copy->light.set(*copy, this->imagespace_modifier);
-      copy->placed_object.set(*copy, this->imagespace_modifier);
-      copy->projectile.set(*copy, this->imagespace_modifier);
+      copy->impact_data_set.set(*copy, this->impact_data_set);
+      copy->light.set(*copy, this->light);
+      copy->placed_object.set(*copy, this->placed_object);
+      copy->projectile.set(*copy, this->projectile);
       for (size_t i = 0; i < this->sounds.size(); ++i)
          copy->sounds[i].set(*copy, this->sounds[i]);
 
