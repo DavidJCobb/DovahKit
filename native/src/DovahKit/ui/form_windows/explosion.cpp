@@ -16,6 +16,7 @@ FormDialogExplosion::FormDialogExplosion(dovah::form_stub& stub, QWidget* parent
    this->ui.imagespaceMod->setAllowedFormType(dovah::form_type::imagespace_modifier);
    this->ui.sound1->setAllowedFormType(dovah::form_type::sound_descriptor);
    this->ui.sound2->setAllowedFormType(dovah::form_type::sound_descriptor);
+   this->ui.impactDataSet->setAllowedFormType(dovah::form_type::impact_data_set);
    this->ui.spawnObject->setAllowedFormTypes(QList<dovah::form_type>{ dovah::all_base_form_types.begin(), dovah::all_base_form_types.end() });
 
    ui::set_unsigned_range<float>(this->ui.damage);
