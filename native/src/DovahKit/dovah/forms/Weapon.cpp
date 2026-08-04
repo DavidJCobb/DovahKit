@@ -235,6 +235,7 @@ namespace dovah::loaded_forms {
                      uint8_t flags = 0;
                      subrecord.read(flags);
                      cobb::split_flags(flags,
+                        this->flags.ignores_normal_weapon_resist,
                         this->flags.hide_backpack,
                         this->flags.automatic,
                         this->flags.cant_drop,
