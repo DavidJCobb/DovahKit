@@ -612,11 +612,13 @@ namespace dovah::loaded_forms {
       copy->enchantable.clone_from(this->enchantable, *copy);
       copy->keywords.clone_from(this->keywords, *copy);
 
+      copy->name        = this->name;
+      copy->description = this->description;
+
       copy->ai_ranges = this->ai_ranges;
       copy->animation = this->animation;
       copy->base_vats_hit_chance = this->base_vats_hit_chance;
       copy->damage        = this->damage;
-      copy->description   = this->description;
       copy->flags         = this->flags;
       copy->hit_gore_behavior = this->hit_gore_behavior;
       copy->ironsight_fov = this->ironsight_fov;
@@ -762,6 +764,7 @@ namespace dovah::loaded_forms {
             );
             subrecord.write(flags);
          }
+         subrecord.write(this->animation.attack_mult);
          subrecord.write(this->fire_rate);
          subrecord.write(this->rumble.left_motor);
          subrecord.write(this->rumble.right_motor);
