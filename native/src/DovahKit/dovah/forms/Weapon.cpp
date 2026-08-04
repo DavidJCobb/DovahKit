@@ -236,9 +236,10 @@ namespace dovah::loaded_forms {
                      subrecord.read(flags);
                      cobb::split_flags(flags,
                         this->flags.ignores_normal_weapon_resist,
-                        this->flags.hide_backpack,
                         this->flags.automatic,
+                        this->flags.has_scope,
                         this->flags.cant_drop,
+                        this->flags.hide_backpack,
                         this->flags.embedded,
                         this->flags.no_first_person_ironsight_anim,
                         this->flags.non_playable
@@ -352,9 +353,9 @@ namespace dovah::loaded_forms {
                      subrecord.read(this->reach); // DNAM+0x08
                      _load_flags_a(); // DNAM+0x0C
                      subrecord.read(this->unk_dnam_0D); // DNAM+0x0D
-                     subrecord.skip_bytes(2); // DNAM+0x0E
+                     subrecord.skip_bytes(2); // DNAM+0x0E // padding
                      subrecord.read(this->ironsight_fov); // DNAM+0x10
-                     subrecord.read(this->unk_dnam_14); // DNAM+0x14
+                     subrecord.read(this->unk_dnam_14); // DNAM+0x14 // unused; discarded during load.
                      subrecord.read(this->base_vats_hit_chance); // DNAM+0x18
                      subrecord.read(this->animation.legacy_anim); // DNAM+0x19
                      subrecord.read(this->projectile_count); // DNAM+0x1A
@@ -370,11 +371,12 @@ namespace dovah::loaded_forms {
                      subrecord.read(this->rumble.duration); // DNAM+0x3C
                      subrecord.read(this->damage_to_weapon_mult); // DNAM+0x40
                      subrecord.read(this->shots_per_second); // DNAM+0x44
-                     subrecord.skip_bytes(4); // DNAM+0x48 // unused
+                     subrecord.skip_bytes(4); // DNAM+0x48 // unused; discarded during load.
                      _load_skill(); // DNAM+0x4C
-                     subrecord.skip_bytes(8); // DNAM+0x50 // unused
+                     subrecord.skip_bytes(4); // DNAM+0x50 // unused; discarded during load. default value is 0.
+                     subrecord.skip_bytes(4); // DNAM+0x54 // unused; discarded during load. default value is 0.
                      subrecord.read(this->resist_av); // DNAM+0x58
-                     subrecord.skip_bytes(4); // DNAM+0x5C // unused
+                     subrecord.skip_bytes(4); // DNAM+0x5C // unused; discarded during load. default value is 0.
                      subrecord.read(this->stagger); // DNAM+0x60
                      // DNAM+0x64
                   }
@@ -738,7 +740,7 @@ namespace dovah::loaded_forms {
          subrecord.write(this->unk_dnam_0D);
          subrecord.skip_bytes(2);
          subrecord.write(this->ironsight_fov);
-         subrecord.write(this->unk_dnam_14);
+         subrecord.write(this->unk_dnam_14); // unused; discarded during load
          subrecord.write(this->base_vats_hit_chance);
          subrecord.write(this->animation.legacy_anim);
          subrecord.write(this->projectile_count);
@@ -772,16 +774,17 @@ namespace dovah::loaded_forms {
          subrecord.write(this->rumble.duration);
          subrecord.write(this->damage_to_weapon_mult);
          subrecord.write(this->shots_per_second);
-         subrecord.skip_bytes(4); // DNAM+0x48 // unused
+         subrecord.skip_bytes(4); // DNAM+0x48 // unused; discarded during load
          if (this->skill.has_value()) { // DNAM+0x4C
             int32_t v = (int32_t)this->skill.value() + dovah::first_skill_actor_value_index;
             subrecord.write(v);
          } else {
             subrecord.write((int32_t)-1);
          }
-         subrecord.skip_bytes(8); // DNAM+0x50 // unused
+         subrecord.skip_bytes(4); // DNAM+0x50 // unused; discarded during load
+         subrecord.skip_bytes(4); // DNAM+0x54 // unused; discarded during load
          subrecord.write(this->resist_av); // DNAM+0x58
-         subrecord.skip_bytes(4); // DNAM+0x5C // unused
+         subrecord.skip_bytes(4); // DNAM+0x5C // unused; discarded during load
          subrecord.write(this->stagger);
          subrecord.close();
       }
