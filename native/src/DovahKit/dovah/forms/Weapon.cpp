@@ -773,7 +773,8 @@ namespace dovah::loaded_forms {
          subrecord.write(this->shots_per_second);
          subrecord.skip_bytes(4); // DNAM+0x48 // unused
          if (this->skill.has_value()) { // DNAM+0x4C
-            subrecord.write((int32_t)this->skill.value());
+            int32_t v = (int32_t)this->skill.value() + dovah::first_skill_actor_value_index;
+            subrecord.write(v);
          } else {
             subrecord.write((int32_t)-1);
          }
