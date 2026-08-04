@@ -982,9 +982,6 @@
             </item>
             <item row="2" column="3">
              <widget class="QDoubleSpinBox" name="animShotsPerSec">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>

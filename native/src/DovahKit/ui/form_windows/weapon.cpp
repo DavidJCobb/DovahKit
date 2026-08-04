@@ -248,6 +248,7 @@ void FormDialogWeapon::_load_impl() {
       ui::bind(this->ui.weaponType, working.type);
       ui::bind(this->ui.attackAnim, working.animation.legacy_anim);
       ui::bind(this->ui.animAttackMult, working.animation.attack_mult);
+      ui::bind(this->ui.animShotsPerSec, working.fire_rate);
       ui::bind(this->ui.flagNoFirstPersonISAnims, working.flags.no_first_person_ironsight_anim);
       ui::bind(this->ui.flagNoThirdPersonISAnims, working.flags.no_third_person_ironsight_anim);
       ui::bind(this->ui.scopeGroupbox, working.flags.has_scope);
@@ -436,6 +437,7 @@ void FormDialogWeapon::_pull_templatable_data_to_ui() {
       _pull_enum(this->ui.weaponType, working.type);
       _pull_enum(this->ui.attackAnim, working.animation.legacy_anim);
       this->ui.animAttackMult->setValue(working.animation.attack_mult);
+      this->ui.animShotsPerSec->setValue(working.fire_rate);
       this->ui.flagNoFirstPersonISAnims->setChecked(working.flags.no_first_person_ironsight_anim);
       this->ui.flagNoThirdPersonISAnims->setChecked(working.flags.no_third_person_ironsight_anim);
       this->ui.scopeGroupbox->setChecked(working.flags.has_scope);
