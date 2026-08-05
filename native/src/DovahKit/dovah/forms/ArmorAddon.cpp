@@ -17,7 +17,6 @@ namespace dovah::loaded_forms {
                this->script_data.load(subrecord, intfc);
                break;
             case components::object_bounds::subrecord:
-               this->bounds.load(subrecord, intfc);
                break;
             case components::biped_object::subrecord_signature_deprecated:
             case components::biped_object::subrecord_signature_modern:
@@ -186,7 +185,6 @@ namespace dovah::loaded_forms {
       
       copy->script_data.clone_from(this->script_data, *copy);
       copy->biped_object.clone_from(this->biped_object, *copy);
-      copy->bounds = this->bounds;
 
       for (size_t i = 0; i < sex_count; ++i) {
          auto& src = this->graphics[i];
@@ -209,9 +207,6 @@ namespace dovah::loaded_forms {
    }
    void ArmorAddon::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
-      this->bounds.save(OBND, intfc);
-      OBND.close();
       this->biped_object.save(record, intfc);
       record.write_formID_subrecord('RNAM', this->races.primary);
       {
@@ -241,7 +236,6 @@ namespace dovah::loaded_forms {
    }
    void ArmorAddon::_clear_impl() noexcept {
       this->biped_object.clear(*this);
-      this->bounds.clear();
       this->script_data.clear(*this);
       //
       for (auto& item : this->graphics) {

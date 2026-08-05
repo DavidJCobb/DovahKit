@@ -4,7 +4,6 @@
 #include "Form.h"
 #include "_common.h"
 #include "components/biped_object.h"
-#include "components/bounds.h"
 #include "components/model.h"
 #include "components/papyrus.h"
 #include "../data/detection_loudness.h"
@@ -38,7 +37,6 @@ namespace dovah::loaded_forms {
 
       public:
          components::biped_object  biped_object; //  BODT, BOD2
-         components::object_bounds bounds; // OBND
          components::papyrus_attachment_data script_data; // VMAD
          //
          form_reference_t art_object;     // ONAM -> ARTO

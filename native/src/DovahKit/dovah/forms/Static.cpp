@@ -127,23 +127,32 @@ namespace dovah::loaded_forms {
          DNAM.close();
       }
       {
-         auto& MNAM = record.open_next_subrecord('MNAM');
-         for (auto& item : this->distant_lod_paths) {
-            size_t size = item.size();
-            if (size >= max_lod_mesh_path_length) {
-               auto notice = notices::form_save_errors::unprefixed_string_is_too_long_to_serialize(
-                  *intfc.target_stub,
-                  size,
-                  max_lod_mesh_path_length,
-                  MNAM.signature()
-               );
-               intfc.throw_save_error(notice);
-               return;
+         bool present = false;
+         for (const auto& path : this->distant_lod_paths) {
+            if (!path.empty()) {
+               present = true;
+               break;
             }
-            MNAM.write(item.data(), size);
-            MNAM.skip_bytes(256 - size);
          }
-         MNAM.close();
+         if (present) {
+            auto& MNAM = record.open_next_subrecord('MNAM');
+            for (auto& item : this->distant_lod_paths) {
+               size_t size = item.size();
+               if (size >= max_lod_mesh_path_length) {
+                  auto notice = notices::form_save_errors::unprefixed_string_is_too_long_to_serialize(
+                     *intfc.target_stub,
+                     size,
+                     max_lod_mesh_path_length,
+                     MNAM.signature()
+                  );
+                  intfc.throw_save_error(notice);
+                  return;
+               }
+               MNAM.write(item.data(), size);
+               MNAM.skip_bytes(256 - size);
+            }
+            MNAM.close();
+         }
       }
    }
    void Static::_sever_outbound_references_impl(form_stub& other) noexcept {
