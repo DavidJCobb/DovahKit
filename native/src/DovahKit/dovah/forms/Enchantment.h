@@ -7,6 +7,7 @@
 #include "components/papyrus.h"
 #include "dovah/data/magic_casting_type.h"
 #include "dovah/data/magic_delivery_type.h"
+#include "dovah/data/magic_spell_type.h"
 
 namespace dovah::loaded_forms {
    class Enchantment : public Form {
@@ -14,10 +15,9 @@ namespace dovah::loaded_forms {
          static constexpr const enum form_type form_type = form_type::enchantment;
          Enchantment(const constructor_params& c) : Form(form_type, c) {};
 
-         // This may be the same enum as components::common_spell_data::type.
-         enum class enchantment_type : uint32_t {
-            general =  6,
-            staff   = 12,
+         static constexpr const auto legal_spell_types = std::array{
+            magic_spell_type::enchantment_normal,
+            magic_spell_type::enchantment_staves,
          };
 
          struct flag {
@@ -41,7 +41,7 @@ namespace dovah::loaded_forms {
          magic_casting_type  casting_type     = magic_casting_type::constant_effect;
          int32_t  charge_amount = 0; // unused
          magic_delivery_type delivery_type    = magic_delivery_type::self;
-         enchantment_type    enchantment_type = enchantment_type::general;
+         magic_spell_type    enchantment_type = magic_spell_type::enchantment_normal;
          float charge_time = 0;
          form_reference_t base_enchantment;  // ENCH
          form_reference_t worn_restrictions; // FLST

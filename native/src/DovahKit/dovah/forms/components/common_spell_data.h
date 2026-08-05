@@ -2,24 +2,22 @@
 #include "../_common.h"
 #include "dovah/data/magic_casting_type.h"
 #include "dovah/data/magic_delivery_type.h"
+#include "dovah/data/magic_spell_type.h"
 
 namespace dovah::loaded_forms::components {
    class common_spell_data { // shared by SPEL and SCRL
       public:
          static constexpr const uint32_t subrecord_signature = 'SPIT'; // SpellItem
 
-         enum class type : uint32_t {
-            spell     =  0,
-            disease,
-            power,
-            lesser_power,
-            ability,
-            poison    =  5,
-            // 6 = "enchantment," according to CommonLib, and this matches the "Enchantment" enchantment type on ENCH forms
-            // 7 = "potion," according to CommonLib
-            addiction = 10,
-            voice     = 11,
-            // 12 would match the "Staff Enchantment" enchantment type on ENCH forms
+         static constexpr const auto legal_spell_types = std::array{
+            magic_spell_type::spell,
+            magic_spell_type::disease,
+            magic_spell_type::power_greater,
+            magic_spell_type::power_lesser,
+            magic_spell_type::ability,
+            magic_spell_type::poison,
+            magic_spell_type::addiction,
+            magic_spell_type::power_voice,
          };
 
          struct flag {
@@ -36,15 +34,15 @@ namespace dovah::loaded_forms::components {
          using flags_t = std::underlying_type_t<flag::type>;
 
       public:
-         flags_t   flags = 0;
-         enum type type  = type::spell;
-         uint32_t  base_cost = 0;
-         float     charge_time = 0;
-         magic_casting_type  casting_type =  magic_casting_type::constant_effect;
-         magic_delivery_type delivery_type = magic_delivery_type::self;
-         float casting_duration = 0;
-         float range = 0;
-         form_reference_t half_cost_perk; // PERK
+         flags_t             flags            = 0;
+         magic_spell_type    type             = magic_spell_type::spell;
+         uint32_t            base_cost        = 0;
+         float               charge_time      = 0;
+         magic_casting_type  casting_type     = magic_casting_type::constant_effect;
+         magic_delivery_type delivery_type    = magic_delivery_type::self;
+         float               casting_duration = 0;
+         float               range            = 0;
+         form_reference_t    half_cost_perk; // PERK
       
          void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
          void save(tes_record_writer&, load_order_interfaces::form_save& intfc);

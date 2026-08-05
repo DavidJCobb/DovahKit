@@ -1,5 +1,6 @@
 #pragma once
 #include "./form_reference_type_mismatch.h"
+#include "./illegal_magic_spell_type.h"
 #include "./invalid_actor_value_index.h"
 #include "./unrecognized_subrecord.h"
 #pragma region by form component

@@ -34,6 +34,7 @@ namespace {
 
    using all_cacheable_form_data = cobb::class_array<
       dovahkit::subsystems::form_info_cache::cached_data::by_form::actor_base,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::enchantment,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::faction,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::head_part,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::magic_effect,
@@ -55,6 +56,7 @@ namespace {
 // The macro should be variadic so we can add extra info without your macro choking.
 #define FOR_EACH_CACHED_FORM_TYPE(DO) \
    DO(actor_base,   cachedActorBaseChanged) \
+   DO(enchantment,  cachedEnchantmentChanged) \
    DO(faction,      cachedFactionChanged) \
    DO(head_part,    cachedHeadPartChanged) \
    DO(magic_effect, cachedMagicEffectChanged) \
@@ -158,13 +160,6 @@ namespace {
    ) {
       using namespace dovahkit::subsystems::form_info_cache;
 
-      //
-      // The `seen` mask is used to exit the subrecord-reading loop early. The idea is that 
-      // when all bits are set, we know we've seen all data of interest. (Above, we set the 
-      // bits for data that is not of interest, i.e. cached-info types that we know the current 
-      // form type will never have.)
-      //
-      // ---------------------------------------------------------------------------------------
       //
       // The branches below (in the subrecord loop, for each cached-info type) generally fall 
       // into two categories:

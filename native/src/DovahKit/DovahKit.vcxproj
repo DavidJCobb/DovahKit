@@ -503,6 +503,7 @@
     <ClCompile Include="editor\helpers\skill_name_to_string.cpp" />
     <ClCompile Include="editor\helpers\story_event_name.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
+    <ClCompile Include="editor\localize\magic_spell_type.cpp" />
     <ClCompile Include="editor\localize\package_data_type.cpp" />
     <ClCompile Include="editor\localize\package_interrupt_override_target.cpp" />
     <ClCompile Include="editor\localize\package_interrupt_override_type.cpp" />
@@ -515,6 +516,7 @@
     <ClCompile Include="editor\open_window_for_form_type.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\head_part.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.cpp" />
@@ -1780,6 +1782,7 @@
     <ClInclude Include="dovah\data\magic_casting_type.h" />
     <ClInclude Include="dovah\data\magic_delivery_type.h" />
     <ClInclude Include="dovah\data\magic_effect_archetypes.h" />
+    <ClInclude Include="dovah\data\magic_spell_type.h" />
     <ClInclude Include="dovah\data\music_track_type.h" />
     <ClInclude Include="dovah\data\packages\interrupt_override_target.h" />
     <ClInclude Include="dovah\data\packages\interrupt_override_type.h" />
@@ -2320,6 +2323,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weather\extra_directional_ambient_lighting_params.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\worldspace\is_own_parent.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\form_reference_type_mismatch.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\illegal_magic_spell_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\invalid_actor_value_index.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\_all.h" />
@@ -2404,7 +2408,9 @@
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
     <ClInclude Include="editor\localize\form_creation_error_code.h" />
     <ClInclude Include="editor\localize\limb.h" />
+    <ClInclude Include="editor\localize\magic_spell_type.h" />
     <ClInclude Include="editor\localize\perk_entry_point_explanation.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set.h" />

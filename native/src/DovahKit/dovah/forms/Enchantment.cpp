@@ -1,6 +1,14 @@
 #include "Enchantment.h"
 #include "_common_cpp.h"
 
+#include "../notices/form_load_warnings/illegal_magic_spell_type.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using illegal_magic_spell_type = dovah::notices::form_load_warnings::illegal_magic_spell_type;
+   }
+}
+
 namespace dovah::loaded_forms {
    void Enchantment::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -73,6 +81,24 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+
+      {
+         bool found = false;
+         for (auto desired : legal_spell_types) {
+            if (this->enchantment_type == desired) {
+               found = true;
+               break;
+            }
+         }
+         if (!found) {
+            specific_load_warnings::illegal_magic_spell_type notice(
+               this->stub,
+               this->enchantment_type
+            );
+            intfc.log_load_warning(notice);
+         }
+      }
+
       this->effects.do_post_load_correctness_checks(intfc);
    }
    /*static*/ void Enchantment::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -195,7 +221,7 @@ namespace dovah::loaded_forms {
       this->charge_time = 0;
       this->casting_type = {};
       this->delivery_type = {};
-      this->enchantment_type = enchantment_type::general;
+      this->enchantment_type = magic_spell_type::enchantment_normal;
 
       this->base_enchantment.set(*this, nullptr);
       this->worn_restrictions.set(*this, nullptr);

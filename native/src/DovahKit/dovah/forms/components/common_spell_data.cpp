@@ -1,6 +1,14 @@
 #include "common_spell_data.h"
 #include "../_common_cpp.h"
 
+#include "../../notices/form_load_warnings/illegal_magic_spell_type.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using illegal_magic_spell_type = dovah::notices::form_load_warnings::illegal_magic_spell_type;
+   }
+}
+
 namespace dovah::loaded_forms::components {
    void common_spell_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       switch (subrecord.signature()) {
@@ -16,6 +24,24 @@ namespace dovah::loaded_forms::components {
             if (auto& form = this->half_cost_perk; subrecord.read(form)) {
                intfc.warn_if_ref_is_wrong_type(form, form_type::perk, subrecord);
             }
+
+            {
+               bool found = false;
+               for (auto desired : legal_spell_types) {
+                  if (this->type == desired) {
+                     found = true;
+                     break;
+                  }
+               }
+               if (!found) {
+                  specific_load_warnings::illegal_magic_spell_type notice(
+                     intfc.target_stub,
+                     this->type
+                  );
+                  intfc.log_load_warning(notice);
+               }
+            }
+
             break;
       }
    }
@@ -34,7 +60,7 @@ namespace dovah::loaded_forms::components {
    }
    void common_spell_data::clear(loaded_forms::Form& my_owner) noexcept {
       this->flags            = 0;
-      this->type             = type::spell;
+      this->type             = magic_spell_type::spell;
       this->base_cost        = 0;
       this->charge_time      = 0;
       this->casting_type     = magic_casting_type::constant_effect;

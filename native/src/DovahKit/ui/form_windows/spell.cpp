@@ -4,6 +4,7 @@
 #include "editor/helpers/actor_value_index_to_name.h"
 #include "editor/localize/magic_casting_type.h"
 #include "editor/localize/magic_delivery_type.h"
+#include "editor/localize/magic_spell_type.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/magic_effect.h"
 #include "editor/subsystems/game_localized_strings/core.h"
@@ -15,17 +16,12 @@ FormDialogSpell::FormDialogSpell(dovah::form_stub& stub, QWidget* parent) : QDia
    this->initialize(stub);
 
    {
-      using enumeration = decltype(dovah::loaded_forms::components::common_spell_data::type);
+      using component = dovah::loaded_forms::components::common_spell_data;
       auto* widget = this->ui.type;
       widget->clear();
-      widget->addItem(tr("Ability"), (int)enumeration::ability);
-      widget->addItem(tr("Addiction"), (int)enumeration::addiction);
-      widget->addItem(tr("Disease"), (int)enumeration::disease);
-      widget->addItem(tr("Lesser Power"), (int)enumeration::lesser_power);
-      widget->addItem(tr("Poison"), (int)enumeration::poison);
-      widget->addItem(tr("Power"), (int)enumeration::power);
-      widget->addItem(tr("Spell"), (int)enumeration::spell);
-      widget->addItem(tr("Voice Power"), (int)enumeration::voice);
+      for (auto v : component::legal_spell_types) {
+         widget->addItem(editor::localize::magic_spell_type(v), (int)v);
+      }
       widget->model()->sort(0);
    }
    {

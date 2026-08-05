@@ -4,6 +4,7 @@
 #include "editor/helpers/actor_value_index_to_name.h"
 #include "editor/localize/magic_casting_type.h"
 #include "editor/localize/magic_delivery_type.h"
+#include "editor/localize/magic_spell_type.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/magic_effect.h"
 #include "editor/subsystems/game_localized_strings/core.h"
@@ -22,17 +23,17 @@ FormDialogEnchantment::FormDialogEnchantment(dovah::form_stub& stub, QWidget* pa
    this->_filters.exclude_self = new DKFormPickerExcludeSingleFormFilter(this);
 
    {
-      using enumeration = decltype(loaded_form_type::enchantment_type);
       auto* widget = this->ui.type;
       widget->clear();
-      widget->addItem(tr("Enchantment"), (int)enumeration::general);
-      widget->addItem(tr("Staff Enchantment"), (int)enumeration::staff);
+      for (auto v : loaded_form_type::legal_spell_types) {
+         widget->addItem(editor::localize::magic_spell_type(v), (int)v);
+      }
       widget->model()->sort(0);
 
-      widget->setCurrentIndex(widget->findData((int)enumeration::general));
+      widget->setCurrentIndex(widget->findData((int)dovah::magic_spell_type::enchantment_normal));
       QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
-         auto v = (enumeration)this->ui.delivery->currentData().toInt();
-         this->ui.chargeTime->setEnabled(v == enumeration::staff);
+         auto v = (dovah::magic_spell_type)this->ui.delivery->currentData().toInt();
+         this->ui.chargeTime->setEnabled(v == dovah::magic_spell_type::enchantment_staves);
       });
    }
    {

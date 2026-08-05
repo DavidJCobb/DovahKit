@@ -10,6 +10,7 @@
 #include "../localize/collision_layer.h"
 #include "../localize/entry_point_function.h"
 #include "../localize/limb.h"
+#include "../localize/magic_spell_type.h"
 #include "../localize/package_data_type.h"
 #include "../localize/package_interrupt_override_type.h"
 #include "../localize/package_legacy_type.h"
@@ -533,6 +534,21 @@ namespace editor_helpers {
                "%1 contained subrecord %2, expected to refer to a form of %3; it instead referred to %4.",
                disambig
             ).arg(subject).arg(subrecord).arg(desired).arg(target);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::illegal_magic_spell_type*>(&warning)) {
+            QString subject    = form_identifiers_to_string(&casted->subject);
+            QString spell_type = editor::localize::magic_spell_type(casted->type);
+
+            if (casted->subject.form_type == dovah::form_type::enchantment) {
+               return QObject::tr(
+                  "%1 has an incorrect enchantment type (%2).",
+                  disambig
+               ).arg(subject).arg(spell_type);
+            }
+            return QObject::tr(
+               "%1 claims to have an incorrect spell type (%2).",
+               disambig
+            ).arg(subject).arg(spell_type);
          }
          if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::unrecognized_subrecord*>(&warning)) {
             QString subject   = form_identifiers_to_string(&casted->subject);

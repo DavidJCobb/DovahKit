@@ -19,6 +19,7 @@ namespace dovahkit::subsystems::form_info_cache {
    namespace cached_data {
       namespace by_form {
          class actor_base;
+         class enchantment;
          class faction;
          class head_part;
          class magic_effect;
@@ -70,6 +71,7 @@ namespace dovahkit::subsystems::form_info_cache {
          void cachedDataCleared(); // emitted when all data is cleared
 
          void cachedActorBaseChanged(dovah::form_stub&);
+         void cachedEnchantmentChanged(dovah::form_stub&);
          void cachedFactionChanged(dovah::form_stub&);
          void cachedHeadPartChanged(dovah::form_stub&);
          void cachedMagicEffectChanged(dovah::form_stub&);
@@ -87,6 +89,7 @@ namespace dovahkit::subsystems::form_info_cache {
          QString get_form_model_path(const dovah::form_stub&) const;
          QString get_quest_filter(const dovah::form_stub&) const;
          const cached_data::by_form::actor_base*   get_actor_base_info(const dovah::form_stub&) const;
+         const cached_data::by_form::enchantment*  get_enchantment_info(const dovah::form_stub&) const;
          const cached_data::by_form::faction*      get_faction_info(const dovah::form_stub&) const;
          const cached_data::by_form::head_part*    get_head_part_info(const dovah::form_stub&) const;
          const cached_data::by_form::magic_effect* get_magic_effect_info(const dovah::form_stub&) const;
