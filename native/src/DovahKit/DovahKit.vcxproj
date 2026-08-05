@@ -1261,6 +1261,7 @@
     <ClCompile Include="ui\form_windows\volumetric_lighting.cpp" />
     <ClCompile Include="ui\form_windows\water_type.cpp" />
     <ClCompile Include="ui\form_windows\weapon.cpp" />
+    <ClCompile Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\weather.cpp" />
     <ClCompile Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.cpp" />
     <ClCompile Include="ui\form_windows\weather\WeatherSoundsModel.cpp" />
@@ -2436,6 +2437,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h" />
     <ClInclude Include="ui\form_windows\quest\QuestStageLogEntriesModel.h" />
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneProperties.h" />
+    <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
@@ -4741,6 +4743,7 @@
     <Natvis Include="dovah\form_reference_t.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="dovah\utils\classed_stat_points.natvis" />
+    <Natvis Include="editor\subsystems\form_info_cache\cache_containers\data_cache.natvis" />
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
     <Natvis Include="editor\subsystems\worldinput\inputs\button.natvis" />
     <Natvis Include="editor\subsystems\worldinput\input_sequence.natvis" />

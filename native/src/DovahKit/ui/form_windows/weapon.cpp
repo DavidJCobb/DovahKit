@@ -11,6 +11,7 @@
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/shrink_dialog_on_show.h"
+#include "./weapon/WeaponEnchantmentFormFilter.h"
 
 FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -18,7 +19,28 @@ FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QD
    ui::shrink_dialog_height_on_show(*this);
 
    #pragma region Base data
-      this->ui.enchantmentForm->setAllowedFormTypes({ dovah::form_type::enchantment, dovah::form_type::spell });
+      {
+         auto* picker = this->ui.enchantmentForm;
+         picker->setAllowedFormType(dovah::form_type::enchantment);
+         picker->setAllowNone(true);
+         QObject::connect(picker, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
+            auto v = (dovah::weapon_type)this->ui.weaponType->currentData().toInt();
+            if (v == dovah::weapon_type::staff) {
+               this->last_selected_enchantment.staves = stub;
+            } else {
+               this->last_selected_enchantment.normal = stub;
+            }
+         });
+         QObject::connect(&DovahKitCore::get(), &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) {
+            if (auto& v = this->last_selected_enchantment.normal; v == stub)
+               v = nullptr;
+            if (auto& v = this->last_selected_enchantment.staves; v == stub)
+               v = nullptr;
+         });
+
+         auto* filter = this->_filters.enchantment = new WeaponEnchantmentFormFilter(this);
+         picker->setCustomFilter(filter);
+      }
       ui::set_range<decltype(dovah::loaded_forms::components::enchantable::charge)>(this->ui.enchantmentCharge);
       ui::set_range<int32_t>(this->ui.value); // TODO: we need a QSpinBox that can hold a uint32_t, not just an int32_t (int)
       this->ui.templateForm->setAllowedFormType(dovah::form_type::weapon);
@@ -93,6 +115,8 @@ FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QD
             widget->addItem(tr("Mace"), (int)dovah::weapon_type::one_hand_mace);
             widget->addItem(tr("War Axe (1H)"), (int)dovah::weapon_type::one_hand_axe);
             widget->model()->sort(0, Qt::SortOrder::AscendingOrder);
+
+            QObject::connect(widget, &QComboBox::currentIndexChanged, this, &FormDialogWeapon::_on_weapon_type_changed);
          }
          {
             auto* widget = this->ui.attackAnim;
@@ -149,6 +173,10 @@ FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QD
 void FormDialogWeapon::_load_impl() {
    auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
+
+   // This is from Art and Sound, but it has to be set before we set the enchantment, 
+   // so the filter on the enchantment picker is in the right state.
+   ui::bind(this->ui.weaponType, working.type);
 
    #pragma region Base data
       ui::bind(this->ui.editorID, this->editor_id());
@@ -248,7 +276,7 @@ void FormDialogWeapon::_load_impl() {
       ui::bind(this->ui.impactDataSet, working.impact_data_set, working);
       ui::bind(this->ui.impactDataSetBlockBash, working.block_bash.impact_data_set, working);
       ui::bind(this->ui.alternateBlockMaterial, working.block_bash.alternate_material, working);
-      ui::bind(this->ui.weaponType, working.type);
+      // `this->ui.weaponType` is handled above
       ui::bind(this->ui.attackAnim, working.animation.legacy_anim);
       ui::bind(this->ui.animAttackMult, working.animation.attack_mult);
       ui::bind(this->ui.animShotsPerSec, working.shots_per_second);
@@ -462,6 +490,8 @@ void FormDialogWeapon::_pull_templatable_data_to_ui() {
       this->ui.rumbleDuration->setValue(working.rumble.duration);
       this->ui.flagAlternateRumble->setChecked(working.flags.rumble_alternate);
    #pragma endregion
+
+   this->_on_weapon_type_changed(); // trigger manually since we blocked signals on the weapon type combobox
 }
 void FormDialogWeapon::_update_from_template_form() {
    if (!this->form)
@@ -519,4 +549,24 @@ void FormDialogWeapon::_update_from_template_form() {
    //
    this->form->copy_data_from_template_weapon(*effective_template_form);
    this->_pull_templatable_data_to_ui();
+}
+
+void FormDialogWeapon::_on_weapon_type_changed() {
+   dovah::form_stub* enchantment = nullptr;
+
+   auto v = (dovah::weapon_type)this->ui.weaponType->currentData().toInt();
+   if (v == dovah::weapon_type::staff) {
+      enchantment = this->last_selected_enchantment.staves;
+   } else {
+      enchantment = this->last_selected_enchantment.normal;
+   }
+
+   // block signals so we don't clobber the last selected enchantment for either 
+   // weapon type in the course of restoring it for the other
+   const auto blocker = QSignalBlocker(this->ui.enchantmentForm);
+
+   this->_filters.enchantment->setWeaponIsStaff(v == dovah::weapon_type::staff);
+   if (enchantment) {
+      this->ui.enchantmentForm->setFormStub(enchantment);
+   }
 }

@@ -4269,6 +4269,9 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10625,6 +10628,9 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12843,5 +12849,6 @@
     <Natvis Include="helpers\qt\qt_5_natvis\QDirPrivate.natvis" />
     <Natvis Include="helpers\qt\qt_5_natvis\QFileInfoPrivate.natvis" />
     <Natvis Include="helpers\lua\lua.natvis" />
+    <Natvis Include="editor\subsystems\form_info_cache\cache_containers\data_cache.natvis" />
   </ItemGroup>
 </Project>

@@ -59,8 +59,8 @@
       <Intrinsic Name="_addenda_grid_position_x" Expression="addenda ? addenda-&gt;grid_position._Value.x : 0" />
       <Intrinsic Name="_addenda_grid_position_y" Expression="addenda ? addenda-&gt;grid_position._Value.y : 0" />
 
-      <DisplayString Condition="form_type == dovah::form_type::cell &amp;&amp; _addenda_has_grid_position()">[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb} at ({_addenda_grid_position_x(),d}, {_addenda_grid_position_y(),d})</DisplayString>
-      <DisplayString>[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8X}]{editorID,sb}</DisplayString>
+      <DisplayString Condition="form_type == dovah::form_type::cell &amp;&amp; _addenda_has_grid_position()">[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8Xb}]{editorID,sb} at ({_addenda_grid_position_x(),d}, {_addenda_grid_position_y(),d})</DisplayString>
+      <DisplayString>[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{formID,8Xb}]{editorID,sb}</DisplayString>
       <Expand>
          <Item Name="[form type]">dovah::form_types[(size_t)form_type].name,sb</Item>
          <Item Name="[form ID]">formID,x</Item>

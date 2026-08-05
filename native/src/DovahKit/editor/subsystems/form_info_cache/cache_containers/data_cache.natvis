@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovahkit::subsystems::form_info_cache::data_cache&lt;*&gt;">
+      
+      <!-- wrap QHash intrinsics so we can easily customize display of the keys -->
+      <Intrinsic Name="getOffset" Category="Method" Expression="_map.getOffset(span, offset)">
+         <Parameter Name="span" Type="int" />
+         <Parameter Name="offset" Type="int" />
+      </Intrinsic>
+      <Intrinsic Name="getKey" Category="Method" Expression="_map.getKey(span, offset)">
+         <Parameter Name="span"   Type="int" />
+         <Parameter Name="offset" Type="int" />
+      </Intrinsic>
+      <Intrinsic Name="getNode" Category="Method" Expression="_map.getNode(span, offset)">
+         <Parameter Name="span" Type="int" />
+         <Parameter Name="offset" Type="int" />
+      </Intrinsic>
+
+      <DisplayString>{{ size={_map.d-&gt;size} }}</DisplayString>
+      <Expand>
+         <!-- vaguely based on QHash Natvis, but our keys are pointers and we don't care about the addresses -->
+         <CustomListItems MaxItemsPerView="5000">
+            <Variable Name="iSpan"   InitialValue="0" />
+            <Variable Name="iOffset" InitialValue="0" />
+            <Variable Name="spanCount" InitialValue="_map.d-&gt;numBuckets" />
+            <Size>_map.d-&gt;size</Size>
+            <Loop>
+               <If Condition="iSpan != spanCount">
+                  <Exec>iOffset = 0</Exec>
+                  <Loop>
+                     <Item Name="{getKey(iSpan, iOffset),na}" Condition="getOffset(iSpan, iOffset) != 255">getNode(iSpan, iOffset)</Item>
+                     <Exec>iOffset++</Exec>
+                     <Break Condition="iOffset &gt; 127" />
+                  </Loop>
+                  <Exec>iSpan++</Exec>
+               </If>
+               <Break Condition="iSpan == spanCount" />
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

@@ -11,7 +11,7 @@
 #define STRING(t) QCoreApplication::translate(TRANSLATION_KEY, t)
 
 namespace editor::localize {
-   extern QString limb(ENUMERATION_TYPE v) {
+   extern QString magic_spell_type(ENUMERATION_TYPE v) {
       using enum ENUMERATION_TYPE;
       switch (v) {
          case spell:

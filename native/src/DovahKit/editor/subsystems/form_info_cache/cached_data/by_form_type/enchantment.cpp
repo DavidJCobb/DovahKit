@@ -9,7 +9,7 @@ namespace {
 namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
    void enchantment::skim_subrecord(dovah::tes_file_reading::subrecord& subrecord) {
       switch (subrecord.signature()) {
-         case 'DATA':
+         case 'ENIT':
             subrecord.skip_bytes(
                sizeof(loaded_form_type::cost) +
                sizeof(loaded_form_type::flags) +

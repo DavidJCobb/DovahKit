@@ -16,8 +16,6 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
-            case components::object_bounds::subrecord:
-               break;
             case components::biped_object::subrecord_signature_deprecated:
             case components::biped_object::subrecord_signature_modern:
                this->biped_object.load(subrecord, intfc);
