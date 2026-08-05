@@ -10,9 +10,12 @@
 #include "ui/utils/enum_dropdown_configs/skill.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
+#include "ui/utils/shrink_dialog_on_show.h"
 
 FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
+
+   ui::shrink_dialog_height_on_show(*this);
 
    #pragma region Base data
       this->ui.enchantmentForm->setAllowedFormTypes({ dovah::form_type::enchantment, dovah::form_type::spell });
@@ -248,7 +251,7 @@ void FormDialogWeapon::_load_impl() {
       ui::bind(this->ui.weaponType, working.type);
       ui::bind(this->ui.attackAnim, working.animation.legacy_anim);
       ui::bind(this->ui.animAttackMult, working.animation.attack_mult);
-      ui::bind(this->ui.animShotsPerSec, working.fire_rate);
+      ui::bind(this->ui.animShotsPerSec, working.shots_per_second);
       ui::bind(this->ui.flagNoFirstPersonISAnims, working.flags.no_first_person_ironsight_anim);
       ui::bind(this->ui.flagNoThirdPersonISAnims, working.flags.no_third_person_ironsight_anim);
       ui::bind(this->ui.scopeGroupbox, working.flags.has_scope);
@@ -437,7 +440,7 @@ void FormDialogWeapon::_pull_templatable_data_to_ui() {
       _pull_enum(this->ui.weaponType, working.type);
       _pull_enum(this->ui.attackAnim, working.animation.legacy_anim);
       this->ui.animAttackMult->setValue(working.animation.attack_mult);
-      this->ui.animShotsPerSec->setValue(working.fire_rate);
+      this->ui.animShotsPerSec->setValue(working.shots_per_second);
       this->ui.flagNoFirstPersonISAnims->setChecked(working.flags.no_first_person_ironsight_anim);
       this->ui.flagNoThirdPersonISAnims->setChecked(working.flags.no_third_person_ironsight_anim);
       this->ui.scopeGroupbox->setChecked(working.flags.has_scope);
