@@ -4272,6 +4272,18 @@
     <ClCompile Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\object_bounds_from_nif.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSBound.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\utils\form_type_is_object_with_bounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\helpers\recalc_bounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10629,6 +10641,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\object_bounds_from_nif.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nif\blocks\BSBound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_type_is_object_with_bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\recalc_bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

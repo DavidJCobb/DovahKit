@@ -472,9 +472,11 @@
     <ClCompile Include="dovah\utils\default_primitive_color_for_base_form.cpp" />
     <ClCompile Include="dovah\utils\form_component_accessors\condition_list.cpp" />
     <ClCompile Include="dovah\utils\form_component_accessors\keyword_list.cpp" />
+    <ClCompile Include="dovah\utils\form_type_is_object_with_bounds.cpp" />
     <ClCompile Include="dovah\utils\get_computed_location.cpp" />
     <ClCompile Include="dovah\utils\get_region_worldspace.cpp" />
     <ClCompile Include="dovah\utils\location_is_or_is_inside_of_location.cpp" />
+    <ClCompile Include="dovah\utils\object_bounds_from_nif.cpp" />
     <ClCompile Include="dovah\utils\subrecord_data_position.cpp" />
     <ClCompile Include="dovah\utils\update_large_ref_index.cpp" />
     <ClCompile Include="dovah\utils\update_location_content.cpp" />
@@ -491,6 +493,7 @@
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\helpers\is_form_type_legal_to_create.cpp" />
+    <ClCompile Include="editor\helpers\recalc_bounds.cpp" />
     <ClCompile Include="editor\helpers\update_active_file_seq_file.cpp" />
     <ClCompile Include="editor\localize\collision_layer.cpp" />
     <ClCompile Include="editor\localize\dialogue_topic_subtype.cpp" />
@@ -956,6 +959,7 @@
     <ClCompile Include="nif\blocks\bhkSphereRepShape.cpp" />
     <ClCompile Include="nif\blocks\bhkTransformShape.cpp" />
     <ClCompile Include="nif\blocks\bhkWorldObject.cpp" />
+    <ClCompile Include="nif\blocks\BSBound.cpp" />
     <ClCompile Include="nif\blocks\BSDismemberSkinInstance.cpp" />
     <ClCompile Include="nif\blocks\BSEffectShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSFurnitureMarkerNode.cpp" />
@@ -2382,6 +2386,7 @@
     <ClInclude Include="dovah\utils\form_component_accessors\condition_list.h" />
     <ClInclude Include="dovah\utils\form_component_accessors\keyword_list.h" />
     <ClInclude Include="dovah\utils\form_type_is_cell_child.h" />
+    <ClInclude Include="dovah\utils\form_type_is_object_with_bounds.h" />
     <ClInclude Include="dovah\utils\get_region_worldspace.h" />
     <ClInclude Include="dovah\utils\location_is_or_is_inside_of_location.h" />
     <ClInclude Include="dovah\utils\magic_effect_list_item_cost_calculator.h" />
@@ -2395,6 +2400,7 @@
     <ClInclude Include="dovah\utils\get_all_relevant_template_actors.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="dovah\utils\get_computed_location.h" />
+    <ClInclude Include="dovah\utils\object_bounds_from_nif.h" />
     <ClInclude Include="dovah\utils\story_event_member_id.h" />
     <ClInclude Include="dovah\utils\subrecord_data_position.h" />
     <ClInclude Include="dovah\utils\text_replacers\do_text_replacement.h" />
@@ -2406,6 +2412,7 @@
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
+    <ClInclude Include="editor\helpers\recalc_bounds.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
     <ClInclude Include="editor\localize\form_creation_error_code.h" />
     <ClInclude Include="editor\localize\limb.h" />
@@ -2425,6 +2432,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestObjectivesModel.h" />
     <QtMoc Include="qt\DKWinTaskbarButton.h" />
     <QtMoc Include="qt\DKWinTaskbarProgress.h" />
+    <ClInclude Include="nif\blocks\BSBound.h" />
     <ClInclude Include="qt\DKWinTaskbarButtonPrivate.h" />
     <ClInclude Include="qt\utils\bulk_string_substitution.h" />
     <ClInclude Include="qt\utils\icon_for_file_extension.h" />

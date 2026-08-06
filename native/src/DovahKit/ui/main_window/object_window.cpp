@@ -4,10 +4,12 @@
 #include <QMessageBox>
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/exceptions/form_renumber_failed.h"
+#include "dovah/utils/form_type_is_object_with_bounds.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
 #include "editor/helpers/is_form_type_legal_to_create.h"
 #include "editor/helpers/make_editor_id_for_duplicate.h"
+#include "editor/helpers/recalc_bounds.h"
 #include "editor/localize/form_creation_error_code.h"
 #include "./form_use_info.h"
 
@@ -135,11 +137,12 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
          this->ui.table->select(created_form);
    });
    //
-   this->_formActionEdit        = new QAction(tr("Edit...",           "object window form actions"), this->ui.table);
-   this->_formActionDuplicate   = new QAction(tr("Duplicate",         "object window form actions"), this->ui.table);
-   this->_formActionShowUseInfo = new QAction(tr("Use Info...",       "object window form actions"), this->ui.table);
-   this->_formActionRenumber    = new QAction(tr("Change form ID...", "object window form actions"), this->ui.table);
-   this->_formActionDelete      = new QAction(tr("Delete",            "object window form actions"), this->ui.table);
+   this->_formActionEdit         = new QAction(tr("Edit...",           "object window form actions"), this->ui.table);
+   this->_formActionDuplicate    = new QAction(tr("Duplicate",         "object window form actions"), this->ui.table);
+   this->_formActionShowUseInfo  = new QAction(tr("Use Info...",       "object window form actions"), this->ui.table);
+   this->_formActionRenumber     = new QAction(tr("Change form ID...", "object window form actions"), this->ui.table);
+   this->_formActionRecalcBounds = new QAction(tr("Recalc Bounds", "object window form actions"), this->ui.table);
+   this->_formActionDelete       = new QAction(tr("Delete",            "object window form actions"), this->ui.table);
    QObject::connect(this->_formActionEdit, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub)
@@ -195,6 +198,12 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       }
       this->ui.table->select(stub);
    });
+   QObject::connect(this->_formActionRecalcBounds, &QAction::triggered, this, [this]() {
+      auto* stub = _get_selected_form(this->ui.table);
+      if (!stub)
+         return;
+      editor_helpers::recalc_bounds(this, *stub);
+   });
    QObject::connect(this->_formActionDelete, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
       if (!stub)
@@ -219,6 +228,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       this->_formActionShowUseInfo->setVisible(form_exists);
       this->_formActionRenumber->setVisible(is_alterable);
       this->_formActionRenumber->setEnabled(is_alterable && DovahKitCore::get().is_form_defined_in_active_file(stub));
+      this->_formActionRecalcBounds->setVisible(is_alterable && dovah::form_type_is_object_with_bounds(stub->form_type));
       this->_formActionDelete->setVisible(is_alterable);
       if (form_types.size() == 1) {
          auto type = form_types[0];
@@ -239,6 +249,10 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       menu.addAction(this->_formActionShowUseInfo);
       menu.addAction(this->_formActionRenumber);
       menu.addAction(this->_formActionDelete);
+      auto* separator = menu.addSeparator();
+      menu.addAction(this->_formActionRecalcBounds);
+      //
+      separator->setVisible(this->_formActionRecalcBounds->isVisible());
       //
       if (menu.isEmpty())
          return; // don't show a menu if all of its contents are disabled or hidden
