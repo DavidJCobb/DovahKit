@@ -4071,13 +4071,10 @@
     <ClCompile Include="dovah\form_stub_addenda\ordered_child_collection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xaudio2\xwma_file_info.cpp">
+    <ClCompile Include="editor\subsystems\audio\impl\xwma_file_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKAudioWidgetFUZ.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="xaudio2\simple_fuz_sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\audio_simple.cpp">
@@ -4281,9 +4278,6 @@
     <ClCompile Include="editor\helpers\recalc_bounds.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xaudio2\engine_and_thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\subsystems\audio\dovahkit_audio_subsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -4297,6 +4291,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\audio\sound_definition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\impl\engine_and_thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\sound_definitions\xwma.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\sound_definitions\wav.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -10214,13 +10217,10 @@
     <ClInclude Include="dovah\form_stub_addenda\passkeys\ordered_child_collection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xaudio2\xwma_file_info.h">
+    <ClInclude Include="editor\subsystems\audio\impl\xwma_file_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\fuz\file_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="xaudio2\operation_set_handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h">
@@ -10667,9 +10667,6 @@
     <ClInclude Include="editor\helpers\recalc_bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xaudio2\engine_and_thread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\audio\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -10683,6 +10680,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\audio\impl\sound_instance_callbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\impl\engine_and_thread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\sound_definitions\xwma.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\sound_definitions\wav.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -12174,9 +12180,6 @@
     <QtMoc Include="widgets\DKAudioWidgetFUZ.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="xaudio2\simple_fuz_sound.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -12790,7 +12793,6 @@
     <None Include="dovah\_docs\form types\t\topic info.md" />
     <None Include="dovahscript\_docs\how to expose form data to Lua.md" />
     <None Include="dovah\_docs\form types\q\quest\reference aliases.md" />
-    <None Include="xaudio2\README.md" />
     <None Include="dovahscript\api_helpers\subobject_property_helpers\README.md" />
     <None Include="dovahscript\api_helpers\native_lists\README.md" />
     <None Include="dovah\_docs\form working copies (suck, and are bad).md" />

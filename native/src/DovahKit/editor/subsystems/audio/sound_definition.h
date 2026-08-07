@@ -9,6 +9,7 @@ namespace dovahkit::subsystems::audio {
          virtual ~sound_definition() {}
          virtual const tWAVEFORMATEX& get_format() const = 0;
          virtual XAUDIO2_BUFFER get_audio_buffer_info() const = 0;
-         virtual XAUDIO2_BUFFER_WMA get_xwma_info() const;
+         virtual XAUDIO2_BUFFER_WMA get_xwma_info() const; // default implementation returns empty/none
+         virtual float estimated_length() const = 0;
    };
 }

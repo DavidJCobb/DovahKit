@@ -15,8 +15,12 @@ namespace dovahkit::subsystems::audio::sound_definitions {
          auto*    riff_data = (const void*)((const uint8_t*)data + dovah::fuz::header_size + this->_fuz_info.buffer.size);
          uint32_t riff_size = size - this->_fuz_info.buffer.size - dovah::fuz::header_size;
 
-         this->_xwma_info = dovahkit::xaudio2::xwma_file_info{ riff_data, riff_size };
+         this->_xwma_info = impl::xwma_file_info{ riff_data, riff_size };
       }
+   }
+
+   /*static*/ bool fuz::data_is_likely_fuz(const void* data, size_t size) {
+      return dovah::fuz::file_info::data_is_fuz(data, size);
    }
 
    /*virtual*/ const tWAVEFORMATEX& fuz::get_format() const /*override*/ {
@@ -27,5 +31,8 @@ namespace dovahkit::subsystems::audio::sound_definitions {
    }
    /*virtual*/ XAUDIO2_BUFFER_WMA fuz::get_xwma_info() const /*override*/ {
       return this->_xwma_info.describe_wma();
+   }
+   /*virtual*/ float fuz::estimated_length() const /*override*/ {
+      return this->_xwma_info.estimated_length();
    }
 }

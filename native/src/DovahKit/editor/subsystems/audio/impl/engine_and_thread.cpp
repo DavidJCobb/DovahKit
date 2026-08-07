@@ -3,9 +3,8 @@
 #include <cassert>
 #include <windows.h>
 #include <xaudio2.h>
-#include "./operation_set_handle.h"
 
-namespace dovahkit::xaudio2 {
+namespace dovahkit::subsystems::audio::impl {
    engine_and_thread::engine_and_thread() {
       {
          assert(this->_com_initialized == false);
@@ -26,9 +25,9 @@ namespace dovahkit::xaudio2 {
          // we want detailed error information (which these functions are not spec'd 
          // to provide).
          //
-         XAudio2Create(&this->x.core, 0, XAUDIO2_DEFAULT_PROCESSOR);
-         if (this->x.core) {
-            this->x.core->CreateMasteringVoice(&this->x.mastering_voice);
+         XAudio2Create(&this->interfaces.core, 0, XAUDIO2_DEFAULT_PROCESSOR);
+         if (this->interfaces.core) {
+            this->interfaces.core->CreateMasteringVoice(&this->interfaces.mastering_voice);
          }
       }
    }
@@ -38,21 +37,21 @@ namespace dovahkit::xaudio2 {
 
    engine_and_thread::engine_and_thread(engine_and_thread&& src) noexcept {
       this->_teardown();
-      std::swap(this->x, src.x);
+      std::swap(this->interfaces, src.interfaces);
    }
 
    engine_and_thread& engine_and_thread::operator=(engine_and_thread&& src) noexcept {
       this->_teardown();
-      std::swap(this->x, src.x);
+      std::swap(this->interfaces, src.interfaces);
       return *this;
    }
 
    void engine_and_thread::_teardown() {
-      if (auto*& p = this->x.mastering_voice) {
+      if (auto*& p = this->interfaces.mastering_voice) {
          p->DestroyVoice();
          p = nullptr;
       }
-      if (auto*& p = this->x.core) {
+      if (auto*& p = this->interfaces.core) {
          p->Release();
          p = nullptr;
       }
@@ -61,22 +60,5 @@ namespace dovahkit::xaudio2 {
          CoUninitialize();
          this->_com_initialized = false;
       }
-   }
-
-   operation_set_handle engine_and_thread::begin_operation_set() {
-      auto id = this->_next_operation_set_id.fetch_add(1);
-      return operation_set_handle{id};
-   }
-   void engine_and_thread::commit_operation_set(operation_set_handle& handle) {
-      assert(!!this->x.core);
-      this->x.core->CommitChanges(handle.id);
-   }
-
-   IXAudio2SourceVoice* engine_and_thread::create_raw_source_voice(const WAVEFORMATEX& format, IXAudio2VoiceCallback* callbacks) {
-      IXAudio2SourceVoice* out = nullptr;
-      if (auto* intfc = this->x.core) {
-         intfc->CreateSourceVoice(&out, &format, 0, 1.0F, callbacks);
-      }
-      return out;
    }
 }

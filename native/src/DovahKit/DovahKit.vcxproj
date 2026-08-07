@@ -518,9 +518,12 @@
     <ClCompile Include="editor\localize\perk_entry_point_explanation.cpp" />
     <ClCompile Include="editor\open_window_for_form_type.cpp" />
     <ClCompile Include="editor\subsystems\audio\dovahkit_audio_subsystem.cpp" />
+    <ClCompile Include="editor\subsystems\audio\impl\engine_and_thread.cpp" />
     <ClCompile Include="editor\subsystems\audio\impl\sound_instance_callbacks.cpp" />
     <ClCompile Include="editor\subsystems\audio\sound_definition.cpp" />
     <ClCompile Include="editor\subsystems\audio\sound_definitions\fuz.cpp" />
+    <ClCompile Include="editor\subsystems\audio\sound_definitions\wav.cpp" />
+    <ClCompile Include="editor\subsystems\audio\sound_definitions\xwma.cpp" />
     <ClCompile Include="editor\subsystems\audio\sound_instance.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
@@ -1536,7 +1539,6 @@
     <ClCompile Include="widgets\DKYesNoUnsetWidget.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilter.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilterableModelMixin.cpp" />
-    <ClCompile Include="xaudio2\engine_and_thread.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
@@ -1576,8 +1578,7 @@
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.cpp" />
     <ClCompile Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.cpp" />
-    <ClCompile Include="xaudio2\simple_fuz_sound.cpp" />
-    <ClCompile Include="xaudio2\xwma_file_info.cpp" />
+    <ClCompile Include="editor\subsystems\audio\impl\xwma_file_info.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovahscript\api_helpers\conditions\common\FAIL_ON_EXPANDOS.h" />
@@ -2425,11 +2426,14 @@
     <ClInclude Include="editor\localize\perk_entry_point_explanation.h" />
     <QtMoc Include="editor\subsystems\audio\dovahkit_audio_subsystem.h" />
     <ClInclude Include="editor\subsystems\audio\core.h" />
+    <ClInclude Include="editor\subsystems\audio\impl\engine_and_thread.h" />
     <ClInclude Include="editor\subsystems\audio\impl\sound_instance_callbacks.h" />
     <ClInclude Include="editor\subsystems\audio\sound_category.h" />
     <ClInclude Include="editor\subsystems\audio\sound_definition.h" />
     <ClInclude Include="editor\subsystems\audio\sound_definitions\fuz.h" />
     <QtMoc Include="editor\subsystems\audio\sound_instance.h" />
+    <ClInclude Include="editor\subsystems\audio\sound_definitions\wav.h" />
+    <ClInclude Include="editor\subsystems\audio\sound_definitions\xwma.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />
@@ -2470,10 +2474,7 @@
     <ClInclude Include="ui\utils\replace_view_selected_rows.h" />
     <ClInclude Include="ui\utils\show_parent_scoped_modal.h" />
     <ClInclude Include="ui\utils\with_view_selected_row.h" />
-    <ClInclude Include="xaudio2\engine_and_thread.h" />
-    <ClInclude Include="xaudio2\operation_set_handle.h" />
-    <QtMoc Include="xaudio2\simple_fuz_sound.h" />
-    <ClInclude Include="xaudio2\xwma_file_info.h" />
+    <ClInclude Include="editor\subsystems\audio\impl\xwma_file_info.h" />
     <QtMoc Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.h" />
     <QtMoc Include="widgets\widget-models\DKMagicEffectListModel.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabScenes.h" />
@@ -4704,10 +4705,6 @@
     <None Include="widgets\widget-models\DKBoundScriptModel.inl" />
     <None Include="widgets\widget-models\DKFormListPaneModel.inl" />
     <None Include="widgets\_docs\DKBreadcrumbBar.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="xaudio2\README.md">
       <SubType>
       </SubType>
     </None>

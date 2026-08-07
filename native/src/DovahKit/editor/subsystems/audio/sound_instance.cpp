@@ -9,7 +9,7 @@ namespace dovahkit::subsystems::audio {
       this->_callbacks  = new impl::sound_instance_callbacks(*this);
 
       auto& subsystem = core::get_or_create();
-      if (auto* intfc = subsystem.get_engine().get_raw_interface()) {
+      if (auto* intfc = subsystem.get_engine().interfaces.core) {
          intfc->CreateSourceVoice(&this->_voice, &this->_definition->get_format(), 0, params.max_frequency_ratio, this->_callbacks);
       }
       QObject::connect(&subsystem, &core::onBeforeTeardown, this, [this]() {

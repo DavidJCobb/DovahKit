@@ -47,7 +47,7 @@ namespace dovahkit::subsystems::audio {
          voice->SetVolume(v);
    }
    void core::set_master_volume(float v) {
-      auto* voice = this->_engine_and_thread.get_raw_mastering_voice_interface();
+      auto* voice = this->_engine_and_thread.interfaces.mastering_voice;
       if (!voice)
          return;
       voice->SetVolume(v);
@@ -80,7 +80,7 @@ namespace dovahkit::subsystems::audio {
       }();
 
       IXAudio2SubmixVoice* result = nullptr;
-      this->_engine_and_thread.get_raw_interface()->CreateSubmixVoice(&result, channel_count, sample_rate, flags, processing_stage, nullptr, nullptr);
+      this->_engine_and_thread.interfaces.core->CreateSubmixVoice(&result, channel_count, sample_rate, flags, processing_stage, nullptr, nullptr);
       return result;
    }
 }

@@ -3,14 +3,11 @@
 #include <vector>
 #include <QObject>
 #include "helpers/singleton_ex.h"
-#include "xaudio2/engine_and_thread.h"
+#include "./impl/engine_and_thread.h"
 namespace dovahkit {
    namespace subsystems::audio {
       enum class sound_category;
       class sound_instance;
-   }
-   namespace xaudio2 {
-      class engine_and_thread;
    }
 }
 class IXAudio2SubmixVoice;
@@ -29,7 +26,7 @@ namespace dovahkit::subsystems::audio {
          const IXAudio2SubmixVoice* get_sound_category_submix(sound_category) const;
          IXAudio2SubmixVoice* get_sound_category_submix(sound_category);
 
-         dovahkit::xaudio2::engine_and_thread& get_engine() {
+         impl::engine_and_thread& get_engine() {
             return this->_engine_and_thread;
          }
 
@@ -39,7 +36,7 @@ namespace dovahkit::subsystems::audio {
          void set_master_volume(float);
 
       protected:
-         dovahkit::xaudio2::engine_and_thread _engine_and_thread;
+         impl::engine_and_thread _engine_and_thread;
          union {
             std::array<IXAudio2SubmixVoice*, 2> list = { 0 };
             struct {

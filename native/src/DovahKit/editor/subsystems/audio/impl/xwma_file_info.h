@@ -4,7 +4,7 @@ struct tWAVEFORMATEX;
 struct XAUDIO2_BUFFER;
 struct XAUDIO2_BUFFER_WMA;
 
-namespace dovahkit::xaudio2 {
+namespace dovahkit::subsystems::audio::impl {
    class xwma_file_info {
       public:
          constexpr xwma_file_info() {}
@@ -27,5 +27,6 @@ namespace dovahkit::xaudio2 {
 
          XAUDIO2_BUFFER describe_buffer() const;
          XAUDIO2_BUFFER_WMA describe_wma() const;
+         float estimated_length() const;
    };
 }
