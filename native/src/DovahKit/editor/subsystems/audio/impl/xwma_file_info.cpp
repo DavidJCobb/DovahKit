@@ -101,9 +101,9 @@ namespace dovahkit::subsystems::audio::impl {
          return 0;
       if (this->dpds.data && this->dpds.size) {
          const auto bytes_per_sample = (this->format->nChannels * this->format->wBitsPerSample) / 8;
-         const auto bytecount        = this->dpds.data[this->dpds.size - 1];
-         return (float)bytecount / bytes_per_sample;
+         const auto bytecount        = this->dpds.data[(this->dpds.size / 4) - 1];
+         return ((float)bytecount / bytes_per_sample) / this->format->nSamplesPerSec;
       }
-      return (float)(this->audio.size * 8) / this->format->nAvgBytesPerSec * this->format->nSamplesPerSec;
+      return (float)this->audio.size / this->format->nAvgBytesPerSec;
    }
 }

@@ -18,7 +18,7 @@ namespace dovahkit::subsystems::audio::impl {
          } audio;
          struct {
             const uint32_t* data = nullptr;
-            uint32_t        size = 0;
+            uint32_t        size = 0; // bytecount, not number of entries
          } dpds;
 
          constexpr bool valid() const noexcept {

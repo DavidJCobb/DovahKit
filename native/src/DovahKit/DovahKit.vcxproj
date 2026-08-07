@@ -4760,6 +4760,7 @@
     <Natvis Include="dovah\form_reference_t.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="dovah\utils\classed_stat_points.natvis" />
+    <Natvis Include="editor\subsystems\audio\impl\xwma_file_info.natvis" />
     <Natvis Include="editor\subsystems\form_info_cache\cache_containers\data_cache.natvis" />
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
     <Natvis Include="editor\subsystems\worldinput\inputs\button.natvis" />

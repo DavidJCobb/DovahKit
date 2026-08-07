@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
 #include <QPushButton>
+#include <QSlider>
+#include <QTimer>
 #include <QWidget>
 namespace dovahkit::subsystems::audio {
    class sound_definition;
@@ -38,9 +40,14 @@ class DKAudioWidgetFUZ : public QWidget {
       struct {
          QPushButton* play_pause = nullptr;
          QPushButton* stop       = nullptr;
+         QSlider*     seek       = nullptr;
       } subwidgets;
+      QTimer seek_poll_timer;
 
       void _reload_sound_definition();
       void _rebuild_sound_instance();
       void _update_buttons();
+      void _update_seek_slider();
+
+      void _on_playback_state_changed();
 };

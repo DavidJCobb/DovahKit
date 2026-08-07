@@ -140,6 +140,9 @@ namespace dovahkit::subsystems::audio::sound_definitions {
       };
    }
    /*virtual*/ float wav::estimated_length() const /*override*/ {
-      return (float)(this->_audio.size * 8) / this->_format->nAvgBytesPerSec * this->_format->nSamplesPerSec;
+      return (float)this->_audio.size / this->_format->nAvgBytesPerSec;
+   }
+   uint32_t wav::sample_count() const {
+      return this->estimated_length() * this->_format->nSamplesPerSec;
    }
 }

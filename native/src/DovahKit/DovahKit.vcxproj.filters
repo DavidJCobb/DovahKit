@@ -12912,5 +12912,6 @@
     <Natvis Include="helpers\qt\qt_5_natvis\QFileInfoPrivate.natvis" />
     <Natvis Include="helpers\lua\lua.natvis" />
     <Natvis Include="editor\subsystems\form_info_cache\cache_containers\data_cache.natvis" />
+    <Natvis Include="editor\subsystems\audio\impl\xwma_file_info.natvis" />
   </ItemGroup>
 </Project>

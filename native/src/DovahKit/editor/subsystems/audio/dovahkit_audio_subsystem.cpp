@@ -10,6 +10,10 @@ namespace dovahkit::subsystems::audio {
       }
    }
    core::~core() {
+      //
+      // All non-mastering voices must be destroyed before the mastering voice can 
+      // be destroyed.
+      //
       emit this->onBeforeTeardown();
       for (auto*& voice : this->_sound_category_submixes.list) {
          if (!voice)

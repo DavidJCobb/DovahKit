@@ -21,5 +21,6 @@ namespace dovahkit::subsystems::audio::sound_definitions {
          virtual const tWAVEFORMATEX& get_format() const override;
          virtual XAUDIO2_BUFFER       get_audio_buffer_info() const override;
          virtual float estimated_length() const override;
+         uint32_t sample_count() const;
    };
 }

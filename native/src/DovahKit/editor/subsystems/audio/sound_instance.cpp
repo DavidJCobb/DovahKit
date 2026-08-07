@@ -48,18 +48,27 @@ namespace dovahkit::subsystems::audio {
          return;
       if (!this->_voice)
          return;
+      const bool was_at_start = this->_is_at_start;
       if (!this->_is_playback_queued) {
          this->queue_playback();
       }
       this->_voice->Start(0, 0);
       this->_is_playing  = true;
       this->_is_at_start = false;
+      if (was_at_start) {
+         this->_reset_last_time_point();
+      } else {
+         this->_update_last_time_point(false);
+      }
    }
    void sound_instance::pause() {
       if (!this->_voice)
          return;
+      if (!this->_is_playing)
+         return;
       this->_voice->Stop(0, 0);
       this->_is_playing = false;
+      this->_update_last_time_point(true);
       emit this->paused();
    }
    void sound_instance::stop() {
@@ -70,6 +79,7 @@ namespace dovahkit::subsystems::audio {
       this->_is_playing         = false;
       this->_is_playback_queued = false;
       this->_is_at_start        = true;
+      this->_reset_last_time_point();
       emit this->stopped();
    }
 
@@ -86,6 +96,17 @@ namespace dovahkit::subsystems::audio {
       this->_voice->SetVolume(v);
    }
 
+   sound_instance::duration_type sound_instance::position() const {
+      if (this->_is_playing) {
+         const auto now = clock_type::now();
+         return this->_last_time_point.played_prior + (now - this->_last_time_point.time);
+      } else if (this->_is_playback_queued) {
+         return duration_type{};
+      } else {
+         return this->_last_time_point.played_prior;
+      }
+   }
+
    void sound_instance::on_playback_finished(const impl::sound_instance_callback_passkey&) {
       this->_is_playing         = false;
       this->_is_playback_queued = false;
@@ -98,5 +119,17 @@ namespace dovahkit::subsystems::audio {
       //
       if (auto* meta = this->metaObject())
          meta->invokeMethod(this, &sound_instance::finished, Qt::ConnectionType::QueuedConnection);
+   }
+
+   void sound_instance::_reset_last_time_point() {
+      this->_last_time_point.time         = clock_type::now();
+      this->_last_time_point.played_prior = {};
+   }
+   void sound_instance::_update_last_time_point(bool has_been_playing) {
+      const auto now = clock_type::now();
+      if (has_been_playing) {
+         this->_last_time_point.played_prior += (now - this->_last_time_point.time);
+      }
+      this->_last_time_point.time = now;
    }
 }

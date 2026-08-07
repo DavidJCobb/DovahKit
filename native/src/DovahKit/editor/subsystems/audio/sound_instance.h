@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <memory>
 #include <QObject>
 namespace dovahkit::subsystems::audio {
@@ -32,6 +33,11 @@ namespace dovahkit::subsystems::audio {
 
    class sound_instance : public QObject {
       Q_OBJECT;
+      public:
+         using clock_type      = std::chrono::steady_clock;
+         using time_point_type = clock_type::time_point;
+         using duration_type   = clock_type::duration;
+
       protected:
          std::shared_ptr<sound_definition> _definition;
          IXAudio2SourceVoice*              _voice     = nullptr;
@@ -40,6 +46,10 @@ namespace dovahkit::subsystems::audio {
          bool _is_at_start        = true;
          bool _is_playback_queued = false;
          bool _is_playing         = false;
+         struct {
+            time_point_type time;
+            duration_type   played_prior;
+         } _last_time_point;
 
       public:
          sound_instance(QObject* parent, const std::shared_ptr<sound_definition>&, const sound_instance_params& = {});
@@ -57,6 +67,8 @@ namespace dovahkit::subsystems::audio {
          constexpr bool is_playing() const noexcept { return this->_is_playing; }
          constexpr bool is_at_start() const noexcept { return this->_is_at_start; }
 
+         duration_type position() const;
+
          constexpr IXAudio2SourceVoice* _get_raw_interface(impl::sound_instance_voice_passkey) const noexcept {
             return this->_voice;
          }
@@ -68,5 +80,9 @@ namespace dovahkit::subsystems::audio {
 
       public: // passkeyed
          void on_playback_finished(const impl::sound_instance_callback_passkey&);
+
+      protected:
+         void _reset_last_time_point();
+         void _update_last_time_point(bool has_been_playing);
    };
 }

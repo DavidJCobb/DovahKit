@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovahkit::subsystems::audio::impl::xwma_file_info">
+      <Intrinsic Name="_nth_dpds" Expression="dpds.data[n]">
+         <Parameter Name="n" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_dpds_count" Expression="dpds.size / 4" />
+      
+      <Intrinsic Name="_bytes_per_sample" Expression="(format-&gt;nChannels * format-&gt;wBitsPerSample) / 8" />
+      
+      <Expand>
+         <Item Name="[format]">format</Item>
+         <Synthetic Name="[audio]">
+            <Expand>
+               <Item Name="[data]">audio.data</Item>
+               <Item Name="[size]">audio.size</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[dpds]">
+            <Expand>
+               <ArrayItems>
+                  <Size>dpds.size / 4</Size>
+                  <ValuePointer>(uint32_t*)dpds.data</ValuePointer>
+               </ArrayItems>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[length]" Condition="!!format">
+            <DisplayString Condition="_dpds_count() &amp;&amp; format-&gt;nSamplesPerSec &gt; 0">{(float)_nth_dpds(_dpds_count() - 1) / _bytes_per_sample() / format-&gt;nSamplesPerSec,f}</DisplayString>
+            <DisplayString Condition="format-&gt;nAvgBytesPerSec &gt; 0">{(float)audio.size / format-&gt;nAvgBytesPerSec,f}</DisplayString>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>
