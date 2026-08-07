@@ -1,80 +1,64 @@
 #include "./xwma_file_info.h"
 #include <bit>
 #include <xaudio2.h>
+#include "../utils/parse_riff.h"
 
 namespace dovahkit::subsystems::audio::impl {
    xwma_file_info::xwma_file_info(const void* data, size_t size) {
-      bool swap_four_cc_endian = false;
-
-      //
-      //  - FourCC: 'R' 'I' 'F' 'F'
-      //
-      if (size < 4)
-         return;
-      else {
-         uint32_t signature = *(uint32_t*)data;
-         if (signature == 'RIFF') {
-         } else if (signature == std::byteswap('RIFF')) {
-            swap_four_cc_endian = true;
-         } else {
-            return;
-         }
-      }
-
-      //
-      //  - Size of the chunked data
-      //  - FourCC: 'X' 'W' 'M' 'A'
-      //
-      {
-         uint32_t riff_size = *(uint32_t*)((const uint8_t*)data + 4);
-         uint32_t riff_type = *(uint32_t*)((const uint8_t*)data + 8);
-         if (swap_four_cc_endian)
-            riff_type = std::byteswap(riff_type);
-         if (riff_type != 'XWMA')
-            return;
-         if (riff_size > size - 8)
-            return;
-         size = riff_size + 8;
-      }
-
-      uint32_t pos = 0xC;
-      //
-      // Each chunk header consists of a FourCC followed by a chunk body size 
-      // (i.e. it does not include the size of the chunk header).
-      //
-      while (pos + 8 < size) {
-         uint32_t chunk_type = *(uint32_t*)((const uint8_t*)data + pos);
-         uint32_t chunk_size = *(uint32_t*)((const uint8_t*)data + pos + 4);
-         if (swap_four_cc_endian) {
-            chunk_type = std::byteswap(chunk_type);
-         }
-         pos += 8;
-         if (pos + chunk_size < pos) { // overflow
-            break;
-         }
-
-         const auto* chunk_data = ((const uint8_t*)data + pos);
-         switch (chunk_type) {
-            case 'fmt ':
-               if (chunk_size < 18)
+      bool is_xwma_riff = utils::parse_riff(
+         data,
+         size,
+         'XWMA',
+         [this](uint32_t chunk_type, const void* chunk_data, size_t chunk_size) -> utils::parse_riff_result {
+            switch (chunk_type) {
+               case 'fmt ':
+                  if (chunk_size < 18)
+                     break;
+                  this->format = (const WAVEFORMATEX*)chunk_data;
                   break;
-               this->format = (const WAVEFORMATEX*)chunk_data;
-               break;
-            case 'dpds':
-               if (chunk_size % 4)
+               case 'dpds':
+                  if (chunk_size % 4)
+                     break;
+                  this->dpds.size = chunk_size;
+                  this->dpds.data = (const uint32_t*)chunk_data;
                   break;
-               this->dpds.size = chunk_size;
-               this->dpds.data = (const uint32_t*)chunk_data;
-               break;
-            case 'data':
-               this->audio.size = chunk_size;
-               this->audio.data = chunk_data;
-               break;
-            default:
-               break;
+               case 'data':
+                  this->audio.size = chunk_size;
+                  this->audio.data = chunk_data;
+                  break;
+               default:
+                  break;
+            }
+            return utils::parse_riff_result::proceed;
          }
-         pos += chunk_size;
-      }
+      );
+   }
+
+   /*static*/ bool xwma_file_info::data_is_xwma(const void* data, size_t size) {
+      bool valid = true;
+      bool is_xwma_riff = utils::parse_riff(
+         data,
+         size,
+         'XWMA',
+         [&valid](uint32_t chunk_type, const void* chunk_data, size_t chunk_size) -> utils::parse_riff_result {
+            switch (chunk_type) {
+               case 'fmt ':
+                  if (chunk_size < 18) {
+                     valid = false;
+                     return utils::parse_riff_result::stop;
+                  }
+                  break;
+               case 'dpds':
+                  break;
+               case 'data':
+                  break;
+               default:
+                  break;
+            }
+            return utils::parse_riff_result::proceed;
+         }
+      );
+      return is_xwma_riff && valid;
    }
 
    XAUDIO2_BUFFER xwma_file_info::describe_buffer() const {

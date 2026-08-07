@@ -87,6 +87,22 @@ namespace dovahkit::subsystems::audio {
       //
       // Now play from the desired offset.
       //
+      if (offset != duration_type::zero()) {
+         auto duration = this->_definition->estimated_length();
+         auto seconds  = (double)std::chrono::duration_cast<std::chrono::milliseconds>(offset).count() / 1000;
+         if (seconds > duration) {
+            //
+            // Requested offset is out of bounds. Treat this as a normal sound stoppage.
+            // 
+            // We here assume that this function isn't being invoked from an XAudio2 
+            // callback, so we can emit the signal directly rather than queueing it to 
+            // fire on the next spin of Qt's event loop. (Compare to how we emit from 
+            // `on_playback_finished`.)
+            //
+            emit this->finished();
+            return;
+         }
+      }
       this->_reset_last_time_point();
       this->_queue_playback_from(offset);
       this->_is_playing  = true;
@@ -99,6 +115,8 @@ namespace dovahkit::subsystems::audio {
       this->play_from(duration_cast<duration_type>(ms));
    }
    void sound_instance::play_from_s(double seconds) {
+      if (seconds < 0)
+         seconds = 0;
       this->play_from_ms(seconds * 1000);
    }
 

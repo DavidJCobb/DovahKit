@@ -4,11 +4,13 @@
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "../impl/xwma_file_info.h"
 #include "../sound_definition.h"
+#include "../utils/is_valid_xwma_riff.h"
 
 namespace dovahkit::subsystems::audio::sound_definitions {
    class xwma final : public sound_definition {
       public:
          static constexpr const std::string_view primary_extension = "xwm";
+         static constexpr const auto is_valid_data = &utils::is_valid_xwma_riff;
 
       protected:
          std::unique_ptr<dovah::bsa_archived_file> _file;
@@ -16,8 +18,6 @@ namespace dovahkit::subsystems::audio::sound_definitions {
 
       public:
          xwma(std::unique_ptr<dovah::bsa_archived_file>&&);
-
-         static bool data_is_likely_xwma(const void* data, size_t size);
 
          virtual const impl::wave_format_ex& get_format() const override;
          virtual XAUDIO2_BUFFER       get_audio_buffer_info() const override;

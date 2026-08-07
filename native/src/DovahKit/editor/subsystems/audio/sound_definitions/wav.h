@@ -4,15 +4,17 @@
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "../impl/wave_format_ex.h"
 #include "../sound_definition.h"
+#include "../utils/is_valid_wav_riff.h"
 
 namespace dovahkit::subsystems::audio::sound_definitions {
    class wav final : public sound_definition {
       public:
          static constexpr const std::string_view primary_extension = "wav";
+         static constexpr const auto is_valid_data = &utils::is_valid_wav_riff;
 
       protected:
          std::unique_ptr<dovah::bsa_archived_file> _file;
-         impl::wave_format_ex _format;
+         impl::wave_format_ex _format = { 0 };
          struct {
             const void* data = nullptr;
             uint32_t    size = 0;
@@ -20,8 +22,6 @@ namespace dovahkit::subsystems::audio::sound_definitions {
 
       public:
          wav(std::unique_ptr<dovah::bsa_archived_file>&&);
-
-         static bool data_is_likely_wav(const void* data, size_t size);
 
          virtual const impl::wave_format_ex& get_format() const override;
          virtual XAUDIO2_BUFFER       get_audio_buffer_info() const override;

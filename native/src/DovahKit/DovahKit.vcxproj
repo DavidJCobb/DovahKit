@@ -525,6 +525,9 @@
     <ClCompile Include="editor\subsystems\audio\sound_definitions\wav.cpp" />
     <ClCompile Include="editor\subsystems\audio\sound_definitions\xwma.cpp" />
     <ClCompile Include="editor\subsystems\audio\sound_instance.cpp" />
+    <ClCompile Include="editor\subsystems\audio\utils\is_valid_fuz_file.cpp" />
+    <ClCompile Include="editor\subsystems\audio\utils\is_valid_wav_riff.cpp" />
+    <ClCompile Include="editor\subsystems\audio\utils\is_valid_xwma_riff.cpp" />
     <ClCompile Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
@@ -2427,6 +2430,7 @@
     <ClInclude Include="editor\localize\perk_entry_point_explanation.h" />
     <QtMoc Include="editor\subsystems\audio\dovahkit_audio_subsystem.h" />
     <ClInclude Include="editor\subsystems\audio\core.h" />
+    <ClInclude Include="editor\subsystems\audio\exceptions\invalid_sound_file_data.h" />
     <ClInclude Include="editor\subsystems\audio\impl\engine_and_thread.h" />
     <ClInclude Include="editor\subsystems\audio\impl\sound_instance_callbacks.h" />
     <ClInclude Include="editor\subsystems\audio\impl\wave_format_ex.h" />
@@ -2436,7 +2440,11 @@
     <QtMoc Include="editor\subsystems\audio\sound_instance.h" />
     <ClInclude Include="editor\subsystems\audio\sound_definitions\wav.h" />
     <ClInclude Include="editor\subsystems\audio\sound_definitions\xwma.h" />
+    <ClInclude Include="editor\subsystems\audio\utils\is_valid_fuz_file.h" />
+    <ClInclude Include="editor\subsystems\audio\utils\is_valid_wav_riff.h" />
+    <ClInclude Include="editor\subsystems\audio\utils\is_valid_xwma_riff.h" />
     <ClInclude Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.h" />
+    <ClInclude Include="editor\subsystems\audio\utils\parse_riff.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />

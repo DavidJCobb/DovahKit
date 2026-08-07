@@ -4305,6 +4305,15 @@
     <ClCompile Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\utils\is_valid_wav_riff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\utils\is_valid_xwma_riff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\utils\is_valid_fuz_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10698,6 +10707,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\audio\impl\wave_format_ex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\utils\parse_riff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\utils\is_valid_wav_riff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\exceptions\invalid_sound_file_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\utils\is_valid_xwma_riff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\utils\is_valid_fuz_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

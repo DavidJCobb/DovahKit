@@ -1,6 +1,9 @@
 #include "./fuz.h"
 #include <xaudio2.h>
+#include "../exceptions/invalid_sound_file_data.h"
 #include "../impl/wave_format_ex.h"
+#include "../utils/is_valid_fuz_file.h"
+#include "../utils/is_valid_xwma_riff.h"
 
 namespace dovahkit::subsystems::audio::sound_definitions {
    fuz::fuz(std::unique_ptr<dovah::bsa_archived_file>&& f) {
@@ -11,17 +14,18 @@ namespace dovahkit::subsystems::audio::sound_definitions {
       auto  size = file.size();
 
       this->_fuz_info = dovah::fuz::file_info{ data, size };
-      // Read RIFF header.
+      if (!this->_fuz_info.buffer.data) {
+         throw exceptions::invalid_sound_file_data{};
+      }
+
       if (size > this->_fuz_info.buffer.size + dovah::fuz::header_size) {
          auto*    riff_data = (const void*)((const uint8_t*)data + dovah::fuz::header_size + this->_fuz_info.buffer.size);
          uint32_t riff_size = size - this->_fuz_info.buffer.size - dovah::fuz::header_size;
-
+         if (!utils::is_valid_xwma_riff(riff_data, riff_size)) {
+            throw exceptions::invalid_sound_file_data{};
+         }
          this->_xwma_info = impl::xwma_file_info{ riff_data, riff_size };
       }
-   }
-
-   /*static*/ bool fuz::data_is_likely_fuz(const void* data, size_t size) {
-      return dovah::fuz::file_info::data_is_fuz(data, size);
    }
 
    /*virtual*/ const impl::wave_format_ex& fuz::get_format() const /*override*/ {

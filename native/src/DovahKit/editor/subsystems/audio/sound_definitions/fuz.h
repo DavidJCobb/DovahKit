@@ -5,11 +5,13 @@
 #include "dovah/files/fuz/file_info.h"
 #include "../impl/xwma_file_info.h"
 #include "../sound_definition.h"
+#include "../utils/is_valid_fuz_file.h"
 
 namespace dovahkit::subsystems::audio::sound_definitions {
    class fuz final : public sound_definition {
       public:
          static constexpr const std::string_view primary_extension = "fuz";
+         static constexpr const auto is_valid_data = &utils::is_valid_fuz_file;
 
       protected:
          std::unique_ptr<dovah::bsa_archived_file> _file;
@@ -18,8 +20,6 @@ namespace dovahkit::subsystems::audio::sound_definitions {
 
       public:
          fuz(std::unique_ptr<dovah::bsa_archived_file>&&);
-
-         static bool data_is_likely_fuz(const void*, size_t);
 
          virtual const impl::wave_format_ex& get_format() const override;
          virtual XAUDIO2_BUFFER       get_audio_buffer_info() const override;
