@@ -1454,7 +1454,7 @@
     <ClCompile Include="vulkan\swap_chain_image.cpp" />
     <ClCompile Include="vulkan\vertex.cpp" />
     <ClCompile Include="widgets\DKAttackDataWidget.cpp" />
-    <ClCompile Include="widgets\DKAudioWidgetFUZ.cpp" />
+    <ClCompile Include="widgets\DKAudioWidget.cpp" />
     <ClCompile Include="widgets\DKBreadcrumbBar.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
@@ -2421,7 +2421,7 @@
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
-    <QtMoc Include="widgets\DKAudioWidgetFUZ.h" />
+    <QtMoc Include="widgets\DKAudioWidget.h" />
     <ClInclude Include="editor\helpers\recalc_bounds.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
     <ClInclude Include="editor\localize\form_creation_error_code.h" />

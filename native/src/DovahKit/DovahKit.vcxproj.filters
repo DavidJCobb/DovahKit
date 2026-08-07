@@ -4074,7 +4074,7 @@
     <ClCompile Include="editor\subsystems\audio\impl\xwma_file_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKAudioWidgetFUZ.cpp">
+    <ClCompile Include="widgets\DKAudioWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\audio_simple.cpp">
@@ -12210,7 +12210,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestAliasesModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKAudioWidgetFUZ.h">
+    <QtMoc Include="widgets\DKAudioWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h">

@@ -1,4 +1,4 @@
-#include "./DKAudioWidgetFUZ.h"
+#include "./DKAudioWidget.h"
 #include <memory>
 #include <QBoxLayout>
 #if !defined(QT_PLUGIN)
@@ -9,19 +9,19 @@
    #include "editor/subsystems/audio/utils/load_asset_as_sound_definition.h"
 #endif
 
-DKAudioWidgetFUZ::DKAudioWidgetFUZ(QWidget* parent) : QWidget(parent) {
+DKAudioWidget::DKAudioWidget(QWidget* parent) : QWidget(parent) {
    auto* layout = new QHBoxLayout(this);
    this->setLayout(layout);
    layout->setContentsMargins({ 0, 0, 0, 0 });
    {
       auto* button = this->subwidgets.play_pause = new QPushButton(tr("Play"));
       layout->addWidget(button);
-      QObject::connect(button, &QPushButton::clicked, this, &DKAudioWidgetFUZ::playPause);
+      QObject::connect(button, &QPushButton::clicked, this, &DKAudioWidget::playPause);
    }
    {
       auto* button = this->subwidgets.stop = new QPushButton(tr("Stop"));
       layout->addWidget(button);
-      QObject::connect(button, &QPushButton::clicked, this, &DKAudioWidgetFUZ::stop);
+      QObject::connect(button, &QPushButton::clicked, this, &DKAudioWidget::stop);
    }
    {
       auto* slider = this->subwidgets.seek = new QSlider(Qt::Orientation::Horizontal);
@@ -55,14 +55,14 @@ DKAudioWidgetFUZ::DKAudioWidgetFUZ(QWidget* parent) : QWidget(parent) {
 
    this->seek_poll_timer.setInterval(50);
    this->seek_poll_timer.setSingleShot(false);
-   QObject::connect(&this->seek_poll_timer, &QTimer::timeout, this, &DKAudioWidgetFUZ::_update_seek_slider);
+   QObject::connect(&this->seek_poll_timer, &QTimer::timeout, this, &DKAudioWidget::_update_seek_slider);
 }
 
 #if !defined(QT_PLUGIN)
-   QString DKAudioWidgetFUZ::path() const {
+   QString DKAudioWidget::path() const {
       return this->sound.path;
    }
-   void DKAudioWidgetFUZ::setPath(QString v) {
+   void DKAudioWidget::setPath(QString v) {
       this->sound.path = v;
       this->_reload_sound_definition();
       this->_rebuild_sound_instance();
@@ -70,15 +70,15 @@ DKAudioWidgetFUZ::DKAudioWidgetFUZ(QWidget* parent) : QWidget(parent) {
    }
 #endif
 
-void DKAudioWidgetFUZ::setAllowSeeking(bool v) {
+void DKAudioWidget::setAllowSeeking(bool v) {
    this->_properties.allow_seeking = v;
    this->subwidgets.seek->setEnabled(v);
 }
 
-bool DKAudioWidgetFUZ::showSeekSlider() const noexcept {
+bool DKAudioWidget::showSeekSlider() const noexcept {
    return !this->subwidgets.seek->isHidden();
 }
-void DKAudioWidgetFUZ::setShowSeekSlider(bool v) {
+void DKAudioWidget::setShowSeekSlider(bool v) {
    auto* widget = this->subwidgets.seek;
    if (!widget->isHidden() == v)
       return;
@@ -88,7 +88,7 @@ void DKAudioWidgetFUZ::setShowSeekSlider(bool v) {
    #endif
 }
 
-void DKAudioWidgetFUZ::play() {
+void DKAudioWidget::play() {
    #if !defined(QT_PLUGIN)
       if (!this->sound.instance)
          return;
@@ -96,7 +96,7 @@ void DKAudioWidgetFUZ::play() {
       this->_on_playback_state_changed();
    #endif
 }
-void DKAudioWidgetFUZ::playPause() {
+void DKAudioWidget::playPause() {
    #if !defined(QT_PLUGIN)
       if (!this->sound.instance)
          return;
@@ -106,14 +106,14 @@ void DKAudioWidgetFUZ::playPause() {
          this->play();
    #endif
 }
-void DKAudioWidgetFUZ::pause() {
+void DKAudioWidget::pause() {
    #if !defined(QT_PLUGIN)
       if (!this->sound.instance)
          return;
       this->sound.instance->pause();
    #endif
 }
-void DKAudioWidgetFUZ::stop() {
+void DKAudioWidget::stop() {
    #if !defined(QT_PLUGIN)
       if (!this->sound.instance)
          return;
@@ -122,7 +122,7 @@ void DKAudioWidgetFUZ::stop() {
 }
 
 #if !defined(QT_PLUGIN)
-   void DKAudioWidgetFUZ::_reload_sound_definition() {
+   void DKAudioWidget::_reload_sound_definition() {
       this->sound.definition.reset();
       if (auto* p = this->sound.instance) {
          p->deleteLater();
@@ -138,18 +138,18 @@ void DKAudioWidgetFUZ::stop() {
          slider->setRange(0, duration * 1000);
       }
    }
-   void DKAudioWidgetFUZ::_rebuild_sound_instance() {
+   void DKAudioWidget::_rebuild_sound_instance() {
       if (!this->sound.definition)
          return;
       auto* inst = this->sound.instance = new sound_instance(this, this->sound.definition);
-      QObject::connect(inst, &sound_instance::paused,   this, &DKAudioWidgetFUZ::_on_playback_state_changed);
-      QObject::connect(inst, &sound_instance::stopped,  this, &DKAudioWidgetFUZ::_on_playback_state_changed);
-      QObject::connect(inst, &sound_instance::finished, this, &DKAudioWidgetFUZ::_on_playback_state_changed);
+      QObject::connect(inst, &sound_instance::paused,   this, &DKAudioWidget::_on_playback_state_changed);
+      QObject::connect(inst, &sound_instance::stopped,  this, &DKAudioWidget::_on_playback_state_changed);
+      QObject::connect(inst, &sound_instance::finished, this, &DKAudioWidget::_on_playback_state_changed);
 
       auto& core = dovahkit::subsystems::audio::core::get_or_create();
       core.set_sound_instance_category(*inst, dovahkit::subsystems::audio::sound_category::dialogue_preview);
    }
-   void DKAudioWidgetFUZ::_update_buttons() {
+   void DKAudioWidget::_update_buttons() {
       if (!this->sound.instance) {
          this->subwidgets.play_pause->setText(tr("Play"));
          this->subwidgets.play_pause->setEnabled(false);
@@ -169,7 +169,7 @@ void DKAudioWidgetFUZ::stop() {
          }
       }
    }
-   void DKAudioWidgetFUZ::_update_seek_slider() {
+   void DKAudioWidget::_update_seek_slider() {
       auto* slider = this->subwidgets.seek;
       if (!this->sound.instance) {
          slider->setValue(0);
@@ -180,7 +180,7 @@ void DKAudioWidgetFUZ::stop() {
       slider->setValue(std::chrono::duration_cast<std::chrono::milliseconds>(position).count());
    }
 
-   bool DKAudioWidgetFUZ::_should_poll_sound_position() const {
+   bool DKAudioWidget::_should_poll_sound_position() const {
       if (!this->sound.instance)
          return false;
       if (!this->sound.instance->is_playing())
@@ -189,7 +189,7 @@ void DKAudioWidgetFUZ::stop() {
          return false;
       return true;
    }
-   void DKAudioWidgetFUZ::_update_polling_sound_position() {
+   void DKAudioWidget::_update_polling_sound_position() {
       bool is_polling  = this->seek_poll_timer.isActive();
       bool should_poll = this->_should_poll_sound_position();
       if (is_polling != should_poll) {
@@ -200,7 +200,7 @@ void DKAudioWidgetFUZ::stop() {
       }
    }
 
-   void DKAudioWidgetFUZ::_on_playback_state_changed() {
+   void DKAudioWidget::_on_playback_state_changed() {
       this->_update_buttons();
       this->_update_seek_slider();
       this->_update_polling_sound_position();

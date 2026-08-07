@@ -2,14 +2,14 @@
 #include <QDialog>
 #include <QGridLayout>
 #include <QPushButton>
-#include "widgets/DKAudioWidgetFUZ.h"
+#include "widgets/DKAudioWidget.h"
 #include "editor/core.h"
 
 namespace DovahKitDebug::features::widgets {
    /*static*/ void audio_simple::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, dialog);
-      auto* widget = new DKAudioWidgetFUZ(dialog);
+      auto* widget = new DKAudioWidget(dialog);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
 
       layout->addWidget(widget);

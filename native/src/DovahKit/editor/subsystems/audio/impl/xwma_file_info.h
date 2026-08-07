@@ -10,8 +10,6 @@ namespace dovahkit::subsystems::audio::impl {
          constexpr xwma_file_info() {}
          xwma_file_info(const void*, size_t size);
 
-         static bool data_is_xwma(const void*, size_t);
-
       public:
          const tWAVEFORMATEX* format = nullptr;
          struct {

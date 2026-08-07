@@ -9,7 +9,7 @@ namespace dovahkit::subsystems::audio {
    class sound_instance;
 }
 
-class DKAudioWidgetFUZ : public QWidget {
+class DKAudioWidget : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(bool allowSeeking   READ allowSeeking   WRITE setAllowSeeking   DESIGNABLE true);
    Q_PROPERTY(bool showSeekSlider READ showSeekSlider WRITE setShowSeekSlider DESIGNABLE true);
@@ -18,7 +18,7 @@ class DKAudioWidgetFUZ : public QWidget {
       using sound_instance   = dovahkit::subsystems::audio::sound_instance;
 
    public:
-      DKAudioWidgetFUZ(QWidget* parent = nullptr);
+      DKAudioWidget(QWidget* parent = nullptr);
 
       #if !defined(QT_PLUGIN)
          QString path() const;

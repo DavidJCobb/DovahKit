@@ -34,33 +34,6 @@ namespace dovahkit::subsystems::audio::impl {
       );
    }
 
-   /*static*/ bool xwma_file_info::data_is_xwma(const void* data, size_t size) {
-      bool valid = true;
-      bool is_xwma_riff = utils::parse_riff(
-         data,
-         size,
-         'XWMA',
-         [&valid](uint32_t chunk_type, const void* chunk_data, size_t chunk_size) -> utils::parse_riff_result {
-            switch (chunk_type) {
-               case 'fmt ':
-                  if (chunk_size < 18) {
-                     valid = false;
-                     return utils::parse_riff_result::stop;
-                  }
-                  break;
-               case 'dpds':
-                  break;
-               case 'data':
-                  break;
-               default:
-                  break;
-            }
-            return utils::parse_riff_result::proceed;
-         }
-      );
-      return is_xwma_riff && valid;
-   }
-
    XAUDIO2_BUFFER xwma_file_info::describe_buffer() const {
       return XAUDIO2_BUFFER{
          .Flags      = XAUDIO2_END_OF_STREAM,
