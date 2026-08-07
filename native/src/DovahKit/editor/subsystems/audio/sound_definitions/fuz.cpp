@@ -1,5 +1,6 @@
 #include "./fuz.h"
 #include <xaudio2.h>
+#include "../impl/wave_format_ex.h"
 
 namespace dovahkit::subsystems::audio::sound_definitions {
    fuz::fuz(std::unique_ptr<dovah::bsa_archived_file>&& f) {
@@ -23,8 +24,8 @@ namespace dovahkit::subsystems::audio::sound_definitions {
       return dovah::fuz::file_info::data_is_fuz(data, size);
    }
 
-   /*virtual*/ const tWAVEFORMATEX& fuz::get_format() const /*override*/ {
-      return *this->_xwma_info.format;
+   /*virtual*/ const impl::wave_format_ex& fuz::get_format() const /*override*/ {
+      return *(const impl::wave_format_ex*)this->_xwma_info.format;
    }
    /*virtual*/ XAUDIO2_BUFFER fuz::get_audio_buffer_info() const /*override*/ {
       return this->_xwma_info.describe_buffer();
@@ -32,7 +33,20 @@ namespace dovahkit::subsystems::audio::sound_definitions {
    /*virtual*/ XAUDIO2_BUFFER_WMA fuz::get_xwma_info() const /*override*/ {
       return this->_xwma_info.describe_wma();
    }
+
    /*virtual*/ float fuz::estimated_length() const /*override*/ {
       return this->_xwma_info.estimated_length();
+   }
+
+   /*virtual*/ size_t fuz::estimated_sample_count() const /*override*/ {
+      const auto* format = this->_xwma_info.format;
+      if (!format)
+         return 0;
+      const auto bytes_per_sample = (format->nChannels * format->wBitsPerSample) / 8;
+      if (this->_xwma_info.dpds.size) {
+         const auto bytecount = this->_xwma_info.dpds.data[(this->_xwma_info.dpds.size / 4) - 1];
+         return bytecount / bytes_per_sample;
+      }
+      return this->_xwma_info.audio.size / bytes_per_sample;
    }
 }

@@ -2429,6 +2429,7 @@
     <ClInclude Include="editor\subsystems\audio\core.h" />
     <ClInclude Include="editor\subsystems\audio\impl\engine_and_thread.h" />
     <ClInclude Include="editor\subsystems\audio\impl\sound_instance_callbacks.h" />
+    <ClInclude Include="editor\subsystems\audio\impl\wave_format_ex.h" />
     <ClInclude Include="editor\subsystems\audio\sound_category.h" />
     <ClInclude Include="editor\subsystems\audio\sound_definition.h" />
     <ClInclude Include="editor\subsystems\audio\sound_definitions\fuz.h" />

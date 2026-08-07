@@ -10697,6 +10697,9 @@
     <ClInclude Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\impl\wave_format_ex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

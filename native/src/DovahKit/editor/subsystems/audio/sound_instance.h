@@ -61,6 +61,10 @@ namespace dovahkit::subsystems::audio {
          void pause();
          void stop();
 
+         void play_from(duration_type);
+         void play_from_ms(size_t milliseconds);
+         void play_from_s(double seconds);
+
          float get_volume() const;
          void set_volume(float);
 
@@ -82,6 +86,8 @@ namespace dovahkit::subsystems::audio {
          void on_playback_finished(const impl::sound_instance_callback_passkey&);
 
       protected:
+         void _queue_playback_from(duration_type);
+
          void _reset_last_time_point();
          void _update_last_time_point(bool has_been_playing);
    };

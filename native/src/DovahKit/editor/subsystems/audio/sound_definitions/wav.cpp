@@ -2,7 +2,7 @@
 #include <xaudio2.h>
 
 namespace {
-   static constexpr const tWAVEFORMATEX dummy_format = {
+   static constexpr const dovahkit::subsystems::audio::impl::wave_format_ex dummy_format = {
       .wFormatTag = 1,
       .nChannels = 1,
       .nSamplesPerSec = 0,
@@ -24,7 +24,7 @@ namespace dovahkit::subsystems::audio::sound_definitions {
          //
          // TODO: these constructors should be able to throw, instead
          //
-         this->_format = std::make_unique<tWAVEFORMATEX>(dummy_format);
+         this->_format = dummy_format;
          return;
       }
 
@@ -58,18 +58,13 @@ namespace dovahkit::subsystems::audio::sound_definitions {
             case 'fmt ':
                if (chunk_size < 14)
                   break;
-               this->_format = std::make_unique<tWAVEFORMATEX>();
+               this->_format = {};
                if (chunk_size >= 18) {
-                  *this->_format = *(const WAVEFORMATEX*)chunk_data;
+                  this->_format = *(const WAVEFORMATEX*)chunk_data;
                } else if (chunk_size >= 16) {
-                  const auto* src = (const PCMWAVEFORMAT*)chunk_data;
-                  *(WAVEFORMAT*)this->_format.get() = src->wf;
-                  this->_format->wBitsPerSample = src->wBitsPerSample;
-                  this->_format->cbSize         = 0;
+                  this->_format = *(const impl::pcm_wave_format*)chunk_data;
                } else if (chunk_size >= 14) {
-                  *(WAVEFORMAT*)this->_format.get() = *(const WAVEFORMAT*)chunk_data;
-                  this->_format->wBitsPerSample = 8;
-                  this->_format->cbSize         = 0;
+                  this->_format = *(const impl::wave_format*)chunk_data;
                } else {
                   break;
                }
@@ -123,8 +118,8 @@ namespace dovahkit::subsystems::audio::sound_definitions {
       return true;
    }
 
-   /*virtual*/ const tWAVEFORMATEX& wav::get_format() const /*override*/ {
-      return *this->_format;
+   /*virtual*/ const impl::wave_format_ex& wav::get_format() const /*override*/ {
+      return this->_format;
    }
    /*virtual*/ XAUDIO2_BUFFER wav::get_audio_buffer_info() const /*override*/ {
       return XAUDIO2_BUFFER{
@@ -140,9 +135,10 @@ namespace dovahkit::subsystems::audio::sound_definitions {
       };
    }
    /*virtual*/ float wav::estimated_length() const /*override*/ {
-      return (float)this->_audio.size / this->_format->nAvgBytesPerSec;
+      return (float)this->_audio.size / this->_format.nAvgBytesPerSec;
    }
-   uint32_t wav::sample_count() const {
-      return this->estimated_length() * this->_format->nSamplesPerSec;
+   /*virtual*/ size_t wav::estimated_sample_count() const /*override*/ {
+      const auto bytes_per_sample = (this->_format.nChannels * this->_format.wBitsPerSample) / 8;
+      return this->_audio.size / bytes_per_sample;
    }
 }

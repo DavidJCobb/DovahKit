@@ -10,7 +10,7 @@ namespace dovahkit::subsystems::audio {
 
       auto& subsystem = core::get_or_create();
       if (auto* intfc = subsystem.get_engine().interfaces.core) {
-         intfc->CreateSourceVoice(&this->_voice, &this->_definition->get_format(), 0, params.max_frequency_ratio, this->_callbacks);
+         intfc->CreateSourceVoice(&this->_voice, (WAVEFORMATEX*)&this->_definition->get_format(), 0, params.max_frequency_ratio, this->_callbacks);
       }
       QObject::connect(&subsystem, &core::onBeforeTeardown, this, [this]() {
          if (auto*& p = this->_voice) {
@@ -31,17 +31,7 @@ namespace dovahkit::subsystems::audio {
    }
 
    void sound_instance::queue_playback() {
-      if (!this->_voice || !this->_definition)
-         return;
-      auto buffer_info = this->_definition->get_audio_buffer_info();
-      auto xwma_info   = this->_definition->get_xwma_info();
-      buffer_info.pContext = this;
-      if (xwma_info.PacketCount) {
-         this->_voice->SubmitSourceBuffer(&buffer_info, &xwma_info);
-      } else {
-         this->_voice->SubmitSourceBuffer(&buffer_info);
-      }
-      this->_is_playback_queued = true;
+      this->_queue_playback_from(duration_type::zero());
    }
    void sound_instance::play() {
       if (this->_is_playing)
@@ -83,6 +73,35 @@ namespace dovahkit::subsystems::audio {
       emit this->stopped();
    }
 
+   void sound_instance::play_from(duration_type offset) {
+      if (!this->_voice)
+         return;
+      //
+      // Stop the sound without emitting signals.
+      //
+      this->_voice->Stop(0, 0);
+      this->_voice->FlushSourceBuffers();
+      this->_is_playing         = false;
+      this->_is_playback_queued = false;
+      this->_is_at_start        = true;
+      //
+      // Now play from the desired offset.
+      //
+      this->_reset_last_time_point();
+      this->_queue_playback_from(offset);
+      this->_is_playing  = true;
+      this->_is_at_start = offset == duration_type::zero();
+      this->_last_time_point.played_prior = offset;
+      this->_voice->Start(0, 0);
+   }
+   void sound_instance::play_from_ms(size_t milliseconds) {
+      std::chrono::milliseconds ms(milliseconds);
+      this->play_from(duration_cast<duration_type>(ms));
+   }
+   void sound_instance::play_from_s(double seconds) {
+      this->play_from_ms(seconds * 1000);
+   }
+
    float sound_instance::get_volume() const {
       if (!this->_voice)
          return 1;
@@ -108,6 +127,7 @@ namespace dovahkit::subsystems::audio {
       this->_is_playing         = false;
       this->_is_playback_queued = false;
       this->_is_at_start        = true;
+      this->_reset_last_time_point();
       //
       // We don't want to `emit this->finished()`, because we're running from a 
       // performance-sensitive XAudio2 callback. Instead, we want to queue the 
@@ -116,6 +136,31 @@ namespace dovahkit::subsystems::audio {
       //
       if (auto* meta = this->metaObject())
          meta->invokeMethod(this, &sound_instance::finished, Qt::ConnectionType::QueuedConnection);
+   }
+
+   void sound_instance::_queue_playback_from(duration_type from) {
+      if (!this->_voice || !this->_definition)
+         return;
+      auto buffer_info = this->_definition->get_audio_buffer_info();
+      auto xwma_info   = this->_definition->get_xwma_info();
+      buffer_info.pContext = this;
+
+      if (from != duration_type::zero()) {
+         const auto seconds = (double)std::chrono::duration_cast<std::chrono::milliseconds>(from).count() / 1000;
+
+         auto sample_count   = this->_definition->estimated_sample_count();
+         auto samples_before = this->_definition->estimated_samples_at_time_point(seconds);
+         buffer_info.PlayBegin  = samples_before;
+         buffer_info.PlayLength = sample_count - samples_before;
+      }
+
+      if (xwma_info.PacketCount) {
+         this->_voice->SubmitSourceBuffer(&buffer_info, &xwma_info);
+      } else {
+         this->_voice->SubmitSourceBuffer(&buffer_info);
+      }
+
+      this->_is_playback_queued = true;
    }
 
    void sound_instance::_reset_last_time_point() {
