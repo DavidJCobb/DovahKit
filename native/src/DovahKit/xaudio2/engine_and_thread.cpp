@@ -1,4 +1,4 @@
-#include "./core_interface.h"
+#include "./engine_and_thread.h"
 #include <algorithm> // std::swap
 #include <cassert>
 #include <windows.h>
@@ -6,7 +6,7 @@
 #include "./operation_set_handle.h"
 
 namespace dovahkit::xaudio2 {
-   core_interface::core_interface() {
+   engine_and_thread::engine_and_thread() {
       {
          assert(this->_com_initialized == false);
          auto result = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED); // Qt forcibly uses COINIT_APARTMENTTHREADED via OleInitialize
@@ -32,22 +32,22 @@ namespace dovahkit::xaudio2 {
          }
       }
    }
-   core_interface::~core_interface() {
+   engine_and_thread::~engine_and_thread() {
       this->_teardown();
    }
 
-   core_interface::core_interface(core_interface&& src) noexcept {
+   engine_and_thread::engine_and_thread(engine_and_thread&& src) noexcept {
       this->_teardown();
       std::swap(this->x, src.x);
    }
 
-   core_interface& core_interface::operator=(core_interface&& src) noexcept {
+   engine_and_thread& engine_and_thread::operator=(engine_and_thread&& src) noexcept {
       this->_teardown();
       std::swap(this->x, src.x);
       return *this;
    }
 
-   void core_interface::_teardown() {
+   void engine_and_thread::_teardown() {
       if (auto*& p = this->x.mastering_voice) {
          p->DestroyVoice();
          p = nullptr;
@@ -63,16 +63,16 @@ namespace dovahkit::xaudio2 {
       }
    }
 
-   operation_set_handle core_interface::begin_operation_set() {
+   operation_set_handle engine_and_thread::begin_operation_set() {
       auto id = this->_next_operation_set_id.fetch_add(1);
       return operation_set_handle{id};
    }
-   void core_interface::commit_operation_set(operation_set_handle& handle) {
+   void engine_and_thread::commit_operation_set(operation_set_handle& handle) {
       assert(!!this->x.core);
       this->x.core->CommitChanges(handle.id);
    }
 
-   IXAudio2SourceVoice* core_interface::create_raw_source_voice(const WAVEFORMATEX& format, IXAudio2VoiceCallback* callbacks) {
+   IXAudio2SourceVoice* engine_and_thread::create_raw_source_voice(const WAVEFORMATEX& format, IXAudio2VoiceCallback* callbacks) {
       IXAudio2SourceVoice* out = nullptr;
       if (auto* intfc = this->x.core) {
          intfc->CreateSourceVoice(&out, &format, 0, 1.0F, callbacks);

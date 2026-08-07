@@ -4074,13 +4074,10 @@
     <ClCompile Include="xaudio2\xwma_file_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKAudioWidgetSimple.cpp">
+    <ClCompile Include="widgets\DKAudioWidgetFUZ.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xaudio2\simple_fuz_sound.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="xaudio2\core_interface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\audio_simple.cpp">
@@ -4282,6 +4279,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\helpers\recalc_bounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xaudio2\engine_and_thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\dovahkit_audio_subsystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\sound_definitions\fuz.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\sound_instance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\impl\sound_instance_callbacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\sound_definition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -10208,9 +10223,6 @@
     <ClInclude Include="xaudio2\operation_set_handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xaudio2\core_interface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -10653,6 +10665,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\helpers\recalc_bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xaudio2\engine_and_thread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\sound_category.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\sound_definitions\fuz.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\sound_definition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\impl\sound_instance_callbacks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -12141,7 +12171,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestAliasesModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKAudioWidgetSimple.h">
+    <QtMoc Include="widgets\DKAudioWidgetFUZ.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="xaudio2\simple_fuz_sound.h">
@@ -12190,6 +12220,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneProperties.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\audio\dovahkit_audio_subsystem.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\audio\sound_instance.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

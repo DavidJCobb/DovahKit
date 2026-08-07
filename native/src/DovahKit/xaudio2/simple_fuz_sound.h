@@ -6,7 +6,7 @@
 #include "./xwma_file_info.h"
 class IXAudio2SourceVoice;
 namespace dovahkit::xaudio2 {
-   class core_interface;
+   class engine_and_thread;
 }
 
 namespace dovahkit::xaudio2 {
@@ -37,7 +37,7 @@ namespace dovahkit::xaudio2 {
       Q_OBJECT;
       protected:
          std::shared_ptr<simple_fuz_sound_definition> _definition;
-         core_interface&      _owner;
+         engine_and_thread&   _owner;
          IXAudio2SourceVoice* _voice = nullptr;
          impl::simple_fuz_sound_instance_callbacks* _callbacks = nullptr;
 
@@ -46,7 +46,7 @@ namespace dovahkit::xaudio2 {
          bool _is_playing = false;
 
       public:
-         simple_fuz_sound_instance(core_interface&, const std::shared_ptr<simple_fuz_sound_definition>&);
+         simple_fuz_sound_instance(engine_and_thread&, const std::shared_ptr<simple_fuz_sound_definition>&);
          ~simple_fuz_sound_instance();
 
       public:

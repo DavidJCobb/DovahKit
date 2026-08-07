@@ -9,7 +9,7 @@ class  IXAudio2VoiceCallback;
 struct tWAVEFORMATEX;
 
 namespace dovahkit::xaudio2 {
-   class core_interface {
+   class engine_and_thread {
       protected:
          struct {
             IXAudio2* core = nullptr; // COM; refcounted
@@ -19,17 +19,24 @@ namespace dovahkit::xaudio2 {
          bool _com_initialized = false;
 
       public:
-         core_interface();
-         ~core_interface();
-         core_interface(const core_interface&) = delete;
-         core_interface& operator=(const core_interface&) = delete;
-         core_interface(core_interface&&) noexcept;
-         core_interface& operator=(core_interface&&) noexcept;
+         engine_and_thread();
+         ~engine_and_thread();
+         engine_and_thread(const engine_and_thread&) = delete;
+         engine_and_thread& operator=(const engine_and_thread&) = delete;
+         engine_and_thread(engine_and_thread&&) noexcept;
+         engine_and_thread& operator=(engine_and_thread&&) noexcept;
 
       protected:
          void _teardown();
 
       public:
+         constexpr IXAudio2* get_raw_interface() noexcept {
+            return this->x.core;
+         }
+         constexpr IXAudio2MasteringVoice* get_raw_mastering_voice_interface() noexcept {
+            return this->x.mastering_voice;
+         }
+
          operation_set_handle begin_operation_set();
          void commit_operation_set(operation_set_handle&);
 

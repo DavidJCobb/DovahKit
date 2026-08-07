@@ -1,6 +1,6 @@
 #include "./simple_fuz_sound.h"
 #include <xaudio2.h>
-#include "./core_interface.h"
+#include "./engine_and_thread.h"
 
 namespace dovahkit::xaudio2 {
    #pragma region simple_fuz_sound_definition
@@ -45,7 +45,7 @@ namespace dovahkit::xaudio2 {
    }
 
    #pragma region simple_fuz_sound_instance
-      simple_fuz_sound_instance::simple_fuz_sound_instance(core_interface& o, const std::shared_ptr<simple_fuz_sound_definition>& dfn) : _owner(o) {
+      simple_fuz_sound_instance::simple_fuz_sound_instance(engine_and_thread& o, const std::shared_ptr<simple_fuz_sound_definition>& dfn) : _owner(o) {
          this->_definition = dfn;
          if (this->_definition) {
             auto& xwma = this->_definition->audio_info();

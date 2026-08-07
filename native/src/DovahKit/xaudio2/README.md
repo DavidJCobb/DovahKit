@@ -11,11 +11,9 @@ This is all also my first foray into using XAudio2, so I can't and won't claim t
 
 Classes in here are as follows:
 
-* `core_interface` maps directly to a single instance of the `IXAudio2` interface i.e. a single audio engine with its own thread and its own voice node graph. You can theoretically create multiple audio cores, and the other classes expect to be given a `std::shared_ptr` for the audio core they should play through.
+* `engine_and_thread` maps directly to a single instance of the `IXAudio2` interface i.e. a single audio engine with its own thread and its own voice node graph. You can theoretically create multiple audio cores, and the other classes expect to be given a `std::shared_ptr` for the audio core they should play through.
 
-  * **However, DovahKit should be given a dedicated audio subsystem to store a single `core_interface` to be reused. We should not be creating one of these for every single UI widget that needs or wants to play audio.**
-
-  * **And just to drive the point home -- just to make clear the implications of creating one of these things -- this class should probably be renamed to `dovahkit::xaudio2::engine_and_thread`.**
+  * **However, DovahKit should be given a dedicated audio subsystem to store a single `engine_and_thread` to be reused. We should not be creating one of these for every single UI widget that needs or wants to play audio.**
 
 * `simple_fuz_sound_definition` maps to a loaded FUZ file and its contents.
 
