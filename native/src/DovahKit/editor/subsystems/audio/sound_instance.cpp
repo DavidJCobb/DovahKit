@@ -100,11 +100,8 @@ namespace dovahkit::subsystems::audio {
       if (this->_is_playing) {
          const auto now = clock_type::now();
          return this->_last_time_point.played_prior + (now - this->_last_time_point.time);
-      } else if (this->_is_playback_queued) {
-         return duration_type{};
-      } else {
-         return this->_last_time_point.played_prior;
       }
+      return this->_last_time_point.played_prior;
    }
 
    void sound_instance::on_playback_finished(const impl::sound_instance_callback_passkey&) {

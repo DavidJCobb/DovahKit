@@ -4302,6 +4302,9 @@
     <ClCompile Include="editor\subsystems\audio\sound_definitions\wav.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10689,6 +10692,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\audio\sound_definitions\wav.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -525,6 +525,7 @@
     <ClCompile Include="editor\subsystems\audio\sound_definitions\wav.cpp" />
     <ClCompile Include="editor\subsystems\audio\sound_definitions\xwma.cpp" />
     <ClCompile Include="editor\subsystems\audio\sound_instance.cpp" />
+    <ClCompile Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.cpp" />
@@ -2434,6 +2435,7 @@
     <QtMoc Include="editor\subsystems\audio\sound_instance.h" />
     <ClInclude Include="editor\subsystems\audio\sound_definitions\wav.h" />
     <ClInclude Include="editor\subsystems\audio\sound_definitions\xwma.h" />
+    <ClInclude Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\character_encoding.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />

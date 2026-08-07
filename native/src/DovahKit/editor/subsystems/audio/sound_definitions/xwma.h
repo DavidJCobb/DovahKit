@@ -1,11 +1,15 @@
 #pragma once
 #include <memory>
+#include <string_view>
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "../impl/xwma_file_info.h"
 #include "../sound_definition.h"
 
 namespace dovahkit::subsystems::audio::sound_definitions {
    class xwma : public sound_definition {
+      public:
+         static constexpr const std::string_view primary_extension = "xwm";
+
       protected:
          std::unique_ptr<dovah::bsa_archived_file> _file;
          impl::xwma_file_info _xwma_info;

@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 #include <memory>
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/files/fuz/file_info.h"
@@ -7,6 +8,9 @@
 
 namespace dovahkit::subsystems::audio::sound_definitions {
    class fuz : public sound_definition {
+      public:
+         static constexpr const std::string_view primary_extension = "fuz";
+
       protected:
          std::unique_ptr<dovah::bsa_archived_file> _file;
          dovah::fuz::file_info   _fuz_info;

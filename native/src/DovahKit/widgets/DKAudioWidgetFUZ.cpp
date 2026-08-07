@@ -3,16 +3,9 @@
 #include <QBoxLayout>
 #include "editor/subsystems/audio/core.h"
 #include "editor/subsystems/audio/sound_category.h"
-#include "editor/subsystems/audio/sound_definitions/fuz.h"
-#include "editor/subsystems/audio/sound_definitions/wav.h"
-#include "editor/subsystems/audio/sound_definitions/xwma.h"
+#include "editor/subsystems/audio/sound_definition.h"
 #include "editor/subsystems/audio/sound_instance.h"
-#include "editor/subsystems/assets.h"
-#include "dovah/files/bsa/bsa_archived_file.h"
-
-namespace sound_definitions {
-   using namespace dovahkit::subsystems::audio::sound_definitions;
-}
+#include "editor/subsystems/audio/utils/load_asset_as_sound_definition.h"
 
 DKAudioWidgetFUZ::DKAudioWidgetFUZ(QWidget* parent) : QWidget(parent) {
    auto* layout = new QHBoxLayout(this);
@@ -84,36 +77,7 @@ void DKAudioWidgetFUZ::_reload_sound_definition() {
    }
 
    std::filesystem::path path = this->sound.path.toStdString();
-   auto* data = dovahkit::subsystems::assets::get_or_create().lookup_game_asset(path, true);
-   if (!data) {
-      return;
-   }
-
-   auto ext    = path.extension();
-   bool is_fuz = sound_definitions::fuz::data_is_likely_fuz(data->data(), data->size());
-   bool is_xwm = false;
-   bool is_wav = false;
-   if (!is_fuz) {
-      is_xwm = sound_definitions::xwma::data_is_likely_xwma(data->data(), data->size());
-      if (!is_xwm)
-         is_wav = sound_definitions::wav::data_is_likely_wav(data->data(), data->size());
-   }
-
-   if (!is_fuz && !is_xwm && !is_wav) {
-      delete data;
-      return;
-   }
-
-   std::unique_ptr<dovah::bsa_archived_file> data_ptr;
-   data_ptr.reset(data);
-   data = nullptr;
-   if (is_fuz) {
-      this->sound.definition = std::make_shared<sound_definitions::fuz>(std::move(data_ptr));
-   } else if (is_xwm) {
-      this->sound.definition = std::make_shared<sound_definitions::xwma>(std::move(data_ptr));
-   } else if (is_wav) {
-      this->sound.definition = std::make_shared<sound_definitions::wav>(std::move(data_ptr));
-   }
+   this->sound.definition = dovahkit::subsystems::audio::utils::load_asset_as_sound_definition(path);
 
    if (this->sound.definition) {
       auto  duration = this->sound.definition->estimated_length();
