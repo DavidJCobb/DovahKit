@@ -161,6 +161,40 @@ namespace ui::types {
       out._data = this->_data.mid(stem._data.size());
       return out;
    }
+   game_file_path& game_file_path::scope_to_stem_folder(std::string_view name) {
+      auto name_view = QLatin1StringView(name.data(), name.size());
+
+      int last = 0;
+      do {
+         int i = this->_data.indexOf(name_view, last, Qt::CaseInsensitive);
+         if (i < 0) {
+            break;
+         }
+         QChar prior = '\\';
+         if (i > 0)
+            prior = this->_data[i - 1];
+         if (
+            (prior == '/' || prior == '\\') &&
+            i + name_view.size() < this->_data.size()
+         ) {
+            auto c = this->_data[i + name_view.size()];
+            if (c.unicode() == '/' || c.unicode() == '\\') {
+               this->_data = this->_data.mid(i);
+               return *this;
+            }
+         }
+         last = i + 1;
+      } while (true);
+      this->_data = QString(name_view) + "\\" + this->_data;
+      _deduplicate_directory_separators(this->_data);
+      return *this;
+   }
+   game_file_path& game_file_path::scope_to_absolute_stem_folder(std::string_view folder_name) {
+      this->scope_to_stem_folder(folder_name);
+      this->_data = QString("Data\\") + this->_data;
+      return *this;
+   }
+
    QString game_file_path::to_string(const format_options& o) const {
       if (this->empty())
          return {};

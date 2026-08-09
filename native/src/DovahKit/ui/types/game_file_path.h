@@ -36,6 +36,8 @@ namespace ui::types {
          game_file_path& append(QStringView);
          game_file_path& append(const game_file_path&);
          game_file_path lexically_relative(game_file_path) const;
+         game_file_path& scope_to_stem_folder(std::string_view folder_name); // mimics the game's behavior, except that the argument you pass should not include a directory separator
+         game_file_path& scope_to_absolute_stem_folder(std::string_view folder_name); // same as above, except "Data\" prefix is added
 
          QString to_string(const format_options& fmt = canonical_options) const;
 
