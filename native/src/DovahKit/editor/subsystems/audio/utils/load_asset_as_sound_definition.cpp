@@ -22,7 +22,17 @@ namespace dovahkit::subsystems::audio::utils {
    extern std::shared_ptr<sound_definition> load_asset_as_sound_definition(std::filesystem::path path) {
       auto* file = dovahkit::subsystems::assets::get_or_create().lookup_game_asset(path, true);
       if (!file) {
-         return nullptr;
+         auto ext = path.extension();
+         if (ext == ".wav") {
+            //
+            // For whatever reason, data files specify `.wav` for several files including 
+            // all music, but the actual files in the BSA are `.xwm`.
+            //
+            path.replace_extension(".xwm");
+            file = dovahkit::subsystems::assets::get_or_create().lookup_game_asset(path, true);
+         }
+         if (!file)
+            return nullptr;
       }
 
       std::shared_ptr<sound_definition> result;

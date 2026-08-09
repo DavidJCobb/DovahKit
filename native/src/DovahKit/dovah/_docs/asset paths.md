@@ -195,6 +195,46 @@ void NormalizeAssetPath(
 ```
 
 
+### `NormalizeAssetPathInPlace`
+
+**SE:** Address Library ID 69968
+
+This function appears to be broken. It attempts to loop over a path and normalize it, but it accidentally operates on character *indices* rather than characters. It also doesn't check for a null terminator in order to stop iteration.
+
+Since the loop counter starts from zero, the effect of this function would be to write a null terminator directly to the start of the target string, clearing it. It would of course also trash the next 126 bytes after that.
+
+I can't figure out precisely where or how this is used. Given that literally everything about it appears to be wrong, I don't think it's even worth accounting for this function or its behavior.
+
+### Translation from x64 to C++
+
+```c++
+const char* NormalizeAssetPathInPlace(char(&path)[128]) {
+   char i = 0;
+   do {
+      char c = i; // bad typo! bad! should've been `c = path[i]`
+      if (c == '/') {
+         c = '\\';
+      } else if (c != '\\' && c >= 'A' && c <= 'Z') {
+         c = tolower(c);
+      }
+      path[i] = c;
+      //
+      // The loop's termination condition is an unsigned comparison between 
+      // the loop counter, sign-extended from `char` to `int`, and 256. When 
+      // the loop counter increments past 127, it'll overflow to -128, which 
+      // (once sign-extended to a four-byte value) tests as greater than 256 
+      // in an unsigned comparison.
+      //
+      // Thus, the loop behaves as if it's `i < 127`. This is very lucky, 
+      // given that without the very particular behavior of performing an 
+      // unsigned comparison, this loop would be infinite.
+      //
+   } while ((int)++i < 256U);
+   return path;
+}
+```
+
+
 ### `ScopePathToFolder`
 
 **LE:** address 0x00A3F5C0  
@@ -228,7 +268,7 @@ Logging and breakpoints indicate that this is used not only for paths in form da
 * LE:5A2A70 uses this to scope paths to `meshes\`. The caller does something with FaceGen.
 * LE:5A2B40 uses this to scope paths to `meshes\`. The caller does something with FaceGen.
 * LE:5A2C70 uses this to scope paths to `meshes\`. The caller does something with FaceGen.
-* LE:653C50 checks if a path starts with the exact case-insensitive string `"Data\\Sound\\"`. If so, it uses this function to scope the path to `sound\`; otherwise, `music\`. It only does this for paths whose file extensions are `.wav`, `.xwm`, or `.fuz` (all case-insensitive).
+* LE:653C50 / SE Address Library ID 33055 checks if a path starts with the exact case-insensitive string `"Data\\Sound\\"`. If so, it uses this function to scope the path to `sound\`; otherwise, `music\`. It only does this for paths whose file extensions are `.wav`, `.xwm`, or `.fuz` (all case-insensitive).
 * LE:876600 uses this to scope the value of the INI setting `[General]sMainMenuMusic` to `music\`.
 * LE:AF5030 uses this to scope paths to `meshes\`. Callers include `TESObject::Clone3D`.
 * LE:AF54C0 uses this to scope paths to `meshes\`. Callers include `TESObject::Clone3D`.

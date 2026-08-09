@@ -210,6 +210,9 @@
        </item>
        <item row="2" column="1" rowspan="2">
         <widget class="QGroupBox" name="groupBox">
+         <property name="whatsThis">
+          <string>&lt;p&gt;When the game wants to stop playing this music track, it'll attempt to synch the &quot;finale&quot; audio file up with one of these cue points. Cue points are time offsets within the main audio file.&lt;/p&gt;</string>
+         </property>
          <property name="title">
           <string>Cue points (in seconds)</string>
          </property>
@@ -266,6 +269,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QComboBox" name="previewPicker">
+            <property name="whatsThis">
+             <string>Choose which file to preview using the audio player.</string>
+            </property>
             <item>
              <property name="text">
               <string>Main File</string>
