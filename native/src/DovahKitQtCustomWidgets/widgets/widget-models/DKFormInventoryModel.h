@@ -80,6 +80,12 @@ class DKFormInventoryModel : public QAbstractItemModel {
          #pragma region Editing
             virtual bool insertRows(int row, int count, const QModelIndex& parent = {}) override;
             virtual bool removeRows(int row, int count, const QModelIndex& parent = {}) override;
+            #pragma region Drag-and-drop
+               virtual bool canDropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) const override;
+               virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
+               virtual QStringList mimeTypes() const override;
+               virtual Qt::DropActions supportedDropActions() const override;
+            #pragma endregion
          #pragma endregion
       #pragma endregion
 

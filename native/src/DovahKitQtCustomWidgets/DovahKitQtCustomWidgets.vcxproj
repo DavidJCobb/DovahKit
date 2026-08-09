@@ -31,12 +31,13 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
+    <QtInstall>6.11.1 MSVC2022 x64</QtInstall>
     <QtModules>core;xml;gui;widgets;designer</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
+    <QtPlugin>true</QtPlugin>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
+    <QtInstall>6.11.1 MSVC2022 x64</QtInstall>
     <QtModules>core;xml;gui;widgets;designer</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
     <MocMacroNames>Q_OBJECT;Q_GADGET;Q_NAMESPACE;Q_NAMESPACE_EXPORT;Q_INTERFACES</MocMacroNames>
@@ -113,6 +114,7 @@
     <ClCompile Include="extensions\DKYesNoUnsetWidgetTaskMenuExtension.cpp" />
     <ClCompile Include="extension_factories\DKYesNoUnsetWidgetExtensionFactory.cpp" />
     <ClCompile Include="interfaces\DKAttackDataWidgetInterface.cpp" />
+    <ClCompile Include="interfaces\DKAudioWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKBreadcrumbBarInterface.cpp" />
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKCompactObjectReferencePickerInterface.cpp" />
@@ -143,6 +145,7 @@
     <ClCompile Include="tools\in_place_text_editor\InPlaceTextEditor.cpp" />
     <ClCompile Include="ui\types\game_file_path.cpp" />
     <ClCompile Include="widgets\DKAttackDataWidget.cpp" />
+    <ClCompile Include="widgets\DKAudioWidget.cpp" />
     <ClCompile Include="widgets\DKBreadcrumbBar.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
@@ -274,9 +277,11 @@
     <QtMoc Include="interfaces\DKBreadcrumbBarInterface.h" />
     <QtMoc Include="interfaces\DKPapyrusFragmentScriptNamePickerInterface.h" />
     <QtMoc Include="interfaces\DKPapyrusFragmentFunctionNamePickerInterface.h" />
+    <QtMoc Include="interfaces\DKAudioWidgetInterface.h" />
     <ClInclude Include="tools\in_place_text_editor\InPlaceTextEditableWidget.h" />
     <ClInclude Include="ui\types\game_file_path.h" />
     <QtMoc Include="widgets\DKBreadcrumbBar.h" />
+    <QtMoc Include="widgets\DKAudioWidget.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />

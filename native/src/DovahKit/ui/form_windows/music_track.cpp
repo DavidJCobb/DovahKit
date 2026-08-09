@@ -44,6 +44,18 @@ FormDialogMusicTrack::FormDialogMusicTrack(dovah::form_stub& stub, QWidget* pare
    ui::set_unsigned_range<float>(this->ui.loopEndTime);
    ui::set_unsigned_range<float>(this->ui.currentCue);
    {
+      auto* preview_picker = this->ui.previewPicker;
+      auto* preview_player = this->ui.previewAudio;
+      
+      QObject::connect(preview_picker, &QComboBox::currentIndexChanged, this, &FormDialogMusicTrack::_update_single_track_preview);
+      for (auto* widget : std::array{
+         this->ui.fileMain,
+         this->ui.fileFinale
+      }) {
+         QObject::connect(widget, &DKGameFilePicker::valueChanged, this, &FormDialogMusicTrack::_update_single_track_preview);
+      }
+   }
+   {
       auto* widget = this->ui.cueList;
       auto* model  = new MusicTrackCuePointsModel(this);
       this->_models.cue_points = model;
@@ -180,6 +192,7 @@ void FormDialogMusicTrack::_load_impl() {
                }
             }
             this->_models.cue_points->importData(casted.cue_points);
+            this->_update_single_track_preview();
          }
          break;
    }
@@ -250,4 +263,16 @@ void FormDialogMusicTrack::_update_displayed_palette_layer() {
       this->ui.paletteTrackList->addStub(stub);
    this->ui.paletteTrackList->setUpdatesEnabled(true);
    this->_state.palette.displayed_layer = layer_idx;
+}
+
+void FormDialogMusicTrack::_update_single_track_preview() {
+   auto* player = this->ui.previewAudio;
+
+   auto  i           = this->ui.previewPicker->currentIndex();
+   auto* file_picker = (i == 0) ? this->ui.fileMain : this->ui.fileFinale;
+   auto  path        = file_picker->value().lexically_relative("Data\\").to_string();
+   if (path == player->path() && player->isSoundLoaded()) {
+      return;
+   }
+   player->setPath(path);
 }

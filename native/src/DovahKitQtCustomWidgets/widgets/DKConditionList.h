@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <QMenu>
 #include <QWidget>
 #if !defined(QT_PLUGIN)
    #include "ui/types/conditions/condition.h"
@@ -48,6 +49,9 @@ class DKConditionList : public QWidget {
 
       size_t conditionCount() const;
 
+      // Del key on listview
+      virtual bool eventFilter(QObject* object, QEvent* event) override;
+
    signals:
       void changeAttempted();
       void changed();
@@ -58,13 +62,32 @@ class DKConditionList : public QWidget {
 
    protected:
       struct {
-         QPushButton* add_item  = nullptr;
-         QPushButton* move_up   = nullptr;
-         QPushButton* move_down = nullptr;
-         QTableView*  view      = nullptr;
+         QMenu menu;
+         struct {
+            QAction* edit      = nullptr;
+            QAction* move_up   = nullptr;
+            QAction* move_down = nullptr;
+            QAction* remove    = nullptr;
+         } actions;
+      } _context;
+      struct {
+         QPushButton* add_item    = nullptr;
+         QPushButton* move_up     = nullptr;
+         QPushButton* move_down   = nullptr;
+         QPushButton* remove_item = nullptr;
+         QTableView*  view        = nullptr;
       } _subwidgets;
       #if !defined(QT_PLUGIN)
          DKConditionListModel* _model = nullptr;
          dovah::form_stub* _owning_stub = nullptr;
+      #endif
+
+      bool _has_selection() const;
+      void _update_button_enable_states();
+
+      #if !defined(QT_PLUGIN)
+         void _move_selection_up();
+         void _move_selection_down();
+         void _delete_selection();
       #endif
 };

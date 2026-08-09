@@ -264,7 +264,7 @@ namespace ui::impl::DKFormPicker {
          to = std::distance(list.begin(), dst_it);
          moving_upward_in_list = dst_it < entry_it;
       }
-      this->beginMoveRows(
+      bool emitted = this->beginMoveRows(
          {},
          from, // first to move
          from, // last  to move
@@ -281,7 +281,8 @@ namespace ui::impl::DKFormPicker {
       }
       list.erase(entry_it);
       list.insert(list.begin() + to, &item);
-      this->endMoveRows();
+      if (emitted)
+         this->endMoveRows();
    }
 
    void DialogModel::_on_item_exclusion_state_changed(const item_type& entry, bool exclude_now) {

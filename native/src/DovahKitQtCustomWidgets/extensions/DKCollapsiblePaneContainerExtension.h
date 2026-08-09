@@ -22,6 +22,8 @@ class DKCollapsiblePaneContainerExtension : public QObject, public QDesignerCont
 
       virtual bool canAddWidget() const override { return instance->viewport() == nullptr; }
 
+      virtual bool canRemove(int index) const override { return false; }
+
       virtual int count() const override { return instance->viewport() ? 1 : 0; }
 
       virtual int currentIndex() const override { return instance->viewport() ? 0 : -1; }

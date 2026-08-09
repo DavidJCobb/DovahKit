@@ -23,8 +23,6 @@ class DKAudioWidget : public QWidget {
       #if !defined(QT_PLUGIN)
          QString path() const;
          void setPath(QString);
-
-         bool isSoundLoaded() const;
       #endif
 
       constexpr bool allowSeeking() const noexcept { return this->_properties.allow_seeking; }

@@ -19,12 +19,12 @@ class DKFormListPaneModel : public QAbstractItemModel {
    public:
       using QAbstractItemModel::QAbstractItemModel;
 
-      virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override { return QModelIndex(); }
-      virtual QModelIndex parent(const QModelIndex& index) const { return QModelIndex(); }
+      virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override { return {}; }
+      virtual QModelIndex parent(const QModelIndex& index) const { return {}; }
       virtual int rowCount(const QModelIndex& parent) const override { return 0; }
       virtual int columnCount(const QModelIndex& item) const override { return 3; }
-      virtual Qt::ItemFlags flags(const QModelIndex& index) const override { return 0; }
-      virtual QVariant data(const QModelIndex& index, int role) const override { return QVariant(); }
+      virtual Qt::ItemFlags flags(const QModelIndex& index) const override { return {}; }
+      virtual QVariant data(const QModelIndex& index, int role) const override { return {}; }
       virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
          if (orientation != Qt::Orientation::Horizontal) {
             return QVariant();
@@ -32,9 +32,9 @@ class DKFormListPaneModel : public QAbstractItemModel {
          switch (role) {
             case Qt::DisplayRole:
                switch (section) {
-                  case DKFormListPane::ColumnType:   return DKFormListPane::tr("Type", "FormList listview");
-                  case DKFormListPane::ColumnName:   return DKFormListPane::tr("Name", "FormList listview");
-                  case DKFormListPane::ColumnFormID: return DKFormListPane::tr("Form ID", "FormList listview");
+                  case 0: return DKFormListPane::tr("Type", "FormList listview");
+                  case 1: return DKFormListPane::tr("Name", "FormList listview");
+                  case 2: return DKFormListPane::tr("Form ID", "FormList listview");
                }
                break;
          }

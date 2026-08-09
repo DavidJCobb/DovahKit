@@ -61,40 +61,27 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="0" column="0" colspan="2">
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="filesGroupbox">
          <property name="title">
           <string>Files</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
-           <widget class="QListView" name="fileList">
-            <property name="whatsThis">
-             <string>The list of sound files that may be played when the game elects to play this sound descriptor. A file will be chosen at random. Files must be stored in &lt;code&gt;Data\Sound\&lt;/code&gt;.</string>
-            </property>
-            <property name="selectionBehavior">
-             <enum>QAbstractItemView::SelectRows</enum>
-            </property>
-            <property name="uniformItemSizes">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
+          <item row="1" column="0" colspan="2">
            <widget class="DKGameFilePicker" name="filePicker">
             <property name="presetConfiguration">
-             <enum>DKGameFilePicker::Sounds</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPushButton" name="buttonAddFile">
-            <property name="text">
-             <string>Add</string>
+             <enum>DKGameFilePicker::PresetConfiguration::Sounds</enum>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <layout class="QVBoxLayout" name="verticalLayout">
+           <layout class="QVBoxLayout" name="fileListButtonsLayout">
+            <item>
+             <widget class="QPushButton" name="buttonAddFile">
+              <property name="text">
+               <string>Add</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QPushButton" name="buttonRemoveFile">
               <property name="text">
@@ -105,7 +92,7 @@
             <item>
              <spacer name="verticalSpacer">
               <property name="orientation">
-               <enum>Qt::Vertical</enum>
+               <enum>Qt::Orientation::Vertical</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -116,6 +103,22 @@
              </spacer>
             </item>
            </layout>
+          </item>
+          <item row="0" column="0">
+           <widget class="QListView" name="fileList">
+            <property name="whatsThis">
+             <string>The list of sound files that may be played when the game elects to play this sound descriptor. A file will be chosen at random. Files must be stored in &lt;code&gt;Data\Sound\&lt;/code&gt;.</string>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+            </property>
+            <property name="uniformItemSizes">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="DKAudioWidget" name="filePlayer"/>
           </item>
          </layout>
         </widget>
@@ -130,7 +133,7 @@
            <item>
             <widget class="QSpinBox" name="dbVariance">
              <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
              <property name="maximum">
               <number>100</number>
@@ -140,7 +143,7 @@
            <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -157,7 +160,7 @@
            <item>
             <widget class="QSpinBox" name="freqShift">
              <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
              <property name="suffix">
               <string>%</string>
@@ -173,10 +176,10 @@
            <item>
             <spacer name="horizontalSpacer_3">
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeType">
-              <enum>QSizePolicy::Fixed</enum>
+              <enum>QSizePolicy::Policy::Fixed</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -186,7 +189,7 @@
              </property>
             </spacer>
            </item>
-           <item alignment="Qt::AlignRight">
+           <item alignment="Qt::AlignmentFlag::AlignRight">
             <widget class="QLabel" name="label_10">
              <property name="text">
               <string>Variance:</string>
@@ -199,7 +202,7 @@
            <item>
             <widget class="QSpinBox" name="freqVariance">
              <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
              <property name="suffix">
               <string>%</string>
@@ -215,7 +218,7 @@
            <item>
             <spacer name="horizontalSpacer_2">
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -269,14 +272,14 @@
            <item>
             <widget class="DKFloatSlider" name="staticAttenuationSlider">
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QDoubleSpinBox" name="staticAttenuationSpinbox">
              <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
             </widget>
            </item>
@@ -387,14 +390,14 @@
               <number>255</number>
              </property>
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QSpinBox" name="prioritySpinbox">
              <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
              <property name="maximum">
               <number>255</number>
@@ -427,14 +430,14 @@
           <item row="0" column="1">
            <widget class="QSlider" name="rumbleSmallSlider">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item row="0" column="2">
            <widget class="QSpinBox" name="rumbleSmallSpinbox">
             <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
             </property>
             <property name="maximum">
              <number>100</number>
@@ -454,14 +457,14 @@
           <item row="1" column="1">
            <widget class="QSlider" name="rumbleLargeSlider">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item row="1" column="2">
            <widget class="QSpinBox" name="rumbleLargeSpinbox">
             <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
             </property>
             <property name="maximum">
              <number>100</number>
@@ -474,7 +477,7 @@
        <item row="2" column="1">
         <spacer name="horizontalSpacer_4">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -497,7 +500,7 @@
        <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -516,7 +519,7 @@
      <item>
       <spacer name="horizontalSpacer_5">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -543,7 +546,7 @@
      <item>
       <spacer name="horizontalSpacer_6">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -562,6 +565,11 @@
    <class>DKFloatSlider</class>
    <extends>QWidget</extends>
    <header>widgets/DKFloatSlider.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKAudioWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKAudioWidget.h</header>
   </customwidget>
   <customwidget>
    <class>DKFormPicker</class>
@@ -584,9 +592,10 @@
   <tabstop>descriptorType</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>fileList</tabstop>
+  <tabstop>buttonAddFile</tabstop>
   <tabstop>buttonRemoveFile</tabstop>
   <tabstop>filePicker</tabstop>
-  <tabstop>buttonAddFile</tabstop>
+  <tabstop>filePlayer</tabstop>
   <tabstop>category</tabstop>
   <tabstop>outputModel</tabstop>
   <tabstop>staticAttenuationSlider</tabstop>

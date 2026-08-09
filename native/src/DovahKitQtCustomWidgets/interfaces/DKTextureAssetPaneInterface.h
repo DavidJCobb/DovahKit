@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QtUiPlugin/QDesignerCustomWidgetInterface>
+#include <QDesignerCustomWidgetInterface>
 
 class DKTextureAssetPaneInterface : public QObject, public QDesignerCustomWidgetInterface {
    Q_OBJECT

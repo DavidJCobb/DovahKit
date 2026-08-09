@@ -6,8 +6,8 @@
 #include <QPointer>
 #include <QWidget>
 
+class DKPapyrusBoundScriptListPane;
 #if !defined(QT_PLUGIN)
-   class DKPapyrusBoundScriptListPane;
    class DKPapyrusFragmentFunctionModel;
 #endif
 
@@ -41,6 +41,8 @@ class DKPapyrusFragmentFunctionPicker : public QWidget {
    protected:
       #if !defined(QT_PLUGIN)
          DKPapyrusFragmentFunctionModel* _model = nullptr;
+      #else
+         QPointer<DKPapyrusBoundScriptListPane> _source_widget;
       #endif
       struct {
          QLabel*    header     = nullptr;

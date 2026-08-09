@@ -155,7 +155,7 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
    for (size_t i = 0; i < this->parameters.size(); ++i) {
       auto& param  = this->parameters[i];
       auto* layout = new QGridLayout(param.parent);
-      layout->setMargin(0);
+      layout->setContentsMargins(0, 0, 0, 0);
       param.parent->setLayout(layout);
 
       param.stack = new QStackedWidget(param.parent);
@@ -310,6 +310,17 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
          //
          this->_update_run_on_ui();
       });
+      QObject::connect(this->ui.runOnDropdown, &QComboBox::currentIndexChanged, this, [this]() {
+         auto  src = this->ui.runOnDropdown->currentData();
+         auto& dst = this->_value.run_on.entity;
+         switch (this->_value.run_on.type) {
+            case run_on_type::event_data:
+            case run_on_type::package_data:
+            case run_on_type::quest_alias:
+               dst.emplace<uint32_t>() = src.toInt();
+               break;
+         }
+      });
       QObject::connect(this->ui.runOnButton, &DKCompactObjectReferencePicker::refChanged, this, [this](dovah::form_stub* stub) {
          if (this->_value.run_on.type != run_on_type::reference)
             return;
@@ -418,7 +429,7 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
       QObject::connect(this->ui.operandGlobal, &DKFormPicker::formChanged, this, [this](dovah::form_stub* value) {
          this->_value.comparison.operand = value;
       });
-      QObject::connect(this->ui.flagCompareToGlobal, &QCheckBox::stateChanged, this, [this](int state) {
+      QObject::connect(this->ui.flagCompareToGlobal, &QCheckBox::checkStateChanged, this, [this](int state) {
          if (state == Qt::CheckState::Checked) {
             this->ui.operandStack->setCurrentWidget(this->ui.operandPageGlobal);
          } else {
@@ -842,7 +853,7 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
          if (widget->count() > 0) {
             bool success    = false;
             auto basis_data = widget->itemData(0); // base it on the first item's data's type
-            desired_type = (decltype(desired_type)) basis_data.type(); // cast needed for QVariant's historical jank
+            desired_type = (decltype(desired_type)) basis_data.typeId(); // cast needed for QVariant's historical jank
          }
 
          bool success = false;

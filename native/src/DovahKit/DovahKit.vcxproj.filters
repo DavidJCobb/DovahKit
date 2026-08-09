@@ -12308,7 +12308,6 @@
     <Text Include="dovah\_docs\form stub addenda.txt" />
     <Text Include="helpers\qt\ini\usage_example.h.txt" />
     <Text Include="helpers\qt\ini\usage_example.cpp.txt" />
-    <Text Include="dovah\_docs\asset paths.txt" />
     <Text Include="editor\_docs\asset manager.txt" />
     <Text Include="vulkan\_docs\GLM.txt" />
     <Text Include="vulkan\_docs\camera controls and input in general.txt" />
@@ -12833,6 +12832,7 @@
     <None Include="dovah\_docs\large references.md" />
     <None Include="dovah\_docs\form types\b\body part data.md" />
     <None Include="dovah\_docs\collision layers.md" />
+    <None Include="dovah\_docs\asset paths.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

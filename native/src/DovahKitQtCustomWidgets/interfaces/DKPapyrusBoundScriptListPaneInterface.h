@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QtUiPlugin/QDesignerCustomWidgetInterface>
+#include <QDesignerCustomWidgetInterface>
 
 class DKPapyrusBoundScriptListPaneInterface : public QObject, public QDesignerCustomWidgetInterface {
    Q_OBJECT

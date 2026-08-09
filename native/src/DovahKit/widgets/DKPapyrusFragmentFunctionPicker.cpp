@@ -4,6 +4,8 @@
 #include <QLineEdit>
 #if !defined(QT_PLUGIN)
    #include "./widget-models/DKPapyrusFragmentFunctionModel.h"
+#else
+   #include "./DKPapyrusBoundScriptListPane.h"
 #endif
 
 DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent) : QWidget(parent) {
@@ -134,5 +136,9 @@ void DKPapyrusFragmentFunctionPicker::setHeaderText(QString v) {
 }
 
 void DKPapyrusFragmentFunctionPicker::setSourceWidget(DKPapyrusBoundScriptListPane* src) {
-   this->_model->setSourceWidget(src);
+   #if !defined(QT_PLUGIN)
+      this->_model->setSourceWidget(src);
+   #else
+      this->_source_widget = src;
+   #endif
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QtUiPlugin/QDesignerCustomWidgetInterface>
+#include <QDesignerCustomWidgetInterface>
 
 class DKFormListPaneInterface : public QObject, public QDesignerCustomWidgetInterface {
    Q_OBJECT

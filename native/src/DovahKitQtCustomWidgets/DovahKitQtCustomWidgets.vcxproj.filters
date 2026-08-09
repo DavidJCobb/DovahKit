@@ -229,6 +229,12 @@
     <QtMoc Include="widgets\DKBreadcrumbBar.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="interfaces\DKAudioWidgetInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKAudioWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp">
@@ -433,6 +439,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKBreadcrumbBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKAudioWidgetInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKAudioWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

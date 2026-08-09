@@ -1,6 +1,7 @@
 #include "./DKConditionList.h"
 #include <QBoxLayout>
 #include <QHeaderView>
+#include <QKeyEvent>
 #include <QPushButton>
 #include <QTableView>
 #if !defined(QT_PLUGIN)
@@ -29,7 +30,7 @@ namespace {
 DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
    auto*    layout      = new QVBoxLayout(this);
    QWidget* button_wrap = nullptr;
-   layout->setMargin(0);
+   layout->setContentsMargins(0, 0, 0, 0);
    this->setLayout(layout);
 
    {
@@ -56,15 +57,25 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
       button_wrap->setLayout(sublayout);
       {
          auto* button = this->_subwidgets.move_up = new QPushButton(tr("<<", "move up label"));
+         button->setAccessibleName(tr("Move Up"));
+         button->setAccessibleDescription(tr("Moves the selected conditions up within the list."));
          sublayout->addWidget(button);
       }
       {
          auto* button = this->_subwidgets.move_down = new QPushButton(tr(">>", "move down label"));
+         button->setAccessibleName(tr("Move Down"));
+         button->setAccessibleDescription(tr("Moves the selected conditions down within the list."));
+         sublayout->addWidget(button);
+      }
+      {
+         auto* button = this->_subwidgets.remove_item = new QPushButton(tr("Delete"));
+         button->setAccessibleDescription(tr("Deletes the selected conditions."));
          sublayout->addWidget(button);
       }
       sublayout->addStretch(1);
       {
          auto* button = this->_subwidgets.add_item = new QPushButton(tr("New", "add new condition label"));
+         button->setAccessibleDescription(tr("Adds a new condition to the end of the list."));
          sublayout->addWidget(button);
       }
    }
@@ -76,73 +87,105 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
       
       button_wrap->setFocusPolicy(Qt::FocusPolicy::TabFocus);
       button_wrap->setFocusProxy(this->_subwidgets.move_up);
-      this->setTabOrder(this->_subwidgets.move_up,   this->_subwidgets.move_down);
-      this->setTabOrder(this->_subwidgets.move_down, this->_subwidgets.add_item);
+      this->setTabOrder(this->_subwidgets.move_up,     this->_subwidgets.move_down);
+      this->setTabOrder(this->_subwidgets.move_down,   this->_subwidgets.remove_item);
+      this->setTabOrder(this->_subwidgets.remove_item, this->_subwidgets.add_item);
    #pragma endregion
 
    #if !defined(QT_PLUGIN)
-   {
-      auto* widget = this->_subwidgets.view;
-      this->_model = new DKConditionListModel(this);
-      widget->setModel(this->_model);
+      {
+         auto* widget = this->_subwidgets.view;
+         this->_model = new DKConditionListModel(this);
+         widget->setModel(this->_model);
 
-      {  // Set up new header
-         //
-         // Have to do this after setting the model, because QHeaderView::setSectionResizeMode 
-         // and friends will crash if the section in question doesn't exist yet.
-         //
-         auto* header = new DKHeaderView(Qt::Orientation::Horizontal, widget);
-         widget->setHorizontalHeader(header);
-         header->setFlexResizeEnabled(true);
+         {  // Set up new header
+            //
+            // Have to do this after setting the model, because QHeaderView::setSectionResizeMode 
+            // and friends will crash if the section in question doesn't exist yet.
+            //
+            auto* header = new DKHeaderView(Qt::Orientation::Horizontal, widget);
+            widget->setHorizontalHeader(header);
+            header->setFlexResizeEnabled(true);
 
-         header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
-         header->setMinimumSectionSize(2);
-         {
-            using Column = DKConditionListModel::Column;
+            header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+            header->setMinimumSectionSize(2);
+            {
+               using Column = DKConditionListModel::Column;
 
-            auto metrics = widget->fontMetrics();
+               auto metrics = widget->fontMetrics();
 
-            header->setColumnFlex(Column::Target,   0, 0, metrics.boundingRect("Subject 123").width() * 1.5F + 4);
-            header->setColumnFlex(Column::Function, 2, 2, metrics.boundingRect("LongIshFunctionName").width() * 1.5F + 4);
-            header->setColumnFlex(Column::Args,     4, 1);
-            header->setColumnFlex(Column::Operator, 0, 0, metrics.boundingRect("<=>").width());
-            header->setColumnFlex(Column::Operand,  1, 3, metrics.boundingRect("12345.6789").width());
-            header->setColumnFlex(Column::UsesOr,   0, 0, metrics.boundingRect("AND").width() * 1.5F + 4);
+               header->setColumnFlex(Column::Target,   0, 0, metrics.boundingRect("Subject 123").width() * 1.5F + 4);
+               header->setColumnFlex(Column::Function, 2, 2, metrics.boundingRect("LongIshFunctionName").width() * 1.5F + 4);
+               header->setColumnFlex(Column::Args,     4, 1);
+               header->setColumnFlex(Column::Operator, 0, 0, metrics.boundingRect("==").width() * 1.5F + 4);
+               header->setColumnFlex(Column::Operand,  1, 3, metrics.boundingRect("12345.6789").width() * 1.5F + 4);
+               header->setColumnFlex(Column::UsesOr,   0, 0, metrics.boundingRect("AND").width() * 1.5F + 4);
 
-            header->setSectionResizeMode(Column::Target,   QHeaderView::Interactive);
-            header->setSectionResizeMode(Column::Function, QHeaderView::Interactive);
-            header->setSectionResizeMode(Column::Args,     QHeaderView::Interactive);
-            header->setSectionResizeMode(Column::Operand,  QHeaderView::Interactive);
+               header->setSectionResizeMode(Column::Target,   QHeaderView::Interactive);
+               header->setSectionResizeMode(Column::Function, QHeaderView::Interactive);
+               header->setSectionResizeMode(Column::Args,     QHeaderView::Interactive);
+               header->setSectionResizeMode(Column::Operand,  QHeaderView::Interactive);
+            }
+            header->setStretchLastSection(false);
          }
-         header->setStretchLastSection(false);
       }
-   }
-   QObject::connect(this->_subwidgets.add_item, &QPushButton::clicked, this, &DKConditionList::openCreateConditionModal);
-   QObject::connect(this->_subwidgets.view, &QTableView::doubleClicked, this, [this](const QModelIndex& qmi) {
-      auto start = qmi.siblingAtColumn(0);
-      auto end   = qmi.siblingAtColumn(DKConditionListModel::column_count - 1);
+      QObject::connect(this->_subwidgets.add_item, &QPushButton::clicked, this, &DKConditionList::openCreateConditionModal);
+      QObject::connect(this->_subwidgets.view, &QTableView::doubleClicked, this, [this](const QModelIndex& qmi) {
+         auto start = qmi.siblingAtColumn(0);
+         auto end   = qmi.siblingAtColumn(DKConditionListModel::column_count - 1);
 
-      auto* sm = this->_subwidgets.view->selectionModel();
-      sm->select(QItemSelection(start, end), QItemSelectionModel::SelectionFlag::ClearAndSelect);
+         auto* sm = this->_subwidgets.view->selectionModel();
+         sm->select(QItemSelection(start, end), QItemSelectionModel::SelectionFlag::ClearAndSelect);
 
-      this->openEditConditionModal();
-   });
+         this->openEditConditionModal();
+      });
 
-   QObject::connect(this->_subwidgets.move_up, &QPushButton::clicked, this, [this]() {
-      auto* sm  = this->_subwidgets.view->selectionModel();
-      auto  sel = sm->selection();
-      if (sel.empty())
-         return;
-      this->_model->move(sel, -1);
-   });
-   QObject::connect(this->_subwidgets.move_down, &QPushButton::clicked, this, [this]() {
-      auto* sm  = this->_subwidgets.view->selectionModel();
-      auto  sel = sm->selection();
-      if (sel.empty())
-         return;
-      this->_model->move(sel, 1);
-   });
+      QObject::connect(this->_subwidgets.move_up,     &QPushButton::clicked, this, &DKConditionList::_move_selection_up);
+      QObject::connect(this->_subwidgets.move_down,   &QPushButton::clicked, this, &DKConditionList::_move_selection_down);
+      QObject::connect(this->_subwidgets.remove_item, &QPushButton::clicked, this, &DKConditionList::_delete_selection);
+
+      this->_subwidgets.view->installEventFilter(this); // Del key
+
+      #pragma region Context menu
+      {
+         auto& menu    = this->_context.menu;
+         auto& actions = this->_context.actions;
+         {
+            auto* action = actions.edit = new QAction(tr("Edit..."), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::openEditConditionModal);
+         }
+         {
+            auto* action = actions.move_up = new QAction(tr("Move Up"), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::_move_selection_up);
+         }
+         {
+            auto* action = actions.move_down = new QAction(tr("Move Down"), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::_move_selection_down);
+         }
+         {
+            auto* action = actions.remove = new QAction(tr("Delete"), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::_delete_selection);
+         }
+
+         auto* widget = this->_subwidgets.view;
+         widget->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+         QObject::connect(widget, &QWidget::customContextMenuRequested, this, [this, widget, &menu](const QPoint& pos) {
+            if (!this->_has_selection())
+               return;
+            menu.exec(widget->mapToGlobal(pos));
+         });
+      }
+      #pragma endregion
    #endif
+
+   QObject::connect(this->_subwidgets.view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this]() {
+      this->_update_button_enable_states();
+   });
+   this->_update_button_enable_states();
 }
 
 #if !defined(QT_PLUGIN)
@@ -189,6 +232,24 @@ size_t DKConditionList::conditionCount() const {
    #else
       return 0;
    #endif
+}
+
+/*virtual*/ bool DKConditionList::eventFilter(QObject* object, QEvent* event) /*override*/ {
+   #if !defined(QT_PLUGIN)
+      if (object == this->_subwidgets.view) {
+         if (event->type() == QEvent::Type::KeyPress) {
+            if (((QKeyEvent*)event)->key() == Qt::Key_Delete) {
+               auto* sm = this->_subwidgets.view->selectionModel();
+               auto  sel = sm->selection();
+               if (!sel.empty()) {
+                  this->_delete_selection();
+                  return true;
+               }
+            }
+         }
+      }
+   #endif
+   return false;
 }
 
 void DKConditionList::openCreateConditionModal() {
@@ -260,3 +321,43 @@ void DKConditionList::openEditConditionModal() {
    }
    #endif
 }
+
+bool DKConditionList::_has_selection() const {
+   #if defined(QT_PLUGIN)
+      return false;
+   #else
+      auto* sm = this->_subwidgets.view->selectionModel();
+      auto  sel = sm->selection();
+      return !sel.empty();
+   #endif
+}
+void DKConditionList::_update_button_enable_states() {
+   bool enabled = this->_has_selection();
+   this->_subwidgets.move_up->setEnabled(enabled);
+   this->_subwidgets.move_down->setEnabled(enabled);
+   this->_subwidgets.remove_item->setEnabled(enabled);
+}
+
+#if !defined(QT_PLUGIN)
+   void DKConditionList::_move_selection_up() {
+      auto* sm  = this->_subwidgets.view->selectionModel();
+      auto  sel = sm->selection();
+      if (sel.empty())
+         return;
+      this->_model->move(sel, -1);
+   }
+   void DKConditionList::_move_selection_down() {
+      auto* sm  = this->_subwidgets.view->selectionModel();
+      auto  sel = sm->selection();
+      if (sel.empty())
+         return;
+      this->_model->move(sel, 1);
+   }
+   void DKConditionList::_delete_selection() {
+      auto* sm = this->_subwidgets.view->selectionModel();
+      auto  sel = sm->selection();
+      if (sel.empty())
+         return;
+      this->_model->remove(sel);
+   }
+#endif

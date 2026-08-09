@@ -159,7 +159,7 @@ QSize DKDelayedEnableButton::sizeHint() const {
    auto metrics = this->fontMetrics();
    auto result  = QPushButton::sizeHint();
    if (this->_style == CounterStyle::Number) {
-      result.rwidth() += metrics.width(tr("%1 (%2)").arg("").arg(10));
+      result.rwidth() += metrics.horizontalAdvance(tr("%1 (%2)").arg("").arg(10));
    } else if (this->_style == CounterStyle::Spinner) {
       float diameter;
       {
@@ -185,8 +185,8 @@ QSize DKDelayedEnableButton::sizeHint() const {
          padding_w = style->pixelMetric(QStyle::PM_ButtonMargin, &option, this) * 2;
       }
 
-      auto displayed_width = metrics.width(this->text());
-      auto needed_padding  = (diameter + metrics.width(" ")) * 2; // double, because text is centered but the spinner is side-aligned
+      auto displayed_width = metrics.horizontalAdvance(this->text());
+      auto needed_padding  = (diameter + metrics.horizontalAdvance(" ")) * 2; // double, because text is centered but the spinner is side-aligned
       if (result.width() - displayed_width - padding_w < needed_padding) {
          result.rwidth() += needed_padding;
       }

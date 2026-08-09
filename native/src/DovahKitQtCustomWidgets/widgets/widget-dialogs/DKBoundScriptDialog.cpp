@@ -247,7 +247,7 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
    });
 
    #pragma region Value-change handlers
-   QObject::connect(this->ui.valueWidget_bool, &QCheckBox::stateChanged, this, [this](int state) {
+   QObject::connect(this->ui.valueWidget_bool, &QCheckBox::checkStateChanged, this, [this](int state) {
       if (this->_selected_property_element_type() != vmad::property_type::boolean)
          return;
       bool checked = (state == Qt::CheckState::Checked);
@@ -519,8 +519,11 @@ void DKBoundScriptDialog::_refresh_property_ui() {
    //*/
 
    auto value_opt = this->script_model->getPropertyValue(qmi);
-   if (!value_opt.has_value())
+   if (!value_opt.has_value()) {
+      this->ui.arrayButtonsLayout->setEnabled(false);
+      this->ui.arrayEditingLayout->setEnabled(false);
       return;
+   }
    this->_populate_array_table(value_opt.value());
    this->_update_array_element_buttons();
    if (info.is_array) {

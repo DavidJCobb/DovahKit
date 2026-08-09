@@ -1,5 +1,5 @@
 #pragma once
-#include <QtUiPlugin/QDesignerCustomWidgetInterface>
+#include <QDesignerCustomWidgetInterface>
 #include <type_traits>
 
 class DovahKitQtCustomWidgetsPlugin : public QObject, public QDesignerCustomWidgetCollectionInterface {

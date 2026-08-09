@@ -30,6 +30,7 @@
 #include "interfaces/DKSliderSpinboxPairFloatInterface.h"
 #include "interfaces/DKSliderSpinboxPairIntInterface.h"
 #include "interfaces/DKBreadcrumbBarInterface.h"
+#include "interfaces/DKAudioWidgetInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
    widgets.append(new DKFloatSliderInterface(this));
@@ -38,6 +39,7 @@ DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : 
    widgets.append(new DKTabWidgetInterface(this));
    widgets.append(new DKYesNoUnsetWidgetInterface(this));
 
+   widgets.append(new DKAudioWidgetInterface(this));
    widgets.append(new DKBreadcrumbBarInterface(this));
    widgets.append(new DKCollapsiblePaneInterface(this));
    widgets.append(new DKColorPickerButtonInterface(this));

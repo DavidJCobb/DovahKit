@@ -2,11 +2,11 @@
 
 #include <QDesignerCustomWidgetInterface>
 
-class DKSliderSpinboxPairFloatInterface : public QObject, public QDesignerCustomWidgetInterface {
-   Q_OBJECT
-   Q_INTERFACES(QDesignerCustomWidgetInterface)
+class DKAudioWidgetInterface : public QObject, public QDesignerCustomWidgetInterface {
+   Q_OBJECT;
+   Q_INTERFACES(QDesignerCustomWidgetInterface);
    public:
-      DKSliderSpinboxPairFloatInterface(QObject* parent = Q_NULLPTR);
+      DKAudioWidgetInterface(QObject* parent = Q_NULLPTR);
 
       bool isContainer() const;
       bool isInitialized() const;

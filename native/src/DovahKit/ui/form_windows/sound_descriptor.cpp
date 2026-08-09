@@ -89,15 +89,9 @@ FormDialogSoundDescriptor::FormDialogSoundDescriptor(dovah::form_stub& stub, QWi
    {
       auto* widget = this->ui.fileList;
       auto* model  = new SoundDescriptorSoundFilesModel(widget);
+      this->_models.files = model;
       widget->setModel(model);
-
-      QObject::connect(this->ui.buttonRemoveFile, &QPushButton::clicked, this, [widget, model]() {
-         auto* sm   = widget->selectionModel();
-         auto  rows = sm->selectedRows();
-         if (rows.empty())
-            return;
-         model->deleteItems(rows[0].row(), 1);
-      });
+      
       QObject::connect(this->ui.buttonAddFile, &QPushButton::clicked, this, [this, model]() {
          auto* picker = this->ui.filePicker;
          auto  path   = picker->value();
@@ -113,6 +107,17 @@ FormDialogSoundDescriptor::FormDialogSoundDescriptor(dovah::form_stub& stub, QWi
             picker->clear();
          }
       });
+      QObject::connect(this->ui.buttonRemoveFile, &QPushButton::clicked, this, [widget, model]() {
+         auto* sm   = widget->selectionModel();
+         auto  rows = sm->selectedRows();
+         if (rows.empty())
+            return;
+         model->deleteItems(rows[0].row(), 1);
+      });
+
+      auto* sm = widget->selectionModel();
+      QObject::connect(sm, &QItemSelectionModel::selectionChanged, this, &FormDialogSoundDescriptor::_pull_file_to_ui);
+      QObject::connect(this->ui.filePicker, &DKGameFilePicker::valueChanged, this, &FormDialogSoundDescriptor::_on_file_path_edited);
    }
 
    this->load(); // this creates the working copy.
@@ -156,6 +161,8 @@ void FormDialogSoundDescriptor::_load_impl() {
    ui::bind(this->ui.prioritySpinbox, working.priority);
    ui::bind(this->ui.rumbleSmallSpinbox, working.length_characteristics.rumble_send.small);
    ui::bind(this->ui.rumbleLargeSpinbox, working.length_characteristics.rumble_send.large);
+
+   this->_pull_file_to_ui();
 }
 void FormDialogSoundDescriptor::_save_impl() {
    //
@@ -175,4 +182,112 @@ void FormDialogSoundDescriptor::_save_impl() {
       assert(!!model);
       model->exportItems(working.sound_files);
    }
+}
+
+void FormDialogSoundDescriptor::_pull_file_to_ui() {
+   const auto blocker = QSignalBlocker(this->ui.filePicker);
+
+   QModelIndex qmi;
+   {
+      auto* sm  = this->ui.fileList->selectionModel();
+      auto  sel = sm->selectedRows();
+      if (!sel.empty())
+         qmi = sel[0];
+   }
+   bool has_selection = qmi.isValid();
+   this->ui.buttonRemoveFile->setEnabled(has_selection);
+   this->ui.filePlayer->setEnabled(has_selection);
+   if (!has_selection) {
+      this->ui.filePlayer->setPath({});
+      this->ui.filePicker->setValue({});
+      return;
+   }
+
+   ui::types::game_file_path root_relative_path;
+   {
+      //
+      // The game seems to treat the "Data\\Sound\\" prefix as optional, so we have to 
+      // account for it potentially only being partially present. A particularly major 
+      // example is [SNDR:0003F206]MagShockFFFireSD, which includes a prefixed path and 
+      // an unprefixed path together! The Creation Kit seems to always prefix new paths, 
+      // though.
+      // 
+      // Some forms have a "\\Data\\Sound\\" prefix. The CK does not currently insert a 
+      // leading slash. I assume these paths are old or otherwise edge-casey.
+      // 
+      // `BGSStandardSoundDef::LoadSound`, which loads the bulk of SNDR's subrecords, 
+      // will check if a path in ANAM contains any directory named "sound\\"; if so, 
+      // the path stored in memory is scoped to that directory; otherwise, the directory 
+      // is prepended. So for example:
+      // 
+      //  - "data\\sound\\foo" becomes "sound\\foo"
+      //  - "sound\\foo"       remains "sound\\foo"
+      //  - "foo"              becomes "sound\\foo"
+      //  - "lmao\\sound\\foo" becomes "sound\\foo"
+      // 
+      // This prefix check properly recognizes all directory separators (i.e. forward- 
+      // and backslashes).
+      // 
+      // Later, when the game actually wants to load WAV/XWM/FUZ files, it will check 
+      // for the case-insensitive prefix "data\\sound\\", as a substring (so it doesn't 
+      // recognize forward slashes). If that prefix is found, then the above logic is 
+      // run to scope the path to "sound\\", properly recognizing all separators; 
+      // otherwise, the above logic is run to scope the path to "music\\".
+      //
+      auto* node = this->_models.files->item(qmi.row());
+      assert(!!node);
+      auto  path = node->filepath;
+
+      auto _view_starts_with_dir = [](QStringView view, QLatin1StringView dir) {
+         if (view.size() < dir.size() + 1)
+            return false;
+         if (!view.startsWith(dir, Qt::CaseInsensitive))
+            return false;
+         auto c = view[dir.size()];
+         return c == '/' || c == '\\';
+      };
+
+      auto view = QStringView(path);
+      if (view[0] == '\\')
+         view = view.mid(1);
+
+      if (_view_starts_with_dir(view, QLatin1StringView("data"))) {
+         auto next = view.mid(5);
+         if (!_view_starts_with_dir(next, QLatin1StringView("sound"))) {
+            root_relative_path.append("Sound\\");
+         }
+      } else {
+         root_relative_path.append("Data\\Sound\\");
+      }
+      root_relative_path.append(path);
+   }
+
+   this->ui.filePicker->setValue(root_relative_path);
+   this->ui.filePlayer->setPath(root_relative_path.lexically_relative("Data\\").to_string());
+}
+void FormDialogSoundDescriptor::_on_file_path_edited() {
+   auto path = this->ui.filePicker->value();
+
+   QModelIndex qmi;
+   {
+      auto* sm = this->ui.fileList->selectionModel();
+      auto  sel = sm->selectedRows();
+      if (!sel.empty())
+         qmi = sel[0];
+   }
+   if (!qmi.isValid())
+      return;
+
+   SoundDescriptorSoundFilesModelNode node;
+   {
+      auto* prior = this->_models.files->item(qmi.row());
+      assert(!!prior);
+      node = *prior;
+   }
+   if (!node.filepath.startsWith("Data\\Sound\\", Qt::CaseInsensitive)) {
+      node.filepath = QString("Data\\Sound\\") + node.filepath;
+   }
+   this->_models.files->overwrite(qmi.row(), node);
+
+   this->ui.filePlayer->setPath(path.to_string());
 }

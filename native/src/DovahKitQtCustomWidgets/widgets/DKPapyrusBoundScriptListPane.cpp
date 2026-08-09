@@ -18,15 +18,15 @@ class DKBoundScriptListModel : public QAbstractItemModel {
    public:
       using QAbstractItemModel::QAbstractItemModel;
 
-      virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override { return QModelIndex(); }
-      virtual QModelIndex parent(const QModelIndex& index) const { return QModelIndex(); }
+      virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override { return {}; }
+      virtual QModelIndex parent(const QModelIndex& index) const { return {}; }
       virtual int rowCount(const QModelIndex& parent) const override { return 0; }
       virtual int columnCount(const QModelIndex& item) const override { return 3; }
-      virtual Qt::ItemFlags flags(const QModelIndex& index) const override { return 0; }
-      virtual QVariant data(const QModelIndex& index, int role) const override { return QVariant(); }
+      virtual Qt::ItemFlags flags(const QModelIndex& index) const override { return {}; }
+      virtual QVariant data(const QModelIndex& index, int role) const override { return {}; }
       virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
          if (orientation != Qt::Orientation::Horizontal) {
-            return QVariant();
+            return {};
          }
          switch (role) {
             case Qt::DisplayRole:
@@ -35,7 +35,7 @@ class DKBoundScriptListModel : public QAbstractItemModel {
                }
                break;
          }
-         return QVariant();
+         return {};
       }
 };
 #else
@@ -255,17 +255,20 @@ void DKPapyrusBoundScriptListPane::_updateGroupbox() {
          }
       }
       if (!script_qmi.isValid()) {
-         this->subwidgets.buttons.wrapper->setEnabled(false);
+         this->subwidgets.buttons.toggle_delete->setEnabled(false);
+         this->subwidgets.buttons.properties->setEnabled(false);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
          return;
       }
 
       auto opt = this->model->status(script_qmi);
       if (!opt.has_value()) {
-         this->subwidgets.buttons.wrapper->setEnabled(false);
+         this->subwidgets.buttons.toggle_delete->setEnabled(false);
+         this->subwidgets.buttons.properties->setEnabled(false);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
          return;
       }
+      this->subwidgets.buttons.toggle_delete->setEnabled(true);
       if (opt.value() != vmad::script_status::removed) {
          this->subwidgets.buttons.properties->setEnabled(true);
          this->subwidgets.buttons.toggle_delete->setText(tr("Delete", "button label to delete attached script"));
@@ -351,23 +354,25 @@ void DKPapyrusBoundScriptListPane::setUsesGroupbox(bool v) {
    this->_updateGroupbox();
 }
 
-std::vector<QString> DKPapyrusBoundScriptListPane::allNonDeletedScriptnames() const {
-   auto list = this->model->getAllBoundScriptNames(false);
+#if !defined(QT_PLUGIN)
+   std::vector<QString> DKPapyrusBoundScriptListPane::allNonDeletedScriptnames() const {
+      auto list = this->model->getAllBoundScriptNames(false);
 
-   std::vector<QString> str;
-   for (auto& item : list)
-      str.push_back(QString::fromUtf8(item.data(), item.size()));
-   return str;
-}
-bool DKPapyrusBoundScriptListPane::hasScript(QString name, bool allow_deleted) const {
-   auto qmi = this->model->index(name);
-   if (!qmi.isValid())
-      return false;
-   if (!allow_deleted) {
-      auto status = this->model->status(qmi);
-      if (status == ui::bound_script_models::vmad::script_status::removed) {
-         return false;
-      }
+      std::vector<QString> str;
+      for (auto& item : list)
+         str.push_back(QString::fromUtf8(item.data(), item.size()));
+      return str;
    }
-   return true;
-}
+   bool DKPapyrusBoundScriptListPane::hasScript(QString name, bool allow_deleted) const {
+      auto qmi = this->model->index(name);
+      if (!qmi.isValid())
+         return false;
+      if (!allow_deleted) {
+         auto status = this->model->status(qmi);
+         if (status == ui::bound_script_models::vmad::script_status::removed) {
+            return false;
+         }
+      }
+      return true;
+   }
+#endif

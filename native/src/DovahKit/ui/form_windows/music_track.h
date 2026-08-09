@@ -31,4 +31,6 @@ class FormDialogMusicTrack :
 
       void _remember_displayed_palette_layer();
       void _update_displayed_palette_layer();
+
+      void _update_single_track_preview();
 };

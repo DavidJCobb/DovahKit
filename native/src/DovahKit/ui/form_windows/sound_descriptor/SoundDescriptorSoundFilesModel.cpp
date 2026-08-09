@@ -13,7 +13,7 @@ QVariant SoundDescriptorSoundFilesModel::data_of(const node_type& node, Qt::Item
       case Qt::ToolTipRole:
          switch (column) {
             case 0:
-               return QString("Data\\Sound\\") + node.filepath;
+               return node.filepath;
          }
          return {};
    }

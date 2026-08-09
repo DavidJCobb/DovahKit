@@ -47,9 +47,13 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
             task->callbacks.on_complete = [this](dovah::form_stub* ref) {
                this->setRef(ref);
                this->setFocus();
+               if (auto* w = this->window())
+                  w->activateWindow();
             };
             task->callbacks.on_canceled = [this]() {
                this->setFocus();
+               if (auto* w = this->window())
+                  w->activateWindow();
             };
             worldedit.begin_pick_ref(task);
          });
@@ -358,12 +362,14 @@ void DKObjectReferencePicker::setRequiredFormType(dovah::form_type ft) {
    if (ft == this->requiredFormType())
       return;
    #if !defined(QT_PLUGIN)
-   #if _DEBUG
-      if (!dovah::form_type_is_reference(ft)) {
-         qWarning("DKObjectReferencePicker is being told to require a form type that isn't REFR or a subclass; no forms will qualify");
-      }
-   #endif
+      #if _DEBUG
+         if (!dovah::form_type_is_reference(ft)) {
+            qWarning("DKObjectReferencePicker is being told to require a form type that isn't REFR or a subclass; no forms will qualify");
+         }
+      #endif
    #endif
    this->state.required_form_type = ft;
-   ((DKRefsInCellModel*)this->subwidgets.refr->model())->setRequiredFormType(ft);
+   #if !defined(QT_PLUGIN)
+      ((DKRefsInCellModel*)this->subwidgets.refr->model())->setRequiredFormType(ft);
+   #endif
 }

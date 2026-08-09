@@ -2,61 +2,16 @@
 #include <algorithm>
 #include <QApplication>
 #include <QIcon>
-#include <QMimeDatabase>
 #include <QStyle>
-#include "../../dovah/files/bsa/bsa_archive.h"
-#include "../../dovah/files/bsa/bsa_load_order.h"
-
-#ifdef _WIN32
-   #include "helpers/windows.h"
-   #include <QtWin>
-#endif
+#include "dovah/files/bsa/bsa_archive.h"
+#include "dovah/files/bsa/bsa_load_order.h"
+#include "qt/utils/icon_for_file_extension.h"
 
 namespace {
    using Node   = DKBSACollectionModelBackend::Node;
    using File   = DKBSACollectionModelBackend::File;
    using Folder = DKBSACollectionModelBackend::Folder;
    using node_type = Node::node_type;
-
-   #ifdef _WIN32
-   QIcon _get_icon_from_windows(const QString& extension) {
-      constexpr std::array sizes      = { 0, SHGFI_SMALLICON, SHGFI_LARGEICON, SHGFI_SHELLICONSIZE };
-      constexpr std::array win_states = { 0,             SHGFI_SELECTED };
-      constexpr std::array qt_states  = { QIcon::Normal, QIcon::Selected };
-      static_assert(win_states.size() == qt_states.size());
-      //
-      QIcon icon;
-      //
-      #ifdef UNICODE
-         auto extension_win = extension.toStdWString();
-      #else
-         auto extension_win = extension.toStdString();
-      #endif
-      extension_win.insert(extension_win.begin(), decltype(extension_win)::value_type('.'));
-      //
-      SHFILEINFO info = {};
-      for (auto s : sizes) {
-         for (size_t i = 0; i < win_states.size(); ++i) {
-            #ifdef UNICODE
-            HRESULT hr = SHGetFileInfoW(extension_win.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | s | win_states[i]);
-            #else
-            HRESULT hr = SHGetFileInfoA(extension_win.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | s | win_states[i]);
-            #endif
-            if (!SUCCEEDED(hr))
-               continue;
-            if (info.hIcon == NULL)
-               continue;
-            auto pm = QtWin::fromHICON(info.hIcon);
-            DestroyIcon(info.hIcon);
-            if (pm.isNull())
-               continue;
-            icon.addPixmap(pm, qt_states[i]);
-         }
-      }
-      //
-      return icon;
-   }
-   #endif
 
    class _Icons {
       private:
@@ -67,15 +22,19 @@ namespace {
             //
             // Preload common extensions:
             //
-            this->iconForExtension("dds");
-            this->iconForExtension("hkx");
-            this->iconForExtension("nif");
-            this->iconForExtension("pex");
-            this->iconForExtension("psc");
-            this->iconForExtension("txt");
+            this->iconForExtension("bto"); // Baked Terrain Objects (just a renamed NIF for static LOD)
+            this->iconForExtension("btr"); // Baked Terrain (just a renamed NIF for landscape LOD)
+            this->iconForExtension("dds"); // DirectDraw Surface (texture)
+            this->iconForExtension("fuz"); // Fused voice file (lip sync + sound)
+            this->iconForExtension("hkx"); // Havok behavior graph
+            this->iconForExtension("nif"); // NetImmerse Format model
+            this->iconForExtension("pex"); // Papyrus script, compiled
+            this->iconForExtension("psc"); // Papyrus script, source
+            this->iconForExtension("seq"); // Start-Enabled Quests
+            this->iconForExtension("tri"); // FaceGen model and/or morph collection
+            this->iconForExtension("txt"); // Text File
          }
 
-         QMimeDatabase database;
          QHash<QString, QIcon> icons_by_extension;
          struct {
             QIcon file;
@@ -98,18 +57,7 @@ namespace {
                   return this->generic_icons.file;
                return icon;
             }
-            auto  types = this->database.mimeTypesForFileName(QString("x.%1").arg(extension));
-            QIcon icon;
-            for (auto& type : types) {
-               icon = QIcon::fromTheme(type.iconName());
-               if (!icon.isNull())
-                  break;
-            }
-            #ifdef _WIN32
-               if (icon.isNull()) {
-                  icon = _get_icon_from_windows(extension);
-               }
-            #endif
+            auto icon = dovahkit::qt::utils::icon_for_file_extension(extension);
             map[extension] = icon;
             return icon;
          }
@@ -124,7 +72,7 @@ namespace {
             return this->generic_icons.file;
          }
          
-         inline QIcon folderIcon() const noexcept { return this->generic_icons.folder; }
+         QIcon folderIcon() const noexcept { return this->generic_icons.folder; }
    };
 }
 
@@ -140,7 +88,10 @@ dovah::bsa_archived_file* File::load() const noexcept {
       return nullptr;
    auto full = this->raw_folder->name;
    full += '/';
-   full += (const char*)this->name.toLatin1();
+   {
+      auto single_byte = this->name.toLatin1();
+      full += std::string_view(single_byte.data(), single_byte.size());
+   }
    return this->source->lookup_file(full);
 }
 void File::setName(const QString& n) {
@@ -183,7 +134,7 @@ File* Folder::file(const QString& name) const noexcept {
    return nullptr;
 }
 File* Folder::file(const QString& name, int stop_at) const noexcept {
-   size_t size = std::min(std::max(0, stop_at), this->files.size());
+   size_t size = std::min(std::max(0, stop_at), (int)this->files.size());
    for (size_t i = 0; i < size; ++i)
       if (name == this->files[i]->name)
          return this->files[i];
@@ -301,31 +252,7 @@ void DKBSACollectionModelBackend::clear() {
    emit this->cleared();
 }
 void DKBSACollectionModelBackend::importFromArchive(const dovah::bsa_archive* bsa) {
-   const auto& folders = bsa->folder_list();
-   for (auto& raw_folder : folders) {
-      auto  folder_path = QString::fromLatin1(raw_folder.name.c_str());
-      auto* our_folder  = this->_folderByPath(folder_path);
-      //
-      auto prior_count = our_folder->files.size();
-      our_folder->files.reserve(raw_folder.files.size());
-      //
-      for (const auto& raw_file : raw_folder.files) {
-         auto  fn = QString::fromLatin1(raw_file.name.c_str());
-         auto* mf = our_folder->file(fn, prior_count);
-         if (mf) {
-            mf->source = bsa;
-            emit this->fileSourceChanged(mf);
-         } else {
-            mf = new File;
-            mf->setName(fn);
-            our_folder->appendFile(mf);
-         }
-         mf->source     = bsa;
-         mf->raw_folder = &raw_folder;
-      }
-      our_folder->sort();
-   }
-   emit this->archiveImported();
+   this->_import_from_archive(*bsa, true, true);
 }
 void DKBSACollectionModelBackend::setArchives(const dovah::bsa_load_order& lo) {
    emit this->aboutToReplace();
@@ -336,11 +263,45 @@ void DKBSACollectionModelBackend::setArchives(const dovah::bsa_load_order& lo) {
       this->_archives.reserve(list.size());
       for (const auto* file : list) {
          this->_archives.push_back(file);
-         this->_importFromArchiveInList(file);
+         this->_import_from_archive(*file, false, false);
       }
    }
+   this->_ensure_critical_top_level_folders_exist();
    this->_root.recursiveSort();
    emit this->replaced();
+}
+
+void DKBSACollectionModelBackend::_import_from_archive(const dovah::bsa_archive& bsa, bool emit_signals, bool sort) {
+   const auto& folders = bsa.folder_list();
+   for (auto& raw_folder : folders) {
+      auto  folder_path  = QString::fromLatin1(raw_folder.name.c_str(), raw_folder.name.size());
+      auto* model_folder = this->_get_or_emplace_folder_by_path(folder_path);
+
+      auto prior_count = model_folder->files.size();
+      model_folder->files.reserve(raw_folder.files.size());
+
+      for (const auto& raw_file : raw_folder.files) {
+         auto  filename   = QString::fromLatin1(raw_file.name.c_str(), raw_file.name.size());
+         auto* model_file = model_folder->file(filename, prior_count);
+         bool  newly_seen = !model_file;
+         if (!model_file) {
+            model_file = new File;
+            model_file->setName(filename);
+            model_folder->appendFile(model_file);
+         }
+         model_file->raw_folder = &raw_folder;
+         model_file->source     = &bsa;
+         if (emit_signals && newly_seen) {
+            emit this->fileSourceChanged(model_file);
+         }
+      }
+      if (sort) {
+         model_folder->sort();
+      }
+   }
+   if (emit_signals) {
+      emit this->archiveImported();
+   }
 }
 
 namespace {
@@ -348,7 +309,7 @@ namespace {
       return path.indexOf(dovah::bsa_archive::path_separator, from);
    }
 }
-Folder* DKBSACollectionModelBackend::_folderByPath(const QString& path) {
+Folder* DKBSACollectionModelBackend::_get_or_emplace_folder_by_path(const QString& path) {
    Folder* basis = &this->_root;
    bool    prior = true;
    int     last  = 0;
@@ -385,26 +346,28 @@ Folder* DKBSACollectionModelBackend::_folderByPath(const QString& path) {
    }
    return basis;
 }
-void DKBSACollectionModelBackend::_importFromArchiveInList(const dovah::bsa_archive* bsa) {
-   const auto& folders = bsa->folder_list();
-   for (auto& raw_folder : folders) {
-      auto  folder_path = QString::fromLatin1(raw_folder.name.c_str());
-      auto* our_folder  = this->_folderByPath(folder_path);
-      //
-      auto prior_count = our_folder->files.size();
-      our_folder->files.reserve(raw_folder.files.size());
-      //
-      for (const auto& raw_file : raw_folder.files) {
-         auto  fn = QString::fromLatin1(raw_file.name.c_str());
-         auto* mf = our_folder->file(fn, prior_count);
-         if (!mf) {
-            mf = new File;
-            mf->setName(fn);
-            our_folder->appendFile(mf);
-         }
-         mf->source     = bsa;
-         mf->raw_folder = &raw_folder;
-      }
+
+void DKBSACollectionModelBackend::_ensure_critical_top_level_folders_exist() {
+   //
+   // Some parts of the UI will only allow the user to pick files from within 
+   // a given top-level folder, consistent with constraints placed on some 
+   // asset paths in some form types. We want to ensure that these folders 
+   // actually exist, even if no loaded BSAs contain them, so that these bits 
+   // of the UI don't choke.
+   //
+   constexpr const std::array folders = {
+      std::string_view("meshes"),
+      std::string_view("sound"),
+      std::string_view("textures"),
+   };
+
+   for (auto name : folders) {
+      auto name_q = QString::fromLatin1(name.data(), name.size());
+      if (this->_root.subfolder(name_q))
+         continue;
+      auto* folder = new Folder;
+      folder->name = name_q;
+      this->_root.appendSubfolder(folder);
    }
 }
 #pragma endregion

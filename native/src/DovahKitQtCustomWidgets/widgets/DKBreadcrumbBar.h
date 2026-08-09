@@ -12,7 +12,9 @@ class DKBreadcrumbBar : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(bool  textEditingAllowed READ textEditingAllowed WRITE setTextEditingAllowed DESIGNABLE true);
    Q_PROPERTY(QChar textSeparator      READ textSeparator      WRITE setTextSeparator      DESIGNABLE true);
+   Q_PROPERTY(QChar textSeparatorAlt   READ textSeparatorAlt   WRITE setTextSeparatorAlt   DESIGNABLE true);
    Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity DESIGNABLE true);
+   Q_PROPERTY(bool  typedPathsCanBeRelative READ typedPathsCanBeRelative WRITE setTypedPathsCanBeRelative DESIGNABLE true);
    public:
       DKBreadcrumbBar(QWidget* parent = nullptr);
 
@@ -81,14 +83,30 @@ class DKBreadcrumbBar : public QWidget {
       QModelIndex currentIndex() const noexcept;
       void setCurrentIndex(const QModelIndex&);
 
+      // If set, the breadcrumb menu will treat this item as the root: we 
+      // will not show path segments outside of it, and paths will be 
+      // treated as relative to it.
+      QModelIndex forcedStem() const noexcept;
+      void setForcedStem(const QModelIndex&);
+
       constexpr Qt::ItemDataRole segmentNameRole() const noexcept { return this->_data.name_role; }
       void setSegmentNameRole(Qt::ItemDataRole);
 
       constexpr bool textEditingAllowed() const noexcept;
       void setTextEditingAllowed(bool);
 
+      // The primary separator for path segments, recognized when reading 
+      // paths you set, and used when producing a path as output.
       constexpr QChar textSeparator() const noexcept;
       void setTextSeparator(QChar);
+
+      // A secondary separator for path segments, recognized when reading 
+      // paths you set.
+      constexpr QChar textSeparatorAlt() const noexcept;
+      void setTextSeparatorAlt(QChar);
+
+      constexpr bool typedPathsCanBeRelative() const noexcept;
+      void setTypedPathsCanBeRelative(bool);
 
       constexpr Qt::CaseSensitivity caseSensitivity() const noexcept;
       void setCaseSensitivity(Qt::CaseSensitivity);
@@ -98,8 +116,12 @@ class DKBreadcrumbBar : public QWidget {
       constexpr size_t segmentCount() const noexcept;
       constexpr size_t visibleSegmentCount() const noexcept;
 
+   protected:
+      bool _set_path_relative_to(QString, const QModelIndex& relative_to);
+   public:
       QString path() const noexcept;
       bool setPath(QString); // returns a success bool
+      bool setRelativePath(QString); // relative to current path
 
       QMenu* rootMenu() const noexcept;
       void setRootMenu(QMenu*); // does NOT take ownership
@@ -170,6 +192,7 @@ class DKBreadcrumbBar : public QWidget {
       struct {
          QPointer<QAbstractItemModel> model;
          QPersistentModelIndex index;
+         QPersistentModelIndex forced_stem;
          Qt::ItemDataRole name_role = Qt::ItemDataRole::DisplayRole;
       } _data;
       struct {
@@ -180,6 +203,8 @@ class DKBreadcrumbBar : public QWidget {
       struct {
          bool  allowed   = true;
          QChar separator = '/';
+         QChar separator_alt = '\\';
+         bool can_be_relative = true;
          Qt::CaseSensitivity case_sensitivity = Qt::CaseSensitivity::CaseInsensitive;
       } _text_editing;
       struct {

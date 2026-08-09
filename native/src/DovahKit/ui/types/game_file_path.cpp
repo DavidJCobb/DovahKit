@@ -135,14 +135,14 @@ namespace ui::types {
          this->_data += '\\';
          return *this;
       }
-      if (this->_data.isEmpty()) {
-         this->_data = "Data\\";
-      } else {
-         if (!_is_directory_separator(this->_data.back())) {
-            this->_data += '\\';
-         }
+      bool was_empty = this->_data.isEmpty();
+      if (!was_empty && !_is_directory_separator(this->_data.back())) {
+         this->_data += '\\';
       }
       this->_append_content(content);
+      if (was_empty && !this->is_absolute()) {
+         this->_data = QString("Data\\") + this->_data;
+      }
       return *this;
    }
    game_file_path& game_file_path::append(const game_file_path& other) {

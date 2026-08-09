@@ -25,10 +25,12 @@ class DKMagicEffectListItemDialog : public QDialog {
 
          public:
             void configure(std::optional<dovah::magic_casting_type>, std::optional<dovah::magic_delivery_type>);
+            void set_exempted_stub(dovah::form_stub*);
 
          protected:
             std::optional<dovah::magic_casting_type>  _casting_type;
             std::optional<dovah::magic_delivery_type> _delivery_type;
+            dovah::form_stub* _do_not_filter_this_stub = nullptr;
       };
 
    public:

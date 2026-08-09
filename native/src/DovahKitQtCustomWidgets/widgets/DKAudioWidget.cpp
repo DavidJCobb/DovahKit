@@ -32,12 +32,11 @@ DKAudioWidget::DKAudioWidget(QWidget* parent) : QWidget(parent) {
             this->seek_poll_timer.stop();
 
             this->_state.dragged_while_playing = false;
-            if (this->sound.instance) {
+            if (this->sound.instance)
                this->_state.dragged_while_playing = this->sound.instance->is_playing();
 
-               const auto blocker = QSignalBlocker(this->sound.instance);
-               this->sound.instance->pause();
-            }
+            const auto blocker = QSignalBlocker(this->sound.instance);
+            this->sound.instance->pause();
          });
          QObject::connect(slider, &QSlider::sliderReleased, this, [this]() {
             const auto pos = (double)this->subwidgets.seek->value() / 1000;
@@ -75,10 +74,6 @@ DKAudioWidget::DKAudioWidget(QWidget* parent) : QWidget(parent) {
       this->_reload_sound_definition();
       this->_rebuild_sound_instance();
       this->_on_playback_state_changed();
-   }
-
-   bool DKAudioWidget::isSoundLoaded() const {
-      return this->sound.definition != nullptr;
    }
 #endif
 

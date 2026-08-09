@@ -4276,7 +4276,6 @@
     <Text Include="dovah\_docs\interior cell coordinate limits.md" />
     <Text Include="editor\subsystems\worldinput\_docs\bind tree.txt" />
     <Text Include="dovah\_docs\form stub addenda.txt" />
-    <Text Include="dovah\_docs\asset paths.txt" />
     <Text Include="dovah\_docs\avenues for further research.txt" />
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\conditions.txt" />
@@ -4398,6 +4397,10 @@
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
     <None Include="dovah\utils\cell_grid_position.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
+    <None Include="dovah\_docs\asset paths.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\collision layers.md">
       <SubType>
       </SubType>
