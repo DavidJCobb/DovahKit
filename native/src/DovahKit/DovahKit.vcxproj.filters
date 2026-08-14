@@ -4314,6 +4314,24 @@
     <ClCompile Include="editor\subsystems\audio\utils\is_valid_fuz_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\files\bsa\utils\path_to_hashes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\bsa\utils\split_path.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\bsa\utils\fold_path.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\bsa\utils\fold_path_component.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoResponseVoicesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\utils\set_textarea_height_in_lines.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10724,6 +10742,27 @@
     <ClInclude Include="editor\subsystems\audio\utils\is_valid_fuz_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\bsa\constants\path_separators.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\bsa\utils\path_to_hashes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\bsa\utils\split_path.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\bsa\utils\fold_path.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\bsa\utils\fold_path_component.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseVoicesModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\set_textarea_height_in_lines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12833,6 +12872,7 @@
     <None Include="dovah\_docs\form types\b\body part data.md" />
     <None Include="dovah\_docs\collision layers.md" />
     <None Include="dovah\_docs\asset paths.md" />
+    <None Include="dovah\_docs\voicetypes valid for a topic info.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
@@ -12946,5 +12986,6 @@
     <Natvis Include="helpers\lua\lua.natvis" />
     <Natvis Include="editor\subsystems\form_info_cache\cache_containers\data_cache.natvis" />
     <Natvis Include="editor\subsystems\audio\impl\xwma_file_info.natvis" />
+    <Natvis Include="dovah\files\bsa\packed_file_info.natvis" />
   </ItemGroup>
 </Project>

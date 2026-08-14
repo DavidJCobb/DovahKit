@@ -5,11 +5,11 @@
   <property name="windowTitle">
    <string>Edit Response</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_3">
+  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0,1,0">
    <item>
     <layout class="QGridLayout" name="howDidWeGetHereLayout" columnstretch="0,0,1">
      <property name="sizeConstraint">
-      <enum>QLayout::SetMaximumSize</enum>
+      <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
      </property>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
@@ -21,7 +21,7 @@
      <item row="2" column="0" colspan="3">
       <widget class="Line" name="line">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
       </widget>
      </item>
@@ -31,23 +31,23 @@
         <string>--</string>
        </property>
        <property name="textFormat">
-        <enum>Qt::PlainText</enum>
+        <enum>Qt::TextFormat::PlainText</enum>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
        </property>
        <property name="textInteractionFlags">
-        <set>Qt::NoTextInteraction</set>
+        <set>Qt::TextInteractionFlag::NoTextInteraction</set>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
+        <enum>QSizePolicy::Policy::Fixed</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -63,13 +63,13 @@
         <string>--</string>
        </property>
        <property name="textFormat">
-        <enum>Qt::PlainText</enum>
+        <enum>Qt::TextFormat::PlainText</enum>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
        </property>
        <property name="textInteractionFlags">
-        <set>Qt::NoTextInteraction</set>
+        <set>Qt::TextInteractionFlag::NoTextInteraction</set>
        </property>
       </widget>
      </item>
@@ -199,7 +199,7 @@
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="3" alignment="Qt::AlignRight">
+        <item row="0" column="3" alignment="Qt::AlignmentFlag::AlignRight">
          <widget class="QLabel" name="label_9">
           <property name="text">
            <string>Intensity:</string>
@@ -212,7 +212,7 @@
         <item row="0" column="4">
          <widget class="QSpinBox" name="emotionValue">
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
           <property name="suffix">
            <string>%</string>
@@ -235,10 +235,10 @@
         <item row="0" column="2">
          <spacer name="horizontalSpacer_4">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
+           <enum>QSizePolicy::Policy::Fixed</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -295,29 +295,19 @@
        </layout>
       </item>
       <item>
-       <widget class="QTableView" name="voiceFilesTable"/>
+       <widget class="QTableView" name="voiceFilesTable">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>125</height>
+         </size>
+        </property>
+       </widget>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QPushButton" name="buttonViewVoicetypeNPCs">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>1</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>View valid NPCs for selected voicetype</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="buttonLoadWavForVoicetype">
-          <property name="text">
-           <string>Load WAV</string>
-          </property>
-         </widget>
+         <widget class="DKAudioWidget" name="audioPlayer"/>
         </item>
        </layout>
       </item>
@@ -329,7 +319,7 @@
      <item>
       <spacer name="horizontalSpacer_5">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -356,7 +346,7 @@
      <item>
       <spacer name="horizontalSpacer_6">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -372,11 +362,32 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKAudioWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKAudioWidget.h</header>
+  </customwidget>
+  <customwidget>
    <class>DKFormPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormPicker.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>text</tabstop>
+  <tabstop>scriptNotes</tabstop>
+  <tabstop>edits</tabstop>
+  <tabstop>animSpeaker</tabstop>
+  <tabstop>animListener</tabstop>
+  <tabstop>flagUseEmotionAnim</tabstop>
+  <tabstop>emotionType</tabstop>
+  <tabstop>emotionValue</tabstop>
+  <tabstop>expectedVoiceFilename</tabstop>
+  <tabstop>useSound</tabstop>
+  <tabstop>voiceFilesTable</tabstop>
+  <tabstop>audioPlayer</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -3,6 +3,7 @@
 #include "bsa_archived_file.h"
 #include "threads.h"
 #include <fstream>
+#include "./utils/path_to_hashes.h"
 
 namespace dovah {
    bsa_load_order::~bsa_load_order() {
@@ -144,12 +145,18 @@ namespace dovah {
          // scanning the BSAs.
          //
       }
+
+      auto opt_path_hashes = bsa::utils::path_to_hashes(path_and_name);
+      if (!opt_path_hashes.has_value())
+         return nullptr;
+      auto [folder_hash, file_hash] = opt_path_hashes.value();
+
       auto& list = this->archives;
       for (auto it = list.rbegin(); it != list.rend(); ++it) {
          auto* archive = *it;
          if (!archive || !archive->is_open() || archive->did_loading_fail())
             continue;
-         auto* result = archive->lookup_file(path_and_name);
+         auto* result = archive->lookup_file(folder_hash, file_hash);
          if (result)
             return result;
       }

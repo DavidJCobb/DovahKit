@@ -197,12 +197,19 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="DKGameFilePicker" name="fileMain"/>
+          <widget class="DKGameFilePicker" name="fileMain">
+           <property name="pathStem" stdset="0">
+            <string>Data\Music\</string>
+           </property>
+          </widget>
          </item>
          <item row="1" column="1">
           <widget class="DKGameFilePicker" name="fileFinale">
            <property name="whatsThis">
             <string>You can optionally select a &quot;finale&quot; sound file. If the game ends the track early, it will crossfade from one of the cue points directly into the finale track. This is mainly used for combat tracks.</string>
+           </property>
+           <property name="pathStem" stdset="0">
+            <string>Data\Music\</string>
            </property>
           </widget>
          </item>

@@ -4,6 +4,7 @@
 #include "dovah/data/dialogue/emotion.h"
 #include "dovah/forms/TopicInfo.h"
 #include "ui_topic_info_response.h" // generated
+class TopicInfoResponseVoicesModel;
 
 class FormSubdialogTopicInfoResponse : public QDialog {
    Q_OBJECT;
@@ -19,4 +20,9 @@ class FormSubdialogTopicInfoResponse : public QDialog {
 
    protected:
       Ui::FormSubdialogTopicInfoResponse ui;
+      struct {
+         TopicInfoResponseVoicesModel* voices = nullptr;
+      } _models;
+
+      void _on_voicetype_selection_changed();
 };

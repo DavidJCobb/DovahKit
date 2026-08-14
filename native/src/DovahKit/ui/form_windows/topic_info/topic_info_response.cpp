@@ -1,15 +1,14 @@
 #include "./topic_info_response.h"
-#include <array>
+#include "dovah/files/tes_file_reading/file_loader.h" // for source filename
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
-#include "dovah/forms/Topic.h"
+#include "dovah/forms/Topic.h" // for topic prompt text
 #include "dovah/utils/compute_voice_file_location.h"
 #include "editor/subsystems/game_localized_strings/core.h"
-
-namespace {
-   // Constexpr so we can enable these as they're implemented.
-   constexpr const bool enable_loading_custom_wav  = false;
-   constexpr const bool enable_browsing_voicetypes = false;
-}
+#include "./TopicInfoResponseVoicesModel.h"
+#include "ui/types/game_file_path.h"
+#include "ui/utils/set_tableview_column_flex.h"
+#include "ui/utils/set_textarea_height_in_lines.h"
+#include "ui/utils/typical_tableview_config.h"
 
 FormSubdialogTopicInfoResponse::FormSubdialogTopicInfoResponse(QWidget* parent) {
    this->ui.setupUi(this);
@@ -34,16 +33,34 @@ FormSubdialogTopicInfoResponse::FormSubdialogTopicInfoResponse(QWidget* parent) 
 
    this->ui.useSound->setAllowedFormType(dovah::form_type::sound_descriptor);
 
-   if constexpr (!enable_loading_custom_wav) {
-      this->ui.buttonLoadWavForVoicetype->setVisible(false);
-   }
-   if constexpr (!enable_browsing_voicetypes) {
-      this->ui.voiceFilesTable->setVisible(false);
-      this->ui.buttonViewVoicetypeNPCs->setVisible(false);
+   {
+      auto* model = this->_models.voices = new TopicInfoResponseVoicesModel(this);
+      auto* view  = this->ui.voiceFilesTable;
+      view->setModel(model);
+      auto* sm = view->selectionModel();
+      QObject::connect(sm, &QItemSelectionModel::selectionChanged, this, &FormSubdialogTopicInfoResponse::_on_voicetype_selection_changed);
+
+      ui::typical_tableview_config(view);
+      ui::set_tableview_column_flex(view, [model](DKHeaderView& header, const QFontMetrics& metrics) {
+         {
+            constexpr const auto column = TopicInfoResponseVoicesModel::Column::Voicetype;
+            auto label_text  = model->headerData(column, Qt::Orientation::Horizontal, Qt::DisplayRole).toString();
+            auto label_width = metrics.boundingRect(label_text).width();
+            auto value_width = metrics.boundingRect("FemaleUniqueMaven").width();
+            header.setColumnFlex(column, 1, 1, std::max(label_width, value_width) * 1.5F + 4);
+         }
+         header.setColumnFlex(TopicInfoResponseVoicesModel::Column::FilePath, 2, 1);
+      });
+      this->_on_voicetype_selection_changed();
    }
 
    QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
+
+   this->ensurePolished();
+   ui::set_textarea_height_in_lines(*this->ui.text, 3);
+   ui::set_textarea_height_in_lines(*this->ui.scriptNotes, 3);
+   ui::set_textarea_height_in_lines(*this->ui.edits, 3);
 }
 
 void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form, const response_type& src) {
@@ -88,6 +105,21 @@ void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form
             quest_editor_id = quest->editorID;
       }
 
+      std::string source_filename;
+      {
+         auto* file = src_form.stub.get_source_file_info(0);
+         if (file && file->pointer) {
+            source_filename = file->pointer->get_filename();
+         }
+      }
+      this->_models.voices->setVoiceFileLocationInfo({
+         .data_filename   = source_filename,
+         .quest_editor_id = std::string(quest_editor_id),
+         .topic_editor_id = std::string(topic_editor_id),
+         .info_form_id    = src_form.stub.formID,
+         .response_uid    = src.id,
+      });
+
       auto filename = dovah::compute_voice_filename(
          quest_editor_id,
          topic_editor_id,
@@ -117,4 +149,26 @@ void FormSubdialogTopicInfoResponse::exportTo(loaded_form_type& dst_form, respon
    dst.emotion.value = this->ui.emotionValue->value();
 
    dst.sound.set(dst_form, this->ui.useSound->formStub());
+}
+
+void FormSubdialogTopicInfoResponse::_on_voicetype_selection_changed() {
+   auto* model  = this->_models.voices;
+   auto* view   = this->ui.voiceFilesTable;
+   auto* sm     = view->selectionModel();
+   auto* player = this->ui.audioPlayer;
+
+   auto sel = sm->selection();
+   if (sel.empty()) {
+      player->setEnabled(false);
+      player->setPath({});
+      return;
+   }
+   player->setEnabled(true);
+
+   auto qmi = sel[0].topLeft();
+   qmi = qmi.sibling(qmi.row(), TopicInfoResponseVoicesModel::Column::FilePath);
+   auto path_str = this->_models.voices->data(qmi, Qt::DisplayRole).toString();
+   auto path     = ui::types::game_file_path(path_str);
+   path.scope_to_stem_folder("sound");
+   player->setPath(path.to_string());
 }

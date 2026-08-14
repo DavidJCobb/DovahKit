@@ -161,6 +161,20 @@ namespace ui::types {
       out._data = this->_data.mid(stem._data.size());
       return out;
    }
+   game_file_path& game_file_path::make_absolute() {
+      if (this->_data.isEmpty())
+         return *this;
+      auto view = QStringView(this->_data);
+      if (view[0] == '/' || view[0] == '\\')
+         view = view.mid(1);
+      if (view.size() >= 5 && view.startsWith(QLatin1StringView("data", 4), Qt::CaseInsensitive)) {
+         auto c = view[4];
+         if (c == '/' || c == '\\')
+            return *this;
+      }
+      this->_data = QString("Data\\") + view;
+      return *this;
+   }
    game_file_path& game_file_path::scope_to_stem_folder(std::string_view name) {
       auto name_view = QLatin1StringView(name.data(), name.size());
 
@@ -187,11 +201,6 @@ namespace ui::types {
       } while (true);
       this->_data = QString(name_view) + "\\" + this->_data;
       _deduplicate_directory_separators(this->_data);
-      return *this;
-   }
-   game_file_path& game_file_path::scope_to_absolute_stem_folder(std::string_view folder_name) {
-      this->scope_to_stem_folder(folder_name);
-      this->_data = QString("Data\\") + this->_data;
       return *this;
    }
 

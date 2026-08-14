@@ -209,6 +209,10 @@
     <ClCompile Include="dovah\datastores\story_manager.cpp" />
     <ClCompile Include="dovah\datastores\story_manager\branch_node.cpp" />
     <ClCompile Include="dovah\datastores\story_manager\node.cpp" />
+    <ClCompile Include="dovah\files\bsa\utils\fold_path.cpp" />
+    <ClCompile Include="dovah\files\bsa\utils\fold_path_component.cpp" />
+    <ClCompile Include="dovah\files\bsa\utils\path_to_hashes.cpp" />
+    <ClCompile Include="dovah\files\bsa\utils\split_path.cpp" />
     <ClCompile Include="dovah\forms\BodyPartData.cpp" />
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
@@ -1268,6 +1272,7 @@
     <ClCompile Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.cpp" />
     <ClCompile Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.cpp" />
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoResponseVoicesModel.cpp" />
     <ClCompile Include="ui\form_windows\topic_info\TopicInfoSharedInfoFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\topic_info\TopicInfoWalkAwayTopicFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\topic_info\topic_info_response.cpp" />
@@ -1395,6 +1400,7 @@
     <ClCompile Include="ui\utils\painting\paint_single_line_text.cpp" />
     <ClCompile Include="ui\utils\pair_slider_to_spinbox.cpp" />
     <ClCompile Include="ui\utils\set_custom_context_menu.cpp" />
+    <ClCompile Include="ui\utils\set_textarea_height_in_lines.cpp" />
     <ClCompile Include="ui\utils\show_parent_scoped_modal.cpp" />
     <ClCompile Include="ui\utils\shrink_dialog_on_show.cpp" />
     <ClCompile Include="ui\utils\typical_tableview_config.cpp" />
@@ -1836,6 +1842,11 @@
     <ClInclude Include="dovah\exceptions\invalid_load_order\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\exceptions\invalid_load_order\some_files_are_too_new.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
+    <ClInclude Include="dovah\files\bsa\constants\path_separators.h" />
+    <ClInclude Include="dovah\files\bsa\utils\fold_path.h" />
+    <ClInclude Include="dovah\files\bsa\utils\fold_path_component.h" />
+    <ClInclude Include="dovah\files\bsa\utils\path_to_hashes.h" />
+    <ClInclude Include="dovah\files\bsa\utils\split_path.h" />
     <ClInclude Include="dovah\files\fuz\file_info.h" />
     <ClInclude Include="dovah\files\pex\parsers\function_collector.h" />
     <ClInclude Include="dovah\files\pex\parsers\util\file_string_table.h" />
@@ -2472,6 +2483,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestStagesModel.h" />
     <ClInclude Include="ui\form_windows\quest\QuestStageLogEntriesModel.h" />
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneProperties.h" />
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseVoicesModel.h" />
     <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
@@ -2483,6 +2495,7 @@
     <ClInclude Include="ui\utils\enum_dropdown_configs\magic_school_av_index.h" />
     <ClInclude Include="ui\utils\enum_dropdown_configs\resistance_av_index.h" />
     <ClInclude Include="ui\utils\replace_view_selected_rows.h" />
+    <ClInclude Include="ui\utils\set_textarea_height_in_lines.h" />
     <ClInclude Include="ui\utils\show_parent_scoped_modal.h" />
     <ClInclude Include="ui\utils\with_view_selected_row.h" />
     <ClInclude Include="editor\subsystems\audio\impl\xwma_file_info.h" />
@@ -4455,6 +4468,10 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\voicetypes valid for a topic info.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="qt.natstepfilter" />
     <None Include="dovah\_docs\form types\r\region.md">
       <SubType>
@@ -4740,6 +4757,7 @@
     <Natvis Include="dovah\datastores\idles\graph_node.natvis" />
     <Natvis Include="dovah\datastores\idles\idle_node.natvis" />
     <Natvis Include="dovah\datastores\idles\loose_idle_list_node.natvis" />
+    <Natvis Include="dovah\files\bsa\packed_file_info.natvis" />
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\files\pex\compiled_function.natvis" />
     <Natvis Include="dovah\files\pex\compiled_opcode.natvis" />

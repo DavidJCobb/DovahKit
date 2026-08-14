@@ -34,6 +34,8 @@ namespace dovahkit::subsystems {
          // caller should delete any returned object.
          dovah::bsa_archived_file* lookup_game_asset(const std::filesystem::path&, bool allow_loose_files = true);
 
+         bool game_asset_exists(const std::filesystem::path&, bool allow_loose_files = true);
+
          // This can throw exceptions; see definition for dovah::compiled_papyrus_script.
          dovah::compiled_papyrus_script parse_compiled_script(const std::string& scriptname);
    };

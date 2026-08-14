@@ -14,7 +14,7 @@ namespace dovah {
       std::string out;
       {
          constexpr const size_t max_length_for_quest_and_topic_ids = 25;
-         constexpr const size_t max_length_for_quest_id            = 16;
+         constexpr const size_t max_length_for_quest_id            = 10;
          //
          // The game caps the lengths of the quest and topic editor IDs as represented in 
          // the file path.
