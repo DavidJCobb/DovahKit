@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 #include <QAbstractItemModel>
+#include <QItemSelection>
 #include <QString>
 #include <QVarLengthArray>
 #include "dovah/form_stub.h"
@@ -142,8 +143,8 @@ class DKFormListPaneModel : public QAbstractTableModel, public DKCustomFormFilte
       int indexOfStub(const dovah::form_stub*) const;
       void moveStubs(QModelIndexList, int down);
       void removeStub(int index);
-      void removeStubs(QVector<int> indices);
-      void removeStubs(QModelIndexList);
+      void removeStubs(const QItemSelectionRange&);
+      void removeStubs(const QItemSelection&);
       inline void reserve(int i) { this->children.reserve(i); }
 
       #pragma region Property setters

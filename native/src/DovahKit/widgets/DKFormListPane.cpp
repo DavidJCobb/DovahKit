@@ -3,6 +3,7 @@
 #include <QFontMetrics>
 #include <QHeaderView>
 #include <QKeyEvent>
+#include <QMetaMethod>
 #include "DKHeaderView.h"
 #if !defined(QT_PLUGIN)
    #include "../editor/open_window_for_form.h"
@@ -139,25 +140,44 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       {
          auto* sel_model = this->subwidgets.view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& sel) {
+            bool should_signal_rows  = this->isSignalConnected(QMetaMethod::fromSignal(&DKFormListPane::selectedRowsChanged));
+            bool should_signal_forms = this->isSignalConnected(QMetaMethod::fromSignal(&DKFormListPane::selectedFormsChanged));
+            if (!should_signal_rows && !should_signal_forms)
+               return;
+
             if (sel.isEmpty()) {
-               emit selectedRowsChanged({});
-               emit selectedFormsChanged({});
+               if (should_signal_rows)
+                  emit selectedRowsChanged({});
+               if (should_signal_forms)
+                  emit selectedFormsChanged({});
                return;
             }
 
-            std::vector<dovah::form_stub*> forms;
             std::vector<size_t> rows;
-
+            std::vector<dovah::form_stub*> forms;
+            {
+               size_t size = 0;
+               for (auto& sel_item : sel)
+                  size += sel_item.bottom() - sel_item.top() + 1;
+               if (should_signal_rows)
+                  rows.reserve(size);
+               if (should_signal_forms)
+                  forms.reserve(size);
+            }
             for (auto& sel_item : sel) {
                int first = sel_item.top();
                int last  = sel_item.bottom();
                for (int i = first; i <= last; ++i) {
-                  forms.push_back(this->_model()->getNthStub(i));
-                  rows.push_back(i);
+                  if (should_signal_rows)
+                     rows.push_back(i);
+                  if (should_signal_forms)
+                     forms.push_back(this->_model()->getNthStub(i));
                }
             }
-            emit selectedRowsChanged(rows);
-            emit selectedFormsChanged(forms);
+            if (should_signal_rows)
+               emit selectedRowsChanged(rows);
+            if (should_signal_forms)
+               emit selectedFormsChanged(forms);
          });
       }
    #endif
@@ -184,7 +204,7 @@ DKFormListPaneModel* DKFormListPane::_model() const noexcept {
       auto* sm = this->subwidgets.view->selectionModel();
       if (!sm)
          return;
-      this->_model()->removeStubs(sm->selectedRows());
+      this->_model()->removeStubs(sm->selection());
    }
 #endif
 void DKFormListPane::_updateButtonVisibility() {

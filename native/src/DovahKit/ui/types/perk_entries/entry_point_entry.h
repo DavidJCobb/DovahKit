@@ -62,7 +62,7 @@ namespace ui::types::perk_entries {
          using condition_group = std::vector<ui::types::conditions::condition>;
 
       public:
-         dovah::perk_entry_point     entry_point = dovah::perk_entry_point::activate;
+         dovah::perk_entry_point     entry_point = (dovah::perk_entry_point)dovah::all_perk_entry_points.size(); // deliberate out-of-range value
          dovah::entry_point_function function    = dovah::entry_point_function::none;
          std::variant<
             std::monostate,

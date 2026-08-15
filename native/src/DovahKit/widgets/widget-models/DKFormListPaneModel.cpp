@@ -644,95 +644,25 @@ void DKFormListPaneModel::removeStub(int index) {
    delete item;
    this->endRemoveRows();
 }
-void DKFormListPaneModel::removeStubs(QVector<int> indices) {
-   if (indices.isEmpty())
+void DKFormListPaneModel::removeStubs(const QItemSelectionRange& range) {
+   auto first = range.top();
+   auto last  = range.bottom();
+
+   auto& list = this->children;
+   if (first < 0 || first >= list.size())
       return;
-
-   QVector<size_t> keep_indices;
-   QModelIndex     parent_index;
-
-   auto&  list = this->children;
-   size_t size = list.size();
-   for (size_t i = 0; i < size; ++i)
-      if (!indices.contains(i))
-         keep_indices.push_back(i);
-
-   if (keep_indices.empty()) {
-      //
-      // We're keeping nothing -- clearing the whole list.
-      //
-      this->clear();
+   if (last < 0 || last >= list.size())
       return;
+   this->beginRemoveRows({}, first, last);
+   for (size_t i = first; i <= last; ++i) {
+      delete list[i];
    }
-   if (keep_indices.size() == size) [[unlikely]] {
-      //
-      // We're not removing anything. (Edge-case: the list of row indices contains 
-      // only invalid row indices.)
-      //
-      return;
-   }
-
-   size_t last_row_to_keep = 0;
-   size_t this_row_to_keep = 0;
-   size_t count_deleted    = 0;
-   for (size_t n = 0; n < keep_indices.size(); last_row_to_keep = this_row_to_keep, ++n) {
-      this_row_to_keep = keep_indices[n] - count_deleted;
-      if (this_row_to_keep == 0) {
-         //
-         // We're keeping the first item in the list; ergo there are no items before 
-         // it to delete.
-         //
-         continue;
-      }
-      if (last_row_to_keep + 1 == this_row_to_keep) {
-         //
-         // Consecutive kept rows. Nothing to remove.
-         //
-         continue;
-      }
-      //
-      // There are rows to remove, between the last row we kept and the current row 
-      // we're keeping. Remove the rows between them.
-      //
-      size_t first_to_delete = last_row_to_keep + 1;
-      size_t last_to_delete  = this_row_to_keep - 1;
-      size_t count_to_delete = last_to_delete - first_to_delete + 1;
-
-      this->beginRemoveRows(parent_index, first_to_delete, last_to_delete);
-      for (size_t i = first_to_delete; i <= last_to_delete; ++i) {
-         delete list[i];
-      }
-      list.remove(first_to_delete, count_to_delete);
-      this->endRemoveRows();
-
-      count_deleted    += count_to_delete;
-      this_row_to_keep -= count_to_delete;
-   }
-
-   //
-   // Check for any rows at the end of the list that need to be removed.
-   //
-   auto last_to_keep = keep_indices.back() - count_deleted;
-   auto last_left    = size - count_deleted - 1;
-   if (last_to_keep < last_left) {
-      size_t first_to_delete = last_to_keep + 1;
-      size_t count_to_delete = last_left - first_to_delete + 1;
-
-      this->beginRemoveRows(parent_index, first_to_delete, last_left);
-      for (size_t i = first_to_delete; i <= last_left; ++i) {
-         delete list[i];
-      }
-      list.remove(first_to_delete, count_to_delete);
-      this->endRemoveRows();
-   }
+   list.remove(first, last - first + 1);
+   this->endRemoveRows();
 }
-void DKFormListPaneModel::removeStubs(QModelIndexList l) {
-   if (l.isEmpty())
-      return;
-   QVector<int> indices;
-   for (auto& i : l)
-      indices.push_back(i.row());
-   this->removeStubs(indices);
+void DKFormListPaneModel::removeStubs(const QItemSelection& sel) {
+   for (auto& range : sel)
+      this->removeStubs(range);
 }
 
 #pragma region Property setters
