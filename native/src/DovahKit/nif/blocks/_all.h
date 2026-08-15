@@ -38,6 +38,7 @@
       #include "BSShaderTextureSet.h"
       #include "NiCollisionObject.h"
       #include "NiExtraData.h"
+         #include "BSBound.h"
          #include "BSFurnitureMarkerNode.h"
          #include "BSInvMarker.h"
          #include "NiIntegerExtraData.h"
@@ -128,6 +129,7 @@ namespace nifDK {
       block_types::bhkTransformShape,
       block_types::bhkWorldObject,
       block_types::BSBlastNode,
+      block_types::BSBound,
       block_types::BSDamageStage,
       block_types::BSDismemberSkinInstance,
       block_types::BSEffectShaderProperty,

@@ -19,6 +19,7 @@ namespace dovahkit::subsystems::form_info_cache {
    namespace cached_data {
       namespace by_form {
          class actor_base;
+         class collision_layer;
          class enchantment;
          class faction;
          class head_part;
@@ -70,34 +71,42 @@ namespace dovahkit::subsystems::form_info_cache {
          void cachedDataBuilt(); // emitted when all data is built
          void cachedDataCleared(); // emitted when all data is cleared
 
+         void cachedModelPathChanged(dovah::form_stub&, QString old_value, QString new_value);
+         void cachedQuestFilterChanged(dovah::form_stub&, QString old_value, QString new_value);
+         void cachedScriptsChanged(dovah::form_stub&);
+         void cachedSharedInfoTopicChanged(dovah::form_stub&, bool became_sharedinfo_topic);
+
+         // I wanted to define these using FOR_EACH_CACHED_FORM_TYPE, to ensure consistency 
+         // across source files. Unfortunately, Qt's MOC tool is highly unpleasant and chokes 
+         // on any attempt to do so.
+         //
+         // We need MOC to see these functions, since it's what creates the code that powers 
+         // them.
          void cachedActorBaseChanged(dovah::form_stub&);
+         void cachedCollisionLayerChanged(dovah::form_stub&);
          void cachedEnchantmentChanged(dovah::form_stub&);
          void cachedFactionChanged(dovah::form_stub&);
          void cachedHeadPartChanged(dovah::form_stub&);
          void cachedMagicEffectChanged(dovah::form_stub&);
-         void cachedModelPathChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedMusicTrackChanged(dovah::form_stub&);
-         void cachedQuestChanged(dovah::form_stub&);
-         void cachedQuestFilterChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedPackageChanged(dovah::form_stub&);
-         void cachedScriptsChanged(dovah::form_stub&);
+         void cachedQuestChanged(dovah::form_stub&);
          void cachedTopicChanged(dovah::form_stub&);
          void cachedVoicetypeChanged(dovah::form_stub&);
-         void cachedSharedInfoTopicChanged(dovah::form_stub&, bool became_sharedinfo_topic);
 
       public:
          QString get_form_model_path(const dovah::form_stub&) const;
          QString get_quest_filter(const dovah::form_stub&) const;
-         const cached_data::by_form::actor_base*   get_actor_base_info(const dovah::form_stub&) const;
-         const cached_data::by_form::enchantment*  get_enchantment_info(const dovah::form_stub&) const;
-         const cached_data::by_form::faction*      get_faction_info(const dovah::form_stub&) const;
-         const cached_data::by_form::head_part*    get_head_part_info(const dovah::form_stub&) const;
-         const cached_data::by_form::magic_effect* get_magic_effect_info(const dovah::form_stub&) const;
-         const cached_data::by_form::music_track*  get_music_track_info(const dovah::form_stub&) const;
-         const cached_data::by_form::quest*        get_quest_info(const dovah::form_stub&) const;
-         const cached_data::by_form::package*      get_package_info(const dovah::form_stub&) const;
-         const cached_data::by_form::topic*        get_topic_info(const dovah::form_stub&) const;
-         const cached_data::by_form::voicetype*    get_voicetype_info(const dovah::form_stub&) const;
+
+         #ifndef Q_MOC_RUN // again, MOC sucks
+            #pragma region const cached_data::by_form::TYPE* get_TYPE_info(const dovah::form_stub&) const
+               #include "./macros/FOR_EACH_CACHED_FORM_TYPE.define.h"
+               #define X(_type, ...) const cached_data::by_form::_type* get_##_type##_info(const dovah::form_stub&) const;
+               FOR_EACH_CACHED_FORM_TYPE(X);
+               #undef X
+               #include "./macros/FOR_EACH_CACHED_FORM_TYPE.undef.h"
+            #pragma endregion
+         #endif
 
          script_attach_state form_script_attachment(const dovah::form_stub&, std::string_view scriptname) const;
          bool quest_has_alias_with_script(const dovah::form_stub&, std::string_view scriptname) const;

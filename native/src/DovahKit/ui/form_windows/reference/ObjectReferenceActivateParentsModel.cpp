@@ -202,10 +202,13 @@ void ObjectReferenceActivateParentsModel::_on_data_abandoned() {
 }
 void ObjectReferenceActivateParentsModel::_on_form_deleted(dovah::form_stub& stub) {
    if (dovah::form_type_is_reference(stub.form_type)) {
-      for (size_t i = 0; i < this->_data.size(); ++i) {
+      size_t size = this->_data.size();
+      for (size_t i = 0; i < size; ++i) {
          if (this->_data[i].ref == &stub) {
             this->beginRemoveRows({}, i, i);
             this->_data.erase(this->_data.begin() + i);
+            --i;
+            --size;
             this->endRemoveRows();
          }
       }

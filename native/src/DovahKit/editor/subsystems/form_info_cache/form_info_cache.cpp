@@ -34,6 +34,7 @@ namespace {
 
    using all_cacheable_form_data = cobb::class_array<
       dovahkit::subsystems::form_info_cache::cached_data::by_form::actor_base,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::collision_layer,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::enchantment,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::faction,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::head_part,
@@ -51,20 +52,7 @@ namespace {
    >;
 }
 
-// Pass your macro name as an argument. The macro params should resemble:
-//    #define DO(name, signal_name, ...)
-// The macro should be variadic so we can add extra info without your macro choking.
-#define FOR_EACH_CACHED_FORM_TYPE(DO) \
-   DO(actor_base,   cachedActorBaseChanged) \
-   DO(enchantment,  cachedEnchantmentChanged) \
-   DO(faction,      cachedFactionChanged) \
-   DO(head_part,    cachedHeadPartChanged) \
-   DO(magic_effect, cachedMagicEffectChanged) \
-   DO(music_track,  cachedMusicTrackChanged) \
-   DO(quest,        cachedQuestChanged) \
-   DO(package,      cachedPackageChanged) \
-   DO(topic,        cachedTopicChanged) \
-   DO(voicetype,    cachedVoicetypeChanged)
+#include "./macros/FOR_EACH_CACHED_FORM_TYPE.define.h"
 
 namespace {
    using all_form_classes_of_interest = dovah::all_loaded_form_types::filter_types<[]<typename Current>() -> bool {

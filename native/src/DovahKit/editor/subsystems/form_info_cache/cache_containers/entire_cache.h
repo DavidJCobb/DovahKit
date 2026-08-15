@@ -4,6 +4,7 @@
 #pragma region Data
    #pragma region By form type
       #include "../cached_data/by_form_type/actor_base.h"
+      #include "../cached_data/by_form_type/collision_layer.h"
       #include "../cached_data/by_form_type/enchantment.h"
       #include "../cached_data/by_form_type/faction.h"
       #include "../cached_data/by_form_type/head_part.h"
@@ -21,16 +22,12 @@
 namespace dovahkit::subsystems::form_info_cache {
    struct entire_cache {
       struct {
-         data_cache<cached_data::by_form::actor_base>   actor_bases;
-         data_cache<cached_data::by_form::enchantment>  enchantments;
-         data_cache<cached_data::by_form::faction>      factions;
-         data_cache<cached_data::by_form::head_part>    head_parts;
-         data_cache<cached_data::by_form::magic_effect> magic_effects;
-         data_cache<cached_data::by_form::music_track>  music_tracks;
-         data_cache<cached_data::by_form::quest>        quests;
-         data_cache<cached_data::by_form::package>      packages;
-         data_cache<cached_data::by_form::topic>        topics;
-         data_cache<cached_data::by_form::voicetype>    voicetypes;
+         #ifndef Q_MOC_RUN // see comments re: Qt MOC in the main FIC singleton's header
+            #include "./macros/FOR_EACH_CACHED_FORM_TYPE.define.h"
+            #define X(_name, ...) data_cache<cached_data::by_form::_name> _name##s; // field name is pluralized
+            FOR_EACH_CACHED_FORM_TYPE(X);
+            #include "./macros/FOR_EACH_CACHED_FORM_TYPE.undef.h"
+         #endif
       } by_form_type;
       data_cache<cached_data::attached_scripts> attached_scripts;
       data_cache<QString> model_paths;

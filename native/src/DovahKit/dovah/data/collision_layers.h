@@ -54,7 +54,7 @@ namespace dovah {
       custom_pick_2          = 44,
       spell_explosion        = 45,
       dropping_pick          = 46,
-      null                   = 47,
+      dead_actor_zone        = 47,
       trigger_falling_trap   = 48,
       navcut                 = 49,
       critter                = 50,

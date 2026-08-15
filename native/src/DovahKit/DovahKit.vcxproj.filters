@@ -4332,6 +4332,12 @@
     <ClCompile Include="ui\utils\set_textarea_height_in_lines.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\collision_layer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\reference\ObjectReferenceCollisionLayerPickerModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10763,6 +10769,18 @@
     <ClInclude Include="ui\utils\set_textarea_height_in_lines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\collision_layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data_class_by_form_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\macros\FOR_EACH_CACHED_FORM_TYPE.define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\macros\FOR_EACH_CACHED_FORM_TYPE.undef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12301,6 +12319,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\audio\sound_instance.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\reference\ObjectReferenceCollisionLayerPickerModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

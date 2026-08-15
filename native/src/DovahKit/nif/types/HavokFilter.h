@@ -13,7 +13,7 @@ namespace nifDK {
          bool scaled = false;
       } flags;
       dovah::body_part       body_part       = dovah::body_part::other;
-      dovah::collision_layer collision_layer = dovah::collision_layer::null;
+      dovah::collision_layer collision_layer = dovah::collision_layer::unidentified;
       uint16_t group = 0;
 
       void read(file_reader&);

@@ -18,6 +18,8 @@ class QDoubleSpinBox;
 class QLabel;
 class QWidget;
 
+class ObjectReferenceCollisionLayerPickerModel;
+
 namespace ui::reference::fragments {
    class primitive {
       public:
@@ -70,6 +72,7 @@ namespace ui::reference::fragments {
          static bool is_primitive(const loaded_form_type&);
          static bool can_change_shape(const loaded_form_type&);
          static bool has_collision_layer(const loaded_form_type&);
+         static dovah::collision_layer default_collision_layer(const loaded_form_type&);
 
       protected:
          QString _primitive_function_text(dovah::form_stub* base_form);
@@ -81,6 +84,9 @@ namespace ui::reference::fragments {
       protected:
          control_collection controls;
          dovah::form_stub*  stub = nullptr;
+         struct {
+            ObjectReferenceCollisionLayerPickerModel* collision_layers = nullptr;
+         } models;
          struct {
             dovah::collision_layer prior_layer = dovah::collision_layer::unidentified;
          } state;

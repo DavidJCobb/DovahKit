@@ -36,6 +36,8 @@ namespace editor::localize {
             return QCoreApplication::translate("dovah::collision_layer", "L_CUSTOMPICK1");
          case dovah::collision_layer::custom_pick_2:
             return QCoreApplication::translate("dovah::collision_layer", "L_CUSTOMPICK2");
+         case dovah::collision_layer::dead_actor_zone:
+            return QCoreApplication::translate("dovah::collision_layer", "L_DEADACTORZONE");
          case dovah::collision_layer::dead_biped:
             return QCoreApplication::translate("dovah::collision_layer", "L_DEADBIP");
          case dovah::collision_layer::debris_large:

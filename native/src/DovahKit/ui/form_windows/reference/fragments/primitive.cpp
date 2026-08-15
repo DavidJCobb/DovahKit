@@ -19,10 +19,15 @@
 #include "editor/localize/collision_layer.h"
 #include "editor/subsystems/message_log/core.h"
 #include "ui/utils/set_range.h"
+#include "../ObjectReferenceCollisionLayerPickerModel.h"
 namespace {
    namespace extra_data_types {
       using namespace dovah::loaded_forms::components::extra_data_types;
    }
+
+   // CK skips serializing REFR/XTRI if the layer is either of these.
+   static constexpr const dovah::collision_layer default_trigger_volume_layer   = dovah::collision_layer::actor_zone;
+   static constexpr const dovah::collision_layer default_collision_volume_layer = dovah::collision_layer::transparent;
 }
 
 namespace ui::reference::fragments {
@@ -47,12 +52,16 @@ namespace ui::reference::fragments {
       {
          QComboBox* widget = this->controls.layer;
          widget->clear();
+         /*//
          for (auto cl : dovah::all_collision_layers) {
             widget->addItem(
                editor::localize::collision_layer(cl),
                (int)cl
             );
          }
+         //*/
+         auto* model = this->models.collision_layers = new ObjectReferenceCollisionLayerPickerModel(widget);
+         widget->setModel(model);
       }
       QObject::connect(this->controls.layer,             qOverload<int>(&QComboBox::currentIndexChanged), &owner, cobb__bound_this_fn(_on_collision_layer_changed));
       QObject::connect(this->controls.player_activation, &QCheckBox::toggled, &owner, cobb__bound_this_fn(_set_player_activation));
@@ -119,6 +128,8 @@ namespace ui::reference::fragments {
          }
       }
 
+      bool is_trigger_volume = base_type == dovah::form_type::activator;
+
       extra_data_type* extra = nullptr;
       if (extra = form.extra_data.get<extra_data_type>()) {
          if (auto* extra_bound = form.extra_data.get<extra_data_types::multibound_bounds>()) {
@@ -157,25 +168,44 @@ namespace ui::reference::fragments {
       // primitive.
       //
       {
+         this->models.collision_layers->setIsForTriggerVolume(is_trigger_volume);
+
+         const auto default_layer = default_collision_layer(form);
+
          QComboBox* widget = this->controls.layer;
-         if (auto* extra = form.extra_data.get<extra_data_types::collision_data>()) {
-            auto i = widget->findData((int)extra->value);
+         {
+            int i = -1;
+            if (auto* extra = form.extra_data.get<extra_data_types::collision_data>()) {
+               i = widget->findData((int)extra->value);
+            }
+            if (i < 0)
+               i = widget->findData((int)default_layer);
             if (i < 0)
                i = widget->findData((int)dovah::collision_layer::unidentified);
             widget->setCurrentIndex(i);
-         } else {
-            widget->setCurrentIndex(widget->findData((int)dovah::collision_layer::unidentified));
          }
          if (!has_collision_layer(form)) {
             widget->setEnabled(false);
          }
          _on_collision_layer_changed();
+         /*
+            Our handling of collision layers isn't fully consistent with the CK, but it's 
+            close enough. Differences:
+
+             - CK adds L_WATER to the combobox if the base form is a water activator.
+
+             - If the base form is an activator but not a water activator, then the CK 
+               guarantees that the combobox has L_NONCOLLIDABLE in it, even if no COLL 
+               form is appropriately configured for that layer. It uses the hardcoded 
+               name "L_NONCOLLIDABLE" without even trying to pull from the form.
+         */
       }
       this->controls.player_activation->setEnabled(base_type == dovah::form_type::activator);
    }
    void primitive::save(loaded_form_type& form) {
       if (!is_primitive(form))
          return;
+
       auto* extra_prim = form.extra_data.get_or_create<extra_data_type>();
       for (size_t i = 0; i < this->controls.extents.all.size(); ++i)
          extra_prim->bounds[i] = this->controls.extents.all[i]->value();
@@ -193,10 +223,13 @@ namespace ui::reference::fragments {
       }
 
       auto layer = (dovah::collision_layer) this->controls.layer->currentData().toInt();
-      if (layer == dovah::collision_layer::unidentified) {
-         form.extra_data.remove<extra_data_types::collision_data>(form);
-      } else {
-         form.extra_data.get_or_create<extra_data_types::collision_data>()->set_layer_id(layer);
+      {
+         const auto default_layer = default_collision_layer(form);
+         if (layer == default_layer) {
+            form.extra_data.remove<extra_data_types::collision_data>(form);
+         } else {
+            form.extra_data.get_or_create<extra_data_types::collision_data>()->set_layer_id(layer);
+         }
       }
 
       if (auto* extra_bound = form.extra_data.get<extra_data_types::multibound_bounds>()) {
@@ -242,6 +275,13 @@ namespace ui::reference::fragments {
       if (base_form->formID == dovah::hardcoded_form_ids::CollisionMarker)
          return true;
       return false;
+   }
+   dovah::collision_layer primitive::default_collision_layer(const loaded_form_type& form) {
+      dovah::form_stub* base_form = form.base_form.get_form_stub();
+      if (base_form && base_form->formID == dovah::hardcoded_form_ids::CollisionMarker) {
+         return dovah::collision_layer::transparent;
+      }
+      return dovah::collision_layer::actor_zone;
    }
 
    QString primitive::_primitive_function_text(dovah::form_stub* base_form) {
