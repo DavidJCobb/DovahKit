@@ -122,12 +122,13 @@ void QuestDialogueBranchlessTopicsModel::setDatastore(datastore_type* ds) {
       QObject::connect(ds, &datastore_type::on_topic_added, this, [this](const node_type& node) {
          if (node.parent)
             return;
+         if (node.cached.category != this->_category)
+            return;
          auto&  list = this->_data;
          size_t i    = list.size();
          this->beginInsertRows({}, i, i);
          list.push_back(&node);
          this->endInsertRows();
-
          this->_re_sort_node(node);
       });
       QObject::connect(ds, &datastore_type::on_topic_edited, this, &QuestDialogueBranchlessTopicsModel::_on_node_edited);
@@ -188,6 +189,9 @@ void QuestDialogueBranchlessTopicsModel::_fill() {
 void QuestDialogueBranchlessTopicsModel::_on_node_edited(const node_type& node) {
    if (node.parent)
       return;
+
+   bool should_show = node.cached.category == this->_category;
+
    auto&  list = this->_data;
    size_t size = list.size();
    for (size_t i = 0; i < size; ++i) {
@@ -195,12 +199,29 @@ void QuestDialogueBranchlessTopicsModel::_on_node_edited(const node_type& node) 
       if (item != &node)
          continue;
 
+      if (should_show) {
+         //
+         // Topic was recategorized. The UI doesn't allow this, but Dovahscript can.
+         // 
+         this->beginRemoveRows({}, i, i);
+         list.erase(list.begin() + i);
+         this->endRemoveRows();
+         return;
+      }
+
       auto tl = this->index(i, 0, {});
       auto br = this->index(i, ColumnCount - 1, {});
       emit dataChanged(tl, br);
 
       this->_re_sort_node(node);
       return;
+   }
+   if (should_show) {
+      size_t i = list.size();
+      this->beginInsertRows({}, i, i);
+      list.push_back(&node);
+      this->endInsertRows();
+      this->_re_sort_node(node);
    }
 }
 void QuestDialogueBranchlessTopicsModel::_re_sort_node(const node_type& item) {

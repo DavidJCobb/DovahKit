@@ -967,7 +967,13 @@
          }
          if (!branch_after && !topic_item) {
             //
-            // Branchless topic moved in from a different quest?!
+            // This handles two cases:
+            // 
+            //  - A branchless topic was moved into this quest from a different quest.
+            // 
+            //  - A branchless topic was created (but we didn't catch the creation 
+            //    because it wasn't yet tied to the quest), and then tied to the quest 
+            //    and modified.
             //
             this->_add_branchless_topic_to_datastore(stub);
             topic_item = this->_data.branchless_topics.back();
