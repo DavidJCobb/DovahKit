@@ -14,7 +14,7 @@ class ObjectWindowTreeModel;
 
 class ObjectWindowTreeItem {
    friend class ObjectWindowTreeModel;
-   protected:
+   public:
       enum class type_t {
          root,
          top_level,
@@ -45,7 +45,7 @@ class ObjectWindowTreeItem {
             return nullptr;
          return this->children[i];
       }
-      [[nodiscard]] inline int indexOf(ObjectWindowTreeItem* child) const noexcept { return this->children.indexOf(child); }
+      [[nodiscard]] inline int indexOf(const ObjectWindowTreeItem* child) const noexcept { return this->children.indexOf(child); }
       [[nodiscard]] int indexOf(const QString& name) const noexcept;
 
       ObjectWindowTreeItem* findChildByFormType(dovah::form_type) const noexcept;
@@ -66,40 +66,43 @@ class ObjectWindowTreeItem {
 
 class ObjectWindowTreeModel : public QAbstractItemModel {
    Q_OBJECT
-   public:
-      using item_type = ObjectWindowTreeItem;
-      //
    protected:
+      using item_type = ObjectWindowTreeItem;
+
       struct {
          item_type* root   = nullptr;
          item_type* all    = nullptr;
          item_type* quests = nullptr;
       } _nodes;
-      //
-      static item_type* _itemFromIndex(const QModelIndex&) noexcept;
+
+      #pragma region QMI helpers
+         const item_type* _item_from_qmi(const QModelIndex&) const noexcept;
+         item_type* _item_from_qmi(const QModelIndex&) noexcept;
+
+         const item_type* _item_parent_from_qmi(const QModelIndex&) const noexcept;
+         item_type* _item_parent_from_qmi(const QModelIndex&) noexcept;
+
+         QModelIndex _qmi_for_item(const item_type&) const noexcept;
+         QModelIndex _qmi_for_item_child(const item_type& parent, size_t child_index, int col = 0) const noexcept;
+      #pragma endregion
+      
       item_type* _findFormTypeItem(dovah::form_type form_type) const noexcept;
-      QModelIndex _indexOfItem(item_type*) const noexcept;
-      QModelIndex _indexOfQuests() const noexcept;
-      QModelIndex _indexOfAll() const noexcept;
       bool _removeRows(int row, int count, const QModelIndex& parent = QModelIndex());
-      void _sortChildrenOf(item_type*);
-      void _sortDescendantsOf(item_type*);
-      //
+      void _sortChildrenOf(item_type&);
+      void _sortDescendantsOf(item_type&);
+      
       void _buildQuestFilters();
       void _buildAllModelPathFilters();
       void _clearFilters(item_type* root);
       void _removeFilter(item_type* root, const QString& full);
       void _addFilter(item_type* root, const QString& full, bool include_trailing = true);
       void _onGameMaybeChanged();
-      //
+      
    public:
       ObjectWindowTreeModel(QObject* parent = nullptr);
       ~ObjectWindowTreeModel();
       
       #pragma region QAbstractItemModel overrides
-         #pragma region Inlines
-            inline item_type* invisibleRootItem() const noexcept { return this->_nodes.root; }
-         #pragma endregion
          QModelIndex index(int row, int column, const QModelIndex& parent) const override;
          QModelIndex parent(const QModelIndex& index) const;
          int rowCount(const QModelIndex& parent) const override;

@@ -98,7 +98,7 @@ namespace {
 
 ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
-   //
+   
    this->ui.table->setSource(this->ui.tree);
    this->ui.table->setFilter(this->ui.filter);
    this->ui.table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
@@ -107,7 +107,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       if (stub && !stub->is_none_stub())
          open_edit_dialog_for_form(*stub, this);
    });
-   //
+  
    #pragma region Context menu
    this->_actionCreateForm = new QAction(tr("New form...", "object window form actions"), this->ui.table);
    QObject::connect(this->_actionCreateForm, &QAction::triggered, this, [this]() {
@@ -259,4 +259,9 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       menu.exec(opener->mapToGlobal(pos));
    });
    #pragma endregion
+
+   // have to do after configuring the UI; doing this in the treeview constructor 
+   // completely breaks layout unless and until the tree structure changes after 
+   // loading content. no clue why. Qt does not give me the means to debug this.
+   this->ui.tree->expandAll();
 }

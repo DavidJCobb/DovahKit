@@ -1,6 +1,5 @@
 #include "./object_window_treeview.h"
 #include <algorithm>
-#include "dovah/form_stub_addenda.h"
 #include "editor/core.h"
 #include "editor/subsystems/form_info_cache/cacheable_traits/model_path.h"
 #include "editor/subsystems/form_info_cache/core.h"
@@ -109,12 +108,87 @@ void ObjectWindowTreeItem::sort() {
 }
 #pragma endregion
 
+namespace {
+   static void _pathlike_string_to_nodes(
+      ObjectWindowTreeItem& root,
+      ObjectWindowTreeItem& surrogate_parent,
+      QString path
+   ) {
+      using item_type = ObjectWindowTreeItem;
+      constexpr const bool include_trailing = false;
+
+      if (path.isEmpty())
+         return;
+
+      QString fragment;
+      auto*   node = &root;
+
+      for (auto c : path) {
+         if (c != '/' && c != '\\') {
+            fragment += c;
+            continue;
+         }
+         //
+         // Handle path separators.
+         //
+         if (fragment.isEmpty()) { // Treat "Foo//Bar" the same as "Foo/Bar"
+            continue;
+         }
+         auto* parent = (node == &root) ? &surrogate_parent : node;
+         int   index  = parent->indexOf(fragment);
+         if (index < 0) {
+            //
+            // This fragment doesn't exist, so create it.
+            //
+            auto* child = &item_type::make_filter(fragment);
+            if (node == &root) {
+               child->full_filter = fragment;
+            } else {
+               child->full_filter = node->full_filter + '/' + fragment;
+            }
+            parent->appendChild(*child);
+            node = child;
+         } else {
+            //
+            // The fragment already exists. Let's just bump up its refcount.
+            //
+            node = parent->child(index);
+         }
+         ++node->refcount;
+         fragment.clear();
+      }
+      if (include_trailing && !fragment.isEmpty()) {
+         auto* parent = (node == &root) ? &surrogate_parent : node;
+         int   index  = parent->indexOf(fragment);
+         if (index < 0) {
+            //
+            // This fragment doesn't exist, so create it.
+            //
+            auto* child = &item_type::make_filter(fragment);
+            if (node == &root) {
+               child->full_filter = fragment;
+            } else {
+               child->full_filter = node->full_filter + '/' + fragment;
+            }
+            parent->appendChild(*child);
+            node = child;
+         } else {
+            //
+            // The fragment already exists. Let's just bump up its refcount.
+            //
+            node = parent->child(index);
+         }
+         ++node->refcount;
+      }
+   }
+}
+
 #pragma region ObjectWindowTreeModel
    ObjectWindowTreeModel::ObjectWindowTreeModel(QObject* parent) : QAbstractItemModel(parent) {
       this->_nodes.root = new item_type;
       this->_nodes.root->type = item_type::type_t::root;
       //
-      this->beginResetModel();
+      //this->beginResetModel();
       #pragma region Build contents
       constexpr const char* disambig = "object window";
       //
@@ -254,7 +328,7 @@ void ObjectWindowTreeItem::sort() {
       this->_nodes.root->appendChild(*this->_nodes.all);
       this->_nodes.root->appendChild(item_type::make_form_type(tr("Missing", disambig), dovah::form_type::none));
       #pragma endregion
-      this->endResetModel();
+      //this->endResetModel();
       //
       auto& cache = dovahkit::subsystems::form_info_cache::core::get_or_create();
       QObject::connect(&cache, &dovahkit::subsystems::form_info_cache::core::cachedDataBuilt,   this, [this]() {
@@ -302,33 +376,54 @@ void ObjectWindowTreeItem::sort() {
       delete this->_nodes.root;
       this->_nodes.root   = nullptr;
    }
-
-   ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_itemFromIndex(const QModelIndex& index) noexcept {
-      if (!index.isValid())
+   
+   #pragma region QMI helpers
+      const ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_item_from_qmi(const QModelIndex& qmi) const noexcept {
+         if (!qmi.isValid())
+            return this->_nodes.root;
+         if (qmi.model() != this) // default-constructed QMIs will have a null model pointer, which `isValid` checks for, so check this after `isValid`
+            return nullptr;
+         auto* parent = (item_type*)qmi.internalPointer();
+         if (!parent)
+            return nullptr;
+         auto i = qmi.row();
+         if (i >= 0 && i < parent->children.size())
+            return parent->children[i];
          return nullptr;
-      return (item_type*) index.internalPointer();
-   }
+      }
+      ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_item_from_qmi(const QModelIndex& qmi) noexcept {
+         return const_cast<item_type*>(std::as_const(*this)._item_from_qmi(qmi));
+      }
+
+      const ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_item_parent_from_qmi(const QModelIndex& qmi) const noexcept {
+         if (!qmi.isValid())
+            return nullptr;
+         if (qmi.model() != this)
+            return nullptr;
+         return (item_type*)qmi.internalPointer();
+      }
+      ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_item_parent_from_qmi(const QModelIndex& qmi) noexcept {
+         return const_cast<item_type*>(std::as_const(*this)._item_parent_from_qmi(qmi));
+      }
+
+      QModelIndex ObjectWindowTreeModel::_qmi_for_item(const item_type& item) const noexcept {
+         auto* parent = item.parent;
+         if (!parent)
+            return {};
+         return _qmi_for_item_child(*parent, parent->indexOf(&item), 0);
+      }
+      QModelIndex ObjectWindowTreeModel::_qmi_for_item_child(const item_type& parent, size_t child_index, int col) const noexcept {
+         return this->createIndex(child_index, col, &parent);
+      }
+   #pragma endregion
+
    ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_findFormTypeItem(dovah::form_type form_type) const noexcept {
       return this->_nodes.root->findChildByFormType(form_type);
-   }
-   QModelIndex ObjectWindowTreeModel::_indexOfItem(item_type* item) const noexcept {
-      if (!item)
-         return QModelIndex();
-      auto* parent = item->parent;
-      if (!parent)
-         return QModelIndex();
-      return this->createIndex(parent->indexOf(item), 0, item);
-   }
-   QModelIndex ObjectWindowTreeModel::_indexOfQuests() const noexcept {
-      return this->_indexOfItem(this->_nodes.quests);
-   }
-   QModelIndex ObjectWindowTreeModel::_indexOfAll() const noexcept {
-      return this->_indexOfItem(this->_nodes.all);
    }
    bool ObjectWindowTreeModel::_removeRows(int row, int count, const QModelIndex& parent) {
       if (count < 1)
          return false;
-      auto* item = _itemFromIndex(parent);
+      auto* item = _item_from_qmi(parent);
       if (!item)
          return false;
       auto& list = item->children;
@@ -344,13 +439,13 @@ void ObjectWindowTreeItem::sort() {
       this->endRemoveRows();
       return true;
    }
-   void ObjectWindowTreeModel::_sortChildrenOf(item_type* item) {
-      if (!item->children.size())
+   void ObjectWindowTreeModel::_sortChildrenOf(item_type& parent) {
+      if (!parent.children.size())
          return;
       //
-      auto& list = item->children;
+      auto& list = parent.children;
       auto  size = list.size();
-      decltype(item->children) sorted;
+      decltype(parent.children) sorted;
       sorted.reserve(size);
       for (auto* child : list)
          sorted.push_back(child);
@@ -364,10 +459,10 @@ void ObjectWindowTreeItem::sort() {
          QModelIndexList change_to;
          for (int i = 0; i < size; ++i) {
             auto* item = list[i];
-            auto  from = this->createIndex(i, 0, item);
+            auto  from = _qmi_for_item_child(parent, i);
             if (persistent.contains(from)) {
                auto to_i = sorted.indexOf(item);
-               auto to   = this->createIndex(to_i, 0, item);
+               auto to   = _qmi_for_item_child(parent, to_i);
                change_from.push_back(from);
                change_to.push_back(to);
             }
@@ -378,52 +473,42 @@ void ObjectWindowTreeItem::sort() {
       }
       std::swap(list, sorted);
    }
-   void ObjectWindowTreeModel::_sortDescendantsOf(item_type* item) {
+   void ObjectWindowTreeModel::_sortDescendantsOf(item_type& item) {
       this->_sortChildrenOf(item);
-      for (auto* child : item->children)
-         this->_sortDescendantsOf(child);
+      for (auto* child : item.children)
+         this->_sortDescendantsOf(*child);
    }
 
    #pragma region QAbstractItemModel overrides
       QModelIndex ObjectWindowTreeModel::index(int row, int column, const QModelIndex& parent) const {
-         if (!this->hasIndex(row, column, parent))
-            return QModelIndex();
-         item_type* parentItem;
-         if (!parent.isValid())
-            parentItem = this->_nodes.root;
-         else
-            parentItem = static_cast<item_type*>(parent.internalPointer());
-         item_type* childItem = parentItem->child(row);
-         if (childItem)
-            return this->createIndex(row, column, childItem);
-         return QModelIndex();
+         if (column != 0)
+            return {};
+         auto* parent_item = _item_from_qmi(parent);
+         if (!parent_item)
+            return {};
+         if (row >= 0 && row < parent_item->children.size())
+            return _qmi_for_item_child(*parent_item, row, column);
+         return {};
       }
       QModelIndex ObjectWindowTreeModel::parent(const QModelIndex& index) const {
-         if (auto* child = _itemFromIndex(index)) {
-            if (auto* parent = child->parent) {
-               if (parent != this->_nodes.root) {
-                  assert(parent->parent);
-                  auto i = parent->parent->indexOf(parent);
-                  return this->createIndex(i, 0, parent);
-               }
-            }
-         }
-         return QModelIndex();
+         auto* parent_item = _item_parent_from_qmi(index);
+         if (!parent_item)
+            return {};
+         return _qmi_for_item(*parent_item);
       }
       int ObjectWindowTreeModel::rowCount(const QModelIndex& parent) const {
-         auto* item = _itemFromIndex(parent);
-         if (!item)
-            item = this->_nodes.root;
-         return item->children.size();
+         if (auto* item = _item_from_qmi(parent))
+            return item->children.size();
+         return 0;
       }
       int ObjectWindowTreeModel::columnCount(const QModelIndex& item) const {
          return 1;
       }
       Qt::ItemFlags ObjectWindowTreeModel::flags(const QModelIndex& index) const {
-         if (!index.isValid())
-            return Qt::NoItemFlags;
-         auto* item = _itemFromIndex(index);
-         if (item && item != this->_nodes.all) {
+         auto* item = _item_from_qmi(index);
+         if (!item)
+            return Qt::ItemFlag::ItemIsEnabled;
+         if (item != this->_nodes.all) {
             //
             // Disable the treeview items for SSE forms, when in LE mode.
             //
@@ -440,30 +525,35 @@ void ObjectWindowTreeItem::sort() {
          return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
       }
       QVariant ObjectWindowTreeModel::data(const QModelIndex& index, int role) const {
-         if (!index.isValid() || index.column() != 0)
-            return QVariant();
-         auto* item = static_cast<item_type*>(index.internalPointer());
+         if (index.column() != 0)
+            return {};
+         auto* item = _item_from_qmi(index);
+         if (!item)
+            return {};
          switch (role) {
             case Qt::DisplayRole:
                return item->name;
             case Qt::FontRole:
-               if (item->type == item_type::type_t::filter)
-                  return QVariant();
-               {
+               if (item->type != item_type::type_t::filter) {
                   QFont font;
                   font.setBold(true);
                   return font;
                }
+               break;
          }
-         return QVariant();
+         return {};
       }
       QVariant ObjectWindowTreeModel::headerData(int section, Qt::Orientation orientation, int role) const {
-         return QVariant();
+         if (orientation == Qt::Orientation::Horizontal && section == 0 && role == Qt::DisplayRole) {
+            return " ";
+         }
+         return {};
       }
    #pragma endregion
 
    QModelIndex ObjectWindowTreeModel::indexOfAllCategory() const noexcept {
-      return this->_indexOfItem(this->_nodes.all);
+      assert(!!this->_nodes.all);
+      return this->_qmi_for_item(*this->_nodes.all);
    }
    QVector<dovah::form_type> ObjectWindowTreeModel::formTypesFor(const QModelIndexList& qmil) const noexcept {
       QVector<dovah::form_type> out;
@@ -474,7 +564,7 @@ void ObjectWindowTreeItem::sort() {
    }
    ui::object_window::filter_info ObjectWindowTreeModel::getFilterInfoFor(const QModelIndexList& qmil) const noexcept {
       ui::object_window::filter_info out;
-      if (qmil.contains(this->_indexOfItem(this->_nodes.all))) {
+      if (qmil.contains(this->indexOfAllCategory())) {
          //
          // The "All" item is selected.
          //
@@ -484,7 +574,7 @@ void ObjectWindowTreeItem::sort() {
          return out;
       }
       for (const auto& qmi : qmil) {
-         auto* item = this->_itemFromIndex(qmi);
+         auto* item = this->_item_from_qmi(qmi);
          if (!item)
             continue;
          item->gatherFormTypes(out.form_types);
@@ -511,7 +601,8 @@ void ObjectWindowTreeItem::sort() {
    void ObjectWindowTreeModel::_buildQuestFilters() {
       auto* root = this->_nodes.quests;
       auto& list = root->children;
-      auto  qmi  = this->_indexOfItem(root);
+      assert(!!root);
+      auto  qmi  = this->_qmi_for_item(*root);
       if (!list.isEmpty()) {
          this->beginRemoveRows(qmi, 0, list.size() - 1);
          root->clear();
@@ -526,76 +617,10 @@ void ObjectWindowTreeItem::sort() {
       //
       auto* surrogate_parent = new item_type;
 
-      auto _pathlike_string_to_nodes = [root, surrogate_parent](QString path) {
-         constexpr const bool include_trailing = false;
-
-         if (path.isEmpty())
-            return;
-
-         QString fragment;
-         auto*   node = root;
-
-         for (auto c : path) {
-            if (c != '/' && c != '\\') {
-               fragment += c;
-               continue;
-            }
-            //
-            // Handle path separators.
-            //
-            if (fragment.isEmpty()) { // Treat "Foo//Bar" the same as "Foo/Bar"
-               continue;
-            }
-            auto* parent = (node == root) ? surrogate_parent : node;
-            int   index  = parent->indexOf(fragment);
-            if (index < 0) {
-               //
-               // This fragment doesn't exist, so create it.
-               //
-               auto* child = &item_type::make_filter(fragment);
-               if (node == root) {
-                  child->full_filter = fragment;
-               } else {
-                  child->full_filter = node->full_filter + '/' + fragment;
-               }
-               parent->appendChild(*child);
-               node = child;
-            } else {
-               //
-               // The fragment already exists. Let's just bump up its refcount.
-               //
-               node = parent->child(index);
-            }
-            ++node->refcount;
-            fragment.clear();
-         }
-         if (include_trailing && !fragment.isEmpty()) {
-            auto* parent = (node == root) ? surrogate_parent : node;
-            int   index  = parent->indexOf(fragment);
-            if (index < 0) {
-               //
-               // This fragment doesn't exist, so create it.
-               //
-               auto* child = &item_type::make_filter(fragment);
-               if (node == root) {
-                  child->full_filter = fragment;
-               } else {
-                  child->full_filter = node->full_filter + '/' + fragment;
-               }
-               parent->appendChild(*child);
-               node = child;
-            } else {
-               //
-               // The fragment already exists. Let's just bump up its refcount.
-               //
-               node = parent->child(index);
-            }
-            ++node->refcount;
-         }
-      };
-      //
       auto& fic = dovahkit::subsystems::form_info_cache::core::get();
-      fic.for_all_quest_filters(_pathlike_string_to_nodes);
+      fic.for_all_quest_filters([root, surrogate_parent](QString path) {
+         _pathlike_string_to_nodes(*root, *surrogate_parent, path);
+      });
 
       if (!surrogate_parent->children.isEmpty()) {
          this->beginInsertRows(qmi, 0, surrogate_parent->children.size() - 1);
@@ -608,74 +633,6 @@ void ObjectWindowTreeItem::sort() {
       }
    }
    void ObjectWindowTreeModel::_buildAllModelPathFilters() {
-      auto _pathlike_string_to_nodes = [](item_type* root, item_type* surrogate_parent, QString path) {
-         constexpr const bool include_trailing = false;
-
-         if (path.isEmpty())
-            return;
-
-         QString fragment;
-         auto*   node = root;
-
-         for (auto c : path) {
-            if (c != '/' && c != '\\') {
-               fragment += c;
-               continue;
-            }
-            //
-            // Handle path separators.
-            //
-            if (fragment.isEmpty()) { // Treat "Foo//Bar" the same as "Foo/Bar"
-               continue;
-            }
-            auto* parent = (node == root) ? surrogate_parent : node;
-            int   index  = parent->indexOf(fragment);
-            if (index < 0) {
-               //
-               // This fragment doesn't exist, so create it.
-               //
-               auto* child = &item_type::make_filter(fragment);
-               if (node == root) {
-                  child->full_filter = fragment;
-               } else {
-                  child->full_filter = node->full_filter + '/' + fragment;
-               }
-               parent->appendChild(*child);
-               node = child;
-            } else {
-               //
-               // The fragment already exists. Let's just bump up its refcount.
-               //
-               node = parent->child(index);
-            }
-            ++node->refcount;
-            fragment.clear();
-         }
-         if (include_trailing && !fragment.isEmpty()) {
-            auto* parent = (node == root) ? surrogate_parent : node;
-            int   index  = parent->indexOf(fragment);
-            if (index < 0) {
-               //
-               // This fragment doesn't exist, so create it.
-               //
-               auto* child = &item_type::make_filter(fragment);
-               if (node == root) {
-                  child->full_filter = fragment;
-               } else {
-                  child->full_filter = node->full_filter + '/' + fragment;
-               }
-               parent->appendChild(*child);
-               node = child;
-            } else {
-               //
-               // The fragment already exists. Let's just bump up its refcount.
-               //
-               node = parent->child(index);
-            }
-            ++node->refcount;
-         }
-      };
-
       constexpr const auto& form_types_of_interest = dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_types_of_interest;
 
       constexpr const size_t form_type_count = form_types_of_interest.size();
@@ -689,7 +646,7 @@ void ObjectWindowTreeItem::sort() {
          ptr = new item_type;
 
       auto& fic = dovahkit::subsystems::form_info_cache::core::get();
-      fic.for_all_form_model_paths([&roots, &surrogate_parents, &_pathlike_string_to_nodes](const dovah::form_stub& stub, QString path) {
+      fic.for_all_form_model_paths([&roots, &surrogate_parents](const dovah::form_stub& stub, QString path) {
          size_t i = 0;
          for (; i < form_types_of_interest.size(); ++i)
             if (stub.form_type == form_types_of_interest[i])
@@ -697,15 +654,16 @@ void ObjectWindowTreeItem::sort() {
          if (i >= form_types_of_interest.size())
             return;
 
-         _pathlike_string_to_nodes(roots[i], surrogate_parents[i], path);
+         _pathlike_string_to_nodes(*roots[i], *surrogate_parents[i], path);
       });
 
       for (size_t i = 0; i < form_type_count; ++i) {
          auto* root      = roots[i];
          auto* surrogate = surrogate_parents[i];
+         assert(!!root);
 
          auto& dst = root->children;
-         auto  qmi = this->_indexOfItem(root);
+         auto  qmi = this->_qmi_for_item(*root);
          {
             if (!dst.isEmpty()) {
                this->beginRemoveRows(qmi, 0, dst.size() - 1);
@@ -725,7 +683,9 @@ void ObjectWindowTreeItem::sort() {
       }
    }
    void ObjectWindowTreeModel::_clearFilters(item_type* root) {
-      auto qmi = this->_indexOfItem(root);
+      if (!root)
+         return;
+      auto qmi = this->_qmi_for_item(*root);
       if (qmi.isValid())
          this->_removeRows(0, this->rowCount(qmi), qmi);
    }
@@ -768,8 +728,9 @@ void ObjectWindowTreeItem::sort() {
          // Destroy the outermost node whose refcount dropped to zero.
          //
          auto* parent = node->parent;
+         assert(!!parent);
          auto  index  = parent->indexOf(node);
-         this->_removeRows(index, 1, this->_indexOfItem(parent));
+         this->_removeRows(index, 1, this->_qmi_for_item(*parent));
       }
    }
    void ObjectWindowTreeModel::_addFilter(item_type* root, const QString& filter, bool include_trailing) {
@@ -786,7 +747,7 @@ void ObjectWindowTreeItem::sort() {
                added_to.push_back(node);
                //
                auto  size = node->children.size();
-               this->beginInsertRows(this->_indexOfItem(node), size, size);
+               this->beginInsertRows(this->_qmi_for_item(*node), size, size);
                auto* child = &item_type::make_filter(fragment);
                if (node == root) {
                   child->full_filter = fragment;
@@ -814,7 +775,7 @@ void ObjectWindowTreeItem::sort() {
             // This fragment doesn't exist, so create it.
             //
             auto  size = node->children.size();
-            this->beginInsertRows(this->_indexOfItem(node), size, size);
+            this->beginInsertRows(this->_qmi_for_item(*node), size, size);
             auto* child = &item_type::make_filter(fragment);
             if (node == root) {
                child->full_filter = fragment;
@@ -834,9 +795,9 @@ void ObjectWindowTreeItem::sort() {
          ++node->refcount;
       }
       for (auto* node : added_to) {
-         emit this->layoutAboutToBeChanged({ this->_indexOfItem(node) }, LayoutChangeHint::VerticalSortHint);
-         this->_sortChildrenOf(node);
-         emit this->layoutChanged({ this->_indexOfItem(node) }, LayoutChangeHint::VerticalSortHint);
+         emit this->layoutAboutToBeChanged({ this->_qmi_for_item(*node) }, LayoutChangeHint::VerticalSortHint);
+         this->_sortChildrenOf(*node);
+         emit this->layoutChanged({ this->_qmi_for_item(*node) }, LayoutChangeHint::VerticalSortHint);
       }
    }
    void ObjectWindowTreeModel::_onGameMaybeChanged() {
@@ -864,7 +825,7 @@ void ObjectWindowTreeItem::sort() {
 
       for (const auto ft : sse_form_types) {
          if (auto* item = _findFormTypeItem(ft)) {
-            auto qmi = _indexOfItem(item);
+            auto qmi = _qmi_for_item(*item);
             emit dataChanged(qmi, qmi);
          }
       }
@@ -875,11 +836,10 @@ void ObjectWindowTreeItem::sort() {
 ObjectWindowTree::ObjectWindowTree(QWidget* parent) : QLinedTreeView(parent) {
    auto* model = new model_type(this);
    this->setModel(model);
-   //
+
    if (auto* sel = this->selectionModel()) {
       sel->select(model->indexOfAllCategory(), QItemSelectionModel::ClearAndSelect);
    }
-   this->expandAll();
 }
 QVector<dovah::form_type> ObjectWindowTree::allPrimaryFormTypes() const noexcept {
    auto* model = (model_type*) this->model();
