@@ -26,8 +26,8 @@ namespace dovah::loaded_forms {
             ammo_flag() = delete;
             enum type : uint32_t {
                ignores_normal_weapon_resist = 0x01,
-               non_playable  = 0x02,
-               crossbow_bolt = 0x04,
+               non_playable      = 0x02,
+               non_crossbow_bolt = 0x04,
             };
          };
 

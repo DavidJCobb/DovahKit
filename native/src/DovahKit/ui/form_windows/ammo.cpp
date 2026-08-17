@@ -43,7 +43,7 @@ void FormDialogAmmo::_load_impl() {
    ui::bind(this->ui.weight, working.weight);
    ui::bind(this->ui.flagIgnoreDamageResist, working.ammo_flags, loaded_form_type::ammo_flag::ignores_normal_weapon_resist);
    ui::bind_inverse(this->ui.flagPlayable, working.ammo_flags, loaded_form_type::ammo_flag::non_playable); // There's a "non-playable" record flag, but Bethesda doesn't seem to use it.
-   ui::bind(this->ui.flagCrossbowBolt, working.ammo_flags, loaded_form_type::ammo_flag::crossbow_bolt);
+   ui::bind_inverse(this->ui.flagCrossbowBolt, working.ammo_flags, loaded_form_type::ammo_flag::non_crossbow_bolt);
    this->ui.keywords->pullStubs(working.keywords.forms);
    this->ui.model->initializeFrom(working.model);
    this->ui.destructionData->initializeFrom(working.destruction_data);
