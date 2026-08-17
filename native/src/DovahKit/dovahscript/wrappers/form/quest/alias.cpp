@@ -123,24 +123,35 @@ namespace {
             if (alias == nullptr)
                cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
             //
-            int  isnum;
-            auto id = lua_tointegerx(L, 2, &isnum);
-            cobb::lua::argcheck(L, isnum,       2, "id (integer) expected");
-            cobb::lua::argcheck(L, id >= 0,     2, "alias IDs cannot be negative");
-            cobb::lua::argcheck(L, id < 0xFFFF, 2, "alias IDs cannot exceed 65534 without causing file format issues");
+            int isnum;
+            const auto id_after = lua_tointegerx(L, 2, &isnum);
+            cobb::lua::argcheck(L, isnum,             2, "id (integer) expected");
+            cobb::lua::argcheck(L, id_after >= 0,     2, "alias IDs cannot be negative");
+            cobb::lua::argcheck(L, id_after < 0xFFFF, 2, "alias IDs cannot exceed 65534 without causing file format issues");
             //
-            if (id == alias->id)
+            const auto id_prior = alias->id;
+            if (id_after == id_prior)
                return 0;
             auto* quest    = self.get_loaded_form_data<dovah::loaded_forms::Quest>();
-            auto* conflict = quest->lookup_alias_by_id(id);
+            auto* conflict = quest->lookup_alias_by_id(id_after);
             if (conflict)
                cobb::lua::error(L, "alias ID %d is already in use by another alias on this quest", id);
             //
             self.before_edit();
-            alias->id = id;
-            if (quest->next_alias_id <= id)
-               quest->next_alias_id = id + 1;
+            alias->id = id_after;
+            if (quest->next_alias_id <= id_after)
+               quest->next_alias_id = id_after + 1;
             self.after_edit();
+            {
+               auto collection = self;
+               assert(!collection.is_collection);
+               collection.is_collection = true;
+
+               auto& part = collection.last_part();
+               part.signature     = wrapper_part_types::quest_alias_by_id;
+               part.noncontiguous = true;
+               core::subsystems::userdata::get().renumber_within_non_sequential_collection(collection, id_prior, id_after);
+            }
             //
             return 0;
          }
@@ -193,6 +204,16 @@ namespace dovahscript::wrappers {
       return nullptr;
    }
 
+   /*static*/ const char* cls::metatable_key_for(const wrapped_type& alias) {
+      switch (alias.type) {
+         case wrapped_type::alias_type::location:
+            return wrappers::quest_loc_alias::metatable_key;
+         case wrapped_type::alias_type::reference:
+            return wrappers::quest_ref_alias::metatable_key;
+      }
+      return wrappers::quest_alias::metatable_key;
+   }
+
    /*static*/ int cls::wrap(lua_State* L, dovah::form_stub* quest, uint32_t aliasID) {
       if (!quest)
          return 0;
@@ -218,16 +239,27 @@ namespace dovahscript::wrappers {
       out.into_collection(alias->id);
       out.last_part().noncontiguous = true;
       //
-      const auto* metatable_key = wrappers::quest_alias::metatable_key;
-      if (alias) {
-         switch (alias->type) {
-            case wrapped_type::alias_type::location:
-               metatable_key = wrappers::quest_loc_alias::metatable_key;
-               break;
-            case wrapped_type::alias_type::reference:
-               metatable_key = wrappers::quest_ref_alias::metatable_key;
-               break;
+      const auto* metatable_key = cls::metatable_key;
+      if (alias)
+         metatable_key = metatable_key_for(*alias);
+      return core::subsystems::userdata::get().push(L, out, metatable_key);
+   }
+   /*static*/ int cls::wrap_by_index(lua_State* L, const wrapper& collection, size_t index) {
+      wrapper out = collection;
+      assert(out.is_collection);
+      assert(out.parts[0].signature == wrapper_part_types::quest_alias);
+      out.into_collection(index);
+      out.last_part().noncontiguous = false;
+
+      const char* metatable_key = cls::metatable_key;
+      if (auto* loaded = out.get_loaded_form_data<dovah::loaded_forms::Quest>()) {
+         if (index >= loaded->aliases.size()) {
+            lua_pushnil(L);
+            return 1;
          }
+         auto* alias = loaded->aliases[index];
+         if (alias)
+            metatable_key = metatable_key_for(*alias);
       }
       return core::subsystems::userdata::get().push(L, out, metatable_key);
    }

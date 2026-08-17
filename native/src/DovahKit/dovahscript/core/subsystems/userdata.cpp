@@ -589,6 +589,65 @@ namespace dovahscript::core::subsystems {
       this->destroy(to_remove);
    }
 
+   void userdata::renumber_within_non_sequential_collection(wrapper& collection, /*zero-indexed:*/ size_t from, /*zero-indexed:*/ size_t to) {
+      require_script_thread();
+      assert(collection.depth && collection.is_collection && "This function must be given a collection wrapper.");
+      assert(collection.last_part().noncontiguous && "This function must be given a non-contiguous collection wrapper.");
+      auto* L     = _get_lua();
+      auto  start = lua_gettop(L);
+      void* light = collection.pertinent_pointer;
+
+      std::vector<int> refs_to_alter;
+      if (collection.lua_key != LUA_NOREF)
+         refs_to_alter.push_back(collection.lua_key);
+      
+      auto si_storage = start + 1;
+      auto si_nk      = start + 2;
+      auto si_nv      = start + 3;
+
+      lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+      lua_pushlightuserdata(L, light);
+      lua_rawget(L, si_storage);
+      assert(lua_istable(L, -1));
+      lua_copy  (L, -1, si_storage);
+      lua_settop(L, si_storage); // STACK: - [ ..., storage_root[light] ] +
+      //
+      // Identify and track the keys of any child/descendant wrappers.
+      //
+      lua_pushnil(L); // nk
+      while (lua_next(L, si_storage) != 0) {
+         wrapper* other = nullptr;
+         if (lua_type(L, si_nv) == LUA_TUSERDATA)
+            other = (wrapper*)lua_touserdata(L, si_nv);
+         //
+         lua_settop(L, si_nk);
+         //
+         if (!other || other->lua_key == collection.lua_key)
+            continue;
+         if (other->is_descendant_of(collection)) {
+            refs_to_alter.push_back(other->lua_key);
+         }
+      }
+      //
+      // Make the alterations.
+      //
+      auto depth = collection.depth;
+      lua_settop(L, si_storage);
+      for (auto key : refs_to_alter) {
+         lua_rawgeti(L, si_storage, key);
+
+         auto* target = (wrapper*)lua_touserdata(L, -1);
+         lua_pop(L, 1);
+         assert(target && target->lua_key == key);
+         if constexpr (debug_log_wrapper_events) {
+            qDebug("Adjusting wrapper: %p, pertinent pointer %p (%s)", target, target->pertinent_pointer, _wrapper_type_to_string(target->type));
+         }
+         auto& member = target->parts[depth];
+         assert(member.index == from);
+         member.index = to;
+      }
+   }
+
    void userdata::clear_entire_collection(wrapper& w) {
       require_script_thread();
       assert(w.depth && w.is_collection && "This function must be given a collection wrapper.");

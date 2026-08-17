@@ -139,6 +139,8 @@ namespace dovahscript {
    }
 
    bool wrapper::is_descendant_of(const wrapper& other) const noexcept {
+      if (this->pertinent_pointer != other.pertinent_pointer)
+         return false;
       if (this->depth < other.depth)
          return false;
       if (this->depth == other.depth) {
@@ -147,13 +149,23 @@ namespace dovahscript {
          if (this->is_collection)
             return false;
       }
-      if (this->type == wrapper_type::form) {
-         if (this->stub != other.stub)
-            return false;
+      if (other.depth > 0) {
+         for (uint8_t i = 0; i < other.depth - 1; ++i)
+            if (this->parts[i] != other.parts[i])
+               return false;
       }
-      for (uint8_t i = 0; i < other.depth; ++i)
-         if (this->parts[i] != other.parts[i])
+      {  // last part has to be compared differently due to how we distinguish between collections and elements.
+         auto& tp = this->parts[other.depth - 1];
+         auto& op = other.parts[other.depth - 1];
+         if (tp.signature != op.signature)
             return false;
+         if (tp.noncontiguous != op.noncontiguous)
+            return false;
+         if (!other.is_collection) {
+            if (tp.index != op.index)
+               return false;
+         }
+      }
       return true;
    }
    bool wrapper::is_equal(const wrapper* other) const noexcept {

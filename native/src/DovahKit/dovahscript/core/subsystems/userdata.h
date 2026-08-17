@@ -40,6 +40,8 @@ namespace dovahscript::core::subsystems {
          void insert_into_sequential_collection(wrapper& collection, /*zero-indexed:*/ size_t at);
          void remove_from_sequential_collection(wrapper& to_remove);
 
+         void renumber_within_non_sequential_collection(wrapper& collection, /*zero-indexed:*/ size_t from, /*zero-indexed:*/ size_t to);
+
          //
          // Zombifies the wrappers for all elements in a collection, and for all of their descendants, 
          // without zombifying the wrapper for the collection itself. You would want to call this from 

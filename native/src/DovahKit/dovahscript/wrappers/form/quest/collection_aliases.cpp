@@ -68,7 +68,7 @@ namespace {
       if (i > list.size() || i <= 0)
          return 0;
       --i;
-      return alias_wrapper_type::wrap(L, self, list[i]);
+      return alias_wrapper_type::wrap_by_index(L, self, i);
    }
    int get_all_item_names(lua_State* L) {
       auto& self = get_collection_wrapper(L);

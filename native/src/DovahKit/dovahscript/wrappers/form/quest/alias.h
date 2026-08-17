@@ -19,9 +19,12 @@ namespace dovahscript::wrappers {
       using wrapped_type = dovah::loaded_forms::Alias;
       static wrapped_type* unwrap(wrapper& w);
 
+      static const char* metatable_key_for(const wrapped_type&);
+
       static int wrap(lua_State* L, dovah::form_stub* quest, uint32_t aliasID);
       static int wrap(lua_State* L, dovah::form_stub* quest, const wrapped_type* alias);
       static int wrap(lua_State* L, const wrapper& collection, const wrapped_type* alias);
+      static int wrap_by_index(lua_State* L, const wrapper& collection, size_t zero_based_index);
    };
    
    struct quest_loc_alias;
