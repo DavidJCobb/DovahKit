@@ -23,6 +23,16 @@
 
 * If `DKFormPicker` has an unnamed exterior cell force-included, it displays the cell's form ID. It should ideally display the cell's grid coordinates and the editor ID of its parent worldspace. This is relevant for the `DKFormPicker` used to pick cells within the `DKObjectReferencePicker`: if you pick an exterior ref in the Render Window, then an exterior cell gets force-included into the cell picker.
 
+* `DKAudioWidget` should notify the audio subsystem when the sound plays/pauses/stops. The audio system, in turn, should use this to keep track of which windows are playing sound. When you use the main window's menu bar to list open windows, the ones playing sound should be marked with an icon.
+
+* `DKAudioWidget` currently uses a standard `QSlider` as its seek slider. This has two problems that can only be fixed with a custom widget:
+
+  * You can't click on the slider track to instantly jump to a position; you must drag the thumb.
+  
+  * The slider position doesn't update in real-time, but rather relies on polling, which leads to jumpy movement of the slider thumb if the audio track is short or the slider is long. A custom widget could query the sound's current position on repaint, hover, click, etc., rather than maintaining its own value as widget state.
+
+* It'd be nice if `DKAudioWidget` had graphical play/pause/stop buttons and a graphical seek slider. A long while back, I figured out how to recreate the old WMP10 icons and themes as SVG assets; porting that to `QPainter` draw commands shouldn't be too hard, though it may be time-consuming.
+
 ## Imagespace Modifier
 
 * Should we allow the user to unset properties on the first or last keyframe?
