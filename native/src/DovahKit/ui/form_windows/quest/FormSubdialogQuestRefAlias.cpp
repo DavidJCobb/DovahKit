@@ -1,4 +1,5 @@
 #include "./FormSubdialogQuestRefAlias.h"
+#include "dovah/data/all_base_form_types.h"
 #include "dovah/data/story_manager.h"
 #include "dovah/forms/components/papyrus/attached_script.h"
 #include "dovah/forms/Quest.h"
@@ -78,6 +79,8 @@ FormSubdialogQuestRefAlias::FormSubdialogQuestRefAlias(loaded_form_type& quest, 
    //
    this->ui.fillFromExtAliasQuest->setAllowedFormType(dovah::form_type::quest);
    //
+   this->ui.createBaseForm->setAllowedFormTypes(QList<dovah::form_type>{ dovah::all_base_form_types.begin(), dovah::all_base_form_types.end() });
+   //
    make_event_data_comboboxes(quest, *this->ui.findMatchingEventName, *this->ui.findMatchingEventData, false, true, false);
    make_reference_alias_combobox(quest, *this->ui.findMatchingNearAliasID);
    {
@@ -91,6 +94,8 @@ FormSubdialogQuestRefAlias::FormSubdialogQuestRefAlias(loaded_form_type& quest, 
       this->accept();
    });
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
+
+   this->ui.name->setFocus();
 
    this->load();
 }

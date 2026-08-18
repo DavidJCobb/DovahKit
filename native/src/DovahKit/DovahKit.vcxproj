@@ -89,7 +89,7 @@
     <QtInstall>6.11.1 MSVC2022 x64</QtInstall>
     <QtModules>core;gui;help;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
-    <QtDeploy>true</QtDeploy>
+    <QtDeploy>false</QtDeploy>
     <QtOptionsBuildLog>true</QtOptionsBuildLog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">

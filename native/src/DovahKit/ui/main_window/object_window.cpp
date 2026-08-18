@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/exceptions/form_renumber_failed.h"
+#include "dovah/forms/Quest.h"
 #include "dovah/utils/form_type_is_object_with_bounds.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
@@ -133,8 +134,26 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       } catch (const exception& ex) {
          _report_form_create_error(this, ex.code);
       }
-      if (created_form)
+      if (created_form) {
+         if (created_form->form_type == dovah::form_type::quest) {
+            //
+            // If we're currently viewing a Quest Filter, give the new quest that filter, so that it isn't 
+            // immediately filtered out of view.
+            //
+            auto filter = this->ui.tree->filterInfo().filters.quest_filter_prefix;
+            if (!filter.isEmpty()) {
+               auto loaded = created_form->load().ptr_cast<dovah::loaded_forms::Quest>();
+               if (loaded) {
+                  auto& editor = DovahKitCore::get();
+                  emit editor.formModificationImminent(created_form);
+                  loaded->filter = filter.toStdString();
+                  created_form->set_edited(true);
+                  emit editor.formModified(created_form);
+               }
+            }
+         }
          this->ui.table->select(created_form);
+      }
    });
    //
    this->_formActionEdit         = new QAction(tr("Edit...",           "object window form actions"), this->ui.table);

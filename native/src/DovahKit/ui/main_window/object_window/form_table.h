@@ -65,7 +65,9 @@ class FormTableModel final : public QAbstractTableModel {
       void formModificationImminent(const form_stub*);
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
       void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
-      //
+
+      void _emit_data_changed_on(const dovah::form_stub&);
+      
    public slots:
       void clear();
       //
@@ -96,13 +98,7 @@ class FormTableModel final : public QAbstractTableModel {
 class FormTableModelProxy : public QSortFilterProxyModel {
    Q_OBJECT
    public:
-      FormTableModelProxy(QObject* parent = nullptr) : QSortFilterProxyModel(parent) {
-         this->setFilterCaseSensitivity(Qt::CaseInsensitive);
-         this->setFilterRole(FormTableModel::FilterableTextRole);
-         this->setFilterKeyColumn(-1);
-         this->setSortCaseSensitivity(Qt::CaseInsensitive);
-         this->setSortRole(Qt::UserRole);
-      }
+      FormTableModelProxy(QObject* parent = nullptr);
 
       virtual void setSourceModel(QAbstractItemModel* sourceModel) override;
 

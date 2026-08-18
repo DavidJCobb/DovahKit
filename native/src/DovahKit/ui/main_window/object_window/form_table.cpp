@@ -10,6 +10,7 @@
 
 #include "dovah/data/story_manager.h"
 #include "editor/helpers/story_event_name.h"
+#include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/story_manager/core.h"
 
 //
@@ -100,6 +101,10 @@ bool FormTableModelItem::updateUserCount() {
 
 #pragma region FormTableModel
 FormTableModel::FormTableModel(QObject* parent) : QAbstractTableModel(parent) {
+   // Ensure that the FIC exists, and hooks `formModified`, before we do. That way, when we hook 
+   // `formModified`, any filters that depend on the FIC will be checking up-to-date data.
+   auto& fic = dovahkit::subsystems::form_info_cache::core::get_or_create();
+
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,      this, &FormTableModel::clear);
    QObject::connect(&editor, &DovahKitCore::formCreated,              this, &FormTableModel::formCreated);
@@ -146,7 +151,7 @@ void FormTableModel::formModified(const dovah::form_stub* stub) {
          item->update();
          auto root  = QModelIndex();
          auto start = this->index(i, 0, root);
-         auto end   = this->index(i, this->columnCount(root), root);
+         auto end   = this->index(i, this->columnCount(root) - 1, root);
          emit dataChanged(start, end);
          break;
       } else if (used.contains(item->stub)) {
@@ -157,13 +162,15 @@ void FormTableModel::formModified(const dovah::form_stub* stub) {
          if (item->updateUserCount()) {
             auto root  = QModelIndex();
             auto start = this->index(i, 0, root);
-            auto end   = this->index(i, this->columnCount(root), root);
+            auto end   = this->index(i, this->columnCount(root) - 1, root);
             emit dataChanged(start, end);
          }
       }
    }
    //
    this->doUseInfoUpdate();
+
+   this->_emit_data_changed_on(*stub);
 }
 void FormTableModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
    auto& list = this->children;
@@ -199,6 +206,25 @@ void FormTableModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_fo
    }
 }
 
+void FormTableModel::_emit_data_changed_on(const dovah::form_stub& stub) {
+   //
+   // We could be filtering forms by some characteristic that just changed 
+   // for this form. Poke the proxy model to re-check it.
+   //
+   auto&  list = this->children;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto& item = list[i];
+      if (item->stub == &stub) {
+         auto root  = QModelIndex{};
+         auto start = this->index(i, 0, root);
+         auto end   = this->index(i, this->columnCount(root) - 1, root);
+         emit dataChanged(start, end);
+         break;
+      }
+   }
+}
+
 QModelIndex FormTableModel::index(dovah::form_stub* stub) const {
    int size = this->children.size();
    for (int i = 0; i < size; ++i)
@@ -218,7 +244,7 @@ QModelIndex FormTableModel::parent(const QModelIndex& index) const {
    return QModelIndex();
 }
 int FormTableModel::rowCount(const QModelIndex& parent) const {
-   if (parent.column() > 0)
+   if (parent.isValid())
       return 0;
    return this->children.size();
 }
@@ -228,7 +254,7 @@ int FormTableModel::columnCount(const QModelIndex& item) const {
 Qt::ItemFlags FormTableModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
       return Qt::NoItemFlags;
-   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsDragEnabled;
+   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsDragEnabled | Qt::ItemFlag::ItemNeverHasChildren;
 }
 QVariant FormTableModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
@@ -447,6 +473,16 @@ const FormTableModel::item_type* FormTableModel::dataAtRow(int row) const noexce
 #pragma endregion
 
 #pragma region FormTableModelProxy
+FormTableModelProxy::FormTableModelProxy(QObject* parent) : QSortFilterProxyModel(parent) {
+   this->setFilterCaseSensitivity(Qt::CaseInsensitive);
+   this->setFilterRole(FormTableModel::FilterableTextRole);
+   this->setFilterKeyColumn(-1);
+   this->setSortCaseSensitivity(Qt::CaseInsensitive);
+   this->setSortRole(Qt::UserRole);
+
+   this->setRecursiveFilteringEnabled(false);
+}
+
 void FormTableModelProxy::setSourceModel(QAbstractItemModel* source_model) {
    if (source_model && !qobject_cast<FormTableModel*>(source_model))
       source_model = nullptr;
