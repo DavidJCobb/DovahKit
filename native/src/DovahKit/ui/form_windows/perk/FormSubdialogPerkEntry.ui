@@ -35,10 +35,10 @@
      <item row="0" column="4">
       <widget class="QSpinBox" name="priority">
        <property name="whatsThis">
-        <string>If multiple Perk Entries (across all of an actor's Perks) conflict, the one with the highest priority wins.</string>
+        <string>When multiple perk entries affect the same values, the entries are sorted according to their priority settings. Entries with a higher priority are computed before entries with a lower priority.</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="maximum">
         <number>255</number>
@@ -58,7 +58,7 @@
      <item row="0" column="5">
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -84,7 +84,7 @@
         <string>This Perk Entry will only take effect for actors who have the Perk at at least this rank.</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="maximum">
         <number>255</number>
@@ -94,10 +94,10 @@
      <item row="0" column="2">
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
+        <enum>QSizePolicy::Policy::Fixed</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -149,7 +149,7 @@
       <item row="0" column="0">
        <widget class="QStackedWidget" name="optionsStack">
         <property name="currentIndex">
-         <number>2</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="optionsQuest">
          <layout class="QGridLayout" name="gridLayout_3">
@@ -158,6 +158,9 @@
             <property name="text">
              <string>Quest to Start:</string>
             </property>
+            <property name="buddy">
+             <cstring>questForm</cstring>
+            </property>
            </widget>
           </item>
           <item row="1" column="0">
@@ -165,12 +168,15 @@
             <property name="text">
              <string>Quest Stage:</string>
             </property>
+            <property name="buddy">
+             <cstring>questStage</cstring>
+            </property>
            </widget>
           </item>
           <item row="2" column="0">
            <spacer name="verticalSpacer">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Orientation::Vertical</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -183,10 +189,10 @@
           <item row="0" column="1">
            <widget class="DKFormPicker" name="questForm"/>
           </item>
-          <item row="1" column="1" alignment="Qt::AlignLeft">
+          <item row="1" column="1" alignment="Qt::AlignmentFlag::AlignLeft">
            <widget class="QSpinBox" name="questStage">
             <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
             </property>
             <property name="maximum">
              <number>65535</number>
@@ -202,12 +208,15 @@
             <property name="text">
              <string>Spell to Add:</string>
             </property>
+            <property name="buddy">
+             <cstring>abilityForm</cstring>
+            </property>
            </widget>
           </item>
           <item row="2" column="0">
            <spacer name="verticalSpacer_2">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Orientation::Vertical</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -235,15 +244,25 @@
         <widget class="QWidget" name="optionsEntryPoint">
          <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,0,0,1,0" columnstretch="0,0,0,0">
           <item row="0" column="1">
-           <widget class="QComboBox" name="entryPointType"/>
+           <widget class="QComboBox" name="entryPointType">
+            <property name="whatsThis">
+             <string>&lt;p&gt;An &quot;entry point&quot; is a specific category of situations in which the game engine will stop to check the perk entries on some relevant actor, using those perk entries to adjust functionality that is otherwise hardcoded. For example, damage calculations during combat have multiple entry points that can be used to influence damage dealt by an attacker or damage taken by a target.&lt;/p&gt;
+&lt;p&gt;The game engine offers a wide variety of entry points. The ways you can adjust the game's functionality will vary between entry points. The vast majority of entry points compute a single number which is fed into some part of the hardcoded game engine. A small number of entry points will instead choose a form (e.g. a spell to apply to someone, or an item to spawn in someone's inventory), and an even smaller number of entry points make other bespoke adjustments.&lt;/p&gt;</string>
+            </property>
+           </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QComboBox" name="entryPointFunction"/>
+           <widget class="QComboBox" name="entryPointFunction">
+            <property name="whatsThis">
+             <string>&lt;p&gt;This controls the kind of adjustment to apply at the selected entry point. The adjustments available will vary depending on what exactly the game engine is asking for at a particular entry point.&lt;/p&gt;
+&lt;p&gt;Most entry points ask for numbers: the game will set some initial value, and then all applicable perk entries can alter that value by adding to it, multiplying it by something, or just overwriting it entirely. Some entry points ask for a form or other bespoke options; typically, you only get one &quot;function&quot; for those entry points, though that function may let you supply multiple different inputs.&lt;/p&gt;</string>
+            </property>
+           </widget>
           </item>
           <item row="2" column="0" colspan="2">
            <widget class="Line" name="line">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -286,7 +305,7 @@
               <item row="1" column="0">
                <spacer name="verticalSpacer_4">
                 <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+                 <enum>Qt::Orientation::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -315,7 +334,7 @@
               <item row="3" column="0" colspan="2">
                <spacer name="verticalSpacer_3">
                 <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+                 <enum>Qt::Orientation::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -332,19 +351,22 @@
                   <property name="text">
                    <string>Value:</string>
                   </property>
+                  <property name="buddy">
+                   <cstring>entryPointParamsOneFloat_Value</cstring>
+                  </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QDoubleSpinBox" name="entryPointParamsOneFloat_Value">
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <spacer name="horizontalSpacer_5">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -384,7 +406,7 @@
                 <item>
                  <widget class="QDoubleSpinBox" name="entryPointParamsTwoFloats_ValueA">
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -398,7 +420,7 @@
                 <item>
                  <widget class="QDoubleSpinBox" name="entryPointParamsTwoFloats_ValueB">
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -412,7 +434,7 @@
                 <item>
                  <spacer name="horizontalSpacer_6">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -427,7 +449,7 @@
               <item>
                <spacer name="verticalSpacer_5">
                 <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+                 <enum>Qt::Orientation::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -475,7 +497,7 @@
                 <item>
                  <widget class="QDoubleSpinBox" name="entryPointParamsOneAVOneFloat_Float">
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -489,7 +511,7 @@
                 <item>
                  <spacer name="horizontalSpacer_7">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -504,7 +526,7 @@
               <item>
                <spacer name="verticalSpacer_6">
                 <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+                 <enum>Qt::Orientation::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -550,7 +572,7 @@
               <item>
                <spacer name="verticalSpacer_7">
                 <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+                 <enum>Qt::Orientation::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -626,7 +648,7 @@
                   <item>
                    <spacer name="horizontalSpacer_8">
                     <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
+                     <enum>Qt::Orientation::Horizontal</enum>
                     </property>
                     <property name="sizeHint" stdset="0">
                      <size>
@@ -643,7 +665,7 @@
               <item>
                <spacer name="verticalSpacer_8">
                 <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+                 <enum>Qt::Orientation::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -689,7 +711,7 @@
               <item>
                <spacer name="verticalSpacer_9">
                 <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+                 <enum>Qt::Orientation::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -735,7 +757,7 @@
               <item>
                <spacer name="verticalSpacer_10">
                 <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+                 <enum>Qt::Orientation::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -790,10 +812,10 @@
           <item row="0" column="2" rowspan="5">
            <spacer name="horizontalSpacer_9">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
             <property name="sizeType">
-             <enum>QSizePolicy::Fixed</enum>
+             <enum>QSizePolicy::Policy::Fixed</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -815,7 +837,7 @@
      <item>
       <spacer name="horizontalSpacer_3">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -842,7 +864,7 @@
      <item>
       <spacer name="horizontalSpacer_4">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -887,11 +909,12 @@
   <tabstop>entryPointParamsActivateChoice_Fragment</tabstop>
   <tabstop>entryPointParamsRawString_Text</tabstop>
   <tabstop>entryPointParamsLocalizedString_Text</tabstop>
-  <tabstop>buttonOK</tabstop>
-  <tabstop>buttonCancel</tabstop>
   <tabstop>questForm</tabstop>
   <tabstop>questStage</tabstop>
   <tabstop>abilityForm</tabstop>
+  <tabstop>entryPointConditionsTabbox</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
  </tabstops>
  <resources/>
  <connections/>

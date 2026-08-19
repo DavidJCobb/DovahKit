@@ -60,6 +60,11 @@ FormSubdialogPerkEntry::FormSubdialogPerkEntry(dovah::loaded_forms::Perk& perk, 
    QObject::connect(this->ui.entryPointFunction, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
       this->_update_entry_point_arguments((dovah::entry_point_function)this->ui.entryPointFunction->currentData().toInt());
    });
+
+   ui::set_range<float>(this->ui.entryPointParamsOneFloat_Value);
+   ui::set_range<float>(this->ui.entryPointParamsTwoFloats_ValueA);
+   ui::set_range<float>(this->ui.entryPointParamsTwoFloats_ValueB);
+   ui::set_range<float>(this->ui.entryPointParamsOneAVOneFloat_Float);
    
    //
    // Now that the event handlers are in place, set up the entry point combobox. This'll trigger signals that 

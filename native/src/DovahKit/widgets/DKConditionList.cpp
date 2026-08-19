@@ -214,6 +214,7 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
    }
 
    void DKConditionList::overrideOwningForm(dovah::loaded_forms::Form& form) {
+      this->_owning_stub = &form.stub;
       this->_model->overrideOwningForm(form);
    }
 
