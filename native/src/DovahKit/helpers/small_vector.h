@@ -58,12 +58,12 @@ namespace cobb {
             constexpr _contiguous_iterator(list_type& o) {
                if (o.empty())
                   return;
-               target = &o[0];
+               target = o.data();
             }
             constexpr _contiguous_iterator(list_type& o, size_t i) {
                if (o.empty())
                   return;
-               target = &o[i];
+               target = o.data() + i;
             }
             constexpr _contiguous_iterator(_contiguous_iterator& o) : target(o.target) {}
 

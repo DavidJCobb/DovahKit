@@ -4,7 +4,7 @@
 #include "dovah/forms/components/conditions.h"
 
 namespace dovah::loaded_forms::components::conditions {
-   struct working_condition;
+   class working_condition;
 }
 
 namespace editor_helpers {

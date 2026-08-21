@@ -21,6 +21,7 @@
 #include "dovah/form_stub_addenda.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/helpers/stringify_conditions.h"
+#include "editor/helpers/condition_to_string/boolean_link.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "editor/core.h"
 
@@ -41,7 +42,7 @@
             return -1;
          float operand = std::get<float>(cmp.operand);
          switch (cmp.op) {
-            using enum dovah::loaded_forms::components::comparison_operator;
+            using enum dovah::loaded_forms::components::conditions::comparison_operator;
             case equal:
                return operand != 1;
             case not_equal:

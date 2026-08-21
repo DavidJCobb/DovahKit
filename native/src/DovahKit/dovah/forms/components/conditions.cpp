@@ -114,7 +114,7 @@ namespace dovah::loaded_forms::components {
             {
                uint8_t type; // flags | (operator << 5)
                subrecord.unchecked_read(type);
-               this->comparison.op = (comparison_operator)((type >> 5) & 7);
+               this->comparison.op = (conditions::comparison_operator)((type >> 5) & 7);
                this->flags = type & 0x1F;
             }
             subrecord.skip_bytes(3);
@@ -406,7 +406,7 @@ namespace dovah::loaded_forms::components {
          void condition::clear(loaded_forms::Form& my_owner) {
             this->flags = 0;
 
-            this->comparison.op = comparison_operator::equal;
+            this->comparison.op = conditions::comparison_operator::equal;
             if (auto* operand = std::get_if<form_reference_t>(&this->comparison.operand))
                operand->set(my_owner, nullptr);
             else

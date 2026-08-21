@@ -526,6 +526,8 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
       "can run the condition on any package data that is an ObjectReference.</p>"
    ));
    #pragma endregion
+
+   this->ui.function->setFocus();
 }
 
 void DKConditionEditDialog::forceUpdateParameters() {

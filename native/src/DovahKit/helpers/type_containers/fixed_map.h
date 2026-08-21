@@ -103,9 +103,20 @@ namespace cobb::type_containers {
             return n;
          }();
 
+         template<value_type Value>
+         static constexpr const size_t index_of_value = []() -> size_t {
+            for (size_t i = 0; i < values.size(); ++i)
+               if (values[i] == Value)
+                  return i;
+            return (size_t)-1;
+         }();
+
       public:
          template<typename Key> requires has_key<Key>
          static constexpr const value_type value_of = values[index_of_key<Key>];
+
+         template<auto Value> requires (index_of_value<Value> != (size_t)-1)
+         using key_of = std::tuple_element_t<index_of_value<Value>, std::tuple<Entries...>>::key_type;
 
          // Execute a functor templated on whatever type is mapped to the input value. Note that 
          // your functor must be valid for all types in the map (i.e. it must be able to compile 

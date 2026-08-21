@@ -1,20 +1,19 @@
 #include "./DKConditionListModel.h"
 #include <QColor>
 #include <QFont>
-#include "helpers/qt/strings.h"
+#include <QIODevice>
+#include <QMimeData>
 #include "dovah/data/conditions/all_function_info.h"
-#include "dovah/data/conditions/all_parameter_types.h"
-#include "dovah/data/conditions/event_function.h"
-#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/components/conditions.h"
-#include "editor/helpers/actor_value_index_to_name.h"
-#include "editor/helpers/form_type_name_to_string.h"
+#include "dovah/forms/Form.h"
 #include "editor/core.h"
-
-#include "dovah/forms/structs/typed_package_info/custom.h"
-#include "dovah/forms/Package.h"
-#include "dovah/forms/Quest.h"
-
+#include "editor/helpers/condition_to_string/boolean_link.h"
+#include "editor/helpers/condition_to_string/comparison_operand.h"
+#include "editor/helpers/condition_to_string/comparison_operator.h"
+#include "editor/helpers/condition_to_string/parameter_set.h"
+#include "editor/helpers/condition_to_string/run_on.h"
+#include "editor/helpers/condition_mime_data.h"
+#include "editor/helpers/stringify_conditions.h" // for plain-text copy/paste
 
 namespace {
    namespace special_case_functions {
@@ -32,33 +31,8 @@ namespace {
       constexpr const auto IsPlayerActionActive  = _lookup_function_id_by_name("IsPlayerActionActive");
       constexpr const auto IsSceneActionComplete = _lookup_function_id_by_name("IsSceneActionComplete");
    }
-   
-   QString _packdata_name(dovah::loaded_forms::Package* package, uint8_t unique_id) {
-      using modern_package_info = dovah::loaded_forms::structs::typed_package_info::custom;
-      if (!package)
-         return {};
 
-      auto* custom = dynamic_cast<modern_package_info*>(package->typed_info);
-      if (!custom)
-         return {};
-
-      if (auto* tp_stub = custom->template_package.get_form_stub(); tp_stub) {
-         auto loaded = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
-         if (!loaded)
-            return {};
-         auto* inherited = dynamic_cast<modern_package_info*>(loaded->typed_info);
-         if (!inherited)
-            return {};
-         for (auto& entry : inherited->data.declarations.entries)
-            if (entry.unique_id == unique_id)
-               return QString::fromStdString(entry.name);
-      } else {
-         for (auto& entry : custom->data.declarations.entries)
-            if (entry.unique_id == unique_id)
-               return QString::fromStdString(entry.name);
-      }
-      return {};
-   }
+   constexpr const char* const conditions_binary_mime_type = "application/dovah-kit.form-condition-array";
 }
 
 DKConditionListModel::DKConditionListModel(QObject* parent) : DKGenericListModel(parent) {
@@ -110,312 +84,34 @@ void DKConditionListModel::handleContextChange() {
    emit dataChanged(tl, br);
 }
 
-QString DKConditionListModel::_stringify_condition_parameter(const Condition& condition, size_t i) const {
-   auto* function_info = dovah::conditions::function_info_by_id(condition.function);
-   if (function_info == nullptr) {
-      return {};
-   }
-   if (function_info->uses_event_data) {
-      auto& params_opt = condition.event_parameters;
-      if (!params_opt.has_value())
-         return {};
-      auto& params = params_opt.value();
-
-      if (i == 0) {
-         switch (params.function) {
-            case dovah::conditions::event_function::GetIsID:
-               return "GetIsID";
-            case dovah::conditions::event_function::GetItemValue:
-               return "GetItemValue";
-            case dovah::conditions::event_function::GetValue:
-               return "GetValue";
-            case dovah::conditions::event_function::HasKeyword:
-               return "HasKeyword";
-            case dovah::conditions::event_function::IsInList:
-               return "IsInList";
-         }
-         return QObject::tr("<event function:%1>").arg(params.function);
-      } else if (i == 1) {
-         auto member = params.member;
-         if constexpr (std::endian::native == std::endian::little) { // this really should be done within the condition internals...
-            member = std::byteswap(member);
-            // Dovahscript also handles this, too, so if we ever do fix it, gotta fix it there too
-         }
-         if (auto* q = this->_context.get_owning_quest()) {
-            if (auto* e = dovah::story_event_definition::lookup(q->event))
-               if (auto* m = e->member_by_signature(member))
-                  return m->name;
-         }
-         return QObject::tr("<event member:%1>").arg(member, 4, 16, QChar('0'));
-      } else if (i == 2) {
-         if (!dovah::conditions::event_function_uses_form(params.function))
-            return {};
-         if (const auto* stub = params.form) {
-            if (!stub->is_none_stub()) {
-               auto tn = editor_helpers::form_type_name_to_string(stub->form_type);
-               auto id = stub->get_editor_id();
-               if (!tn.isEmpty())
-                  return QObject::tr("%1: '%2'", "condition argument (form)").arg(tn).arg(id);
-               return QObject::tr("Form: '%1'", "condition argument (form of strange type)").arg(id);
-            }
-         }
-         return QObject::tr("NONE", "condition argument (no form or none-stub)");
-      }
-      return {};
-   }
-
-   auto& parameter = condition.parameters[i];
-
-   #pragma region Special-case functions
-   if (condition.function == special_case_functions::IsSceneActionComplete) {
-      //
-      // TODO: First parameter is a Scene form; second parameter is the index of an action in that 
-      //       scene. When we can load Scenes, show a drop-down of the actions instead of a spinbox.
-      // 
-      // TODO: Should we handle GetStageDone's quest stage parameter the same way, and remove the 
-      //       "quest stage" type that's built into the condition internals?
-      //
-   }
-   if (auto* casted = std::get_if<int32_t>(&parameter)) {
-      auto value = *casted;
-      if (condition.function == special_case_functions::IsLimbGone) {
-         static constexpr const auto names = std::array{
-            "Torso",
-            "Head",
-            "Eye",
-            "Look At",
-            "Fly Grab",
-            "Saddle",
-         };
-         if (value < names.size()) {
-            return tr("%1 (%2)", "IsLimbGone special-case names").arg(value).arg(names[value]);
-         }
-      } else if (condition.function == special_case_functions::IsPlayerActionActive) {
-         static const auto names = std::array{
-            tr("Swing Melee Weapon",    "PLAYER_ACTION"),
-            tr("Cast Spell",            "PLAYER_ACTION"),
-            tr("Shooting Bow",          "PLAYER_ACTION"),
-            tr("Grabbing (Z-Key) Ref",  "PLAYER_ACTION"),
-            tr("Knocking Over Objects", "PLAYER_ACTION"),
-            tr("Standing on Furniture", "PLAYER_ACTION"),
-            tr("Zoomed-In Aim",         "PLAYER_ACTION"),
-            tr("Destroy Object",        "PLAYER_ACTION"),
-            tr("Locked Object",         "PLAYER_ACTION"),
-            tr("Pickpocket Crosshair",  "PLAYER_ACTION"),
-            tr("Cast Self Spell",       "PLAYER_ACTION"),
-            tr("Shout",                 "PLAYER_ACTION"),
-            tr("Actor Collision",       "PLAYER_ACTION"),
-         };
-         if (value < names.size()) {
-            return names[value];
-         }
-      }
-   }
-   #pragma endregion
-
-   const auto* argument_typeinfo = condition.get_argument_typeinfo(i);
-
-   if (argument_typeinfo == &dovah::conditions::parameter_types::ActorValue) {
-      if (auto* casted = std::get_if<int32_t>(&parameter)) {
-         QString out = editor_helpers::actor_value_index_to_name(*casted);
-         if (!out.isEmpty())
-            return out;
-      }
-      return tr("<MISMATCHED>", "condition argument with mismatched type");
-   }
-
-   if (auto* casted = std::get_if<float>(&parameter)) {
-      return QString::number(*casted);
-   } else if (auto* casted = std::get_if<int32_t>(&parameter)) {
-      if (argument_typeinfo && argument_typeinfo->enumeration_info.has_value()) {
-         //
-         // NOTE: If we want to localize enumeration members' names, we could do that HERE if we 
-         // check what enum we're working with (i.e. identity comparison on *argument_typeinfo).
-         //
-         const auto& info = argument_typeinfo->enumeration_info.value();
-         for (size_t i = 0; i < info.size; ++i) {
-            const auto& member = info.members[i];
-            if (*casted == member.value) {
-               const std::string_view& name = member.name;
-               return QString::fromLatin1(QByteArray(name.data(), name.size()));
-            }
-         }
-      }
-      return QString::number(*casted);
-   } else if (auto* casted = std::get_if<std::string>(&parameter)) {
-      return QString::fromUtf8(QByteArray::fromStdString(*casted));
-   } else if (auto* casted = std::get_if<char>(&parameter)) {
-      return QChar(*casted);
-   } else if (std::holds_alternative<dovah::form_stub*>(parameter)) {
-      auto* stub = std::get<dovah::form_stub*>(parameter);
-      if (stub && !stub->is_none_stub()) {
-         auto tn = editor_helpers::form_type_name_to_string(stub->form_type);
-         auto id = stub->get_editor_id();
-         if (!tn.isEmpty())
-            return QObject::tr("%1: '%2'", "condition argument (form)").arg(tn).arg(id);
-         return QObject::tr("Form: '%1'", "condition argument (form of strange type)").arg(id);
-      }
-      return QObject::tr("NONE", "condition argument (no form or none-stub)");
-   } else if (std::holds_alternative<uint32_t>(parameter)) {
-      auto dword = std::get<uint32_t>(parameter);
-      if (!function_info) {
-         return QString::number(dword);
-      }
-
-      auto underlying = condition.get_argument_underlying_type(i);
-      switch (underlying) {
-         using enum dovah::conditions::parameter_underlying_type;
-         case alias:
-            if (auto* quest = this->_context.get_owning_quest()) {
-               if (auto* alias = quest->lookup_alias_by_id(dword)) {
-                  return QString::fromUtf8(QByteArray::fromStdString(alias->name));
-               }
-               return QObject::tr("Alias ID #%1", "condition argument (alias ID with no identifiable owning quest)").arg(dword);
-            }
-            return {};
-
-         case package_data:
-            if (dword == -1)
-               return QObject::tr("NONE", "condition argument (no package data)");
-            if (auto* package = this->_context.get_owning_package()) {
-               using modern_package_info = dovah::loaded_forms::structs::typed_package_info::custom;
-
-               if (auto* custom = dynamic_cast<modern_package_info*>(package->typed_info)) {
-                  //
-                  // First, check if the package has a template. If so, redirect our checks to that 
-                  // template.
-                  //
-                  if (auto* tp_stub = custom->template_package.get_form_stub(); tp_stub) {
-                     auto loaded = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
-                     custom = nullptr;
-                     if (loaded) {
-                        custom = dynamic_cast<modern_package_info*>(loaded->typed_info);
-                     }
-                  }
-                  if (custom) {
-                     QString name;
-                     for (auto& entry : custom->data.declarations.entries)
-                        if (entry.unique_id == dword)
-                           return QString::fromStdString(entry.name);
-                  }
-               }
-            }
-            return QObject::tr("Package Data #%1", "condition argument (packge data with no identifiable owning quest)").arg(dword);
-
-         case int_unsigned:
-            return QString::number(dword);
-
-         case quest_stage:
-            return QString::number(dword);
-      }
-   }
-
-   return {};
-}
-
 QVariant DKConditionListModel::data_of(const node_type& node, Qt::ItemDataRole role, size_t column) const {
    const auto* function = dovah::conditions::function_info_by_id(node.function);
 
    switch (column) {
       case Column::Target:
          {
-            using run_on_type = ui::types::conditions::run_on_type;
-
-            const dovah::loaded_forms::Alias* run_on_alias     = nullptr;
-            const dovah::loaded_forms::Quest* run_on_quest     = nullptr;
-            const dovah::form_stub*           run_on_reference = nullptr;
-
-            uint32_t run_on_alias_id = -1;
-            QString  run_on_alias_name;
-
-            if (node.run_on.type == run_on_type::reference) {
-               if (std::holds_alternative<dovah::form_stub*>(node.run_on.entity))
-                  run_on_reference = std::get<dovah::form_stub*>(node.run_on.entity);
-            } else if (node.run_on.type == run_on_type::quest_alias) {
-               if (run_on_quest = this->_context.get_owning_quest()) {
-                  if (!std::holds_alternative<uint32_t>(node.run_on.entity))
-                     break;
-                  run_on_alias_id = std::get<uint32_t>(node.run_on.entity);
-                  run_on_alias    = run_on_quest->lookup_alias_by_id(run_on_alias_id);
-                  if (run_on_alias) {
-                     run_on_alias_name = QString::fromStdString(run_on_alias->name).trimmed();
-                  }
-               }
+            uint32_t          index = -1;
+            dovah::form_stub* stub  = nullptr;
+            if (std::holds_alternative<uint32_t>(node.run_on.entity)) {
+               index = std::get<uint32_t>(node.run_on.entity);
+            } else if (std::holds_alternative<dovah::form_stub*>(node.run_on.entity)) {
+               stub = std::get<dovah::form_stub*>(node.run_on.entity);
             }
 
-            if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
-               switch (node.run_on.type) {
-                  case run_on_type::combat_target:
-                     return tr("Combat Target", "run on");
-                  case run_on_type::event_data:
-                     if (run_on_quest) {
-                        if (std::holds_alternative<uint32_t>(node.run_on.entity)) {
-                           auto  code = run_on_quest->event;
-                           auto* def  = dovah::story_event_definition::lookup(code);
-                           if (def) {
-                              auto* member = def->member_by_wide_signature(std::get<uint32_t>(node.run_on.entity));
-                              if (member)
-                                 return tr("Event Data: %1", "run on").arg(member->name);
-                           }
-                        }
-                     }
-                     return tr("Event Data", "run on");
-                  case run_on_type::linked_ref:
-                     return tr("Linked Ref", "run on");
-                  case run_on_type::package_data:
-                     if (std::holds_alternative<uint32_t>(node.run_on.entity)) {
-                        auto unique_id = std::get<uint32_t>(node.run_on.entity);
-                        if (unique_id == 0xFF) {
-                           return tr("No Package Data", "run on");
-                        }
-                        auto name = _packdata_name(this->_context.loaded.package.unwrap(), unique_id);
-                        if (name.isEmpty())
-                           return tr("Package Data #%1", "run on").arg(unique_id);
-                        return name;
-                     }
-                     return tr("Package Data", "run on");
-                  case run_on_type::quest_alias:
-                     if (!run_on_alias_name.isEmpty())
-                        return run_on_alias_name;
-                     return tr("Alias ID #%1", "run on").arg(run_on_alias_id);
-                  case run_on_type::reference:
-                     if (run_on_reference) {
-                        if (run_on_reference->formID == dovah::hardcoded_form_ids::PlayerRef)
-                           return tr("Player", "run on form - player");
-                        return tr("[%1:%2]%3", "run on form")
-                           .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(run_on_reference->form_type).signature))
-                           .arg(run_on_reference->formID, 8, 16, QChar('0'))
-                           .arg(run_on_reference->get_editor_id());
-                     }
-                     return tr("No Reference", "run on");
-                  case run_on_type::subject:
-                     return tr("Subject", "run on");
-                  case run_on_type::target:
-                     return tr("Target", "run on");
-               }
-               break;
-            } else if (role == Qt::FontRole) {
-               QFont italics;
-               italics.setItalic(true);
+            auto text_and_type = editor_helpers::condition_to_string::run_on(
+               this->_context,
+               node.run_on.type,
+               index,
+               stub
+            );
 
-               switch (node.run_on.type) {
-                  case run_on_type::package_data:
-                     // TODO: revisit this when we actually know what package data indices *are*
-                     return italics;
-                  case run_on_type::quest_alias:
-                     if (!run_on_alias_name.isEmpty())
-                        return italics;
-                     break;
-                  case run_on_type::reference:
-                     if (!run_on_reference)
-                        break;
-                     [[fallthrough]];
-                  case run_on_type::event_data:
-                  case run_on_type::linked_ref:
-                  case run_on_type::combat_target:
-                  case run_on_type::subject:
-                  case run_on_type::target:
-                     return italics;
+            if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
+               return text_and_type.first;
+            } else if (role == Qt::FontRole) {
+               if (text_and_type.second) {
+                  QFont italics;
+                  italics.setItalic(true);
+                  return italics;
                }
             }
          }
@@ -435,77 +131,30 @@ QVariant DKConditionListModel::data_of(const node_type& node, Qt::ItemDataRole r
             case Qt::DisplayRole:
                [[fallthrough]];
             case Qt::ToolTipRole:
-               if (!function)
-                  break;
-               if (function->uses_event_data) {
-                  auto value_a = _stringify_condition_parameter(node, 0);
-                  auto value_b = _stringify_condition_parameter(node, 1);
-                  auto value_c = _stringify_condition_parameter(node, 2);
-                  if (value_c.isEmpty()) {
-                     return tr("%1(%2)").arg(value_a).arg(value_b);
-                  }
-                  return tr("%1(%2, %3)").arg(value_a).arg(value_b).arg(value_c);
-               }
-               if (function->argument_types[0] != &dovah::conditions::parameter_types::None) {
-                  auto value_a = _stringify_condition_parameter(node, 0);
-                  if (function->argument_types[1] && function->argument_types[1] != &dovah::conditions::parameter_types::None) {
-                     auto value_b = _stringify_condition_parameter(node, 1);
-                     return tr("%1, %2").arg(value_a).arg(value_b);
-                  }
-                  return value_a;
-               }
-               break;
+               return editor_helpers::condition_to_string::parameter_set(this->_context, node, true, true, {
+                  .form_type = editor_helpers::condition_to_string::options::form_type_format::name,
+               });
          }
          break;
       case Column::Operator:
          if (role == Qt::DisplayRole) {
-            switch (node.comparison.op) {
-               using enum ui::types::conditions::comparison_operator;
-               case equal:
-                  return tr("==", "comparison operator, equal");
-               case greater:
-                  return tr(">",  "comparison operator, greater");
-               case greater_or_equal:
-                  return tr(">=", "comparison operator, greater or equal");
-               case less:
-                  return tr("<",  "comparison operator, less");
-               case less_or_equal:
-                  return tr("<=", "comparison operator, less or equal");
-               case not_equal:
-                  return tr("!=", "comparison operator, not equal");
-            }
+            return editor_helpers::condition_to_string::comparison_operator(node.comparison.op);
          }
          break;
       case Column::Operand:
-         {
-            bool compare_to_global = std::holds_alternative<dovah::form_stub*>(node.comparison.operand);
-
-            if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
-               if (compare_to_global) {
-                  auto* stub = std::get<dovah::form_stub*>(node.comparison.operand);
-                  if (!stub)
-                     return tr("NONE", "compare to global (missing)");
-                  return tr("[%1:%2]%3", "compare to global")
-                     .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->form_type).signature))
-                     .arg(stub->formID, 8, 16, QChar('0'))
-                     .arg(stub->get_editor_id());
-               }
-               assert(std::holds_alternative<float>(node.comparison.operand));
-               return std::get<float>(node.comparison.operand);
-            } else if (role == Qt::FontRole) {
+         if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
+            return editor_helpers::condition_to_string::comparison_operand(node.comparison);
+         } else if (role == Qt::FontRole) {
+            if (std::holds_alternative<dovah::form_stub*>(node.comparison.operand)) {
                QFont italics;
                italics.setItalic(true);
-
-               if (compare_to_global)
-                  return italics;
+               return italics;
             }
          }
          break;
       case Column::UsesOr:
          if (role == Qt::DisplayRole) {
-            if (node.flags.or_linked)
-               return tr("OR", "condition link, or");
-            return tr("AND", "condition link, and");
+            return editor_helpers::condition_to_string::boolean_link(node.flags.or_linked);
          }
          break;
    }
@@ -555,6 +204,84 @@ void DKConditionListModel::clear() {
    }
 
    return {};
+}
+/*virtual*/ QMimeData* DKConditionListModel::mimeData(const QModelIndexList& indexes) const /*override*/ {
+   QMimeData* out = new QMimeData;
+   {  // plaintext
+      QString text;
+      for (const auto& qmi : indexes) {
+         const int row = qmi.row();
+         if (row < 0 || row >= this->_nodes.size())
+            continue;
+         const auto& node = *this->_nodes[row];
+         text += editor_helpers::stringify_condition(node, this->_context);
+         text += ' ';
+         text += editor_helpers::stringify_condition_boolean_operator(node);
+         if (row + 1 < this->_nodes.size())
+            text += '\n';
+      }
+      out->setText(text);
+   }
+   {  // binary
+      QByteArray  data;
+      QDataStream stream(&data, QIODevice::WriteOnly);
+
+      auto _stream_form = [&stream](dovah::form_stub* stub) {
+         uint32_t form_id = 0;
+         if (stub)
+            form_id = stub->formID;
+         stream << form_id;
+      };
+
+      for (const auto& qmi : indexes) {
+         const int row = qmi.row();
+         if (row < 0 || row >= this->_nodes.size())
+            continue;
+         const auto& node = *this->_nodes[row];
+         editor_helpers::append_condition_to_mime_data_stream(stream, node);
+      }
+      out->setData(editor_helpers::form_condition_array_mime_type, data);
+   }
+
+   return out;
+}
+/*virtual*/ QStringList DKConditionListModel::mimeTypes() const /*override*/ {
+   return {
+      "text/plain",
+      editor_helpers::form_condition_array_mime_type
+   };
+}
+/*virtual*/ bool DKConditionListModel::canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) const /*override*/ {
+   if (!data->hasFormat(editor_helpers::form_condition_array_mime_type))
+      return false;
+   return true;
+}
+/*virtual*/ bool DKConditionListModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) /*override*/ {
+   if (!this->canDropMimeData(data, action, row, column, parent))
+      return false;
+   if (action == Qt::IgnoreAction)
+      return true;
+   if (row == -1) {
+      if (parent.isValid())
+         row = parent.row();
+      else
+         row = this->_nodes.size();
+   }
+   
+   auto dropped = editor_helpers::conditions_from_mime_data(*data);
+   this->_nodes.reserve(this->_nodes.size() + dropped.size());
+   this->beginInsertRows({}, row, row + dropped.size() - 1);
+   for (size_t i = 0; i < dropped.size(); ++i) {
+      auto  it   = this->_nodes.insert(this->_nodes.begin() + row + i, nullptr);
+      auto& ptr  = *it;
+      auto& node = *(ptr = new node_type);
+      node = std::move(dropped[i]);
+   }
+   this->endInsertRows();
+   return true;
+}
+/*virtual*/ Qt::DropActions DKConditionListModel::supportedDropActions() const /*override*/ {
+   return Qt::CopyAction;
 }
 
 [[nodiscard]] const std::vector<DKConditionListModel::Condition> DKConditionListModel::conditions() const noexcept {

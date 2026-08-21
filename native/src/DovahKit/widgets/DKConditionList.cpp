@@ -5,6 +5,9 @@
 #include <QPushButton>
 #include <QTableView>
 #if !defined(QT_PLUGIN)
+   #include <QApplication>
+   #include <QClipboard>
+   #include <QShortcut>
    #include "./widget-dialogs/DKConditionEditDialog.h"
    #include "./widget-models/DKConditionListModel.h"
    #include "./DKHeaderView.h"
@@ -127,6 +130,20 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
                header->setSectionResizeMode(Column::Operand,  QHeaderView::Interactive);
             }
             header->setStretchLastSection(false);
+         }
+
+         //
+         // Shortcuts
+         //
+         {
+            auto* shortcut = new QShortcut(widget);
+            shortcut->setKey(QKeySequence::StandardKey::Copy);
+            QObject::connect(shortcut, &QShortcut::activated, this, &DKConditionList::_copy_selected);
+         }
+         {
+            auto* shortcut = new QShortcut(widget);
+            shortcut->setKey(QKeySequence::StandardKey::Paste);
+            QObject::connect(shortcut, &QShortcut::activated, this, &DKConditionList::_paste);
          }
       }
       QObject::connect(this->_subwidgets.add_item, &QPushButton::clicked, this, &DKConditionList::openCreateConditionModal);
@@ -360,5 +377,20 @@ void DKConditionList::_update_button_enable_states() {
       if (sel.empty())
          return;
       this->_model->remove(sel);
+   }
+
+   void DKConditionList::_copy_selected() {
+      auto* sm   = this->_subwidgets.view->selectionModel();
+      auto* mime = this->_model->mimeData(sm->selectedRows());
+      QApplication::clipboard()->setMimeData(mime);
+   }
+   void DKConditionList::_paste() {
+      const auto* mime = QApplication::clipboard()->mimeData();
+      if (!mime)
+         return;
+
+      int row = this->_model->rowCount();
+      if (this->_model->canDropMimeData(mime, Qt::CopyAction, row, 0, {}))
+         this->_model->dropMimeData(mime, Qt::CopyAction, row, 0, {});
    }
 #endif

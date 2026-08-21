@@ -5,6 +5,7 @@
 #include "../../data/conditions/parameter_underlying_type.h"
 #include "../../data/conditions/run_on_type.h"
 #include "../../data/story_manager.h"
+#include "./conditions/comparison_data.h"
 #include "./conditions/event_parameters.h"
 #include "./conditions/parameter.h"
 #include "./conditions/working_parameter.h"
@@ -22,10 +23,9 @@ namespace dovah {
 
 namespace dovah::loaded_forms::components {
    namespace conditions {
+      using  run_on_type = dovah::conditions::run_on_type;
       class working_condition;
    }
-   using comparison_operator = dovah::conditions::comparison_operator;
-   using run_on_type         = dovah::conditions::run_on_type;
 
    class condition {
       public:
@@ -41,13 +41,9 @@ namespace dovah::loaded_forms::components {
          };
          using flags_t = std::underlying_type_t<flag::type>;
          
-         struct comparison_data {
-            comparison_operator op = comparison_operator::equal;
-            std::variant<
-               float,
-               form_reference_t // GLOB
-            > operand;
-         };
+         using comparison_data = conditions::comparison_data;
+         using run_on_type     = conditions::run_on_type;
+
          struct run_on_data {
             run_on_type type = run_on_type::subject;
             uint32_t    index = -1;

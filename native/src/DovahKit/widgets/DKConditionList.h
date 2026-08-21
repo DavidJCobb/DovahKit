@@ -89,5 +89,8 @@ class DKConditionList : public QWidget {
          void _move_selection_up();
          void _move_selection_down();
          void _delete_selection();
+
+         void _copy_selected();
+         void _paste();
       #endif
 };

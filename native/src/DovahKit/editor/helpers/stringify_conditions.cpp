@@ -1,17 +1,18 @@
 #include "./stringify_conditions.h"
-#include "./stringify_condition_argument.h"
 #include "../core.h"
-#include <QObject>
+#include <QCoreApplication>
 #include <QStringBuilder>
 #include "dovah/data/conditions/all_function_info.h"
-#include "dovah/data/conditions/comparison_operator.h"
 #include "dovah/data/conditions/function_info.h"
-#include "dovah/data/conditions/run_on_type.h"
-#include "dovah/data/story_manager.h"
 #include "dovah/forms/components/conditions/working_condition.h"
-#include "dovah/forms/Package.h"
-#include "dovah/forms/Quest.h"
 #include "dovah/form_stub.h"
+#include "editor/helpers/condition_to_string/boolean_link.h"
+#include "editor/helpers/condition_to_string/comparison_operand.h"
+#include "editor/helpers/condition_to_string/comparison_operator.h"
+#include "editor/helpers/condition_to_string/event_parameter.h"
+#include "editor/helpers/condition_to_string/non_event_parameter.h"
+#include "editor/helpers/condition_to_string/parameter_set.h"
+#include "editor/helpers/condition_to_string/run_on.h"
 
 namespace {
    namespace conditions {
@@ -20,76 +21,13 @@ namespace {
    }
    using condition = dovah::loaded_forms::components::condition;
    using context   = dovah::loaded_forms::components::conditions::context;
-}
 
-namespace {
-   QString _stringify_comparison_operator(dovah::conditions::comparison_operator op) {
-      switch (op) {
-         case conditions::comparison_operator::equal:
-            return QObject::tr("==", "condition operator");
-         case conditions::comparison_operator::not_equal:
-            return QObject::tr("!=", "condition operator");
-         case conditions::comparison_operator::greater:
-            return QObject::tr(">", "condition operator");
-         case conditions::comparison_operator::greater_or_equal:
-            return QObject::tr(">=", "condition operator");
-         case conditions::comparison_operator::less:
-            return QObject::tr("<", "condition operator");
-         case conditions::comparison_operator::less_or_equal:
-            return QObject::tr("<=", "condition operator");
-      }
-      std::unreachable();
-      return QObject::tr("??", "condition operator");
-   }
-
-   QString _stringify_condition_run_on(const context& context, dovah::conditions::run_on_type type, uint32_t integral, dovah::form_stub* stub) {
-      switch (type) {
-         case conditions::run_on_type::subject:
-            return QObject::tr("Subject");
-         case conditions::run_on_type::target:
-            return QObject::tr("Target");
-         case conditions::run_on_type::reference:
-            if (stub && !stub->is_none_stub()) {
-               auto* edid = stub->get_editor_id();
-               if (edid && edid[0])
-                  return edid;
-               else {
-                  return QString("[REFR:%1]").arg(stub->formID, 8, 16, QChar('0')).toUpper();
-               }
-            } else {
-               return QObject::tr("NONE", "condition - missing run-on ref");
-            }
-            break;
-         case conditions::run_on_type::combat_target:
-            return QObject::tr("Combat Target");
-         case conditions::run_on_type::linked_ref:
-            return QObject::tr("Linked Ref");
-         case conditions::run_on_type::quest_alias:
-            if (auto* q = context.get_owning_quest()) {
-               auto* alias = q->lookup_alias_by_id(integral);
-               if (alias)
-                  return alias->name.c_str();
-               else
-                  return QObject::tr("Alias #%1").arg(integral);
-            }
-            return QObject::tr("Alias #%1").arg(integral);
-         case conditions::run_on_type::package_data:
-            return QObject::tr("Package Data #%1").arg(integral);
-            break;
-         case conditions::run_on_type::event_data:
-            if (auto* q = context.get_owning_quest()) {
-               auto  code = q->event;
-               auto* def  = dovah::story_event_definition::lookup(code);
-               if (def) {
-                  auto* member = def->member_by_wide_signature(integral);
-                  if (member)
-                     return member->name;
-               }
-            }
-            return QObject::tr("Event Data %1").arg(integral);
-      }
-      return QObject::tr("?", "unknown condition run-on type enum");
-   }
+   constexpr const auto form_format = editor_helpers::condition_to_string::options::form_format{
+      .form_type         = editor_helpers::condition_to_string::options::form_type_format::none,
+      .include_editor_id = editor_helpers::condition_to_string::options::editor_id_presence::only_for_form,
+      .include_form_id   = editor_helpers::condition_to_string::options::form_id_presence::if_no_editor_id,
+      .include_placement = editor_helpers::condition_to_string::options::form_id_presence::never,
+   };
 }
 
 namespace editor_helpers {
@@ -101,41 +39,24 @@ namespace editor_helpers {
       auto& editor = DovahKitCore::get();
       auto& rod    = cnd.get_run_on_data();
       //
-      out += _stringify_condition_run_on(ctx, rod.type, rod.index, rod.reference.get_form_stub());
-      out += QObject::tr(".", "condition run-on type delimiter");
+      out += condition_to_string::run_on(ctx, rod.type, rod.index, rod.reference.get_form_stub(), form_format).first;
+      out += QCoreApplication::translate("condition to string", ".", "separator between run-on and function");
       //
       auto* func = cnd.get_function();
       if (func)
          out += QString::fromUtf8(QByteArray(func->name.data(), func->name.size()));
       else
-         out += QObject::tr("?%1", "unknown condition function").arg(cnd.get_function_id());
-      out += QObject::tr("(", "condition arg delimiter - open");
-      if (func) {
-         bool dummy;
-         auto count = func->argument_count();
-         for (int i = 0; i < count; ++i) {
-            out += stringify_condition_argument(dummy, cnd, i, ctx);
-            if (i + 1 < count)
-               out += QObject::tr(",", "condition arg delimiter - separator");
-         }
-      }
-      out += QObject::tr(")", "condition arg delimiter - close");
+         out += QCoreApplication::translate("condition to string", "?%1", "unknown condition function").arg(cnd.get_function_id());
+      out += QCoreApplication::translate("condition to string", "(", "condition arg delimiter - open");
+      out += condition_to_string::parameter_set(ctx, cnd, true, false, form_format);
+      out += QCoreApplication::translate("condition to string", ")", "condition arg delimiter - close");
       //
       auto& cmp = cnd.get_comparison();
-      out += QObject::tr(" ", "condition operator padding");
-      out += _stringify_comparison_operator(cmp.op);
-      out += QObject::tr(" ", "condition operator padding");
+      out += QCoreApplication::translate("condition to string", " ", "separator between params and comparison operator");
+      out += condition_to_string::comparison_operator(cmp.op);
+      out += QCoreApplication::translate("condition to string", " ", "separator between comparison operator and operand");
+      out += condition_to_string::comparison_operand(cmp);
       //
-      if (std::holds_alternative<dovah::form_reference_t>(cmp.operand)) {
-         const auto* stub = std::get<dovah::form_reference_t>(cmp.operand).get_form_stub();
-         if (stub && !stub->is_none_stub()) {
-            out += stub->get_editor_id();
-         } else {
-            out += QObject::tr("NONE", "condition - missing global");
-         }
-      } else {
-         out += QString::number(std::get<float>(cmp.operand));
-      }
       return out;
    }
    extern QString stringify_condition(
@@ -153,58 +74,35 @@ namespace editor_helpers {
          } else if (std::holds_alternative<uint32_t>(cnd.run_on.entity)) {
             index = std::get<uint32_t>(cnd.run_on.entity);
          }
-         out += _stringify_condition_run_on(ctx, cnd.run_on.type, index, stub);
+         out += condition_to_string::run_on(ctx, cnd.run_on.type, index, stub, form_format).first;
       }
-      out += QObject::tr(".", "condition run-on type delimiter");
+      out += QCoreApplication::translate("condition to string", ".", "separator between run-on and function");
 
       const auto* func = dovah::conditions::function_info_by_id(cnd.function);
       if (func)
          out += QString::fromUtf8(QByteArray(func->name.data(), func->name.size()));
       else
-         out += QObject::tr("?%1", "unknown condition function").arg(cnd.function);
-      out += QObject::tr("(", "condition arg delimiter - open");
-      if (func) {
-         bool dummy;
-         auto count = func->argument_count();
-         for (int i = 0; i < count; ++i) {
-            out += stringify_condition_argument(dummy, cnd, i, ctx);
-            if (i + 1 < count)
-               out += QObject::tr(",", "condition arg delimiter - separator");
-         }
-      }
-      out += QObject::tr(")", "condition arg delimiter - close");
+         out += QCoreApplication::translate("condition to string", "?%1", "unknown condition function").arg(cnd.function);
+      out += QCoreApplication::translate("condition to string", "(", "condition arg delimiter - open");
+      out += condition_to_string::parameter_set(ctx, cnd, true, false, form_format);
+      out += QCoreApplication::translate("condition to string", ")", "condition arg delimiter - close");
       //
-      out += QObject::tr(" ", "condition operator padding");
-      out += _stringify_comparison_operator(cnd.comparison.op);
-      out += QObject::tr(" ", "condition operator padding");
-      if (std::holds_alternative<dovah::form_stub*>(cnd.comparison.operand)) {
-         const auto* stub = std::get<dovah::form_stub*>(cnd.comparison.operand);
-         if (stub && !stub->is_none_stub()) {
-            out += stub->get_editor_id();
-         } else {
-            out += QObject::tr("NONE", "condition - missing global");
-         }
-      } else {
-         out += QString::number(std::get<float>(cnd.comparison.operand));
-      }
+      out += QCoreApplication::translate("condition to string", " ", "separator between params and comparison operator");
+      out += condition_to_string::comparison_operator(cnd.comparison.op);
+      out += QCoreApplication::translate("condition to string", " ", "separator between comparison operator and operand");
+      out += condition_to_string::comparison_operand(cnd.comparison);
       return out;
    }
 
    extern QString stringify_condition_boolean_operator(
       const dovah::loaded_forms::components::condition& cnd
    ) {
-      if (cnd.get_flags() & condition::flag::or_linked)
-         return QObject::tr("OR", "condition boolean operator");
-      else
-         return QObject::tr("AND", "condition boolean operator");
+      return condition_to_string::boolean_link(cnd.get_flags() & condition::flag::or_linked);
    }
    extern QString stringify_condition_boolean_operator(
       const dovah::loaded_forms::components::conditions::working_condition& cnd
    ) {
-      if (cnd.flags.or_linked)
-         return QObject::tr("OR", "condition boolean operator");
-      else
-         return QObject::tr("AND", "condition boolean operator");
+      return condition_to_string::boolean_link(cnd.flags.or_linked);
    }
 
    extern QString stringify_condition_list(

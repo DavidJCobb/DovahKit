@@ -64,6 +64,11 @@ class DKConditionListModel : public DKGenericListModel<DKConditionListModel, ui:
 
    public:
       virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+      virtual QMimeData* mimeData(const QModelIndexList& indexes) const override;
+      virtual QStringList mimeTypes() const override;
+      virtual bool canDropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) const override;
+      virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
+      virtual Qt::DropActions supportedDropActions() const override;
       
    public:
       [[nodiscard]] const std::vector<Condition> conditions() const noexcept;

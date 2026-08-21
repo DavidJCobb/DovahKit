@@ -7,6 +7,7 @@
 #include "../../../data/conditions/parameter_underlying_type.h"
 #include "../../../data/conditions/run_on_type.h"
 #include "./working_comparison.h"
+#include "./working_event_parameters.h"
 #include "./working_parameter.h"
 
 namespace dovah {
@@ -39,13 +40,7 @@ namespace dovah::loaded_forms::components::conditions {
 
          constexpr bool operator==(const working_condition&) const noexcept = default;
 
-         struct event_data {
-            constexpr bool operator==(const event_data&) const noexcept = default;
-
-            uint16_t   function = 0;
-            uint16_t   member   = 0;
-            form_stub* form     = nullptr;
-         };
+         using event_data = working_event_parameters;
 
       public:
          struct _ {
@@ -59,7 +54,7 @@ namespace dovah::loaded_forms::components::conditions {
          uint16_t function = 0;
 
          std::array<working_parameter, 2> parameters;
-         std::optional<event_data> event_parameters; // used instead of `parameters` for GetEventData
+         std::optional<working_event_parameters> event_parameters; // used instead of `parameters` for GetEventData
 
          working_comparison comparison;
          struct __ {
