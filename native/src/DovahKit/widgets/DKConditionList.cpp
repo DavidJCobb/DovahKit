@@ -7,6 +7,7 @@
 #if !defined(QT_PLUGIN)
    #include <QApplication>
    #include <QClipboard>
+   #include <QMimeData>
    #include <QShortcut>
    #include "./widget-dialogs/DKConditionEditDialog.h"
    #include "./widget-models/DKConditionListModel.h"
@@ -14,6 +15,7 @@
 
    #include "dovah/data/conditions/all_function_info.h"
    #include "dovah/forms/Form.h"
+   #include "editor/helpers/condition_mime_data.h"
    #include "helpers/string/strieq_ascii.h"
    #include "ui/types/conditions/condition.h"
 #endif
@@ -137,13 +139,17 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
          //
          {
             auto* shortcut = new QShortcut(widget);
+            shortcut->setContext(Qt::ShortcutContext::WidgetShortcut);
             shortcut->setKey(QKeySequence::StandardKey::Copy);
+            shortcut->setAutoRepeat(false);
             QObject::connect(shortcut, &QShortcut::activated, this, &DKConditionList::_copy_selected);
          }
          {
             auto* shortcut = new QShortcut(widget);
+            shortcut->setContext(Qt::ShortcutContext::WidgetShortcut);
             shortcut->setKey(QKeySequence::StandardKey::Paste);
-            QObject::connect(shortcut, &QShortcut::activated, this, &DKConditionList::_paste);
+            shortcut->setAutoRepeat(false);
+            QObject::connect(shortcut, &QShortcut::activated, this, &DKConditionList::_paste_below);
          }
       }
       QObject::connect(this->_subwidgets.add_item, &QPushButton::clicked, this, &DKConditionList::openCreateConditionModal);
@@ -173,26 +179,73 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
             QObject::connect(action, &QAction::triggered, this, &DKConditionList::openEditConditionModal);
          }
          {
-            auto* action = actions.move_up = new QAction(tr("Move Up"), &menu);
+            auto* action = actions.move_up = new QAction(tr("Move up"), &menu);
             menu.addAction(action);
             QObject::connect(action, &QAction::triggered, this, &DKConditionList::_move_selection_up);
          }
          {
-            auto* action = actions.move_down = new QAction(tr("Move Down"), &menu);
+            auto* action = actions.move_down = new QAction(tr("Move down"), &menu);
             menu.addAction(action);
             QObject::connect(action, &QAction::triggered, this, &DKConditionList::_move_selection_down);
+         }
+         {
+            auto* action = actions.duplicate = new QAction(tr("Duplicate"), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::_duplicate_selection);
          }
          {
             auto* action = actions.remove = new QAction(tr("Delete"), &menu);
             menu.addAction(action);
             QObject::connect(action, &QAction::triggered, this, &DKConditionList::_delete_selection);
          }
+         actions.separator = menu.addSeparator();
+         {
+            auto* action = actions.copy = new QAction(tr("Copy"), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::_copy_selected);
+         }
+         {
+            auto* action = actions.paste_above = new QAction(tr("Paste before"), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::_paste_above);
+         }
+         {
+            auto* action = actions.paste_below = new QAction(tr("Paste after"), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::_paste_below);
+         }
+         {
+            auto* action = actions.paste_at_end = new QAction(tr("Paste at end"), &menu);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &DKConditionList::_paste_at_end);
+         }
+
 
          auto* widget = this->_subwidgets.view;
          widget->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-         QObject::connect(widget, &QWidget::customContextMenuRequested, this, [this, widget, &menu](const QPoint& pos) {
-            if (!this->_has_selection())
-               return;
+         QObject::connect(widget, &QWidget::customContextMenuRequested, this, [this, widget, &menu, &actions](const QPoint& pos) {
+            bool has_clipboard = this->_are_conditions_copied();
+            bool has_selection = this->_has_selection();
+            for (auto* action : std::array{
+               actions.edit,
+               actions.move_up,
+               actions.move_down,
+               actions.duplicate,
+               actions.remove,
+               actions.separator,
+               actions.copy,
+               actions.paste_above,
+               actions.paste_below,
+            }) {
+               action->setVisible(has_selection);
+            }
+            for (auto* action : std::array{
+               actions.paste_above,
+               actions.paste_below,
+               actions.paste_at_end,
+            }) {
+               action->setEnabled(has_clipboard);
+            }
             menu.exec(widget->mapToGlobal(pos));
          });
       }
@@ -379,18 +432,69 @@ void DKConditionList::_update_button_enable_states() {
       this->_model->remove(sel);
    }
 
+   bool DKConditionList::_are_conditions_copied() const {
+      auto* mime_data = QApplication::clipboard()->mimeData();
+      if (!mime_data)
+         return false;
+      return mime_data->hasFormat(editor_helpers::form_condition_array_mime_type);
+   }
+
    void DKConditionList::_copy_selected() {
       auto* sm   = this->_subwidgets.view->selectionModel();
       auto* mime = this->_model->mimeData(sm->selectedRows());
       QApplication::clipboard()->setMimeData(mime);
    }
-   void DKConditionList::_paste() {
+   void DKConditionList::_duplicate_selection() {
+      auto* sm   = this->_subwidgets.view->selectionModel();
+      auto  rows = sm->selectedRows();
+      if (rows.isEmpty())
+         return;
+      auto* mime = this->_model->mimeData(rows);
+
+      int at = rows.back().row() + 1;
+      if (this->_model->canDropMimeData(mime, Qt::CopyAction, at, 0, {})) {
+         this->_model->dropMimeData(mime, Qt::CopyAction, at, 0, {});
+
+         auto tl = this->_model->index(at, 0, {});
+         auto br = this->_model->index(at + rows.size() - 1, this->_model->columnCount({}), {});
+         sm->select(QItemSelection{ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+      }
+   }
+
+   void DKConditionList::_paste_at_row(int row) {
       const auto* mime = QApplication::clipboard()->mimeData();
       if (!mime)
          return;
-
-      int row = this->_model->rowCount();
       if (this->_model->canDropMimeData(mime, Qt::CopyAction, row, 0, {}))
          this->_model->dropMimeData(mime, Qt::CopyAction, row, 0, {});
+   }
+   void DKConditionList::_paste_at_end() {
+      this->_paste_at_row(this->_model->rowCount());
+   }
+   void DKConditionList::_paste_above() {
+      int row = 0;
+      {
+         auto* sm   = this->_subwidgets.view->selectionModel();
+         auto  rows = sm->selectedRows();
+         if (rows.isEmpty()) {
+            row = this->_model->rowCount();
+         } else {
+            row = rows[0].row();
+         }
+      }
+      this->_paste_at_row(row);
+   }
+   void DKConditionList::_paste_below() {
+      int row = 0;
+      {
+         auto* sm   = this->_subwidgets.view->selectionModel();
+         auto  rows = sm->selectedRows();
+         if (rows.isEmpty()) {
+            row = this->_model->rowCount();
+         } else {
+            row = rows.back().row() + 1;
+         }
+      }
+      this->_paste_at_row(row);
    }
 #endif

@@ -183,6 +183,11 @@ namespace editor_helpers {
       } else {
          stream >> dst.comparison.operand.emplace<float>();
       }
+
+      // Account for form IDs having been deleted or replaced out from under us:
+      for (size_t i = 0; i < 2; ++i)
+         if (!dst.is_parameter_valid(i))
+            dst.reset_parameter(i);
    }
 
    extern void add_conditions_to_mime_data(QMimeData& mime_data, const std::vector<ui::types::conditions::condition>& list, const ui::types::conditions::context& context) {

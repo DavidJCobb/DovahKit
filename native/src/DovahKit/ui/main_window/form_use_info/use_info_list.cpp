@@ -9,7 +9,6 @@
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/open_window_for_form.h"
 #include "editor/subsystems/worldedit/core.h"
-#include "ui/utils/handlers/copy_selected_rows_on_copy_key.h"
 
 namespace {
    QString _format_cell(dovah::form_stub* cell) {
@@ -444,7 +443,9 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
    }
    this->verticalHeader()->setDefaultSectionSize(0);
    this->sortByColumn(0, Qt::AscendingOrder);
-   //
+   
+   this->setSelectionMode(SelectionMode::ExtendedSelection);
+
    auto header  = this->horizontalHeader();
    auto metrics = QFontMetrics(this->font());
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
@@ -481,11 +482,6 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
    //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, &FormUseInfoList::build);
-
-   {
-      auto& handler = ui::utils::handlers::copy_selected_rows_on_copy_key::install(*this);
-      handler.setCopyHeaders(true);
-   }
 };
 FormUseInfoList::relationship_mode FormUseInfoList::relationshipMode() const noexcept {
    auto model = (model_type*)this->unwrappedModel();

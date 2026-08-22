@@ -2,7 +2,6 @@
 #include <QObject>
 #include <QPointer>
 class QAbstractItemView;
-class QShortcut;
 
 namespace ui::utils::handlers {
    //
@@ -22,7 +21,6 @@ namespace ui::utils::handlers {
 
       protected:
          QPointer<QAbstractItemView> _view;
-         QPointer<QShortcut> _shortcut;
          bool _copy_headers = false;
 
          void _activated();

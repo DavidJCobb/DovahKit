@@ -8,10 +8,15 @@
 
 namespace ui::utils::handlers {
    copy_selected_rows_on_copy_key::copy_selected_rows_on_copy_key(QAbstractItemView& view) : QObject(&view) {
-      this->_view     = &view;
-      this->_shortcut = new QShortcut(&view);
-      this->_shortcut->setKey(QKeySequence::StandardKey::Copy);
-      QObject::connect(this->_shortcut, &QShortcut::activated, this, &copy_selected_rows_on_copy_key::_activated);
+      this->_view = &view;
+
+      // Qt's ownership model will take care of deleting the instance when the view dies.
+      auto* shortcut = new QShortcut(&view);
+      shortcut->setContext(Qt::ShortcutContext::WidgetShortcut);
+      shortcut->setKey(QKeySequence::StandardKey::Copy);
+      shortcut->setAutoRepeat(false);
+      QObject::connect(shortcut, &QShortcut::activated, this, &copy_selected_rows_on_copy_key::_activated);
+      QObject::connect(shortcut, &QShortcut::activatedAmbiguously, this, &copy_selected_rows_on_copy_key::_activated);
    }
 
    /*static*/ copy_selected_rows_on_copy_key& copy_selected_rows_on_copy_key::install(QAbstractItemView& view) {

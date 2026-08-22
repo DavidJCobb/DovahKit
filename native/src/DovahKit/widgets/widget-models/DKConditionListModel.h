@@ -49,8 +49,6 @@ class DKConditionListModel : public DKGenericListModel<DKConditionListModel, ui:
       ~DKConditionListModel();
 
    protected:
-      QString _stringify_condition_parameter(const Condition&, size_t i) const;
-
       QVariant      data_of(const node_type&, Qt::ItemDataRole, size_t column) const;
       Qt::ItemFlags flags_of(const node_type&, size_t column) const;
       

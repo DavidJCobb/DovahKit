@@ -1,6 +1,7 @@
 #include "form_use_info.h"
 #include "../../editor/core.h"
 #include "../../helpers/qt/strings.h"
+#include "ui/utils/handlers/copy_selected_rows_on_copy_key.h"
 
 FormUseInfoDialog::FormUseInfoDialog(const dovah::form_stub* stub, QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
@@ -29,6 +30,15 @@ FormUseInfoDialog::FormUseInfoDialog(const dovah::form_stub* stub, QWidget* pare
          this->reject();
       }
    });
+   //
+   {
+      auto& handler = ui::utils::handlers::copy_selected_rows_on_copy_key::install(*this->ui.usesInGeneral);
+      handler.setCopyHeaders(true);
+   }
+   {
+      auto& handler = ui::utils::handlers::copy_selected_rows_on_copy_key::install(*this->ui.usesAsBaseForm);
+      handler.setCopyHeaders(true);
+   }
    //
    this->rebuild();
 }

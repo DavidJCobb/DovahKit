@@ -64,10 +64,16 @@ class DKConditionList : public QWidget {
       struct {
          QMenu menu;
          struct {
-            QAction* edit      = nullptr;
-            QAction* move_up   = nullptr;
-            QAction* move_down = nullptr;
-            QAction* remove    = nullptr;
+            QAction* edit         = nullptr;
+            QAction* move_up      = nullptr;
+            QAction* move_down    = nullptr;
+            QAction* duplicate    = nullptr;
+            QAction* remove       = nullptr;
+            QAction* separator    = nullptr;
+            QAction* copy         = nullptr;
+            QAction* paste_above  = nullptr;
+            QAction* paste_below  = nullptr;
+            QAction* paste_at_end = nullptr;
          } actions;
       } _context;
       struct {
@@ -81,7 +87,7 @@ class DKConditionList : public QWidget {
          DKConditionListModel* _model = nullptr;
          dovah::form_stub* _owning_stub = nullptr;
       #endif
-
+         
       bool _has_selection() const;
       void _update_button_enable_states();
 
@@ -90,7 +96,15 @@ class DKConditionList : public QWidget {
          void _move_selection_down();
          void _delete_selection();
 
+         bool _are_conditions_copied() const;
+
          void _copy_selected();
-         void _paste();
+         void _duplicate_selection();
+
+         void _paste_at_row(int);
+
+         void _paste_at_end();
+         void _paste_above();
+         void _paste_below();
       #endif
 };
