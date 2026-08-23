@@ -168,6 +168,7 @@ void FormDialogSpell::_load_impl() {
 
    this->_update_auto_calc();
    this->_update_effect_parameters_enable_states();
+   this->_update_condition_explanation();
 }
 void FormDialogSpell::_save_impl() {
    //

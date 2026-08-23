@@ -33,15 +33,31 @@ namespace editor_helpers {
 
       {  // Run On
          stream << src.run_on.type;
-         bool is_index = std::holds_alternative<uint32_t>(src.run_on.entity);
-         stream << is_index;
-         if (is_index) {
-            stream << std::get<uint32_t>(src.run_on.entity);
-         } else {
-            dovah::form_stub* stub = nullptr;
-            if (std::holds_alternative<dovah::form_stub*>(src.run_on.entity))
-               stub = std::get<dovah::form_stub*>(src.run_on.entity);
-            _stream_form(stub);
+         switch (src.run_on.type) {
+            using enum dovah::conditions::run_on_type;
+            case reference:
+               {
+                  dovah::form_stub* stub = nullptr;
+                  if (std::holds_alternative<dovah::form_stub*>(src.run_on.entity))
+                     stub = std::get<dovah::form_stub*>(src.run_on.entity);
+                  _stream_form(stub);
+               }
+               break;
+            case combat_target:
+            case linked_ref:
+            case subject:
+            case target:
+               break;
+            case event_data:
+            case package_data:
+            case quest_alias:
+               {
+                  uint32_t index = -1;
+                  if (std::holds_alternative<uint32_t>(src.run_on.entity))
+                     index = std::get<uint32_t>(src.run_on.entity);
+                  stream << index;
+               }
+               break;
          }
       }
       stream << src.function;
@@ -98,13 +114,21 @@ namespace editor_helpers {
 
       {  // Run On
          stream >> dst.run_on.type;
-         bool is_index;
-         stream >> is_index;
-         if (is_index) {
-            stream >> dst.run_on.entity.emplace<uint32_t>();
-         } else {
-            auto& stub = dst.run_on.entity.emplace<dovah::form_stub*>();
-            _stream_form(stub);
+         switch (dst.run_on.type) {
+            using enum dovah::conditions::run_on_type;
+            case reference:
+               _stream_form(dst.run_on.entity.emplace<dovah::form_stub*>());
+               break;
+            case combat_target:
+            case linked_ref:
+            case subject:
+            case target:
+               break;
+            case event_data:
+            case package_data:
+            case quest_alias:
+               stream >> dst.run_on.entity.emplace<uint32_t>();
+               break;
          }
       }
       stream >> dst.function;
