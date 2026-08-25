@@ -96,7 +96,7 @@ namespace dovahkit::subsystems::form_info_cache {
       auto it = this->_map.find(&key);
       if (it == this->_map.end()) {
          this->_map.insert(&key, value);
-         return value;
+         return {};
       }
       if (*it == value) {
          return {};

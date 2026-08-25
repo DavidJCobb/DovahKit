@@ -51,6 +51,8 @@ namespace dovahkit::subsystems::form_info_cache {
          core();
          ~core();
 
+         void _recache_form(dovah::form_stub*);
+
       private:
          template<dovah::form_type FormType>
          void _skim_record(dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);

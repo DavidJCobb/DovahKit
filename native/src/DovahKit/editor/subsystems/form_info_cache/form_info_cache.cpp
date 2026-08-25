@@ -454,18 +454,9 @@ namespace dovahkit::subsystems::form_info_cache {
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &core::clear);
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,  this, &core::buildAllData);
-
-      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
-         all_form_classes_of_interest::for_each_until_true([this, stub]<typename Current>() -> bool {
-            if (stub->form_type == Current::form_type) {
-               auto loaded = stub->load().ptr_cast<Current>();
-               assert(loaded);
-               _update_form<Current>(*this, *this->_cache, *loaded);
-               return true;
-            }
-            return false;
-         });
-      });
+      
+      QObject::connect(&editor, &DovahKitCore::formCreated,  this, &core::_recache_form); // duplicated forms may be created with FIC-relevant data that we need to cache
+      QObject::connect(&editor, &DovahKitCore::formModified, this, &core::_recache_form);
 
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
          all_form_classes_of_interest::for_each_until_true([this, stub]<typename Current>() -> bool {
@@ -527,6 +518,20 @@ namespace dovahkit::subsystems::form_info_cache {
          delete p;
          p = nullptr;
       }
+   }
+
+   void core::_recache_form(dovah::form_stub* stub) {
+      if (!stub)
+         return;
+      all_form_classes_of_interest::for_each_until_true([this, stub]<typename Current>() -> bool {
+         if (stub->form_type == Current::form_type) {
+            auto loaded = stub->load().ptr_cast<Current>();
+            assert(loaded);
+            _update_form<Current>(*this, *this->_cache, *loaded);
+            return true;
+         }
+         return false;
+      });
    }
 
    template<dovah::form_type FormType>
