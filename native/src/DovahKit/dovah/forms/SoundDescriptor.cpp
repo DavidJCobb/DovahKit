@@ -1,8 +1,9 @@
 #include "SoundDescriptor.h"
 #include "_common_cpp.h"
 
+#include "../notices/form_load_warnings/by_form_type/sound_descriptor/sound_data_before_sound_class.h"
 #include "../notices/form_load_warnings/by_form_type/sound_descriptor/sound_file_path_too_long.h"
-#include "../notices/form_load_warnings/by_form_type/sound_descriptor/unexpected_subrecord_after_cnam.h"
+#include "../notices/form_load_warnings/by_form_type/sound_descriptor/unrecognized_cnam.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -13,14 +14,26 @@ namespace {
 namespace dovah::loaded_forms {
    void SoundDescriptor::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
-      //
+
       if (!intfc.is_winning_record)
          return;
-      //
-      uint32_t previous_signature = 0;
+
+      bool is_in_sound_def = false;
+      
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
+
+         auto _warn_if_early_subrecord = [this, &intfc, &is_in_sound_def, &subrecord]() {
+            if (is_in_sound_def)
+               return;
+            specific_load_warnings::sound_data_before_sound_class notice(
+               this->stub,
+               subrecord.signature()
+            );
+            intfc.log_load_warning(notice);
+         };
+
          switch (subrecord.signature()) {
             case 'EDID': // already read by the FormStub
                break;
@@ -37,50 +50,62 @@ namespace dovah::loaded_forms {
                break;
             case 'CNAM':
                subrecord.read(this->type);
-               switch (auto sig = record.peek_next_subrecord_type()) {
-                  case 0: // no next subrecord
-                     break;
-                  case 'GNAM':
-                     break;
-                  default:
-                     {
-                        specific_load_warnings::unexpected_subrecord_after_cnam notice(
-                           this->stub,
-                           sig
-                        );
-                        intfc.log_load_warning(notice);
-                     }
-                     // NOTE: Swallowing only happens for initial form load, not on-demand form load?
-                     break;
+               //
+               // So technically, what happens is this: the "type" value is the CRC-32 hash 
+               // of an internal class name. Bethesda has a hashmap that they use to find a 
+               // factory object, to instantiate an instance of that class. This allows the 
+               // "sound descriptor" form type to potentially hold multiple different sound 
+               // classes.
+               // 
+               // (In practice, there's only one class: `BGSStandardSoundDef`.)
+               // 
+               // If a factory is found and an instance is created, the loader then opens 
+               // the next subrecord and tells the instance to continue loading from there. 
+               // As it happens, `BGSStandardSoundDef::Load` will just consume all of the 
+               // remaining subrecords. Between that, and the fact that it's the only valid 
+               // sound type, we don't need to actually reconstruct any of the behaviors of 
+               // this system. We can just handle all the subrecords top-level, as if the 
+               // abstraction in question didn't exist. The only concern is that we need to 
+               // warn if CNAM isn't the right value.
+               // 
+               // Note also that any subrecords belonging to BGSStandardSoundDef would be 
+               // ignored by the game if they come before CNAM. In practice, the subrecords 
+               // that belong to BGSSoundDescriptorForm itself are:
+               // 
+               //  - EDID
+               //  - VMAD
+               //  - OBND (no-op)
+               //  - CNAM
+               //
+               is_in_sound_def = true;
+               if (this->type != descriptor_type::standard) {
+                  specific_load_warnings::unrecognized_cnam notice(
+                     this->stub,
+                     (uint32_t)this->type
+                  );
+                  intfc.log_load_warning(notice);
                }
                break;
+
+            #pragma region BGSStandardSoundDef
             case 'GNAM':
+               _warn_if_early_subrecord();
                if (subrecord.read(this->category)) {
                   intfc.warn_if_ref_is_wrong_type(this->category, form_type::sound_category, subrecord.signature());
                }
-               //
-               // NOTE: BGSSoundDescriptor attempts to read CNAM and GNAM both at startup and on demand.
-               // The load performed at startup assumes that GNAM always comes after CNAM (i.e. the 
-               // loader doesn't actually check for GNAM), so a misplaced GNAM subrecord will be missed. 
-               // However, the on-demand load is, uh, actually normal, doesn't make that assumption, and 
-               // will find GNAM correctly no matter where it is.
-               //
                break;
-
-            #pragma region Subrecords loaded on demand
-            //
-            // The game doesn't load these in TESForm::Load; rather, there's a separate member function 
-            // on an associated class, BGSStandardSoundDef, which loads SNAM, GNAM, and these subrecords.
-            //
             case 'CTDA':
+               _warn_if_early_subrecord();
                this->conditions.read_next(subrecord.get_containing_record(), intfc);
                break;
             case 'SNAM':
+               _warn_if_early_subrecord();
                if (auto& form = this->alternate_for; subrecord.read(form)) {
                   intfc.warn_if_ref_is_wrong_type(form, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             case 'ANAM':
+               _warn_if_early_subrecord();
                {
                   auto& item = this->sound_files.emplace_back();
                   if (subrecord.size() >= max_sound_file_path_length) {
@@ -95,6 +120,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'FNAM': // legacy
+               _warn_if_early_subrecord();
                {
                   uint32_t coalesced;
                   if (subrecord.read(coalesced)) {
@@ -126,6 +152,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'LNAM':
+               _warn_if_early_subrecord();
                {
                   uint32_t coalesced;
                   subrecord.read(coalesced);
@@ -138,6 +165,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'BNAM':
+               _warn_if_early_subrecord();
                subrecord.read(this->frequency.shift);
                subrecord.read(this->frequency.variance);
                subrecord.read(this->priority);
@@ -145,6 +173,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->static_attenuation);
                break;
             case 'ONAM':
+               _warn_if_early_subrecord();
                if (auto& form = this->output_model; subrecord.read(form)) {
                   intfc.warn_if_ref_is_wrong_type(form, form_type::sound_output_model, subrecord.signature());
                }
@@ -155,7 +184,6 @@ namespace dovah::loaded_forms {
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
-         previous_signature = subrecord.signature();
       }
    }
    /*static*/ void SoundDescriptor::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -218,6 +246,7 @@ namespace dovah::loaded_forms {
    void SoundDescriptor::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       {
+         this->type = descriptor_type::standard;
          auto& subrecord = record.open_next_subrecord('CNAM');
          subrecord.write(this->type);
          subrecord.close();

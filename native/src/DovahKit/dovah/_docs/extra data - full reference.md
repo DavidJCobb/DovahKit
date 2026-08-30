@@ -244,7 +244,15 @@ Deprecated. Refers to a container ref.
 
 In Fallout 3 and Fallout: New Vegas, this is applied to merchant NPCs. Items that they buy from the player are redirected to the specified container, so that the merchant doesn't become overburdened as a result of the player selling heavy items to them. Skyrim replaces this with a system wherein merchant job behaviors (and the containers used) are tied to Factions, which among other things means that when a merchant dies, another actor can take up their role.
 
-#### `ExtraMultiBound` (`XMBO`: eXtra MultiBOund)
+#### `ExtraMultiBound` (`XMBP`: eXtra MultiBound Primitive)
+
+**Used on:** REFR
+
+The only data the Creation Kit saves for `ExtraMultiBound` is `XMBP`, an empty subrecord. The Creation Kit doesn't ever actually load `XMBP`; the `REFR` and `CELL` loaders feed it into the extra-data loader, which ignores it.
+
+The sole data contained within `ExtraMultiBound` at run-time is a `NiPointer<BSMultiBound>`. This object stores an unknown dword and a `NiPointer<BSMultiBoundShape>` (either an AABB or OBB). It's updated whenever you close the properties dialog for a ref, though I'm not sure how or why.
+
+#### `ExtraMultiBoundMarkerData` (`XMBO`: eXtra MultiBOund)
 
 **Used on:** REFR
 

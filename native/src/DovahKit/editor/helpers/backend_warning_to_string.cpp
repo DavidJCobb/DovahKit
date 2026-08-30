@@ -2239,6 +2239,16 @@ namespace editor_helpers {
                }
             #pragma endregion
             #pragma region sound descriptor
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::sound_descriptor::sound_data_before_sound_class*>(&warning)) {
+                  auto subject   = form_identifiers_to_string(&casted->subject);
+                  auto signature = cobb::qt::four_cc_to_string(casted->unexpected_signature);
+                  
+                  return QObject::tr(
+                     "Sound descriptor %1 specified some of its sound data (subrecord %2) before it specified its "
+                     "sound type (in CNAM). The Creation Kit and the game will ignore the early data.",
+                     disambig
+                  ).arg(subject).arg(signature);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::sound_descriptor::sound_file_path_too_long*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   //
@@ -2248,17 +2258,20 @@ namespace editor_helpers {
                      disambig
                   ).arg(subject).arg(casted->which).arg(casted->size).arg(casted->max_serializable_size);
                }
-               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::sound_descriptor::unexpected_subrecord_after_cnam*>(&warning)) {
-                  auto subject   = form_identifiers_to_string(&casted->subject);
-                  auto signature = cobb::qt::four_cc_to_string(casted->unexpected_signature);
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::sound_descriptor::unrecognized_cnam*>(&warning)) {
+                  auto subject  = form_identifiers_to_string(&casted->subject);
+                  auto hash    = QString("%1").arg(casted->hash, 8, 16, '0').toUpper();
+                  auto desired = QString("%1").arg(form_load_warnings::by_type::sound_descriptor::unrecognized_cnam::correct_hash, 8, 16, '0').toUpper();
                   
                   return QObject::tr(
-                     "While loading sound descriptor %1, encountered an unexpected subrecord with "
-                     "with signature %2. This subrecord was placed after CNAM, where the game would "
-                     "expect GNAM; depending on when the game decides to load the sound data, it may "
-                     "mistake this unexpected subrecord for GNAM and misread its contents.",
+                     "Sound descriptor %1 claims to have an incorrect sound type (hash %2), so the Creation Kit "
+                     "and the game won't know how to load most of its data and will skip that data. The correct "
+                     "sound type is \"BGSStandardSoundDef\" (CRC-32 hash %3).\n\n"
+                     "DovahKit doesn't know how to work with non-standard sound types, so it'll assume that this "
+                     "is a standard sound type with an incorrect type code, and it'll correct the type code to %3 "
+                     "when saving this form.",
                      disambig
-                  ).arg(subject).arg(signature);
+                  ).arg(subject).arg(hash).arg(desired);
                }
             #pragma endregion
             #pragma region static collection

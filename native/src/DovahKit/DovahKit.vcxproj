@@ -2352,8 +2352,9 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\unterminated_scene_phase.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\shout\wrong_word_count.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_category\is_own_parent.h" />
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unexpected_subrecord_after_cnam.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_data_before_sound_class.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_file_path_too_long.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unrecognized_cnam.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\static_collection\orphaned_instances.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_event_node\unrecognized_event.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_node\orphaned.h" />
@@ -4491,6 +4492,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\r\reference.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\s\sound descriptor.md">
       <SubType>
       </SubType>
     </None>

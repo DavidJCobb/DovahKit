@@ -8528,9 +8528,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_file_path_too_long.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unexpected_subrecord_after_cnam.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\forms\Sound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -10871,6 +10868,12 @@
     <ClInclude Include="dovah\forms\components\extra_data\types\m\multibound_sentinel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unrecognized_cnam.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_data_before_sound_class.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12987,6 +12990,7 @@
     <None Include="dovah\_docs\collision layers.md" />
     <None Include="dovah\_docs\asset paths.md" />
     <None Include="dovah\_docs\voicetypes valid for a topic info.md" />
+    <None Include="dovah\_docs\form types\s\sound descriptor.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

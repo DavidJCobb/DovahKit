@@ -16,7 +16,7 @@ namespace dovah::loaded_forms {
          static constexpr const size_t max_sound_file_path_length = 0x104;
 
          enum class descriptor_type {
-            standard = 0,
+            standard = 0x1EEF540A, // CRC32 hash of "BGSStandardSoundDef"
          };
          enum class loop_type {
             none,
