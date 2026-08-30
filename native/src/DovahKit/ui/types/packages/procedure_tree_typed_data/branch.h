@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include "dovah/data/packages/procedure_tree_branch_type.h"
+#include "dovah/forms/structs/custom_packages/package_flag_overrides.h"
 namespace dovah::loaded_forms {
    namespace structs::custom_packages::procedure_node_data {
       class branch;
@@ -31,6 +32,11 @@ namespace ui::types::packages::procedure_tree_typed_data {
          branch_type type = branch_type::sequence;
          std::vector<std::unique_ptr<procedure_node>> children;
          uint32_t flags = 0;
+         std::optional<dovah::loaded_forms::structs::custom_packages::package_flag_overrides> flag_overrides;
+
+         constexpr bool can_have_flag_overrides() const noexcept {
+            return this->type == branch_type::simultaneous;
+         }
 
          void importData(const backend_type&);
          void exportData(backend_type&, dovah::loaded_forms::Form& dst_owner) const;

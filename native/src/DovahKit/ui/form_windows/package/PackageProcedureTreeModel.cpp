@@ -295,11 +295,14 @@ void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_ty
                   return {};
                return (int)procedure_data->flags;
             case ProcedureOverrideFlagsRole:
-               if (!procedure_data)
-                  return {};
-               if (!procedure_data->flag_overrides.has_value())
-                  return {};
-               return QVariant::fromValue(procedure_data->flag_overrides.value());
+               if (branch_data) {
+                  if (branch_data->flag_overrides.has_value())
+                     return QVariant::fromValue(branch_data->flag_overrides.value());
+               } else if (procedure_data) {
+                  if (procedure_data->flag_overrides.has_value())
+                     return QVariant::fromValue(procedure_data->flag_overrides.value());
+               }
+               return {};
             case Qt::DisplayRole:
             case Qt::ToolTipRole:
                if (branch_data) {
@@ -374,11 +377,24 @@ void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_ty
                   }
                   break;
                case ProcedureOverrideFlagsRole:
-                  if (procedure_data) {
-                     if (value.canConvert<dovah::loaded_forms::structs::custom_packages::package_flag_overrides>()) {
-                        procedure_data->flag_overrides = value.value<dovah::loaded_forms::structs::custom_packages::package_flag_overrides>();
-                        emit dataChanged(index, index, { ProcedureOverrideFlagsRole });
+                  {
+                     using pfo_type = dovah::loaded_forms::structs::custom_packages::package_flag_overrides;
+                     auto set_pfo = [this, &index, &value](std::optional<pfo_type>& dst) {
+                        if (!value.canConvert<pfo_type>())
+                           return false;
+                        dst = value.value<pfo_type>();
+                        if (dst.value().empty())
+                           dst.reset();
+                        emit this->dataChanged(index, index, { ProcedureOverrideFlagsRole });
                         return true;
+                     };
+
+                     if (procedure_data) {
+                        if (set_pfo(procedure_data->flag_overrides))
+                           return true;
+                     } else if (branch_data && branch_data->can_have_flag_overrides()) {
+                        if (set_pfo(branch_data->flag_overrides))
+                           return true;
                      }
                   }
                   break;

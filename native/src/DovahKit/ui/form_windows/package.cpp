@@ -1431,7 +1431,7 @@ bool FormDialogPackage::_uses_package_template() {
             using flag = ui::types::packages::procedure_tree_typed_data::branch::flag;
             this->ui.currentProcedureRepeatWhenComplete->setChecked(flags & flag::repeat_when_complete);
          }
-         this->ui.procedureOverrideFlagsLayout->setEnabled(false);
+         this->ui.procedureOverrideFlagsLayout->setEnabled(branch_type == dovah::packages::procedure_tree_branch_type::simultaneous);
       } else {
          this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageProcedure);
 
@@ -1528,8 +1528,17 @@ bool FormDialogPackage::_uses_package_template() {
             return;
       }
 
-      auto var_proc_type = model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole);
-      if (!var_proc_type.isValid())
+      bool can_have_flag_overrides = false;
+
+      auto var_branch_type = model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
+      auto var_proc_type   = model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole);
+      if (var_proc_type.isValid())
+         can_have_flag_overrides = true;
+      else if (var_branch_type.isValid()) {
+         const auto branch_type = (dovah::packages::procedure_tree_branch_type)var_branch_type.toInt();
+         can_have_flag_overrides = branch_type == dovah::packages::procedure_tree_branch_type::simultaneous;
+      }
+      if (!can_have_flag_overrides)
          return;
    
       const auto yes_no_widgets = std::array{

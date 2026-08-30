@@ -4,6 +4,7 @@
 #include <vector>
 #include "../../../_common.h"
 #include "../../../../data/packages/procedure_tree_branch_type.h"
+#include "../package_flag_overrides.h"
 
 namespace dovah::loaded_forms::structs::custom_packages {
    class procedure_node;
@@ -26,7 +27,14 @@ namespace dovah::loaded_forms::structs::custom_packages::procedure_node_data {
          packages::procedure_tree_branch_type branch_type = packages::procedure_tree_branch_type::sequence;
          std::vector<std::unique_ptr<procedure_node>> children;
          uint32_t flags = 0;
+         std::optional<package_flag_overrides> flag_overrides; // "Simultaneous" only
          
+      public:
+         constexpr bool can_have_flag_overrides() const noexcept {
+            return this->branch_type == packages::procedure_tree_branch_type::simultaneous;
+         }
+
+      public:
          // these functions should be called just after the first subrecord constituting this struct's 
          // data has been opened. when the functions exit, the subrecord after this struct's data will 
          // have just been opened.

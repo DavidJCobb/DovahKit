@@ -24,5 +24,17 @@ namespace dovah::loaded_forms::structs::custom_packages {
       public:
          void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
          void save(tes_subrecord_writer&, load_order_interfaces::form_save&);
+
+         constexpr bool empty() const noexcept {
+            if (this->general.set)
+               return false;
+            if (this->general.clear)
+               return false;
+            if (this->interrupt.set)
+               return false;
+            if (this->interrupt.clear)
+               return false;
+            return this->preferred_speed != preferred_movement_speed::run;
+         }
    };
 }

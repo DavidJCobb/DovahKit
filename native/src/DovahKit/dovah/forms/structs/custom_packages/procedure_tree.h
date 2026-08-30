@@ -25,6 +25,22 @@ namespace dovah::loaded_forms::structs::custom_packages {
             for (auto& node_ptr : this->orphans)
                traverse(*node_ptr);
          }
+         
+         template<typename Functor, typename TrailerFunctor>
+         void for_each_node_with_trailer(Functor&& functor, TrailerFunctor&& trailer) {
+            auto traverse = [&functor, &trailer](this auto&& recurse, procedure_node& node) -> void {
+               functor(node);
+               if (auto* casted = std::get_if<procedure_node_data::branch>(&node.data)) {
+                  for (auto& child_ptr : casted->children)
+                     recurse(*child_ptr);
+               }
+               trailer(node);
+            };
+            if (this->root)
+               traverse(*this->root);
+            for (auto& node_ptr : this->orphans)
+               traverse(*node_ptr);
+         }
 
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load&);

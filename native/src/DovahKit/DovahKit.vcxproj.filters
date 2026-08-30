@@ -4374,6 +4374,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\mega_tests\oops_all_itms.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\mega_tests\full_load_every_form.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10857,6 +10860,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\oops_all_itms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\full_load_every_form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -357,6 +357,18 @@ namespace dovah::loaded_forms::components::conditions {
             parameter.emplace<std::string>();
             break;
       }
+      //
+      // If we're resetting the first argument, and the second argument is a union whose type 
+      // is decided by the first argument, then reset the second argument too:
+      //
+      if (i == 0) {
+         auto* function_info = dovah::conditions::function_info_by_id(this->function);
+         if (function_info) {
+            auto* arg_typeinfo = function_info->argument_types[1];
+            if (arg_typeinfo && arg_typeinfo->is_union())
+               this->reset_parameter(1);
+         }
+      }
    }
    void working_condition::reset_parameters() {
       auto* function_info = dovah::conditions::function_info_by_id(this->function);

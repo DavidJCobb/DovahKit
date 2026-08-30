@@ -23,6 +23,7 @@
 #include "idles_datastore.h"
 #include "./form_types/imagespace_modifier_keyframe_interp.h"
 #include "./form_types/region_bifurcated_data_test.h"
+#include "./mega_tests/full_load_every_form.h"
 #include "./mega_tests/oops_all_itms.h"
 #include "./models/scoped_proxy_model.h"
 #include "./renderwin/vulkan_renderer_instance.h"
@@ -57,6 +58,7 @@ namespace DovahKitDebug {
       features::form_types::region_bifurcated_data_test
    >;
    using mega_tests = cobb::class_list<
+      features::mega_tests::full_load_every_form,
       features::mega_tests::oops_all_itms
    >;
    using model_tests = cobb::class_list<

@@ -2,6 +2,7 @@
 #include "../../_common_cpp.h"
 #include <array>
 #include <utility>
+#include "./procedure_nodes/branch.h"
 
 #include "../../../notices/form_load_warnings/by_form_type/package/procedure_tree_has_orphaned_nodes.h"
 
@@ -16,6 +17,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
       struct loaded_node {
          std::unique_ptr<procedure_node> ptr;
          size_t child_count = 0;
+         bool branch_trailing_content = false;
       };
       std::vector<loaded_node> nodes;
 
@@ -26,6 +28,51 @@ namespace dovah::loaded_forms::structs::custom_packages {
          auto& entry = nodes.emplace_back();
          entry.ptr         = std::move(node_ptr);
          entry.child_count = node->load(record, intfc);
+
+         //
+         // HACK: Simultaneous nodes can have PFOR, and it comes after the subrecords for 
+         //       their child/descendant nodes. Functionally, an "extra" PFOR after a 
+         //       procedure will apply to the last seen Simultaneous node that hasn't 
+         //       already taken a PFOR. Ditto for PFO2, but a Simultaneous node can only 
+         //       load one (i.e. it'll claim the first in a sequence of PFOR+PFO2 or 
+         //       PFO2+PFOR).
+         // 
+         // Example: [PACK:0005912A]DefaultMasterPackageMultiLinkDayTemplate
+         // 
+         //       Node #6 ends with a PFOR, followed by another PFOR for its ancestor 
+         //       node #1.
+         //
+         while (
+            record.get_current_subrecord().signature() == package_flag_overrides::subrecord_legacy ||
+            record.get_current_subrecord().signature() == package_flag_overrides::subrecord_modern
+         ) {
+            const bool is_legacy = record.get_current_subrecord().signature() == package_flag_overrides::subrecord_legacy;
+
+            bool found = false;
+            for (auto rit = nodes.rbegin(); rit != nodes.rend(); ++rit) {
+               auto& info = *rit;
+               assert(!!info.ptr);
+               if (info.branch_trailing_content) {
+                  continue;
+               }
+               if (std::holds_alternative<procedure_node_data::branch>(info.ptr->data)) {
+                  auto& b = std::get<procedure_node_data::branch>(info.ptr->data);
+                  if (b.can_have_flag_overrides()) {
+                     auto& fo = b.flag_overrides.emplace();
+                     fo.load(record.get_current_subrecord(), intfc);
+                     record.next_subrecord();
+                     info.branch_trailing_content = true;
+                     found = true;
+                     break;
+                  }
+               }
+            }
+            if (!found) {
+               //
+               // TODO: warn
+               //
+            }
+         }
       }
 
       if (nodes.empty())
@@ -87,9 +134,90 @@ namespace dovah::loaded_forms::structs::custom_packages {
       }
    }
    void procedure_tree::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      this->for_each_node([&record, &intfc](procedure_node& node) {
-         node.save(record, intfc);
+      /*
+      
+         So for some reason, Bethesda allows Simultaneous branch nodes to have package 
+         flag overrides (hereafter: PFOs); and for some reason, they decided to have 
+         the game and CK serialize a branch's PFOs *after* the subrecords for all of 
+         the branch's children and descendants. This is a bizarre and hideous decision 
+         that has forced me to write all sorts of disgusting hacks into this loader.
+
+         If Bethesda *hadn't* done that, then saving the tree would be as simple as:
+
+            this->for_each_node([&record, &intfc](procedure_node& node) {
+               node.save(record, intfc);
+            });
+
+         Unfortunately, Bethesda's bad and weird and dumb decision has forced a much 
+         more elaborate approach. The main thing: if a Simultaneous branch node has 
+         PFOs, its last child is *capable* of having PFOs (by virtue of being either 
+         a procedure node or another Simultaneous branch node), and its last child 
+         *does not actually have* PFOs, then we have to serialize no-op PFOs onto its 
+         last child. If we don't, then the PFOs we'd serialize onto the parent node 
+         may be misread and loaded as PFOs belonging to the child.
+
+         Note that Bethesda themselves *do not do this*; the Creation Kit will in fact 
+         serialize PFOs incorrectly for a Simultaneous node that has them but also has 
+         a last child that is capable of having them but doesn't.
+
+      */
+      this->for_each_node([](procedure_node& node) {
+         if (!std::holds_alternative<procedure_node_data::branch>(node.data))
+            return;
+         auto& parent = std::get<procedure_node_data::branch>(node.data);
+         if (!parent.can_have_flag_overrides() || !parent.flag_overrides.has_value())
+            return;
+         if (parent.children.empty())
+            return;
+
+         assert(!!parent.children.back());
+         auto& child = *parent.children.back();
+         if (std::holds_alternative<procedure_node_data::branch>(child.data)) {
+            auto& b = std::get<procedure_node_data::branch>(child.data);
+            if (b.can_have_flag_overrides() && !b.flag_overrides.has_value())
+               b.flag_overrides.emplace();
+            //
+            // And then we'll recurse into this child and deal with the grandchildren.
+            //
+         } else if (std::holds_alternative<procedure_node_data::procedure>(child.data)) {
+            auto& p = std::get<procedure_node_data::procedure>(child.data);
+            if (!p.flag_overrides.has_value())
+               p.flag_overrides.emplace();
+         }
       });
+      //
+      // Now that we've dealt with that, we can get to saving the damn things.
+      //
+      this->for_each_node_with_trailer(
+         [&record, &intfc](procedure_node& node) {
+            bool force_flag_overrides = false;
+            if (std::holds_alternative<procedure_node_data::branch>(node.data)) {
+               auto& b = std::get<procedure_node_data::branch>(node.data);
+               if (b.can_have_flag_overrides() && b.flag_overrides.has_value()) {
+                  force_flag_overrides = true;
+               }
+            }
+            node.save(record, intfc);
+         },
+         [&record, &intfc](procedure_node& node) {
+            //
+            // Save trailing content if present for Simultaneous nodes.
+            // 
+            if (std::holds_alternative<procedure_node_data::branch>(node.data)) {
+               auto& b = std::get<procedure_node_data::branch>(node.data);
+               if (b.can_have_flag_overrides()) {
+                  if (b.flag_overrides.has_value()) {
+                     auto& subrecord = record.open_next_subrecord(package_flag_overrides::subrecord_modern);
+                     b.flag_overrides.value().save(subrecord, intfc);
+                     subrecord.close();
+                  }
+               } else {
+                  // Flag overrides illegally present; strip.
+                  b.flag_overrides.reset();
+               }
+            }
+         }
+      );
    }
    void procedure_tree::clone_from(const procedure_tree& src, Form& my_owner) noexcept {
       this->clear(my_owner);
