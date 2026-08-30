@@ -46,6 +46,8 @@ namespace DovahKitDebug::features::mega_tests {
       editor.for_each_form([&prefix, desired_file, &count](dovah::form_stub* form) -> bool {
          if (form->is_none_stub())
             return false;
+         if (form->form_type == dovah::form_type::none) // don't try to save PapyrusPersistenceForm, etc.; we can't
+            return false;
 
          if (prefix.value().contains_form_id(form->formID)) {
             form->set_edited(true);

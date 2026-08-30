@@ -10,6 +10,7 @@
 #include "dovah/files/tes_file_writing/results.h"
 #include "editor/core.h"
 #include "editor/helpers/backend_error_to_string.h"
+#include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/message_log/core.h"
 #include "../main_window.h"
 
@@ -111,7 +112,8 @@ namespace {
             return QObject::tr("The file was successfully saved, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
          case error_code::post_save_none_stub_cleanup_failed:
             return QObject::tr("The file was successfully saved, but internal errors occurred while trying to clean up information on dangling form-to-form references. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
-
+         case error_code::unimplemented_form_type:
+            return QObject::tr("One of the edited forms is of a form type that DovahKit doesn't know how to save. (Wait, what? How did this happen?) ", "write error");
          case error_code::desired_file_version_does_not_support_co_opting_the_hardcoded_form_id_range:
             return QObject::tr("The active file defines forms that fall within the hardcoded form ID range [xx000001, xx0007FF]. The desired save version doesn't support this.", "write error");
       }
@@ -554,6 +556,11 @@ void ActiveFileSaveDialog::commit() {
             message = editor_helpers::backend_error_to_string(*ex.details.form_save_error);
          } else {
             message = tr("An unknown problem occurred while trying to save one of the forms in this file.", "write error");
+         }
+      } else if (ex.code == error_code::unimplemented_form_type) {
+         if (ex.details.unimplemented_form) {
+            message = tr("Form %1 is of a type that DovahKit doesn't know how to save.", "write error")
+               .arg(editor_helpers::form_identifiers_to_string(ex.details.unimplemented_form));
          }
       }
 
