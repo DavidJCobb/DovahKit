@@ -135,7 +135,8 @@ namespace dovah::loaded_forms::components::extra_data_factories {
             _entry{ extra_data_types::water_current_zone_data::signature_zone_cell,      _use_info<extra_data_types::water_current_zone_data> }, // 
             _entry{ extra_data_types::water_current_zone_data::signature_zone_ref,       _use_info<extra_data_types::water_current_zone_data> }, // 
             _entry{ extra_data_types::water_current_zone_data::signature_zone_action,    _use_info<extra_data_types::water_current_zone_data> }, // 
-            _entry{ extra_data_types::water_data::signature_base,                        _use_info<extra_data_types::water_data> }, // This extra-data type has multiple signatures...
+            _entry{ extra_data_types::water_data::signature_base_legacy,                 _use_info<extra_data_types::water_data> }, // This extra-data type has multiple signatures...
+            _entry{ extra_data_types::water_data::signature_base_modern,                 _use_info<extra_data_types::water_data> }, // 
             _entry{ extra_data_types::water_data::signature_vel,                         _use_info<extra_data_types::water_data> }, // 
             _entry{ extra_data_types::water_environment_map::signature,                  _use_info<extra_data_types::water_environment_map> },
          #pragma endregion
