@@ -244,7 +244,7 @@ namespace dovah::loaded_forms {
                this->creature_sounds.load(subrecord, intfc);
                break;
             #pragma region Package override lists
-            case 'SCOR':
+            case 'SPOR':
                if (subrecord.read(this->ai.package_override_lists.spectator)) {
                   intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.spectator, form_type::formlist, subrecord.signature());
                }
@@ -687,7 +687,7 @@ namespace dovah::loaded_forms {
                structs::actor_creature_sounds::generate_use_info(subrecord, creature_sounds_uib);
                break;
             #pragma region Package override lists
-            case 'SCOR':
+            case 'SPOR':
                subrecord.read(package_override_lists.spectator);
                break;
             case 'OCOR':
