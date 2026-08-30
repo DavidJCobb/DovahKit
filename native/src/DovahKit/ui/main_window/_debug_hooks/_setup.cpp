@@ -23,6 +23,7 @@
 #include "idles_datastore.h"
 #include "./form_types/imagespace_modifier_keyframe_interp.h"
 #include "./form_types/region_bifurcated_data_test.h"
+#include "./mega_tests/oops_all_itms.h"
 #include "./models/scoped_proxy_model.h"
 #include "./renderwin/vulkan_renderer_instance.h"
 #include "./renderwin/worldinput2.h"
@@ -54,6 +55,9 @@ namespace DovahKitDebug {
    using form_type_tests = cobb::class_list<
       features::form_types::imagespace_modifier_keyframe_interp,
       features::form_types::region_bifurcated_data_test
+   >;
+   using mega_tests = cobb::class_list<
+      features::mega_tests::oops_all_itms
    >;
    using model_tests = cobb::class_list<
       features::models::scoped_proxy_model
@@ -151,6 +155,10 @@ namespace DovahKitDebug {
       {
          auto* submenu = menu->addMenu(QString("UI models"));
          model_tests::for_each_with_args<_add_functor>(submenu, p);
+      }
+      {
+         auto* submenu = menu->addMenu(QString("Mega-Tests"));
+         mega_tests::for_each_with_args<_add_functor>(submenu, p);
       }
       all_features::for_each_with_args<_add_functor>(menu, p);
    }

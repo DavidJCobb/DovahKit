@@ -1311,6 +1311,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\idles_datastore.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\mega_tests\oops_all_itms.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp" />
@@ -2517,6 +2518,7 @@
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceCollisionLayerPickerModel.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseVoicesModel.h" />
     <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\oops_all_itms.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />

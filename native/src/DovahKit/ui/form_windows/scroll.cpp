@@ -87,6 +87,8 @@ void FormDialogScroll::_load_impl() {
 
    ui::bind(this->ui.editorID, this->editor_id());
    this->ui.name->setText(gls.convert_localized_string(working.name));
+   ui::bind(this->ui.weight, working.weight);
+   ui::bind(this->ui.value,  working.value);
    {
       using enumeration = dovah::magic_casting_type;
       auto* widget = this->ui.casting;
