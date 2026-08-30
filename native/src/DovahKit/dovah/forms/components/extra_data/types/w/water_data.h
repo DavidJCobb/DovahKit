@@ -8,7 +8,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
    class water_data : public extra_data {
       public:
          static constexpr uint32_t signature_base_modern = 'XWCN';
-         static constexpr uint32_t signature_base_legacy = 'XWCs';
+         static constexpr uint32_t signature_base_legacy = 'XWCS';
          static constexpr uint32_t signature_vel         = 'XWCU';
          
          struct _vector4 {
