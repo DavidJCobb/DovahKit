@@ -1131,6 +1131,7 @@ void FormDialogObjectReference::_emit_warnings_on_load() {
       }
    }();
 
+   this->fragments.light.issue_initial_warnings(working);
    this->fragments.primitive.issue_initial_warnings(working);
    this->fragments.teleport.issue_initial_warnings(working);
 }

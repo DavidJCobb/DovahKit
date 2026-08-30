@@ -4377,6 +4377,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\mega_tests\full_load_every_form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\refs\light_radius.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9857,9 +9860,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\occlusion_box_should_be_a_plane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\light_emitter_radius_is_too_small.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\utils\get_computed_location.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -10863,6 +10863,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\full_load_every_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\refs\light_radius.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

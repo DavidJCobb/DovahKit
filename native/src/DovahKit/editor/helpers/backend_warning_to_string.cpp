@@ -1969,12 +1969,6 @@ namespace editor_helpers {
                   }
                   return format.arg(subject);
                }
-               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::light_emitter_radius_is_too_small*>(&warning)) {
-                  QString subject = form_identifiers_to_string(&casted->subject);
-                  return QObject::tr(
-                     "Light emitter %1 has a radius (%2) that is too small (the minimum that the Creation Kit warns about is %3)."
-                  ).arg(subject).arg(casted->actual).arg(casted->minimum);
-               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::map_marker_has_no_data*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   return QObject::tr(

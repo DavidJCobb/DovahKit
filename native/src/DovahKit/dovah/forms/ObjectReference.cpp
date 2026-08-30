@@ -7,7 +7,6 @@
 #include "components/extra_data/types/a/action.h"
 #include "components/extra_data/types/e/enable_state_parent.h"
 #include "components/extra_data/types/p/primitive.h"
-#include "components/extra_data/types/r/radius.h"
 #include "components/extra_data/types/r/reflector_refs.h"
 #include "components/extra_data/types/s/scale.h"
 #include "components/extra_data/use_info_state.h"
@@ -16,7 +15,6 @@
 #include "../notices/form_load_warnings/by_form_type/reference/actor_reflected_by_water_refs.h"
 #include "../notices/form_load_warnings/by_form_type/reference/corrupt_coordinates.h"
 #include "../notices/form_load_warnings/by_form_type/reference/lateral_position_too_far_from_interior_origin.h"
-#include "../notices/form_load_warnings/by_form_type/reference/light_emitter_radius_is_too_small.h"
 #include "../notices/form_load_warnings/by_form_type/reference/map_marker_has_no_data.h"
 #include "../notices/form_load_warnings/by_form_type/reference/occlusion_box_should_be_a_plane.h"
 #include "../notices/form_load_warnings/by_form_type/reference/suspiciously_low_z_position.h"
@@ -298,17 +296,6 @@ namespace dovah::loaded_forms {
             if (this->stub.test_record_flags(form_flag::reflected_by_auto_water)) {
                specific_load_warnings::actor_reflected_by_cell_water notice(this->stub);
                intfc.log_load_warning(notice);
-            }
-         } else if (base->form_type == dovah::form_type::light) {
-            if (const auto* extra = this->extra_data.get<components::extra_data_types::radius>()) {
-               if (extra->value < 20.0F) {
-                  specific_load_warnings::light_emitter_radius_is_too_small notice(
-                     this->stub,
-                     20.0F,
-                     extra->value
-                  );
-                  intfc.log_load_warning(notice);
-               }
             }
          } else if (base->formID == hardcoded_form_ids::MapMarker) {
             if (!this->extra_data.get<components::extra_data_types::map_marker>()) {

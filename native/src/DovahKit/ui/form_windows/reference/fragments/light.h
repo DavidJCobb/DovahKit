@@ -55,6 +55,7 @@ namespace ui::reference::fragments {
          
       public:
          void setup(QWidget& owner, const control_collection&);
+         void issue_initial_warnings(loaded_form_type&);
          void load(loaded_form_type&, uint32_t& record_flags);
          void save(loaded_form_type&, uint32_t& record_flags);
 

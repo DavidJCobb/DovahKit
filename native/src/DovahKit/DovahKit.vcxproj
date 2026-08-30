@@ -481,6 +481,7 @@
     <ClCompile Include="dovah\utils\get_region_worldspace.cpp" />
     <ClCompile Include="dovah\utils\location_is_or_is_inside_of_location.cpp" />
     <ClCompile Include="dovah\utils\object_bounds_from_nif.cpp" />
+    <ClCompile Include="dovah\utils\refs\light_radius.cpp" />
     <ClCompile Include="dovah\utils\subrecord_data_position.cpp" />
     <ClCompile Include="dovah\utils\update_large_ref_index.cpp" />
     <ClCompile Include="dovah\utils\update_location_content.cpp" />
@@ -2329,7 +2330,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\actor_reflected_by_water_refs.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\corrupt_coordinates.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\lateral_position_too_far_from_interior_origin.h" />
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\light_emitter_radius_is_too_small.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\map_marker_has_no_data.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\occlusion_box_should_be_a_plane.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\suspiciously_low_z_position.h" />
@@ -2439,6 +2439,7 @@
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="dovah\utils\get_computed_location.h" />
     <ClInclude Include="dovah\utils\object_bounds_from_nif.h" />
+    <ClInclude Include="dovah\utils\refs\light_radius.h" />
     <ClInclude Include="dovah\utils\story_event_member_id.h" />
     <ClInclude Include="dovah\utils\subrecord_data_position.h" />
     <ClInclude Include="dovah\utils\text_replacers\do_text_replacement.h" />

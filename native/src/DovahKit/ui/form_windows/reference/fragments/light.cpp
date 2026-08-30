@@ -1,5 +1,6 @@
 #include "./light.h"
 #include <QCheckBox>
+#include <QCoreApplication> // logging
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QPushButton>
@@ -9,6 +10,9 @@
 #include "dovah/forms/Light.h"
 #include "dovah/forms/ObjectReference.h"
 #include "dovah/utils/default_light_emitter_shadow_depth_bias.h"
+#include "dovah/utils/refs/light_radius.h"
+#include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/subsystems/message_log/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 namespace {
@@ -36,6 +40,29 @@ namespace ui::reference::fragments {
          this->controls.depth_bias.slider->setValue(v);
       });
    }
+   void light::issue_initial_warnings(loaded_form_type& form) {
+      auto* base_form = form.base_form.get_form_stub();
+      if (!base_form || base_form->form_type != dovah::form_type::light)
+         return;
+
+      float radius = dovah::utils::refs::get_light_radius(form);
+      if (radius < 20.0F) {
+         auto& logger = dovahkit::subsystems::message_log::core::get();
+         logger.addLogItem(ui::types::log_item(
+            QCoreApplication::translate(
+               "frontend REFR load warnings",
+               //
+               "Light emitter %1 has a radius (%2) that is too small (the minimum that the Creation Kit warns about is %3)."
+            )
+               .arg(editor_helpers::form_identifiers_to_string(&form.stub))
+               .arg(radius)
+               .arg(20.0F)
+            ,
+            ui::types::log_item_type::warning,
+            ui::types::log_item_context::form_load
+         ));
+      }
+   }
    void light::load(loaded_form_type& form, uint32_t& record_flags) {
       this->stub = &form.stub;
 
@@ -46,30 +73,22 @@ namespace ui::reference::fragments {
       }
       this->controls.groupbox->setEnabled(true);
       
-      if (auto* extra = form.extra_data.get<extra_data_type>()) {
-         this->controls.groupbox->setChecked(true);
-         this->controls.fov.spinbox->setValue(extra->fov);
-         this->controls.fade.spinbox->setValue(extra->fade);
-         this->controls.end_cap.spinbox->setValue(extra->end_distance_cap);
-         this->controls.depth_bias.spinbox->setValue(extra->shadow_depth_bias);
-      } else {
-         auto loaded = base_form->load().ptr_cast<dovah::loaded_forms::Light>();
-         if (loaded) {
-            this->controls.fov.spinbox->setValue(loaded->fov);
-            this->controls.fade.spinbox->setValue(loaded->fade);
-            this->controls.end_cap.spinbox->setValue(loaded->radius); // TODO: is this correct?
+      {
+         auto loaded_base = base_form->load().ptr_cast<dovah::loaded_forms::Light>();
+         if (auto* extra = form.extra_data.get<extra_data_type>()) {
+            this->controls.groupbox->setChecked(true);
+            this->controls.fov.spinbox->setValue(extra->fov);
+            this->controls.fade.spinbox->setValue(extra->fade);
+            this->controls.end_cap.spinbox->setValue(extra->end_distance_cap);
+            this->controls.depth_bias.spinbox->setValue(extra->shadow_depth_bias);
+         } else {
+            if (loaded_base) {
+               this->controls.fov.spinbox->setValue(loaded_base->fov);
+               this->controls.fade.spinbox->setValue(loaded_base->fade);
+               this->controls.end_cap.spinbox->setValue(loaded_base->radius); // TODO: is this correct?
+            }
          }
-      }
-
-      if (auto* extra = form.extra_data.get<extra_data_types::radius>())
-         this->controls.radius.spinbox->setValue(extra->value);
-      else {
-         auto* base_form = this->loaded().base_form.get_form_stub();
-         if (!base_form)
-            return;
-         auto loaded = base_form->load().ptr_cast<dovah::loaded_forms::Light>();
-         if (loaded)
-            this->controls.radius.spinbox->setValue(loaded->radius);
+         this->controls.radius.spinbox->setValue(dovah::utils::refs::get_light_radius(form));
       }
 
       QObject::connect(this->controls.fov.reset, &QPushButton::clicked, [this, &form]() {
@@ -109,7 +128,7 @@ namespace ui::reference::fragments {
       const float cap    = this->controls.end_cap.spinbox->value();
       const float bias   = this->controls.depth_bias.spinbox->value();
       
-      const bool any_changed = [&]() {
+      const bool non_radius_params_changed = [&]() {
          auto* base_form = this->loaded().base_form.get_form_stub();
          if (!base_form)
             return true;
@@ -117,23 +136,21 @@ namespace ui::reference::fragments {
          if (!loaded)
             return true;
          return (
-            loaded->radius != radius
-         || loaded->fade   != fade
+            loaded->fade   != fade
          || loaded->fov    != fov
          );
       }();
 
-      if (any_changed) {
+      if (non_radius_params_changed) {
          auto* extra = form.extra_data.get_or_create<extra_data_types::light>();
          extra->fade = fade;
          extra->fov  = fov;
          extra->end_distance_cap  = cap;
          extra->shadow_depth_bias = bias;
-         form.extra_data.get_or_create<extra_data_types::radius>()->value = radius;
       } else {
          form.extra_data.remove<extra_data_types::light>(form);
-         form.extra_data.remove<extra_data_types::radius>(form);
       }
+      dovah::utils::refs::set_light_radius(form, radius, true);
    }
 
    light::loaded_form_type& light::loaded() {

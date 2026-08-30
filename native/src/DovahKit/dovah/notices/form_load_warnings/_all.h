@@ -114,7 +114,6 @@
    #include "./by_form_type/reference/actor_reflected_by_water_refs.h"
    #include "./by_form_type/reference/corrupt_coordinates.h"
    #include "./by_form_type/reference/lateral_position_too_far_from_interior_origin.h"
-   #include "./by_form_type/reference/light_emitter_radius_is_too_small.h"
    #include "./by_form_type/reference/map_marker_has_no_data.h"
    #include "./by_form_type/reference/occlusion_box_should_be_a_plane.h"
    #include "./by_form_type/reference/suspiciously_low_z_position.h"
