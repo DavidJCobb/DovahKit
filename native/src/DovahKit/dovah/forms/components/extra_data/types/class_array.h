@@ -60,6 +60,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
       class merchant_container;
       class multibound_bounds;
       class multibound_ref;
+      class multibound_sentinel;
    #pragma endregion
    #pragma region N
       class navmesh_door_portal;
@@ -182,6 +183,7 @@ namespace dovah::loaded_forms::components {
          extra_data_types::merchant_container,
          extra_data_types::multibound_bounds,
          extra_data_types::multibound_ref,
+         extra_data_types::multibound_sentinel,
       #pragma endregion
       #pragma region N
          extra_data_types::navmesh_door_portal,

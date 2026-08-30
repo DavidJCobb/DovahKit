@@ -58,6 +58,7 @@
    #include "./m/merchant_container.h"
    #include "./m/multibound_bounds.h"
    #include "./m/multibound_ref.h"
+   #include "./m/multibound_sentinel.h"
 #pragma endregion
 #pragma region N
    #include "./n/navmesh_door_portal.h"

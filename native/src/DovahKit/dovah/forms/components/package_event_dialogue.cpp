@@ -1,5 +1,6 @@
 #include "package_event_dialogue.h"
 #include "../_common_cpp.h"
+#include "./legacy_script.h"
 
 #include "../../notices/form_load_warnings/by_form_component/package_event_dialogue/unrecognized_subrecord.h"
 
@@ -20,6 +21,15 @@ namespace dovah::loaded_forms::components {
             case 'INAM':
                subrecord.read(this->idle);
                intfc.warn_if_ref_is_wrong_type(this->idle, form_type::idle, subrecord.signature());
+               break;
+            case components::legacy_script::subrecord_signature_header:
+            case components::legacy_script::subrecord_signature_compiled_data:
+            case components::legacy_script::subrecord_signature_source_code:
+            case components::legacy_script::subrecord_signature_quest:
+            case components::legacy_script::subrecord_signature_ref_objects:
+            case components::legacy_script::subrecord_signature_ref_variables:
+               // TODO: load and retain legacy script data, in the future, if we ever care about that.
+               // NOTE: per xEdit, only SCHR and maybe SCTX have been seen. Does the CK or game load the others?
                break;
             case 'TNAM':
                this->type = topic_type::ref;

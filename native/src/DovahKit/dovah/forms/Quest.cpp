@@ -1,6 +1,7 @@
 #include "Quest.h"
 #include "_common_cpp.h"
 #include "../form_stub_addenda.h"
+#include "./components/legacy_script.h"
 
 #include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
 #include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"
@@ -1027,6 +1028,21 @@ namespace dovah::loaded_forms {
             auto& subrecord = record.get_current_subrecord();
             assert(subrecord.signature() == 'QSDT' && "Quest::LogEntry::load should only be called just after the QSDT subrecord is opened.");
             subrecord.read(this->flags);
+            while (true) {
+               switch (record.peek_next_subrecord_type()) {
+                  case components::legacy_script::subrecord_signature_header:
+                  case components::legacy_script::subrecord_signature_compiled_data:
+                  case components::legacy_script::subrecord_signature_source_code:
+                  case components::legacy_script::subrecord_signature_quest:
+                  case components::legacy_script::subrecord_signature_ref_objects:
+                  case components::legacy_script::subrecord_signature_ref_variables:
+                     record.next_subrecord();
+                     continue;
+                  default:
+                     break;
+               }
+               break;
+            }
             if (record.peek_next_subrecord_type() != 'NAM0')
                return;
             record.next_subrecord();

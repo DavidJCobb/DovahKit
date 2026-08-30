@@ -175,13 +175,6 @@ namespace dovah::loaded_forms {
                   //
                   done = true;
                   break;
-               case components::legacy_script::subrecord_signature_header:
-               case components::legacy_script::subrecord_signature_compiled_data:
-               case components::legacy_script::subrecord_signature_source_code:
-               case components::legacy_script::subrecord_signature_quest:
-               case components::legacy_script::subrecord_signature_ref_objects:
-               case components::legacy_script::subrecord_signature_ref_variables:
-                  break;
                default:
                   specific_load_warnings::scene_action_base_layout_incorrect notice(
                      intfc.target_stub,
@@ -350,6 +343,13 @@ namespace dovah::loaded_forms {
                      intfc.log_load_warning(notice);
                      return false;
                   }
+                  break;
+               case components::legacy_script::subrecord_signature_header:
+               case components::legacy_script::subrecord_signature_compiled_data:
+               case components::legacy_script::subrecord_signature_source_code:
+               case components::legacy_script::subrecord_signature_quest:
+               case components::legacy_script::subrecord_signature_ref_objects:
+               case components::legacy_script::subrecord_signature_ref_variables:
                   break;
                default:
                   specific_load_warnings::unexpected_subrecord_in_scene_action notice(

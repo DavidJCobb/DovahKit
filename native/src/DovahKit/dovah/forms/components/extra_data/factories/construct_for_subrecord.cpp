@@ -83,10 +83,11 @@ namespace dovah::loaded_forms::components::extra_data_factories {
             _entry{ extra_data_types::lock::signature,                      _construct<extra_data_types::lock> },
          #pragma endregion
          #pragma region M
-            _entry{ extra_data_types::map_marker::signature,         _construct<extra_data_types::map_marker> },
-            _entry{ extra_data_types::merchant_container::signature, _construct<extra_data_types::merchant_container> },
-            _entry{ extra_data_types::multibound_bounds::signature,  _construct<extra_data_types::multibound_bounds> },
-            _entry{ extra_data_types::multibound_ref::signature,     _construct<extra_data_types::multibound_ref> },
+            _entry{ extra_data_types::map_marker::signature,          _construct<extra_data_types::map_marker> },
+            _entry{ extra_data_types::merchant_container::signature,  _construct<extra_data_types::merchant_container> },
+            _entry{ extra_data_types::multibound_bounds::signature,   _construct<extra_data_types::multibound_bounds> },
+            _entry{ extra_data_types::multibound_ref::signature,      _construct<extra_data_types::multibound_ref> },
+            _entry{ extra_data_types::multibound_sentinel::signature, _construct<extra_data_types::multibound_sentinel> },
          #pragma endregion
          _entry{ extra_data_types::navmesh_door_portal::signature, _construct<extra_data_types::navmesh_door_portal> },
          #pragma region O

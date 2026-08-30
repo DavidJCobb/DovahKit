@@ -1950,6 +1950,7 @@
     <ClInclude Include="dovah\forms\components\extra_data\types\m\merchant_container.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\m\multibound_bounds.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\m\multibound_ref.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\types\m\multibound_sentinel.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\n\navmesh_door_portal.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\o\occlusion_plane.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\o\occlusion_plane_ref_data.h" />

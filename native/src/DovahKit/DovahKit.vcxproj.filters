@@ -10868,6 +10868,9 @@
     <ClInclude Include="dovah\utils\refs\light_radius.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\m\multibound_sentinel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
