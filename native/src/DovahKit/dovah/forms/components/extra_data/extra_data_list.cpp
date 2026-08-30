@@ -53,9 +53,19 @@ namespace dovah::loaded_forms::components {
       if (data) {
          this->content.push_back(data);
          auto result = data->load(subrecord, intfc);
-         assert(result != subrecord_load_result::unrecognized && "An extra-data class didn't recognize a subrecord that our factory definitions said was its responsibility.");
+         #if _DEBUG
+            if (result == subrecord_load_result::unrecognized)
+               //
+               // An extra-data class didn't recognize a subrecord that our factory definitions said was its 
+               // responsibility. This could happen if the record data is ill-formed, e.g. if an extra-data 
+               // type consists of multiple subrecords with strict ordering and a leading subrecord is not 
+               // present; however, it could as easily be a mistake on our part.
+               //
+               __debugbreak();
+         #endif
          switch (result) {
             case subrecord_load_result::failed:
+            case subrecord_load_result::unrecognized:
                return load_result::failed;
             case subrecord_load_result::succeeded:
                return load_result::succeeded;

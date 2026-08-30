@@ -17,7 +17,9 @@ namespace {
 
 namespace dovah::loaded_forms::components::extra_data_types {
    /*virtual*/ subrecord_load_result water_data::load(tes_file_reading::subrecord& subrecord, load_interface_t& intfc) /*override*/ {
-      if (subrecord.signature() == signature_base)
+      if (subrecord.signature() == signature_base_modern)
+         return subrecord_load_result::requires_record;
+      if (subrecord.signature() == signature_base_legacy)
          return subrecord_load_result::requires_record;
       return subrecord_load_result::unrecognized;
    }
@@ -25,7 +27,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
       uint32_t count = 0;
       {
          auto& subrecord = record.get_current_subrecord();
-         assert(subrecord.signature() == signature_base && "This function should only have been called after the other `load` overload verified that we were in an XWCN subrecord.");
+         assert((subrecord.signature() == signature_base_modern || subrecord.signature() == signature_base_legacy) && "This function should only have been called after the other `load` overload verified that we were in an XWCN subrecord.");
          subrecord.read(count);
       }
 
