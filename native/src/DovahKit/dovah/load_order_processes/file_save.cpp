@@ -164,6 +164,7 @@ namespace dovah::load_order_processes {
          // The file was reopened successfully, so let's update our in-memory state to match the data 
          // that was saved out.
          //
+         this->_post_save_sever_uses(writer);
          this->_post_save_form_id_remap(writer);
          writer.update_source_file_header();
          //
@@ -190,6 +191,39 @@ namespace dovah::load_order_processes {
          if (active_load_order.on_mass_renumber)
             (active_load_order.on_mass_renumber)();
       }
+   }
+
+   void file_save::_post_save_sever_uses(writer_type& writer) {
+      for (auto& pair : writer.fixup_data.uses_to_sever) {
+         auto* stub = pair.first;
+         auto& list = pair.second;
+         if (!list.empty()) {
+            //
+            // According to this form's use info, it refers to other forms that we were unable to 
+            // write to the final file. Those references will have been serialized as zero, so now 
+            // we need to sever them in-memory: if the form is still loaded, then we need to update 
+            // the loaded data, and either way, we also need to update the use info.
+            //
+            // One example of where this could happen: imagine that we're converting the active 
+            // file from Skyrim Special to Skyrim Classic, and it contains a form list that has 
+            // an entry for a VOLI form -- a type that can only exist in Skyrim Special. When 
+            // writing, we'll serialize form ID 0 instead of the VOLI form ID. If the VOLI form is 
+            // part of the active file, then we'll also discard it below using a form deletion 
+            // request, and that will sever the references to it. However, if the VOLI belongs to 
+            // one of the active file's masters, then it won't be deleted, so we need to sever the 
+            // references to it here.
+            //
+            auto loaded = stub->get_content_if_loaded(); // use this to ensure it doesn't unload out from under us
+            for (auto id : list) {
+               auto* target = active_load_order.get_form(id, false);
+               assert(target && "Error during post-save cleanup: How does one of the saved forms have a dangling form-to-form reference with no target none-stub?");
+               if (loaded)
+                  loaded->sever_outbound_references_to(*target);
+               stub->revoke_all_outbound_references_to(target);
+            }
+         }
+      }
+      writer.fixup_data.uses_to_sever.clear();
    }
 
    void file_save::_post_save_form_id_remap(writer_type& writer) {
@@ -262,32 +296,6 @@ namespace dovah::load_order_processes {
             active_load_order.active_file_forms_by_type[stub->form_type].forms[stub->formID] = stub;
          }
          stub->set_edited(false);
-         //
-         if (!info.sever_references_to.empty()) {
-            //
-            // According to this form's use info, it refers to other forms that we were unable to 
-            // write to the final file. Those references will have been serialized as zero, so now 
-            // we need to sever them in-memory: if the form is still loaded, then we need to update 
-            // the loaded data, and either way, we also need to update the use info.
-            //
-            // One example of where this could happen: imagine that we're converting the active 
-            // file from Skyrim Special to Skyrim Classic, and it contains a form list that has 
-            // an entry for a VOLI form -- a type that can only exist in Skyrim Special. When 
-            // writing, we'll serialize form ID 0 instead of the VOLI form ID. If the VOLI form is 
-            // part of the active file, then we'll also discard it below using a form deletion 
-            // request, and that will sever the references to it. However, if the VOLI belongs to 
-            // one of the active file's masters, then it won't be deleted, so we need to sever the 
-            // references to it here.
-            //
-            auto loaded = stub->get_content_if_loaded(); // use this to ensure it doesn't unload out from under us
-            for (auto id : info.sever_references_to) {
-               auto* target = active_load_order.get_form(id, false);
-               assert(target && "Error during post-save cleanup: How does one of the saved forms have a dangling form-to-form reference with no target none-stub?");
-               if (loaded)
-                  loaded->sever_outbound_references_to(*target);
-               stub->revoke_all_outbound_references_to(target);
-            }
-         }
       }
    }
    void file_save::_post_save_unsaved_form_delete(writer_type& writer) {

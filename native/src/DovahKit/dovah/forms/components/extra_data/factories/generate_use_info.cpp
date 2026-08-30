@@ -27,7 +27,6 @@ namespace dovah::loaded_forms::components::extra_data_factories {
          _entry{ extra_data_types::deprecated::XNVP::signature, _use_info<extra_data_types::deprecated::XNVP> },
          _entry{ extra_data_types::deprecated::XROO::signature, _use_info<extra_data_types::deprecated::XROO> },
          _entry{ extra_data_types::deprecated::XUSE::signature, _use_info<extra_data_types::deprecated::XUSE> },
-         _entry{ extra_data_types::deprecated::XWCS::signature, _use_info<extra_data_types::deprecated::XWCS> },
          _entry{ extra_data_types::deprecated::XWLT::signature, _use_info<extra_data_types::deprecated::XWLT> },
          _entry{ extra_data_types::deprecated::XWNT::signature, _use_info<extra_data_types::deprecated::XWNT> },
          _entry{ extra_data_types::deprecated::XDCR::signature, _use_info<extra_data_types::deprecated::XDCR> },

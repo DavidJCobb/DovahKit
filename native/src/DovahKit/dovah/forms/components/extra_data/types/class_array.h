@@ -116,7 +116,6 @@ namespace dovah::loaded_forms::components::extra_data_types {
       class XSED;
       class XSOL;
       class XUSE;
-      class XWCS;
       class XWLT;
       class XWNT;
    }
@@ -238,7 +237,6 @@ namespace dovah::loaded_forms::components {
       extra_data_types::deprecated::XSED,
       extra_data_types::deprecated::XSOL,
       extra_data_types::deprecated::XUSE,
-      extra_data_types::deprecated::XWCS,
       extra_data_types::deprecated::XWLT,
       extra_data_types::deprecated::XWNT
    >;

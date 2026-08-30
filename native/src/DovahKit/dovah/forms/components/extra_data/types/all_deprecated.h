@@ -41,8 +41,6 @@ namespace dovah::loaded_forms::components::extra_data_types::deprecated {
    };
    class XUSE : public common_empty<XUSE, 'XUSE'> {
    };
-   class XWCS : public common_empty<XWCS, 'XWCS'> {
-   };
    class XWLT : public common_empty<XWLT, 'XWLT'> {
    };
    class XWNT : public common_empty<XWNT, 'XWNT'> {

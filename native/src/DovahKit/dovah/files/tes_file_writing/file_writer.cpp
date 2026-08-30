@@ -267,11 +267,16 @@ namespace dovah::tes_file_writing {
          auto& write_info = this->fixup_data.form_stubs[stub->formID];
          write_info.stub   = stub;
          write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
+         std::vector<bare_form_id_t>* uses_to_sever = nullptr;
          for (auto& pair : stub->outbound) {
             auto  id    = pair.first;
             auto& entry = pair.second;
-            if (!this->_can_serialize_form(entry.other))
-               write_info.sever_references_to.push_back(id);
+            if (!this->_can_serialize_form(entry.other)) {
+               if (!uses_to_sever) {
+                  uses_to_sever = &this->fixup_data.uses_to_sever[stub];
+               }
+               uses_to_sever->push_back(id);
+            }
          }
          //
          if (this->_should_compress_current_record(stub))

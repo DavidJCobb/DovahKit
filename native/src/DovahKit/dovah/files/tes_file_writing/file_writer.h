@@ -42,7 +42,6 @@ namespace dovah {
                form_stub* stub         = nullptr;
                uint32_t   record_flags = 0; // preserved for the case of a form being added to the active file because a child record needed saving
                uint32_t   offset       = 0;
-               std::vector<bare_form_id_t> sever_references_to;
             };
             
          protected:
@@ -109,6 +108,7 @@ namespace dovah {
                   file_offset_t offset = 0;
                } record_and_group_count;
                std::unordered_map<bare_form_id_t, form_stub_write_info> form_stubs;
+               std::unordered_map<form_stub*, std::vector<bare_form_id_t>> uses_to_sever;
             } fixup_data;
             
             constexpr group& get_current_group() {
