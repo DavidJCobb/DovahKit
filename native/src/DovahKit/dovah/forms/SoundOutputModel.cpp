@@ -67,6 +67,8 @@ namespace dovah::loaded_forms {
             case 'MNAM':
                subrecord.read(this->type);
                break;
+            case 'CNAM': // legacy count for SNAM
+               break;
             case 'SNAM': // legacy ONAM
                if (subrecord.size() >= 8) {
                   if (subrecord.size() >= 16) {

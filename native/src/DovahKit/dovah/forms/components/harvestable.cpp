@@ -16,7 +16,7 @@ namespace dovah::loaded_forms::components {
       //
       if (signature == subrecord_signature_ingredient) {
          if (auto& dst = this->ingredient; subrecord.read(dst)) {
-            intfc.warn_if_ref_is_wrong_type(dst, form_type::ingredient, subrecord.signature());
+            intfc.warn_if_ref_is_wrong_type(dst, std::array{ form_type::ingredient, form_type::potion, form_type::leveled_item }, subrecord.signature());
          }
          return;
       }

@@ -167,6 +167,7 @@ namespace dovah::loaded_forms {
             case 'NAM5':
                if (record.is_skyrim_special()) {
                   subrecord.read(this->noise.flowmap_texture);
+                  break;
                }
                [[fallthrough]];
             default:

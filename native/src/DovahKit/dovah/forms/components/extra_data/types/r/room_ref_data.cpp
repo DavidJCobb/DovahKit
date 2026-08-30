@@ -39,10 +39,17 @@ namespace dovah::loaded_forms::components::extra_data_types {
          //  - bool     is_master;
          //  - uint8_t  pad03;
          //
+         uint32_t dword = 0;
+         subrecord.read(dword);
+         linked_room_count = dword & 0xFF;
+         this->flags     = dword >> 8;
+         this->is_master = (dword >> 16) == 1;
+         /*//
          subrecord.read(linked_room_count);
          subrecord.read(this->flags);
          subrecord.read(this->is_master);
          subrecord.skip_bytes(1);
+         //*/
       }
 
       if (this->flags & flag::has_lighting_template) {
@@ -124,6 +131,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
          intfc.throw_save_error(notice);
          return;
       }
+
       uint8_t linked_room_count = this->linked_rooms.size();
 
       if (this->lighting_template)
@@ -137,10 +145,20 @@ namespace dovah::loaded_forms::components::extra_data_types {
          this->flags &= ~flag::has_imagespace;
 
       auto& XRMR = record.open_next_subrecord(signature);
+      /*//
       XRMR.write(linked_room_count);
       XRMR.write(this->flags);
       XRMR.write(this->is_master);
       XRMR.skip_bytes(1);
+      //*/
+      {
+         uint32_t dword = 0;
+         dword |= (uint8_t)this->linked_rooms.size();
+         dword |= this->flags << 8;
+         if (this->is_master)
+            dword |= (uint32_t)1 << 16;
+         XRMR.write(dword);
+      }
       XRMR.close();
       if (this->lighting_template)
          record.write_formID_subrecord('LNAM', this->lighting_template);

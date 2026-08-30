@@ -14,13 +14,15 @@ namespace dovah::loaded_forms::structs::custom_packages {
    /*virtual*/ void package_data_object_list::load_value(tes_record_reader& record, load_order_interfaces::form_load& intfc, const load_context& context) /*override*/ {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() != 'CNAM') {
-         specific_load_warnings::package_data_unexpected_value_subrecord notice(
-            intfc.target_stub,
-            context.which,
-            this->get_type(),
-            subrecord.signature()
-         );
-         intfc.log_load_warning(notice);
+         if (subrecord.signature() != 'ANAM') { // if not the next packdata
+            specific_load_warnings::package_data_unexpected_value_subrecord notice(
+               intfc.target_stub,
+               context.which,
+               this->get_type(),
+               subrecord.signature()
+            );
+            intfc.log_load_warning(notice);
+         }
          return;
       }
       subrecord.read(this->value);

@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::components {
          case subrecord_signature_entry:
             if (subrecord.read(form_id)) {
                this->forms.push_back(form_id);
-               intfc.warn_if_ref_is_wrong_type(form_id, std::array{ form_type::spell, form_type::shout }, subrecord);
+               intfc.warn_if_ref_is_wrong_type(form_id, std::array{ form_type::spell, form_type::shout, form_type::leveled_spell }, subrecord.signature());
             }
             break;
       }

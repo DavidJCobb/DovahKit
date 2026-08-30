@@ -29,6 +29,15 @@ namespace dovah::loaded_forms {
                subrecord.read(this->general.equipment_score_mults.staff);
                subrecord.read(this->general.avoid_threat_chance);
                break;
+            case 'CSMD':
+               {
+                  if (!this->csmd.has_value())
+                     this->csmd.emplace();
+                  auto& csmd = this->csmd.value();
+                  subrecord.read(csmd.unk00);
+                  subrecord.read(csmd.unk04);
+               }
+               break;
             case 'CSME':
                subrecord.read(this->melee.attack_staggered_mult);
                subrecord.read(this->melee.power_attack_staggered_mult);
@@ -95,6 +104,7 @@ namespace dovah::loaded_forms {
       copy->close_range = this->close_range;
       copy->long_range  = this->long_range;
       copy->flight      = this->flight;
+      copy->csmd        = this->csmd;
    }
    void CombatStyle::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
@@ -110,6 +120,13 @@ namespace dovah::loaded_forms {
          subrecord.write(this->general.equipment_score_mults.unarmed);
          subrecord.write(this->general.equipment_score_mults.staff);
          subrecord.write(this->general.avoid_threat_chance);
+         subrecord.close();
+      }
+      if (this->csmd.has_value()) {
+         auto& csmd      = this->csmd.value();
+         auto& subrecord = record.open_next_subrecord('CSMD');
+         subrecord.write(csmd.unk00);
+         subrecord.write(csmd.unk04);
          subrecord.close();
       }
       {

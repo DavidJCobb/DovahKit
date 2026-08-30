@@ -175,6 +175,13 @@ namespace dovah::loaded_forms {
                   //
                   done = true;
                   break;
+               case components::legacy_script::subrecord_signature_header:
+               case components::legacy_script::subrecord_signature_compiled_data:
+               case components::legacy_script::subrecord_signature_source_code:
+               case components::legacy_script::subrecord_signature_quest:
+               case components::legacy_script::subrecord_signature_ref_objects:
+               case components::legacy_script::subrecord_signature_ref_variables:
+                  break;
                default:
                   specific_load_warnings::scene_action_base_layout_incorrect notice(
                      intfc.target_stub,
@@ -238,6 +245,13 @@ namespace dovah::loaded_forms {
                case 'DMAX':
                   subrecord.read(action_data.looping.max);
                   break;
+               case components::legacy_script::subrecord_signature_header:
+               case components::legacy_script::subrecord_signature_compiled_data:
+               case components::legacy_script::subrecord_signature_source_code:
+               case components::legacy_script::subrecord_signature_quest:
+               case components::legacy_script::subrecord_signature_ref_objects:
+               case components::legacy_script::subrecord_signature_ref_variables:
+                  break;
                default:
                   specific_load_warnings::unexpected_subrecord_in_scene_action notice(
                      intfc.target_stub,
@@ -285,6 +299,13 @@ namespace dovah::loaded_forms {
                         action_data.packages.push_back(id);
                      }
                   }
+                  break;
+               case components::legacy_script::subrecord_signature_header:
+               case components::legacy_script::subrecord_signature_compiled_data:
+               case components::legacy_script::subrecord_signature_source_code:
+               case components::legacy_script::subrecord_signature_quest:
+               case components::legacy_script::subrecord_signature_ref_objects:
+               case components::legacy_script::subrecord_signature_ref_variables:
                   break;
                default:
                   specific_load_warnings::unexpected_subrecord_in_scene_action notice(
@@ -723,6 +744,17 @@ namespace dovah::loaded_forms {
                   }
                   break;
             #pragma endregion
+            case components::legacy_script::subrecord_signature_header:
+            case components::legacy_script::subrecord_signature_compiled_data:
+            case components::legacy_script::subrecord_signature_source_code:
+            case components::legacy_script::subrecord_signature_quest:
+            case components::legacy_script::subrecord_signature_ref_objects:
+            case components::legacy_script::subrecord_signature_ref_variables:
+               // TODO: potentially multiple legacy scripts separated with NEXT
+               break;
+            case 'NEXT':
+               // TODO: separator between legacy scripts
+               break;
             case 'VNAM':
                for (auto& item : this->vnam)
                   if (!subrecord.read(item))

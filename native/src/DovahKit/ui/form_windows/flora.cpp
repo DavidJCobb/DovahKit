@@ -5,7 +5,7 @@
 FormDialogFlora::FormDialogFlora(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
-   this->ui.ingredient->setAllowedFormType(dovah::form_type::ingredient);
+   this->ui.ingredient->setAllowedFormTypes({ dovah::form_type::ingredient, dovah::form_type::potion, form_type::leveled_item });
    this->ui.harvestSound->setAllowedFormType(dovah::form_type::sound_descriptor);
    this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
 

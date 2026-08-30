@@ -58,7 +58,7 @@ namespace dovah::loaded_forms {
                   for (auto& sublist : this->footsteps.sublists)
                      sublist.clear();
 
-                  if (subrecord.size() != (
+                  if (subrecord.size() != sizeof(bare_form_id_t) * (
                      counts.walk +
                      counts.run +
                      counts.sprint +

@@ -11,9 +11,9 @@ namespace dovah::loaded_forms::components::extra_data_types {
          
          struct flag {
             flag() = delete;
-            enum : uint8_t {
-               has_imagespace        = 0x04, // only used during load
-               has_lighting_template = 0x08, // only used during load
+            enum : uint16_t {
+               has_imagespace        = 1 << 6, // only used during load
+               has_lighting_template = 1 << 7, // only used during load
             };
          };
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include "./Form.h"
 #include "./_common.h"
 #include "./components/papyrus.h"
@@ -23,6 +24,11 @@ namespace dovah::loaded_forms {
             };
          };
          using flags_t = std::underlying_type_t<flag::type>;
+
+         struct CSMD {
+            float unk00;
+            float unk04;
+         };
 
       public:
          components::papyrus_attachment_data script_data; // VMAD
@@ -81,6 +87,7 @@ namespace dovah::loaded_forms {
                float time   = 0; // CSFL+0x18
             } perch_attack;
          } flight; // CSFL
+         std::optional<CSMD> csmd;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
