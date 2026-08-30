@@ -49,7 +49,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
       return record_load_result::complete;
    }
    /*virtual*/ void water_data::save(tes_file_writing::record& record, save_interface_t& intfc) /*override*/ {
-      auto& XWCN = record.open_next_subrecord(signature_base);
+      auto& XWCN = record.open_next_subrecord(signature_base_modern);
       XWCN.write((uint32_t)this->data.size());
       XWCN.close();
       auto& XWCU = record.open_next_subrecord(signature_vel);
