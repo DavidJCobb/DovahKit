@@ -848,33 +848,6 @@ namespace editor_helpers {
                   }
                   return format.arg(subject).arg(crc_seen).arg(crc_expected).arg(crc_is_of).arg(navmesh);
                }
-               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::navmesh_pathing_cell::improper_exterior*>(&warning)) {
-                  QString subject = form_identifiers_to_string(&casted->subject);
-                  QString navmesh = form_identifiers_to_string(casted->navmesh);
-                  QString cell    = form_identifiers_to_string(&casted->cell);
-                  //
-                  QString format;
-                  if (casted->subject.form_type == dovah::form_type::navmesh_info_map) {
-                     format = QObject::tr(
-                        "Info for Navmesh %2 in the Navmesh Info Map specifies exterior cell %3 as its pathing cell. However, the format used "
-                        "to specify this exterior cell is only valid for interior cells. (The cell is specified by record ID; exterior cells "
-                        "must be specified via the parent worldspace's record ID and the cell's grid position.)",
-                        disambig
-                     );
-                  } else {
-                     format = QObject::tr(
-                        "Navmesh %1 specifies exterior cell %3 as its pathing cell. However, the format used "
-                        "to specify this exterior cell is only valid for interior cells. (The cell is specified by record ID; exterior cells "
-                        "must be specified via the parent worldspace's record ID and the cell's grid position.)",
-                        disambig
-                     );
-                  }
-                  return dovahkit::qt::utils::bulk_string_substitution(format).exec(
-                     subject,
-                     navmesh,
-                     cell
-                  );
-               }
             #pragma endregion
             #pragma region package event dialogue
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::package_event_dialogue::unrecognized_subrecord*>(&warning)) {

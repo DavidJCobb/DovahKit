@@ -12,7 +12,7 @@ namespace dovah::loaded_forms::structs {
             int16_t grid_x = 0;
             int16_t grid_y = 0;
          };
-         struct pathing_cell_interior {
+         struct pathing_cell_interior { // NOTE: sometimes used in vanilla for some exterior cells; not sure when or why
             form_reference_t cell;
          };
 

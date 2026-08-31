@@ -28,6 +28,7 @@ You can create an object navmesh by right-clicking a base form in the Creation K
   * Load doors identify their navmesh and triangle via `REFR/XNDP`.
   * The navmesh identifies load doors and matches them to local triangles via door links (`PathingDoor` instances) in `NAVM/NVNM`.
   * The navmesh info map identifies load doors via door links (`PathingDoor` instances) in `NAVI/NVMI` (`NavMeshInfo` instances; each navmesh should have one).
+* `PathingCell` objects are implemented similarly to `BGSStandardSoundDef` in sound descriptor forms. It's the same basic design, using a CRC of a typename to look up a factory. As with sound definitions, `PathingCell` appears to be the only class that can actually appear here.
 
 ### Areas for future research
 

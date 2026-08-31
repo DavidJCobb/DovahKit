@@ -2,7 +2,6 @@
 #include "../_common_cpp.h"
 
 #include "../../notices/form_load_warnings/by_form_component/navmesh_pathing_cell/bad_crc.h"
-#include "../../notices/form_load_warnings/by_form_component/navmesh_pathing_cell/improper_exterior.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -41,16 +40,6 @@ namespace dovah::loaded_forms::structs {
             auto& data = this->data.emplace<pathing_cell_interior>();
             if (auto& form = data.cell; subrecord.read(form)) {
                intfc.warn_if_ref_is_wrong_type(form, form_type::cell, subrecord.signature());
-               if (auto* stub = form.get_form_stub(); stub && stub->form_type == form_type::cell) {
-                  if (stub->is_exterior_cell()) {
-                     specific_load_warnings::improper_exterior notice(
-                        intfc.target_stub,
-                        owning_navmesh,
-                        *stub
-                     );
-                     intfc.log_load_warning(notice);
-                  }
-               }
             }
          }
       }
