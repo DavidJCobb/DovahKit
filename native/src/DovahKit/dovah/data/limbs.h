@@ -11,5 +11,5 @@ namespace dovah {
       saddle   = 5,
    };
 
-   constexpr const size_t limbs_count = (size_t)limb::saddle;
+   constexpr const size_t limbs_count = (size_t)limb::saddle + 1;
 }
