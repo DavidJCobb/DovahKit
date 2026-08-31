@@ -9119,9 +9119,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\bad_crc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\improper_exterior.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh\invalid_grid_size.h">
       <Filter>Header Files</Filter>
     </ClInclude>

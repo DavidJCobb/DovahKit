@@ -2238,7 +2238,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\misplaced_effect_item_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\too_many_effects.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\bad_crc.h" />
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\improper_exterior.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\inconsistent_fragment_scriptname.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\vmad_too_large.h" />
