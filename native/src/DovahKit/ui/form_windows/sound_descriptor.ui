@@ -30,13 +30,7 @@
       <widget class="QLineEdit" name="editorID"/>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="descriptorType">
-       <item>
-        <property name="text">
-         <string>Standard</string>
-        </property>
-       </item>
-      </widget>
+      <widget class="QComboBox" name="descriptorType"/>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">

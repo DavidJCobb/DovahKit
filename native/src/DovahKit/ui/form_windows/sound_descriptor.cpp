@@ -7,11 +7,16 @@
 FormDialogSoundDescriptor::FormDialogSoundDescriptor(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
+   {
+      using enumeration = loaded_form_type::descriptor_type;
+      auto* widget = this->ui.descriptorType;
+      widget->clear();
+      widget->addItem(tr("Standard"), (int)enumeration::standard);
+   }
    this->ui.category->setAllowedFormType(dovah::form_type::sound_category);
    this->ui.outputModel->setAllowedFormType(dovah::form_type::sound_output_model);
    this->ui.alternateFor->setAllowedFormType(dovah::form_type::sound_descriptor);
 
-   ui::item_indices_to_data(this->ui.descriptorType);
    {
       using enumeration = loaded_form_type::loop_type;
       auto* widget = this->ui.looping;

@@ -290,6 +290,7 @@ namespace dovah::loaded_forms {
       this->script_data.clear(*this);
       this->conditions.clear(*this);
 
+      this->type = descriptor_type::standard;
       this->alternate_for.set(*this, nullptr);
       this->category.set(*this, nullptr);
       this->output_model.set(*this, nullptr);

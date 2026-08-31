@@ -78,8 +78,17 @@ namespace dovah::loaded_forms::structs::region {
          const auto& a = this->points[i];
          const auto& b = this->points[i + 1];
          for (size_t j = i + 2; j < size; ++j) {
+            const bool is_implicitly_closing = (j + 1 >= size);
+            if (is_implicitly_closing) {
+               if (i == 0)
+                  //
+                  // For e.g. a five-vertex polygon, testing (A, B, D, A) for 
+                  // self-intersection would give a false-positive result.
+                  //
+                  break;
+            }
             const auto& c = this->points[j];
-            const auto& d = (j + 1 < size) ? this->points[j + 1] : this->points[0];
+            const auto& d = is_implicitly_closing ? this->points[0] : this->points[j + 1];
             if (impl::are_poly_edges_self_intersecting(a, b, c, d))
                return true;
          }
