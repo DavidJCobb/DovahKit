@@ -19,13 +19,13 @@ namespace dovah::loaded_forms::components::extra_data_types {
    /*virtual*/ subrecord_load_result primitive::load(tes_file_reading::subrecord& subrecord, load_interface_t& intfc) /*override*/ {
       if (subrecord.signature() != signature)
          return subrecord_load_result::unrecognized;
-      subrecord.read(this->bounds.x);
-      subrecord.read(this->bounds.y);
-      subrecord.read(this->bounds.z);
+      subrecord.read(this->halfwidths.x);
+      subrecord.read(this->halfwidths.y);
+      subrecord.read(this->halfwidths.z);
       this->color.load(subrecord);
       subrecord.read(this->shape);
 
-      if (this->bounds.length() < 0.001F) { // same warning threshold as the CK
+      if (this->halfwidths.length() < 0.001F) { // same warning threshold as the CK
          specific_load_warnings::primitive_is_zero_size notice(intfc.target_stub);
          intfc.log_load_warning(notice);
       }
@@ -37,9 +37,9 @@ namespace dovah::loaded_forms::components::extra_data_types {
    }
    /*virtual*/ void primitive::save(tes_file_writing::record& record, save_interface_t& intfc) /*override*/ {
       auto& subrecord = record.open_next_subrecord(signature);
-      subrecord.write(this->bounds.x);
-      subrecord.write(this->bounds.y);
-      subrecord.write(this->bounds.z);
+      subrecord.write(this->halfwidths.x);
+      subrecord.write(this->halfwidths.y);
+      subrecord.write(this->halfwidths.z);
       this->color.save(subrecord);
       subrecord.write(this->shape);
       subrecord.close();
@@ -54,7 +54,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
    
    /*virtual*/ extra_data* primitive::clone(loaded_forms::Form& clone_owner) const noexcept /*override*/ {
       auto* clone = new primitive;
-      clone->bounds = this->bounds;
+      clone->halfwidths = this->halfwidths;
       clone->color  = this->color;
       clone->shape  = this->shape;
       return clone;

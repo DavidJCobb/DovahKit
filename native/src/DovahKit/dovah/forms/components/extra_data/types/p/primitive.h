@@ -30,9 +30,14 @@ namespace dovah::loaded_forms::components::extra_data_types {
          primitive() : extra_data(all_extra_data_types::index_of_type<primitive>) {}
 
       public:
-         cobb::vector3<float> bounds;
+         cobb::vector3<float> halfwidths;
          color_floats color = { 1, 1, 1, 0.15 };
          enum shape   shape = shape::box;
+
+      public:
+         constexpr cobb::vector3<float> dimensions() const noexcept {
+            return this->halfwidths * 2;
+         }
 
       public:
          virtual subrecord_load_result load(tes_file_reading::subrecord&, load_interface_t&) override;

@@ -88,7 +88,7 @@ namespace ui::reference::fragments {
       auto* extra_mbnd = form.extra_data.get<extra_data_types::multibound_bounds>();
       if (!extra_prim || !extra_mbnd)
          return;
-      if (extra_prim->bounds != extra_mbnd->halfwidths * 2) {
+      if (extra_prim->halfwidths != extra_mbnd->halfwidths) {
          auto& logger = dovahkit::subsystems::message_log::core::get();
          logger.addLogItem(ui::types::log_item(
             QCoreApplication::translate(
@@ -133,11 +133,11 @@ namespace ui::reference::fragments {
       extra_data_type* extra = nullptr;
       if (extra = form.extra_data.get<extra_data_type>()) {
          if (auto* extra_bound = form.extra_data.get<extra_data_types::multibound_bounds>()) {
-            if (extra->bounds != extra_bound->halfwidths) {
+            if (extra->halfwidths != extra_bound->halfwidths) {
                //
                // We've already warned the user about this, so just correct it now.
                //
-               extra_bound->halfwidths = extra->bounds / 2;
+               extra_bound->halfwidths = extra->halfwidths;
             }
          }
       } else {
@@ -151,7 +151,7 @@ namespace ui::reference::fragments {
             extra->color = dovah::utils::default_primitive_color_for_base_form(*base_form);
          }
          if (auto* extra_bound = form.extra_data.get<extra_data_types::multibound_bounds>()) {
-            extra->bounds = extra_bound->halfwidths * 2;
+            extra->halfwidths = extra_bound->halfwidths;
          }
       }
       this->controls.color->setColor(QColor::fromRgbF(extra->color.r, extra->color.g, extra->color.b, extra->color.a));
@@ -160,7 +160,7 @@ namespace ui::reference::fragments {
       for (size_t i = 0; i < this->controls.extents.all.size(); ++i) {
          auto* widget  = this->controls.extents.all[i];
          auto  blocker = QSignalBlocker(widget);
-         widget->setValue(extra->bounds[i]);
+         widget->setValue(extra->halfwidths[i] * 2);
       }
       //
       // The "Player Activation" checkbox just changes the layer type to L_NONCOLLIDABLE. 
@@ -208,7 +208,7 @@ namespace ui::reference::fragments {
 
       auto* extra_prim = form.extra_data.get_or_create<extra_data_type>();
       for (size_t i = 0; i < this->controls.extents.all.size(); ++i)
-         extra_prim->bounds[i] = this->controls.extents.all[i]->value();
+         extra_prim->halfwidths[i] = this->controls.extents.all[i]->value() / 2;
       {
          auto color = this->controls.color->color();
          extra_prim->color = {
@@ -233,7 +233,7 @@ namespace ui::reference::fragments {
       }
 
       if (auto* extra_bound = form.extra_data.get<extra_data_types::multibound_bounds>()) {
-         extra_bound->halfwidths = extra_prim->bounds / 2;
+         extra_bound->halfwidths = extra_prim->halfwidths;
       }
    }
 

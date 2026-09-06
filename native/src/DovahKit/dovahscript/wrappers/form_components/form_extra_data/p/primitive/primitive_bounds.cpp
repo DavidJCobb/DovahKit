@@ -15,7 +15,7 @@ namespace {
       auto* data = wrappers::form_extra_data_types::primitive::unwrap(self);
       if (!data)
          cobb::lua::argerror(L, 1, "no underlying object");
-      return data->bounds;
+      return data->halfwidths;
    }
 
    namespace _methods {

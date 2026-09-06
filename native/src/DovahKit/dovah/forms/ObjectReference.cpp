@@ -307,7 +307,7 @@ namespace dovah::loaded_forms {
                if (extra->shape == components::extra_data_types::primitive::shape::box) {
                   bool tiny = false;
                   for (size_t i = 0; i < 3; ++i) {
-                     if (extra->bounds[i] < 16.0F) {
+                     if (extra->halfwidths[i] < 16.0F) {
                         tiny = true;
                         break;
                      }

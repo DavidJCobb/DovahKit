@@ -56,7 +56,7 @@ void cls::validate_table_for_assign(lua_State* L, int stack_pos) {
       cobb::lua::argerror(L, stack_pos, "table or userdata expected");
    
    api_helpers::fail_table_if_expandos(L, stack_pos, std::array{
-      std::string_view("bounds"),
+      std::string_view("halfwidths"),
       std::string_view("shape"),
    });
 
@@ -72,10 +72,10 @@ void cls::validate_table_for_assign(lua_State* L, int stack_pos) {
          cobb::lua::argerror(L, stack_pos, "field `shape` is not a recognized shape type");
    }
    {
-      lua_getfield(L, stack_pos, "bounds");
+      lua_getfield(L, stack_pos, "halfwidths");
       if (!lua_istable(L, -1) && !lua_isuserdata(L, -1)) {
          lua_pop(L, 1);
-         cobb::lua::argerror(L, stack_pos, "field `bounds` must be a table or userdata");
+         cobb::lua::argerror(L, stack_pos, "field `halfwidths` must be a table or userdata");
       }
       for (size_t i = 0; i < 3; ++i) {
          lua_geti(L, -1, i + 1);
@@ -96,15 +96,15 @@ void cls::validate_table_for_assign(lua_State* L, int stack_pos) {
          std::string err;
          if (named_absent) {
             if (indexed_absent) {
-               err = std::format("field `bounds` does not have field {} or field '{}'", i + 1, name);
+               err = std::format("field `halfwidths` does not have field {} or field '{}'", i + 1, name);
             } else {
-               err = std::format("field `bounds` field {} is not a number, and field '{}' is not present", i + 1, name);
+               err = std::format("field `halfwidths` field {} is not a number, and field '{}' is not present", i + 1, name);
             }
          } else {
             if (indexed_absent) {
-               err = std::format("field `bounds` does not have field {}, and field '{}' is not a number", i + 1, name);
+               err = std::format("field `halfwidths` does not have field {}, and field '{}' is not a number", i + 1, name);
             } else {
-               err = std::format("field `bounds` fields {} and '{}' are not numbers", i + 1, name);
+               err = std::format("field `halfwidths` fields {} and '{}' are not numbers", i + 1, name);
             }
          }
          cobb::lua::argerror(L, stack_pos, err.c_str());
@@ -115,7 +115,7 @@ void cls::validate_table_for_assign(lua_State* L, int stack_pos) {
 void cls::assign(wrapped_type& dst, lua_State* L, int stack_pos) {
    stack_pos = lua_absindex(L, stack_pos);
 
-   cobb::vector3<float> bounds;
+   cobb::vector3<float> halfwidths;
    enum wrapped_type::shape shape = wrapped_type::shape::none;
 
    {
@@ -125,11 +125,11 @@ void cls::assign(wrapped_type& dst, lua_State* L, int stack_pos) {
       shape = opt.value();
    }
    {
-      lua_getfield(L, stack_pos, "bounds");
+      lua_getfield(L, stack_pos, "halfwidths");
       for (size_t i = 0; i < 3; ++i) {
          lua_geti(L, -1, i + 1);
          if (lua_isnumber(L, -1)) {
-            bounds[i] = lua_tonumber(L, -1);
+            halfwidths[i] = lua_tonumber(L, -1);
             lua_pop(L, 1);
             continue;
          }
@@ -137,19 +137,19 @@ void cls::assign(wrapped_type& dst, lua_State* L, int stack_pos) {
          char name[2] = { 'x' + i, '\0' };
          lua_getfield(L, -1, name);
          assert(lua_isnumber(L, -1) && "this should've been checked earlier, with a call to `validate_table_for_assign`!");
-         bounds[i] = lua_tonumber(L, -1);
+         halfwidths[i] = lua_tonumber(L, -1);
          lua_pop(L, 1);
       }
       lua_pop(L, 1);
    }
 
-   dst.bounds = bounds;
-   dst.shape  = shape;
+   dst.halfwidths = halfwidths;
+   dst.shape      = shape;
 }
 
 namespace {
    namespace _getters {
-      int bounds(lua_State* L) {
+      int halfwidths(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
          auto* data = cls::unwrap(self);
@@ -175,7 +175,7 @@ namespace {
       }
    }
    namespace _setters {
-      int bounds(lua_State* L) {
+      int halfwidths(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
          auto* data = cls::unwrap(self);
@@ -183,16 +183,16 @@ namespace {
             return 0;
 
          // STACK: [self, argument]
-         lua_getfield(L, 1, "bounds");
-         // STACK: [self, argument, self.bounds]
+         lua_getfield(L, 1, "halfwidths");
+         // STACK: [self, argument, self.halfwidths]
          lua_getfield(L, -1, "set_xyz");
-         // STACK: [self, argument, self.bounds, self.bounds.set_xyz]
+         // STACK: [self, argument, self.halfwidths, self.halfwidths.set_xyz]
          lua_pushvalue(L, -2);
-         // STACK: [self, argument, self.bounds, self.bounds.set_xyz, self.bounds]
+         // STACK: [self, argument, self.halfwidths, self.halfwidths.set_xyz, self.halfwidths]
          lua_pushvalue(L, 2);
-         // STACK: [self, argument, self.bounds, self.bounds.set_xyz, self.bounds, argument]
+         // STACK: [self, argument, self.halfwidths, self.halfwidths.set_xyz, self.halfwidths, argument]
          lua_call(L, 2, 0);
-         // STACK: [self, argument, self.bounds]
+         // STACK: [self, argument, self.halfwidths]
          return 0;
       }
       int shape(lua_State* L) {
@@ -220,13 +220,13 @@ namespace dovahscript::wrappers {
    };
    
    /*static*/ cls::method_list_t cls::metatable_getters = {
-      { "bounds", &_getters::bounds },
+      { "halfwidths", &_getters::halfwidths },
       // TODO: color
-      { "shape",  &_getters::shape },
+      { "shape",      &_getters::shape },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
-      { "bounds", &_setters::bounds },
+      { "halfwidths", &_setters::halfwidths },
       // TODO: color
-      { "shape",  &_setters::shape },
+      { "shape",      &_setters::shape },
    };
 }
