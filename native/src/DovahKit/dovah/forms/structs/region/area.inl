@@ -37,18 +37,17 @@ namespace dovah::loaded_forms::structs::region {
          if (m == 0)
             return true; // `cd` and `ba` are collinear
          if (m > 0) {
-            if (o >= 0)
+            if (o < 0 || o > m)
                return false;
-            if (o > m)
+            if (n < 0 || n > m)
                return false;
-            return m > n;
          } else {
-            if (o >= 0)
+            if (o > 0 || o < m)
                return false;
-            if (n > 0)
+            if (n > 0 || n < m)
                return false;
-            return m <= n;
          }
+         return true;
       }
    }
 
