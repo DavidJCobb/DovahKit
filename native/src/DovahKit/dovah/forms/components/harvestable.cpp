@@ -1,5 +1,6 @@
 #include "./harvestable.h"
 #include "../_common_cpp.h"
+#include "../../data/all_carryable_form_types.h"
 
 namespace dovah::loaded_forms::components {
    void harvestable::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -16,7 +17,7 @@ namespace dovah::loaded_forms::components {
       //
       if (signature == subrecord_signature_ingredient) {
          if (auto& dst = this->ingredient; subrecord.read(dst)) {
-            intfc.warn_if_ref_is_wrong_type(dst, std::array{ form_type::ingredient, form_type::potion, form_type::leveled_item }, subrecord.signature());
+            intfc.warn_if_ref_is_wrong_type(dst, all_carryable_form_types, subrecord.signature());
          }
          return;
       }

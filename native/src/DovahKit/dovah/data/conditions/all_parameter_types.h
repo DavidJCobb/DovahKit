@@ -517,7 +517,7 @@ namespace dovah::conditions::parameter_types {
       };
    }
    namespace _form_type_lists {
-      inline constexpr const auto BaseForm        = std::array{
+      inline constexpr const auto BaseForm         = std::array{
          form_type::acoustic_space, // Confirmed in CK. Strange, since these aren't placeable.
          form_type::activator,
          form_type::actor_base,
@@ -555,14 +555,14 @@ namespace dovah::conditions::parameter_types {
          // Other:
          form_type::formlist,
       };
-      inline constexpr const auto EffectItem      = std::array{
+      inline constexpr const auto EffectItem       = std::array{
          form_type::spell,
          form_type::potion,
          form_type::enchantment,
          form_type::ingredient,
          form_type::scroll,
       };
-      inline constexpr const auto InventoryItem   = std::array{
+      inline constexpr const auto InventoryItem    = std::array{
          form_type::ammo,
          form_type::armor,
          form_type::book,
@@ -578,11 +578,11 @@ namespace dovah::conditions::parameter_types {
          form_type::soul_gem,
          form_type::weapon,
       };
-      inline constexpr const auto KnowableForm    = std::array{
+      inline constexpr const auto KnowableForm     = std::array{
          form_type::magic_effect,
          form_type::word_of_power,
       };
-      inline constexpr const auto ObjectReference = std::array{
+      inline constexpr const auto ObjectReference  = std::array{
          form_type::actor,
          form_type::reference,
          form_type::arrow,
@@ -594,13 +594,17 @@ namespace dovah::conditions::parameter_types {
          form_type::missile,
          form_type::placed_hazard,
       };
-      inline constexpr const auto OwnerForm       = std::array{
+      inline constexpr const auto OwnerForm        = std::array{
          form_type::actor_base,
          form_type::faction,
       };
-      inline constexpr const auto Voicetype = std::array{
-         form_type::formlist,
+      inline constexpr const auto VoicetypeOrList  = std::array{
          form_type::voicetype,
+         form_type::formlist,
+      };
+      inline constexpr const auto WorldspaceOrList = std::array{
+         form_type::worldspace,
+         form_type::formlist,
       };
    }
    
@@ -658,10 +662,10 @@ namespace dovah::conditions::parameter_types {
    inline constexpr const auto Spell             = parameter_typeinfo("Spell",               form_type::spell);
    inline constexpr const auto String            = parameter_typeinfo("String",              parameter_underlying_type::string);
    inline constexpr const auto VATSValueFunction = parameter_typeinfo("VATS Value Function", _enums::VATSValueFunction);
-   inline constexpr const auto Voicetype         = parameter_typeinfo("Voicetype",           _form_type_lists::Voicetype);
+   inline constexpr const auto VoicetypeOrList   = parameter_typeinfo("Voicetype",           _form_type_lists::VoicetypeOrList);
    inline constexpr const auto WardState         = parameter_typeinfo("Ward State",          _enums::WardState);
    inline constexpr const auto Weather           = parameter_typeinfo("Weather",             form_type::weather);
-   inline constexpr const auto Worldspace        = parameter_typeinfo("Worldspace",          form_type::worldspace);
+   inline constexpr const auto WorldspaceOrList  = parameter_typeinfo("Worldspace",          _form_type_lists::WorldspaceOrList);
    
    namespace _VATSValueTypes {
       inline constexpr const auto Weapon             = parameter_typeinfo("Weapon",      form_type::weapon);

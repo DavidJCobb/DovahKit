@@ -1,4 +1,5 @@
 #include "./tree.h"
+#include "dovah/data/all_carryable_form_types.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
@@ -14,7 +15,7 @@ FormDialogTree::FormDialogTree(dovah::form_stub& stub, QWidget* parent) : QDialo
    // where or how they're set.
    //
    
-   this->ui.ingredient->setAllowedFormTypes({ dovah::form_type::ingredient, dovah::form_type::potion, dovah::form_type::leveled_item });
+   this->ui.ingredient->setAllowedFormTypes(QList(dovah::all_carryable_form_types.begin(), dovah::all_carryable_form_types.end()));
    this->ui.harvestSound->setAllowedFormType(dovah::form_type::sound_descriptor);
 
    this->load(); // this creates the working copy.
