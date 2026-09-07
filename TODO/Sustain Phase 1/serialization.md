@@ -1,6 +1,18 @@
 
 # Serialization notes
 
+## Mapping record IDs to form IDs
+
+Internally, this process is referred to as "fixing up form IDs;" in the rewrite it should be referred to as "resolving" "record IDs" to "form IDs."
+
+Currently, if we see a record ID that is out-of-bounds within its containing file, we return an error. For form uses, this means that the use fails to resolve. This is mostly correct but for one thing: the game itself instead acts as though the record ID used the load order prefix of the containing file.
+
+For example, consider a load order with Skyrim.esm, Update.esm, IrrelevantFile.esp, OtherUnrelatedFile.esp, and MyCoolMod.esp. Suppose that MyCoolMod lists Skyrim and Update as its masters, such that record IDs prefixed with 02 refer to forms defined within MyCoolMod itself; thus the record IDs would resolve to load order prefix 04. If there exists a use of a form whose specified ID is 03xxxxxx, then we error on that and resolve it to 00000000, whereas the game would pretend that the record ID was actually 02xxxxxx and thus resolve it to 04xxxxxx.
+
+This is mostly only relevant for cases where the game inadvertently resolves form IDs twice (i.e. DLBR/QNAM), as this is what prevents DLBRs in all new content files from being *intrinsically* broken (i.e. you can add DLBRs to your own quests, but not to quests defined in any master, unless that master has the same position in your master list as in the final load order -- generally only true for Skyrim.esm and the DLCs assuming a well-formed master list). If we want to load a malformed file faithfully to how the game would load it, however, then we should replicate the game's behavior and add a special warning for this specific case. The warning would have to be emitted from within the subrecord-reader object itself; I don't want each individual form loader to have to manually check for this sort of thing.
+
+For now, I special-case the logic for detecting when DLBR/QNAM will break; so, resolving record IDs to form IDs is is strict in DovahKit (i.e. out-of-bounds record IDs resolve to null rather than to forms in the containing file), but the code that detects when DLBR/QNAM will break will manually apply the "same file" logic on its own to avoid emitting spurious warnings on basically every DLBR outside of Skyrim.esm.
+
 ## Multi-read and multi-write
 The "read" and "write" functions used to read TES files only stream one field at a time. In other programs I've written since I wrote the TES file code, I've had multi-stream functions &mdash; variadic template functions which read/write multiple values in sequence. It'd be nice to bring that enhancement to DovahKit.
 

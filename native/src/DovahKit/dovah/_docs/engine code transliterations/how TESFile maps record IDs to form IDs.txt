@@ -1,0 +1,22 @@
+
+void TESFile::ApplyPrefixToUnprefixedFormID(uint32_t& id) {
+   id &= 0x00FFFFFF;
+   #if !SKYRIM_LE
+      if (this->IsLight()) { // flag 1 << 9
+         uint32_t v = 0xFE000000 | (id & 0xFFF);
+         v |= (this->lightIndex << 0xC);
+         id = v;
+         return;
+      }
+   #endif
+   id |= this->compileIndex << 0x18;
+}
+
+void FixupFormIDForLoad(uint32_t& id, TESFile* this_file) {
+   if (id <= 0x7FF)
+      return;
+   if (!file)
+      return;
+   // inlined in LE:
+   (containing_file ? containing_file : this_file)->ApplyPrefixToUnprefixedFormID(id);
+}
