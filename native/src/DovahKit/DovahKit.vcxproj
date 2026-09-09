@@ -512,6 +512,7 @@
     <ClCompile Include="editor\helpers\recalc_bounds.cpp" />
     <ClCompile Include="editor\helpers\update_active_file_seq_file.cpp" />
     <ClCompile Include="editor\localize\collision_layer.cpp" />
+    <ClCompile Include="editor\localize\dialogue_category.cpp" />
     <ClCompile Include="editor\localize\dialogue_topic_subtype.cpp" />
     <ClCompile Include="editor\localize\entry_point_function.cpp" />
     <ClCompile Include="editor\localize\form_creation_error_code.cpp" />
@@ -2250,6 +2251,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\collision_layer\invalid_uid.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\invalid_topic_category.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\footstep_set\footstep_count_mismatch.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h" />
@@ -2271,6 +2273,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\music_track\invalid_track_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\music_track\too_many_palette_layers.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh\invalid_grid_size.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh\too_many_door_links.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh\too_many_edge_links.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_door_bad_crc.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_may_be_multiply_deleted.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\precomputed_path_has_gaps.h" />
@@ -2466,11 +2470,13 @@
     <QtMoc Include="widgets\DKAudioWidget.h" />
     <ClInclude Include="editor\helpers\recalc_bounds.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
+    <ClInclude Include="editor\localize\dialogue_category.h" />
     <ClInclude Include="editor\localize\form_creation_error_code.h" />
     <ClInclude Include="editor\localize\limb.h" />
     <ClInclude Include="editor\localize\magic_spell_type.h" />
     <ClInclude Include="editor\localize\perk_entry_point_explanation.h" />
     <QtMoc Include="editor\subsystems\audio\dovahkit_audio_subsystem.h" />
+    <ClInclude Include="editor\localize\_macros.h" />
     <ClInclude Include="editor\subsystems\audio\core.h" />
     <ClInclude Include="editor\subsystems\audio\exceptions\invalid_sound_file_data.h" />
     <ClInclude Include="editor\subsystems\audio\impl\engine_and_thread.h" />
@@ -4320,6 +4326,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="dovah\_docs\engine code transliterations\collision layer comparisons.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how TESFile maps record IDs to form IDs.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game handles large refs.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
@@ -4439,6 +4446,10 @@
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
     <None Include="dovah\forms\structs\region\area.inl" />
+    <None Include="dovah\forms\structs\region\_docs\area.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stubs\helpers\README.md" />
     <None Include="dovah\load_order_interfaces\form_load.inl" />

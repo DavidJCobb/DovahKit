@@ -2,13 +2,7 @@
 #include <QCoreApplication>
 
 #define ENUMERATION_TYPE dovah::magic_spell_type
-#pragma region macro boilerplate
-   #define STR_(x) #x
-   #define STR(x) STR_(x)
-#pragma endregion
-#define TRANSLATION_KEY STR(ENUMERATION_TYPE)
-
-#define STRING(t) QCoreApplication::translate(TRANSLATION_KEY, t)
+#include "./_macros.h"
 
 namespace editor::localize {
    extern QString magic_spell_type(ENUMERATION_TYPE v) {

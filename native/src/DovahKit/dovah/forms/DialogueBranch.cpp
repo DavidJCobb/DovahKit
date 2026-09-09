@@ -2,6 +2,7 @@
 #include "_common_cpp.h"
 #include "../form_stub_addenda.h"
 
+#include "../notices/form_load_warnings/by_form_type/dialogue_branch/invalid_topic_category.h"
 #include "../notices/form_load_warnings/by_form_type/dialogue_branch/mishandled_owning_quest_id.h"
 
 namespace dovah::loaded_forms {
@@ -20,7 +21,25 @@ namespace dovah::loaded_forms {
                subrecord.read(this->branch_flags);
                break;
             case 'TNAM':
-               subrecord.read(this->tnam);
+               {
+                  uint32_t v = 0;
+                  subrecord.read(v);
+                  this->category = (dialogue::category)v;
+               }
+               switch (this->category) {
+                  case dialogue::category::topic:
+                  case dialogue::category::favor_dialogue:
+                     break;
+                  default:
+                     {
+                        notices::form_load_warnings::by_type::dialogue_branch::invalid_topic_category notice(
+                           this->stub,
+                           this->category
+                        );
+                        intfc.log_load_warning(notice);
+                     }
+                     break;
+               }
                break;
             case 'SNAM':
                if (subrecord.read(this->starting_topic))
@@ -134,7 +153,7 @@ namespace dovah::loaded_forms {
       bool committing_to_self = (&out->stub == &this->stub) && this->is_working_copy;
       
       copy->branch_flags = this->branch_flags;
-      copy->tnam         = this->tnam;
+      copy->category     = this->category;
       copy->starting_topic.set(*copy, this->starting_topic);
       copy->owning_quest.set(*copy, this->owning_quest);
       copy->object_bounds = this->object_bounds;
@@ -142,9 +161,16 @@ namespace dovah::loaded_forms {
    }
    /*virtual*/ void DialogueBranch::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       record.write_formID_subrecord('QNAM', this->owning_quest);
-      auto& TNAM = record.open_next_subrecord('TNAM');
-      TNAM.write(this->tnam);
-      TNAM.close();
+      {
+         auto& TNAM = record.open_next_subrecord('TNAM');
+         uint32_t v = (uint32_t)this->category;
+         if (v > 1) {
+            v = 0;
+            this->category = (dialogue::category)v;
+         }
+         TNAM.write(v);
+         TNAM.close();
+      }
       auto& DNAM = record.open_next_subrecord('DNAM');
       DNAM.write(this->branch_flags);
       DNAM.close();
@@ -160,7 +186,7 @@ namespace dovah::loaded_forms {
    }
    /*virtual*/ void DialogueBranch::_clear_impl() noexcept {
       this->branch_flags = branch_flag::top_level;
-      this->tnam         = 0;
+      this->category     = dialogue::category::topic;
       this->owning_quest.set(*this, nullptr);
       this->starting_topic.set(*this, nullptr);
       this->object_bounds.clear();

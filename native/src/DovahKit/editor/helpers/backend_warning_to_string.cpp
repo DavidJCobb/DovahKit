@@ -8,6 +8,7 @@
 #include "./form_identifiers_to_string.h"
 #include "./form_type_name_to_string.h"
 #include "../localize/collision_layer.h"
+#include "../localize/dialogue_Category.h"
 #include "../localize/entry_point_function.h"
 #include "../localize/limb.h"
 #include "../localize/magic_spell_type.h"
@@ -971,6 +972,19 @@ namespace editor_helpers {
                }
             #pragma endregion
             #pragma region dialogue branch
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::dialogue_branch::invalid_topic_category*>(&warning)) {
+                  QString form     = form_identifiers_to_string(&casted->subject);
+                  QString category = editor::localize::dialogue_category(casted->category);
+                  if (category.isEmpty()) {
+                     category = QString("%1").arg((uint32_t)casted->category);
+                  }
+                  //
+                  return QObject::tr(
+                     "Dialogue branch %1 places itself in category %2. This is not valid; the branch will be recategorized "
+                     "if DovahKit resaves it.",
+                     disambig
+                  ).arg(form).arg(category);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::dialogue_branch::mishandled_owning_quest_id*>(&warning)) {
                   QString form     = form_identifiers_to_string(&casted->subject);
                   QString intended = form_identifiers_to_string(&casted->intended_owning_quest);
@@ -1276,6 +1290,20 @@ namespace editor_helpers {
                   return QObject::tr(
                      "Navmesh %1 has an invalid navmesh grid size (%2)."
                   ).arg(subject).arg(casted->size);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh::too_many_door_links*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Navmesh %1 has %2 door links. Although the file format allows that many, the "
+                     "game and Creation Kit can only load %3 door links into memory."
+                  ).arg(subject).arg(casted->size).arg(std::decay_t<decltype(*casted)>::max_supported_size);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh::too_many_edge_links*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Navmesh %1 has %2 edge links. Although the file format allows that many, the "
+                     "game and Creation Kit can only load %3 edge links into memory."
+                  ).arg(subject).arg(casted->size).arg(std::decay_t<decltype(*casted)>::max_supported_size);
                }
             #pragma endregion
             #pragma region navmesh info map
@@ -1984,7 +2012,7 @@ namespace editor_helpers {
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::occlusion_box_should_be_a_plane*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   return QObject::tr(
-                     "Occlusion box %1 has a half-extent smaller than 16 units. This should be an occlusion plane instead."
+                     "Occlusion box %1 has an extent smaller than 16 units. This should be an occlusion plane instead."
                   ).arg(subject);
                }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::suspiciously_low_z_position*>(&warning)) {

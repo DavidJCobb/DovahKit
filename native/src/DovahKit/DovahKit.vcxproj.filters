@@ -4380,6 +4380,9 @@
     <ClCompile Include="dovah\utils\refs\light_radius.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\localize\dialogue_category.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10871,6 +10874,21 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_data_before_sound_class.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh\too_many_door_links.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh\too_many_edge_links.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\invalid_topic_category.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\dialogue_category.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\_macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12484,6 +12502,7 @@
     <Text Include="dovah\_docs\engine code transliterations\how the game handles large refs.txt" />
     <Text Include="dovah\_docs\engine code transliterations\text replacement.txt" />
     <Text Include="dovah\_docs\engine code transliterations\collision layer comparisons.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how TESFile maps record IDs to form IDs.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -12988,6 +13007,7 @@
     <None Include="dovah\_docs\asset paths.md" />
     <None Include="dovah\_docs\voicetypes valid for a topic info.md" />
     <None Include="dovah\_docs\form types\s\sound descriptor.md" />
+    <None Include="dovah\forms\structs\region\_docs\area.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

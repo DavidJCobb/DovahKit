@@ -4,6 +4,7 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "../data/dialogue/category.h"
 #include "components/bounds.h"
 #include "components/conditions.h"
 #include "components/papyrus.h"
@@ -29,7 +30,7 @@ namespace dovah::loaded_forms {
          unique_form_reference_t<use_info::entry_flags::dialogue_branch::parent_quest> owning_quest; // QNAM
          form_reference_t starting_topic; // SNAM
          branch_flags_t   branch_flags = branch_flag::top_level; // DNAM
-         uint32_t tnam = 0; // TNAM
+         dialogue::category category = dialogue::category::topic; // TNAM
          //
          components::object_bounds object_bounds; // OBND. recognized, but probably discarded at run-time.
          components::papyrus_attachment_data script_data; // VMAD

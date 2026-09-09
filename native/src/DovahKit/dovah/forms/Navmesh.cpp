@@ -2,6 +2,8 @@
 #include "_common_cpp.h"
 
 #include "../notices/form_load_warnings/by_form_type/navmesh/invalid_grid_size.h"
+#include "../notices/form_load_warnings/by_form_type/navmesh/too_many_door_links.h"
+#include "../notices/form_load_warnings/by_form_type/navmesh/too_many_edge_links.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -62,6 +64,17 @@ namespace dovah::loaded_forms {
                   auto&    list = this->geometry.edge_links;
                   uint32_t size = 0;
                   subrecord.read(size);
+                  if (size > std::numeric_limits<uint16_t>::max()) {
+                     //
+                     // Bethesda serializes the count as four-byte, but uses a two-byte length 
+                     // in memory. The CK warns if the serialized count would overflow.
+                     //
+                     specific_load_warnings::too_many_edge_links notice(
+                        this->stub,
+                        size
+                     );
+                     intfc.log_load_warning(notice);
+                  }
                   list.resize(size);
                   for (decltype(size) i = 0; i < size; ++i) {
                      auto& item = list[i];
@@ -75,6 +88,17 @@ namespace dovah::loaded_forms {
                   auto&    list = this->geometry.door_links;
                   uint32_t size = 0;
                   subrecord.read(size);
+                  if (size > std::numeric_limits<uint16_t>::max()) {
+                     //
+                     // Bethesda serializes the count as four-byte, but uses a two-byte length 
+                     // in memory. The CK warns if the serialized count would overflow.
+                     //
+                     specific_load_warnings::too_many_door_links notice(
+                        this->stub,
+                        size
+                     );
+                     intfc.log_load_warning(notice);
+                  }
                   list.resize(size);
                   for (decltype(size) i = 0; i < size; ++i) {
                      auto& item = list[i];
