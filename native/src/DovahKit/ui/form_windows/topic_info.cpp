@@ -8,6 +8,7 @@
 #include "dovah/forms/Topic.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
+#include "editor/helpers/smart_topic_info_warnings.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_custom_context_menu.h"
@@ -296,6 +297,8 @@ void FormDialogTopicInfo::_load_impl() {
          }
       }
    }
+
+   editor_helpers::smart_topic_info_warnings(working);
 }
 void FormDialogTopicInfo::_save_impl() {
    //

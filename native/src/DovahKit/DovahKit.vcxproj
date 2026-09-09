@@ -472,6 +472,7 @@
     <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp" />
     <ClCompile Include="dovah\utils\auto_door_envelopes_teleport_marker.cpp" />
+    <ClCompile Include="dovah\utils\conditions\classify_boolean_comparison.cpp" />
     <ClCompile Include="dovah\utils\default_light_emitter_shadow_depth_bias.cpp" />
     <ClCompile Include="dovah\utils\default_primitive_color_for_base_form.cpp" />
     <ClCompile Include="dovah\utils\form_component_accessors\condition_list.cpp" />
@@ -510,6 +511,7 @@
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\helpers\is_form_type_legal_to_create.cpp" />
     <ClCompile Include="editor\helpers\recalc_bounds.cpp" />
+    <ClCompile Include="editor\helpers\smart_topic_info_warnings.cpp" />
     <ClCompile Include="editor\helpers\update_active_file_seq_file.cpp" />
     <ClCompile Include="editor\localize\collision_layer.cpp" />
     <ClCompile Include="editor\localize\dialogue_category.cpp" />
@@ -2424,6 +2426,7 @@
     <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.undef.h" />
     <ClInclude Include="dovah\use_info\is_entry_flag_type.h" />
     <ClInclude Include="dovah\utils\auto_door_envelopes_teleport_marker.h" />
+    <ClInclude Include="dovah\utils\conditions\classify_boolean_comparison.h" />
     <ClInclude Include="dovah\utils\default_light_emitter_shadow_depth_bias.h" />
     <ClInclude Include="dovah\utils\default_primitive_color_for_base_form.h" />
     <ClInclude Include="dovah\utils\form_component_accessors\condition_list.h" />
@@ -2469,6 +2472,7 @@
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidget.h" />
     <ClInclude Include="editor\helpers\recalc_bounds.h" />
+    <ClInclude Include="editor\helpers\smart_topic_info_warnings.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
     <ClInclude Include="editor\localize\dialogue_category.h" />
     <ClInclude Include="editor\localize\form_creation_error_code.h" />

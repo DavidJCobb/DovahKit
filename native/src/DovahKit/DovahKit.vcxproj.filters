@@ -4383,6 +4383,12 @@
     <ClCompile Include="editor\localize\dialogue_category.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\smart_topic_info_warnings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\utils\conditions\classify_boolean_comparison.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10887,6 +10893,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\localize\_macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\smart_topic_info_warnings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\conditions\classify_boolean_comparison.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
