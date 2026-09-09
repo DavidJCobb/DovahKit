@@ -88,6 +88,11 @@ Examples of default objects include:
 | `SKLK` | SkeletonKey | The item to use as the Skeleton Key: a lockpick that never breaks, and is used before any other lockpicks. |
 | `WWSP` | Werewolf Spell | The spell to apply to an actor when they change form into a werewolf. |
 
+### delocalized
+The adjective Bethesda uses to refer to a [localized string](#localized%20string) whose content is stored in a string file.
+
+This choice of terminolgy is ambiguous (see [On the word "delocalized"](#on-the-word-delocalized)) and should not be used within DovahKit's internals or documentation. Prefer "localized" for this situation, and "non-localized" for the reverse.
+
 ## E
 
 ### editor ID
@@ -216,6 +221,21 @@ The most-significant byte of a [form ID](#form%20ID) or [record ID](#record%20ID
 In games that support [light data files](#light%20data%20file), forms defined such files use the sentinel value `0xFE` as their load order prefix in their form IDs. Whether they also do so in their record IDs varies from game to game, with all pre-<i>Starfield</i> games declining to do so.
 
 For forms created during gameplay, the load order prefix is the sentinel value `0xFF`.
+
+### localized string
+A string within a [data file](#data%20file) whose content can be stored either inline or in a [strings file](#strings-file). When localized strings are inlined, the file header will lack the "localized" flag, and the localized string's [subrecord](#subrecord) will contain the string's content. When strings are stored in a strings file, the file header will have the "localized" flag, and the localized string's subrecord will contain the four-byte index of a string in the string file.
+
+The name of a strings file is the name of the data file, suffixed with an underscore and the name of the language. There are three sub-types of localized string, each using different strings file extensions:  `.STRINGS`, `.DLSTRINGS`, and `.ILSTRINGS`. (The latter two are used for various "description" strings and for [topic info](#topic-info) text.) Internally, these sub-types use the classes `BGSLocalizedString`, `BGSLocalizedStringDL`, and `BGSLocalizedStringIL`.
+
+Strings files make it possible to localize a single game data file for use with multiple languages. The localized strings can be translated without needing to touch the data file itself.
+
+Localized strings may be [tagified](#tagification) when working with version control.
+
+#### On the word "delocalized"
+
+Strangely, Bethesda seems to use the term "[delocalized](#delocalized)" to mean "localized." For example, if a file is flagged as "localized" but a localized string subrecord isn't exactly four bytes long, the Creation Kit will emit the warning message "LOCALIZATION: Delocalized TESFile, but [chunk](#chunk)size is not a BSUInt32." It's possible that Bethesda is here using "localize" to mean two different things at once: they may be using the verb form "localization" to refer to the process of translating content for different languages, but using the verb form "localized" to mean "stored locally," such that a string whose content is stored in a strings file (facilitating "localization" of its content) would be "delocalized" because its content is not "local" to the data file.
+
+DovahKit intentionally diverges from Bethesda's terminology on this point: we consistently use "localize" (in the context of strings) to refer to the process of "localization." To put it more explicitly, we use the verb form "localized" to describe a situation wherein the relevant flag in the file header is set, and the localized string content is stored in string files and referenced by four-byte string IDs; thus the text content used by the data file can be subject to the process of "localization" for multiple languages. We may use "non-localized" to refer to the opposite situation, wherein localized string content is inlined into the data file and "localization" for multiple languages at a time is therefore not possible. We never use "delocalized."
 
 ## M
 
@@ -354,20 +374,33 @@ In certain contexts, this term can refer to a [worldspace](#worldspace) or [cell
 
 DovahKit prefers the term "world or cell" over this usage of "space."
 
+### strings file
+A sidecar file that contains the content of [localized strings](#localized-string) in a [data file](#data-file). A strings file is stored in `Data/Strings/` and will have a name of the form `DataFileName_Language.STRINGS` e.g. `Skyrim_English.STRINGS`. There are three possible file extensions, one for each type of localized string.
+
 ### subrecord
 The community term for a fragment of a [record](#record), consisting of a [FourCC](#FourCC) (commonly called a "signature"), a length, and data. A subrecord may represent a single field within a [form](#form) (or nested struct), or an entire data structure.
 
-Some subrecord signatures are unique across forms; for example, `VMAD` always refers to a form's attached [Papyrus](#Papyrus) script data ("VM attached data"). Other subrecord signatures are reused across [form types](#form%20type) with different meanings; for example, `ACTI/SNAM` and `RACE/SNAM` have very different meanings.
+Some subrecord signatures are unique across forms; for example, `VMAD` always refers to a form's attached [Papyrus](#Papyrus) script data ("VM attachment data"). Other subrecord signatures are reused across [form types](#form%20type) with different meanings; for example, `ACTI/SNAM` and `RACE/SNAM` have very different meanings.
 
 *Typically*, subrecords are order-independent. However, *some* subrecords do have specific ordering requirements:
 
 * One subrecord may be dependent on data or conditions established by a previous subrecord.
 * A list of structs within a form may be serialized using multiple subrecords per struct, with a particular subrecord marking the beginning of the next struct.
 * One subrecord may expect to be followed by another subrecord, and the game engine may just blindly open the latter subrecord without even checking its four-CC.
+* Subrecords are typically consumed by a `while` loop. When structs are nested in a form type, the loading code *may* enter a nested `while` loop for those structs, such that non-struct-related subrecords are ignored/unrecognized until the struct is finished loading. (This behavior is not consistently done for every form type, nor necessarily for every struct within those form types that behave this way.)
 
-Bethesda's own term for these is "chunk," with a signature being called a chunk's "ID."
+Bethesda's own term for subrecords is "[chunks](#chunk)," with a signature being called a chunk's "ID."
 
 ## T
+
+### tagification
+<a name="tagified"></a>
+<a name="tagify"></a>
+A Creation Kit process triggered by the `-TagifyMasterfile` command line switch. This appears to involve applying a prefix of the form `<ID=xxxxxxxx>` to all [localized strings](#localized%20string) in a file. Within the prefix, `xxxxxxxx` is the hexadecimal unique ID of a localized string within the relevant [strings file](#strings-file).
+
+Localized strings that begin with `<ID=` are assumed by the Creation Kit to be tagified.
+
+If the Creation Kit INI setting `[General]bReconstructIDTags` is enabled, then localized strings that get loaded from string files will be tagified on load. The Creation Kit is designed to hide the tags from its UI when editing form data.
 
 ### temporary
 The antonym of [persistent](#persistent).
@@ -390,6 +423,7 @@ Topics exist as parent forms to infos, with the latter stored in child [groups](
 When the game decides what topics to present to the player, it does so by scanning through each topic's child infos sequentially, looking for an info whose [conditions](#condition) test as true. If none of a topic's infos test positive, then the topic will not be available to the player. Otherwise, the game will usually use the first such info it finds as the NPC's response to the topic. (It's also possible to flag a contiguous range of infos as "random," such that the game will test all infos in that range and pick randomly from those whose conditions test as true.)
 
 ### topic info
+<a name="TopicInfo"></a>
 One of the [form types](#form%20type) used to define in-game dialogue. In typical usage, a <dfn>topic info</dfn> or <dfn>info</dfn> is a sequence of dialogue lines that an [actor](#actor) can say, typically in response to [something the player has said](#topic%20info).
 
 A typical info contains a list of [conditions](#condition) to determine whether the info can play at all, and a set of <dfn>responses</dfn> which are played sequentially. Each response has a text caption, a voice file, and settings to tweak the NPC's facial animations.
