@@ -274,21 +274,13 @@ namespace dovah {
          auto* file = this->owner.loader;
          if (!file) // PASS (i.e. don't warn) if something weird has happened and we can't check anything
             return true;
-         
-         uint8_t local_prefix = id >> 0x18;
-         auto    master_count = file->header.masters.size();
+
          //
          // PASS if referring to a form defined in this file.
          //
-         if (local_prefix == master_count)
+         if (file->get_load_order().file_prefix_for(*file).contains_form_id(id))
             return true;
-         //
-         // FAIL if out of bounds. While it could hypothetically still refer to a form within 
-         // this file, we can't know that that is the intended form.
-         //
-         if (local_prefix > master_count)
-            return false;
-
+         
          constexpr const std::array<std::string_view, 5> bethesda_masters = {
             "skyrim.esm",
             "update.esm",
@@ -298,6 +290,7 @@ namespace dovah {
          };
          constexpr const size_t first_dlc_index = 2;
 
+         const uint8_t local_prefix = id >> 0x18;
          if (local_prefix >= bethesda_masters.size()) {
             //
             // FAIL: specifying a form from a mod.
