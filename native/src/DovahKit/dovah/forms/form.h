@@ -47,6 +47,7 @@ namespace dovah {
             };
             //
             Form(enum form_type ft, const constructor_params&);
+            virtual ~Form() {}
             
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
