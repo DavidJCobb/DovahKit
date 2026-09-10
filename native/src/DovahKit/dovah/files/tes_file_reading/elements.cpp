@@ -5,6 +5,7 @@
 #include <cassert>
 #include <filesystem>
 #include <stdexcept>
+#include "../../../helpers/string/strieq_ascii.h"
 #include "../../../helpers/strings.h"
 #include "../../localized_strings.h"
 #include "../../logging.h"
@@ -262,60 +263,67 @@ namespace dovah {
          return file->get_load_order().get_form(id, false);
       }
       bool subrecord::form_id_can_survive_redundant_fixup(bare_form_id_t id) const noexcept {
-         if (id == 0)
+         //
+         // For more information on the behavior of this check, refer to the documentation 
+         // for the "dialogue branch" form type.
+         //
+
+         if (id == 0) // PASS if None
             return true;
 
          auto* file = this->owner.loader;
-         if (!file)
+         if (!file) // PASS (i.e. don't warn) if something weird has happened and we can't check anything
             return true;
+         
+         uint8_t local_prefix = id >> 0x18;
+         auto    master_count = file->header.masters.size();
+         //
+         // PASS if referring to a form defined in this file.
+         //
+         if (local_prefix == master_count)
+            return true;
+         //
+         // FAIL if out of bounds. While it could hypothetically still refer to a form within 
+         // this file, we can't know that that is the intended form.
+         //
+         if (local_prefix > master_count)
+            return false;
 
-         bare_form_id_t copy = id;
-         auto& flo     = file->get_load_order();
-         auto  problem = flo.local_formID_to_global_formID(file, copy);
-         if (copy == 0) {
-            if (problem == dovah::file_load_order::form_id_status::out_of_bounds) {
+         constexpr const std::array<std::string_view, 5> bethesda_masters = {
+            "skyrim.esm",
+            "update.esm",
+            "dawnguard.esm",
+            "hearthfires.esm",
+            "dragonborn.esm",
+         };
+         constexpr const size_t first_dlc_index = 2;
+
+         if (local_prefix >= bethesda_masters.size()) {
+            //
+            // FAIL: specifying a form from a mod.
+            //
+            return false;
+         }
+         for (uint8_t i = 0; i <= local_prefix; ++i) {
+            auto& master = file->header.masters[i];
+            if (!cobb::strieq_ascii(master.master, bethesda_masters[i])) {
                //
-               // When Skyrim loads a record ID that is out of bounds, it forces that record ID 
-               // to have the load order prefix of whatever file the ID was loaded from.
+               // FAIL: at least one of the following requirements are not met:
                // 
-               // For example, Dragonborn.esm contains a DLBR/QNAM that refers to a QUST with 
-               // record ID 020179DE. Due to a game bug, DLBR/QNAM gets fixed up twice. Thus for 
-               // the following load order --
+               //  - form's containing file must be a base-game or DLC file
                // 
-               //    00 Skyrim.esm
-               //    01 Update.esm
-               //    02 Dawnguard.esm
-               //    03 Hearthfires.esm
-               //    04 Dragonborn.esm
+               //  - form's containing file must have the "canonical" position in this file's 
+               //    master list
                // 
-               // -- the first remapping sees that Dragonborn has two masters and thus 02xxxxxx 
-               // refers to forms within Dragonborn.esm itself: 020179DE becomes 040179DE. Then, 
-               // for the second, redundant, fixup, 04 is out of range within Dragonborn.esm, so 
-               // the game simply uses Dragonborn.esm's current position in the load order, 04; 
-               // and so 040179DE maps to 040179DE and is unchanged.
-               // 
-               // Similarly, if Dragonborn.esm wanted to point a DLBR/QNAM at some form that 
-               // exists within Skyrim.esm or Update.esm, that would work as well, because 00 
-               // and 01 are unchanged if remapped twice.
-               // 
-               // However, suppose we have a load order like this:
-               // 
-               //    00 Skyrim.esm
-               //    01 Update.esm
-               //    02 CoolModA.esp
-               //    03 CoolModB.esp
-               // 
-               // If CoolModB lists Skyrim and CoolModA as its masters, then it cannot safely 
-               // point DLBR/QUST at any quest defined in CoolModA. Why? Because 01xxxxxx would 
-               // first map to 02xxxxxx, correctly referring to the CoolModA form; but then it'd 
-               // be remapped again, now inadvertently referring to forms within CoolModB itself.
+               //  - if form's containing file is a DLC, all preceding DLCs must be in this 
+               //    file's master list (to guarantee that the player who installs this mod 
+               //    has those DLCs and that the form's containing file definitely ends up 
+               //    in its "canonical" position in the player's load order)
                //
-               auto my_prefix = flo.file_prefix_for(*file);
-               if (my_prefix.contains_form_id(id))
-                  return true;
+               return false;
             }
          }
-         return copy == id;
+         return true;
       }
       #pragma endregion
    }
