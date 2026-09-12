@@ -52,6 +52,10 @@ namespace dovah::loaded_forms::structs {
          auto& subrecord = record.open_next_subrecord('RNAM');
          subrecord.write(pair.first.y);
          subrecord.write(pair.first.x);
+         {
+            uint32_t count = pair.second.size();
+            subrecord.write(count);
+         }
          for (const ref_info& ref : pair.second) {
             subrecord.write(ref.form);
             subrecord.write(ref.parent_cell_id.y);
