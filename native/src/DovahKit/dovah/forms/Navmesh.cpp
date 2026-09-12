@@ -333,6 +333,26 @@ namespace dovah::loaded_forms {
 
       {
          auto& subrecord = record.open_next_subrecord('NVNM');
+         subrecord.reserve_more(
+            sizeof(this->geometry.version) +
+            8 + // pathing cell
+            sizeof(uint32_t) + // vertex count
+            this->geometry.vertices.size() * sizeof(float) * 3 +
+            sizeof(uint32_t) + // triangle count
+            this->geometry.triangles.size() * ((sizeof(uint16_t) * 6) + sizeof(uint32_t)) +
+            sizeof(uint32_t) + // edge link count
+            this->geometry.edge_links.size() * 10 +
+            sizeof(uint32_t) + // door link count
+            this->geometry.door_links.size() * 10 +
+            sizeof(uint32_t) + // cover triangle count
+            this->geometry.cover_triangles.size() * sizeof(uint16_t) +
+            (
+               sizeof(this->geometry.navmesh_grid.divisor) +
+               sizeof(this->geometry.navmesh_grid.size.x) +
+               sizeof(this->geometry.navmesh_grid.size.y) +
+               sizeof(float) * 6
+            )
+         );
          subrecord.write(this->geometry.version);
          this->geometry.pathing_cell.save(subrecord, intfc);
          {
@@ -397,6 +417,7 @@ namespace dovah::loaded_forms {
             if (grid.divisor <= 12) {
                auto& list = grid.triangles_by_grid_cell;
                for (auto& sublist : list) {
+                  subrecord.reserve_more(sizeof(uint32_t) + sublist.size() * sizeof(uint16_t));
                   subrecord.write((uint32_t)sublist.size());
                   for (auto& item : sublist)
                      subrecord.write(item);
@@ -408,18 +429,21 @@ namespace dovah::loaded_forms {
 
       if (!this->base_objects.empty()) {
          auto& subrecord = record.open_next_subrecord('ONAM');
+         subrecord.reserve_more(this->base_objects.size() * 4);
          for (auto& item : this->base_objects)
             subrecord.write(item);
          subrecord.close();
       }
       if (!this->preferred_connectors.empty()) {
          auto& subrecord = record.open_next_subrecord('PNAM');
+         subrecord.reserve_more(this->preferred_connectors.size() * sizeof(uint16_t));
          for (auto& item : this->preferred_connectors)
             subrecord.write(item);
          subrecord.close();
       }
       if (!this->non_connectors.empty()) {
          auto& subrecord = record.open_next_subrecord('NNAM');
+         subrecord.reserve_more(this->non_connectors.size() * sizeof(uint16_t));
          for (auto& item : this->non_connectors)
             subrecord.write(item);
          subrecord.close();

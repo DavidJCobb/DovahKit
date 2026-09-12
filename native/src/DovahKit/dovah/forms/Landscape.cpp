@@ -467,6 +467,18 @@ namespace dovah::loaded_forms {
       copy->mpcd = this->mpcd;
    }
    void Landscape::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      {
+         constexpr const size_t subrecord_header_size = sizeof(uint32_t) + sizeof(uint16_t);
+         record.reserve_more(
+            subrecord_header_size + sizeof(land_flags) + // DATA
+            subrecord_header_size + (total_vertex_count * 3) + // VNML
+            subrecord_header_size + sizeof(float) + total_vertex_count * sizeof(int8_t) + 3 + // VHGT
+            subrecord_header_size + (total_vertex_count * 3) + // VCLR
+            4 * (subrecord_header_size + 8) + // BTXT[4] (worst-case)
+            0
+         );
+      }
+
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->land_flags);
       DATA.close();
@@ -570,6 +582,7 @@ namespace dovah::loaded_forms {
             if (ref == nullptr)
                continue;
             auto& BTXT = record.open_next_subrecord('BTXT');
+            BTXT.reserve_more(8);
             BTXT.write(ref);
             BTXT.write(uint8_t(quad));
             BTXT.skip_bytes(1);
@@ -583,15 +596,13 @@ namespace dovah::loaded_forms {
          for (auto& layer : list) {
             constexpr const size_t grid_linear_size = decltype(layer.opacities)::area;
 
-            bool any_non_zero_opacity = false;
-            for (uint16_t i = 0; i < grid_linear_size; ++i) {
-               const auto f = layer.opacities.by_flat_index(i);
-               if (f > 0.0F) {
-                  any_non_zero_opacity = true;
-                  break;
-               }
+            const auto& opacities              = layer.opacities.list();
+            size_t      non_zero_opacity_count = 0;
+            for (auto v : opacities) {
+               if (v > 0.0F)
+                  ++non_zero_opacity_count;
             }
-            if (!any_non_zero_opacity)
+            if (non_zero_opacity_count == 0)
                continue;
 
             auto& ATXT = record.open_next_subrecord('ATXT');
@@ -603,8 +614,9 @@ namespace dovah::loaded_forms {
             ATXT.close();
 
             auto& VTXT = record.open_next_subrecord('VTXT');
+            VTXT.reserve_more(non_zero_opacity_count * 8);
             for (uint16_t i = 0; i < grid_linear_size; ++i) {
-               const auto f = layer.opacities.by_flat_index(i);
+               const auto f = opacities[i];
                if (f > 0.0F) {
                   VTXT.write(uint16_t(i));
                   VTXT.skip_bytes(2);
