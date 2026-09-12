@@ -1,0 +1,283 @@
+<!doctype html>
+<html>
+   <head>
+      <title>RNAM differ</title>
+      <style>
+html {
+   height: 100%;
+}
+body {
+   height: 100%;
+   margin: 0;
+   padding: .25em;
+   box-sizing: border-box;
+   overflow: hidden;
+   display: flex;
+   flex-flow: column nowrap;
+   
+   .input, .output {
+      flex: 1 1 auto;
+   }
+}
+
+.input {
+   display: grid;
+   grid-template: "a      b" 1fr
+                  "bottom bottom";
+   
+   border-bottom: 1px solid #000;
+
+   #a {
+      grid-area: a;
+   }
+   #b {
+      grid-area: b;
+   }
+   div {
+      grid-area: bottom;
+   }
+}
+.output {
+   display:   flex;
+   flex-flow: row nowrap;
+   
+   overflow-y: scroll;
+   
+   ol>li[data-unmatched],
+   ol>li[data-match] {
+      &::before {
+         padding:       .25em;
+         text-align:    center;
+         min-width:     1em;
+         height:        1em;
+         line-height:   1em;
+         border-radius: .5em;
+         margin-right:  1ch;
+      }
+   }
+   ol>li[data-match] {
+      &::before {
+         content: attr(data-match);
+         background: #090;
+         color: #FFF;
+      }
+      .output.hide-refs-in-matched &>ul {
+         display: none;
+      }
+      .output.hide-matched-cells & {
+         display: none;
+      }
+   }
+   ol>li[data-unmatched] {
+      &::before {
+         content: "!";
+         background: #900;
+         color: #FFF;
+      }
+   }
+}
+      </style>
+   </head>
+   <body>
+      <div class="input">
+         <textarea id="a"></textarea>
+         <textarea id="b"></textarea>
+         <div>
+            <input type="button" value="Run" id="run" /> <br/>
+            <label><input type="checkbox" id="hide-refs-in-matched" /> Hide refs in matched cells</label>
+            <label><input type="checkbox" id="hide-matched" /> Hide matched cells</label>
+         </div>
+      </div>
+      <div class="output">
+         <ol id="out-a"></ol>
+         <ol id="out-b"></ol>
+      </div>
+      <script>
+document.getElementById("hide-refs-in-matched").addEventListener("click", function() {
+   document.querySelector(".output").classList.toggle("hide-refs-in-matched");
+});
+document.getElementById("hide-matched").addEventListener("click", function() {
+   document.querySelector(".output").classList.toggle("hide-matched-cells");
+});
+
+function form_id_to_string(id) {
+   if (+id === id)
+      id = id.toString(16);
+   id = id.toUpperCase().padStart(8, '0');
+   return id;
+}
+
+function bytes_to_view(text) {
+   let bytes  = text.trim().split(' ');
+   let buffer = new ArrayBuffer(bytes.length);
+   let view   = new DataView(buffer);
+   for(let i = 0; i < bytes.length; ++i) {
+      let byte = parseInt(bytes[i], 16);
+      view.setUint8(i, byte);
+   }
+   return view;
+}
+
+class RnamRef {
+   constructor() {
+      this.ref  = null;
+      this.cell = { x: null, y: null };
+   }
+   load(view, offset) { // returns bytecount read
+      this.ref    = view.getUint32(offset, true);
+      this.cell.x = view.getInt16(offset + 4, true);
+      this.cell.y = view.getInt16(offset + 6, true);
+      return 8;
+   }
+   equals(other) {
+      if (this.ref != other.ref)
+         return false;
+      if (this.cell.x != other.cell.x)
+         return false;
+      if (this.cell.y != other.cell.y)
+         return false;
+      return true;
+   }
+};
+class RnamCell {
+   constructor() {
+      this.cell = { x: null, y: null };
+      this.refs = [];
+   }
+   load(view, offset) { // returns bytecount read
+      this.cell.x = view.getInt16(offset + 0, true);
+      this.cell.y = view.getInt16(offset + 2, true);
+      let count    = view.getUint32(offset + 4, true);
+      let consumed = 8;
+      for(let i = 0; i < count; ++i) {
+         let item = new RnamRef();
+         this.refs.push(item);
+         consumed += item.load(view, offset + consumed);
+      }
+      return consumed;
+   }
+   equals(other) {
+      if (this.cell.x != other.cell.x)
+         return false;
+      if (this.cell.y != other.cell.y)
+         return false;
+      if (this.refs.length != other.refs.length)
+         return false;
+      for(let i = 0; i < this.refs.length; ++i)
+         if (!this.refs[i].equals(other.refs[i]))
+            return false;
+      return true;
+   }
+};
+
+function parse_payload(view) {
+   let cells  = [];
+   let offset = 0;
+   while (offset < view.byteLength) {
+      let signature = "";
+      for(let i = 0; i < 4; ++i) {
+         signature += String.fromCharCode(view.getUint8(offset + i));
+      }
+      if (signature != "RNAM") {
+         throw new Error("Expected RNAM at offset " + offset);
+      }
+      let length = view.getUint16(offset + 4, true);
+      offset += 4;
+      offset += 2;
+      
+      let subrecord_view = new DataView(view.buffer, offset, length);
+      let cell           = new RnamCell();
+      let consumed       = cell.load(subrecord_view, 0);
+      offset += consumed;
+      cells.push(cell);
+   }
+   return cells;
+}
+
+document.getElementById("run").addEventListener("click", function() {
+   let out_a = document.getElementById("out-a");
+   let out_b = document.getElementById("out-b");
+   out_a.replaceChildren();
+   out_b.replaceChildren();
+   
+   let view_a = bytes_to_view(document.getElementById("a").value);
+   let view_b = bytes_to_view(document.getElementById("b").value);
+   
+   let cells_a = parse_payload(view_a);
+   let cells_b = parse_payload(view_b);
+   
+   function render(cell_list, list_node) {
+      for(let cell of cell_list) {
+         let li = document.createElement("li");
+         list_node.append(li);
+         {
+            let span = document.createElement("span");
+            span.innerText = `Cell (${cell.cell.x}, ${cell.cell.y})`;
+            li.append(span);
+         }
+         let ul = document.createElement("ul");
+         li.append(ul);
+         for(let ref of cell.refs) {
+            let li = document.createElement("li");
+            ul.append(li);
+            li.innerText = `Ref ${form_id_to_string(ref.ref)} from cell (${ref.cell.x}, ${ref.cell.y})`;
+         }
+      }
+   }
+   render(cells_a, out_a);
+   render(cells_b, out_b);
+   console.log(cells_a, cells_b);
+   
+   let found_a = [];
+   let found_b = [];
+   for(let i = 0; i < cells_a.length; ++i) {
+      let cell_a = cells_a[i];
+      let node_a = out_a.children[i];
+      let found  = -1;
+      for(let j = 0; j < cells_b.length; ++j) {
+         if (found_b[j])
+            continue;
+         let cell_b = cells_b[j];
+         if (cell_a.equals(cell_b)) {
+            found = j;
+            break;
+         }
+      }
+      if (found >= 0) {
+         let node_b = out_b.children[found];
+         found_a[i]     = true;
+         found_b[found] = true;
+         node_a.setAttribute("data-match", found);
+         node_b.setAttribute("data-match", i);
+      } else {
+         node_a.setAttribute("data-unmatched");
+      }
+   }
+   for(let i = 0; i < cells_b.length; ++i) {
+      if (found_b[i])
+         continue;
+      let cell_b = cells_b[i];
+      let found  = -1;
+      for(let j = 0; j < cells_a.length; ++j) {
+         let cell_a = cells_a[j];
+         if (cell_a.equals(cell_b)) {
+            found = j;
+            break;
+         }
+      }
+      let node_b = out_b.children[i];
+      if (found >= 0) {
+         let node_a = out_a.children[found];
+         found_a[i]     = true;
+         found_b[found] = true;
+         node_a.setAttribute("data-match", found);
+         node_b.setAttribute("data-match", i);
+      } else {
+         node_a.setAttribute("data-unmatched");
+      }
+   }
+});
+
+      </script>
+   </body>
+</html>
