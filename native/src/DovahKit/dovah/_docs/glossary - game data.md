@@ -191,6 +191,9 @@ See [topic info](#topic%20info).
 
 ## L
 
+### large ref
+A [ref](#ref) in an exterior [cell](#cell) that has been indexed in a [worldspace](#worldspace)'s "large ref data" (`BGSLargeRefData`). This system is used to force refs to load even if they're not in the loaded area, so that especially large objects (e.g. the architecture of the College of Winterhold) render at full detail from a further distance than normal.
+
 ### legacy script
 Scripts made for the script engine that preceded [Papyrus](#Papyrus).
 
@@ -218,7 +221,7 @@ Collectively, all of the [data files](#data%20file) that have been loaded for a 
 ### load order prefix
 The most-significant byte of a [form ID](#form%20ID) or [record ID](#record%20ID), used to identify the [data file](#data%20file) that originally defined a given [form](#form).
 
-In games that support [light data files](#light%20data%20file), forms defined such files use the sentinel value `0xFE` as their load order prefix in their form IDs. Whether they also do so in their record IDs varies from game to game, with all pre-<i>Starfield</i> games declining to do so.
+In games that support [light data files](#light%20data%20file), forms defined in such files use the sentinel value `0xFE` as their load order prefix in their form IDs. Whether they also do so in their record IDs varies from game to game, with all pre-<i>Starfield</i> games declining to do so.
 
 For forms created during gameplay, the load order prefix is the sentinel value `0xFF`.
 
