@@ -33,8 +33,8 @@ namespace dovah::loaded_forms::structs {
          cell_grid_dword  parent_cell;
          subrecord.unchecked_read(ref);
          intfc.warn_if_ref_is_wrong_type(ref, form_type::reference, subrecord.signature());
-         subrecord.unchecked_read(cell.y);
-         subrecord.unchecked_read(cell.x);
+         subrecord.unchecked_read(parent_cell.y);
+         subrecord.unchecked_read(parent_cell.x);
          if constexpr (avoid_duplicate_insertions) {
             auto it = std::find_if(cell_info.begin(), cell_info.end(), [&ref](const auto& item) {
                return item.form == ref;
