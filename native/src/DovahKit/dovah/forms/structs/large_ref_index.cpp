@@ -28,21 +28,32 @@ namespace dovah::loaded_forms::structs {
       }
 
       auto& cell_info = this->cells_to_refs[cell];
-      for (size_t i = 0; i < ref_count; ++i) {
-         form_reference_t ref;
-         cell_grid_dword  parent_cell;
-         subrecord.unchecked_read(ref);
-         intfc.warn_if_ref_is_wrong_type(ref, form_type::reference, subrecord.signature());
-         subrecord.unchecked_read(parent_cell.y);
-         subrecord.unchecked_read(parent_cell.x);
-         if constexpr (avoid_duplicate_insertions) {
-            auto it = std::find_if(cell_info.begin(), cell_info.end(), [&ref](const auto& item) {
-               return item.form == ref;
-            });
-            if (it != cell_info.end())
-               continue;
+      if constexpr (avoid_duplicate_insertions) {
+         cell_info.reserve(ref_count);
+         for (size_t i = 0; i < ref_count; ++i) {
+            form_reference_t ref;
+            cell_grid_dword  parent_cell;
+            subrecord.unchecked_read(ref);
+            intfc.warn_if_ref_is_wrong_type(ref, form_type::reference, subrecord.signature());
+            subrecord.unchecked_read(parent_cell.y);
+            subrecord.unchecked_read(parent_cell.x);
+            if constexpr (avoid_duplicate_insertions) {
+               auto it = std::find_if(cell_info.begin(), cell_info.end(), [&ref](const auto& item) {
+                  return item.form == ref;
+               });
+               if (it != cell_info.end())
+                  continue;
+            }
+            cell_info.push_back({ ref, parent_cell });
          }
-         cell_info.emplace_back(ref_info{ ref, parent_cell });
+      } else {
+         cell_info.resize(ref_count);
+         for (auto& dst_item : cell_info) {
+            subrecord.unchecked_read(dst_item.form);
+            intfc.warn_if_ref_is_wrong_type(dst_item.form, form_type::reference, subrecord.signature());
+            subrecord.unchecked_read(dst_item.parent_cell_id.y);
+            subrecord.unchecked_read(dst_item.parent_cell_id.x);
+         }
       }
    }
    void large_ref_index::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) const {
@@ -50,6 +61,7 @@ namespace dovah::loaded_forms::structs {
          if (pair.second.empty())
             continue;
          auto& subrecord = record.open_next_subrecord('RNAM');
+         subrecord.reserve_more(8 + pair.second.size() * 8);
          subrecord.write(pair.first.y);
          subrecord.write(pair.first.x);
          {
