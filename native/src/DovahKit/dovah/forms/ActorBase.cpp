@@ -932,6 +932,7 @@ namespace dovah::loaded_forms {
       {
          auto& ACBS = record.open_next_subrecord('ACBS');
          if (record.version() < 0x1D) {
+            ACBS.reserve_more(0x1A);
             ACBS.write(this->actor_flags);
             ACBS.write(this->stats.attributes.offsets.magicka);
             ACBS.write(this->stats.attributes.offsets.stamina);
@@ -945,6 +946,7 @@ namespace dovah::loaded_forms {
             ACBS.write(this->stats.attributes.offsets.health);  // 16 -> 14
             ACBS.write(this->stats.bleedout_threshold); // 18 -> 16
          } else {
+            ACBS.reserve_more(0x18);
             ACBS.write(this->actor_flags);
             ACBS.write(this->stats.attributes.offsets.magicka);
             ACBS.write(this->stats.attributes.offsets.stamina);
@@ -961,6 +963,7 @@ namespace dovah::loaded_forms {
       }
       for (const auto& entry : this->faction_memberships) {
          auto& SNAM = record.open_next_subrecord('SNAM');
+         SNAM.reserve_more(5);
          SNAM.write(entry.faction);
          SNAM.write(entry.rank);
          SNAM.close();
@@ -987,6 +990,7 @@ namespace dovah::loaded_forms {
          }
          for (const auto& entry : this->perks) {
             auto& PRKR = record.open_next_subrecord('PRKR');
+            PRKR.reserve_more(8);
             PRKR.write(entry.perk);
             PRKR.write(entry.rank);
             PRKR.skip_bytes(3);
@@ -996,6 +1000,7 @@ namespace dovah::loaded_forms {
       this->inventory.save(record, intfc);
       {
          auto& AIDT = record.open_next_subrecord('AIDT');
+         AIDT.reserve_more(0x14);
          AIDT.write(this->ai.aggression);        // 00
          AIDT.write(this->ai.confidence);        // 01
          AIDT.write(this->ai.energy_level);      // 02
@@ -1030,6 +1035,15 @@ namespace dovah::loaded_forms {
       }
       {
          auto& DNAM = record.open_next_subrecord('DNAM');
+         DNAM.reserve_more(
+            this->stats.skills.calculated.list.size() * sizeof(skill_value_type) +
+            this->stats.skills.offsets.list.size() * sizeof(skill_value_type) +
+            sizeof(attribute_value_type) * 3 +
+            2 +
+            sizeof(this->far_away.distance) +
+            sizeof(this->geared_up_weapons) +
+            3
+         );
          for (auto& byte : this->stats.skills.calculated.list)
             DNAM.write(byte);
          for (auto& byte : this->stats.skills.offsets.list)
@@ -1083,6 +1097,7 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('FTST', this->facegen.complexion, true);
       {
          auto& QNAM = record.open_next_subrecord('QNAM');
+         QNAM.reserve_more(sizeof(float) * 3);
          QNAM.write(this->texture_lighting.r);
          QNAM.write(this->texture_lighting.g);
          QNAM.write(this->texture_lighting.b);
@@ -1090,12 +1105,14 @@ namespace dovah::loaded_forms {
       }
       if (!this->facegen.morphs.all_sliders_zeroed()) {
          auto& NAM9 = record.open_next_subrecord('NAM9');
+         NAM9.reserve_more(this->facegen.morphs.sliders.size() * sizeof(decltype(this->facegen.morphs.sliders)::value_type));
          for (auto f : this->facegen.morphs.sliders)
             NAM9.write(f);
          NAM9.close();
       }
       if (!this->facegen.morphs.all_indexed_morphs_zeroed()) {
          auto& NAMA = record.open_next_subrecord('NAMA');
+         NAMA.reserve_more(this->facegen.morphs.indices.size() * sizeof(decltype(this->facegen.morphs.indices)::value_type));
          for (auto v : this->facegen.morphs.indices)
             NAMA.write(v);
          NAMA.close();
@@ -1108,6 +1125,7 @@ namespace dovah::loaded_forms {
          }
          {
             auto& TINC = record.open_next_subrecord('TINC');
+            TINC.reserve_more(4);
             TINC.write(entry.color.r);
             TINC.write(entry.color.g);
             TINC.write(entry.color.b);
