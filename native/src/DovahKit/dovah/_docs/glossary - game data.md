@@ -311,9 +311,9 @@ Beginning with <i>Starfield</i>'s launch, record IDs for those forms now follow 
 ### ref<br/>reference
 <a name="ref"></a>
 <a name="reference"></a>
-A <dfn>reference</dfn> or <dfn>ref</dfn> is an object that physically exists in the game world. These are a kind of [form](#form), and Bethesda conceptualizes them as forms which "refer" to a [base form](#base%20form) that defines their shared properties. (The base form is often referred to as the reference's "base.")
+A <dfn>reference</dfn> or <dfn>ref</dfn> is an object that physically exists in the game world. These are a kind of [form](#form), and Bethesda conceptualizes them as forms which "refer" to a [base form](#base%20form) that defines their shared properties. (The base form is often referred to as the reference's "base.") Under the hood, base form types are typically subclasses of `TESObject`; thus, "object reference."
 
-Using the term "reference" for this is, obviously, a bit confusing, since plenty of things can "refer" to each other without constituting this particular kind of "reference." DovahKit therefore prefers the term "ref," though documentation may also refer to "[ObjectReferences](#ObjectReference)" or to `TESObjectREFR`, the internal class name for refs.
+Using the term "reference" for this is, obviously, a bit confusing, since plenty of things can "refer" to each other without constituting this particular kind of "reference." DovahKit therefore prefers the term "ref," though documentation may also refer to "[ObjectReferences](#ObjectReference)" or to `TESObjectREFR`, the game's internal class name for refs.
 
 * A reference's location is stored as its position and rotation within a "parent [cell](#cell)." Sometimes, the "parent [worldspace](#worldspace)" of a ref's parent cell may be referred to as the ref's own "parent worldspace," but this is a linguistic shortcut; refs do not store their containing worldspace.
 * References are typically loaded and unloaded on demand, unless they are [persistent](#persistent).
@@ -378,7 +378,7 @@ In certain contexts, this term can refer to a [worldspace](#worldspace) or [cell
 DovahKit prefers the term "world or cell" over this usage of "space."
 
 ### strings file
-A sidecar file that contains the content of [localized strings](#localized-string) in a [data file](#data-file). A strings file is stored in `Data/Strings/` and will have a name of the form `DataFileName_Language.STRINGS` e.g. `Skyrim_English.STRINGS`. There are three possible file extensions, one for each type of localized string.
+A sidecar file that contains the content of [localized strings](#localized-string) used in a [data file](#data-file). A strings file is stored in `Data/Strings/` and will have a name of the form `DataFileName_Language.STRINGS` e.g. `Skyrim_English.STRINGS`. There are three possible file extensions, one for each type of localized string.
 
 ### subrecord
 The community term for a fragment of a [record](#record), consisting of a [FourCC](#FourCC) (commonly called a "signature"), a length, and data. A subrecord may represent a single field within a [form](#form) (or nested struct), or an entire data structure.
