@@ -147,6 +147,7 @@ namespace dovah::loaded_forms::components {
 
          for (const auto& entry : this->entries) {
             auto& LVLO = record.open_next_subrecord('LVLO');
+            LVLO.reserve_more(0xC);
             LVLO.write(entry.level);
             LVLO.skip_bytes(2);
             LVLO.write(entry.form);

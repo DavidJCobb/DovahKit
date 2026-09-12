@@ -378,6 +378,7 @@ namespace dovah::loaded_forms {
       }
       //
       auto& DATA = record.open_next_subrecord('DATA');
+      DATA.reserve_more(sizeof(float) * 6);
       DATA.write(this->position.x);
       DATA.write(this->position.y);
       DATA.write(this->position.z);

@@ -398,6 +398,7 @@ namespace dovah::loaded_forms {
       this->keywords.save(record, intfc);
       {
          auto& subrecord = record.open_next_subrecord('DATA');
+         subrecord.reserve_more(0x9C);
          subrecord.write(this->flags);
          subrecord.write(this->base_cost);
          subrecord.write(this->associated_items.form);

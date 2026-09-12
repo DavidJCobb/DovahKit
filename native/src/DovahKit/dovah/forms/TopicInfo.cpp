@@ -39,6 +39,7 @@ namespace dovah::loaded_forms {
    }
    void TopicInfo::response::save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       auto& TRDT = record.open_next_subrecord('TRDT');
+      TRDT.reserve_more(0x18);
       TRDT.write(this->emotion.type);
       TRDT.write(this->emotion.value);
       TRDT.write(this->unused);

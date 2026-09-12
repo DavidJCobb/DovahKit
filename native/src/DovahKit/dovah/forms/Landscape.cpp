@@ -472,6 +472,7 @@ namespace dovah::loaded_forms {
       DATA.close();
       //
       auto& VNML = record.open_next_subrecord('VNML');
+      VNML.reserve_more(total_vertex_count * 3);
       for (int i = 0; i < total_vertex_count; ++i) {
          auto& vec = this->heightmap.normals.by_flat_index(i);
          //
@@ -514,6 +515,7 @@ namespace dovah::loaded_forms {
          //
          float base_offset = floor(list[0] / 8.0F);
          float span_offset = 0.0F;
+         VHGT.reserve_more(sizeof(float) + (list.size() * sizeof(int8_t)) + 3);
          VHGT.write(base_offset);
          for (size_t i = 0; i < total_vertex_count; ++i) {
             int x = i % vertices_per_side; // col
@@ -550,6 +552,7 @@ namespace dovah::loaded_forms {
       VHGT.close();
       //
       auto& VCLR = record.open_next_subrecord('VCLR');
+      VCLR.reserve_more(total_vertex_count * 3);
       for (int i = 0; i < total_vertex_count; ++i) {
          auto& color = this->heightmap.colors.by_flat_index(i);
          VCLR.write(color.r);
@@ -578,33 +581,42 @@ namespace dovah::loaded_forms {
          //
          auto& list = this->alpha_layers_by_quad[quad];
          for (auto& layer : list) {
-            std::vector<uint16_t> indices;
-            for (uint16_t i = 0; i < decltype(layer.opacities)::area; ++i) {
+            constexpr const size_t grid_linear_size = decltype(layer.opacities)::area;
+
+            bool any_non_zero_opacity = false;
+            for (uint16_t i = 0; i < grid_linear_size; ++i) {
                const auto f = layer.opacities.by_flat_index(i);
-               if (f > 0.0F)
-                  indices.push_back(i);
+               if (f > 0.0F) {
+                  any_non_zero_opacity = true;
+                  break;
+               }
             }
-            if (indices.empty())
+            if (!any_non_zero_opacity)
                continue;
-            //
+
             auto& ATXT = record.open_next_subrecord('ATXT');
+            ATXT.reserve_more(4 + sizeof(uint8_t) + 1 + sizeof(decltype(layer.layer)));
             ATXT.write(layer.texture);
             ATXT.write(uint8_t(quad));
             ATXT.skip_bytes(1);
             ATXT.write(layer.layer);
             ATXT.close();
-            //
+
             auto& VTXT = record.open_next_subrecord('VTXT');
-            for (const auto i : indices) {
-               VTXT.write(uint16_t(i));
-               VTXT.skip_bytes(2);
-               VTXT.write(layer.opacities.by_flat_index(i));
+            for (uint16_t i = 0; i < grid_linear_size; ++i) {
+               const auto f = layer.opacities.by_flat_index(i);
+               if (f > 0.0F) {
+                  VTXT.write(uint16_t(i));
+                  VTXT.skip_bytes(2);
+                  VTXT.write(f);
+               }
             }
             VTXT.close();
          }
       }
       if (!this->textures.empty()) {
          auto& VTEX = record.open_next_subrecord('VTEX');
+         VTEX.reserve_more(4 * this->textures.size());
          for (auto& ref : this->textures) {
             VTEX.write(ref);
          }

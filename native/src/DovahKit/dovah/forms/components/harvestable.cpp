@@ -39,6 +39,7 @@ namespace dovah::loaded_forms::components {
       record.write_formID_subrecord(subrecord_signature_ingredient, this->ingredient,    true);
       record.write_formID_subrecord(subrecord_signature_sound,      this->harvest_sound, true);
       auto& PFPC = record.open_next_subrecord('PFPC');
+      PFPC.reserve_more(4);
       PFPC.write(this->chance_by_season.spring);
       PFPC.write(this->chance_by_season.summer);
       PFPC.write(this->chance_by_season.autumn);

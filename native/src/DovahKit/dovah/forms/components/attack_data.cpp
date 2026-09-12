@@ -80,6 +80,7 @@ namespace dovah::loaded_forms::components {
       //
       for (const auto& entry : this->attacks) {
          auto& ATKD = record.open_next_subrecord(subrecord_signature_data);
+         ATKD.reserve_more(0x2C);
          ATKD.write(entry.damage_mult);
          ATKD.write(entry.attack_chance);
          ATKD.write(entry.attack_spell);

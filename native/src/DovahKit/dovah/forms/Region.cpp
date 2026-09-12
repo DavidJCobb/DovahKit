@@ -771,6 +771,7 @@ namespace dovah::loaded_forms {
          }
          {
             auto& subrecord = record.open_next_subrecord('RPLD');
+            subrecord.reserve_more(area.points.size() * 8);
             for (auto& point : area.points) {
                subrecord.write(point.x);
                subrecord.write(point.y);
@@ -789,6 +790,7 @@ namespace dovah::loaded_forms {
          }
          if (auto* casted = std::get_if<2>(&data.data)) {
             auto& subrecord = record.open_next_subrecord('RDOT');
+            subrecord.reserve_more(casted->objects.size() * 0x34);
             for (auto& item : casted->objects) {
                subrecord.write(item.form);
                subrecord.write(item.parent_index);
@@ -816,6 +818,7 @@ namespace dovah::loaded_forms {
             subrecord.close();
          } else if (auto* casted = std::get_if<3>(&data.data)) {
             auto& subrecord = record.open_next_subrecord('RDWT');
+            subrecord.reserve_more(casted->weathers.size() * 0x0C);
             for (auto& item : casted->weathers) {
                subrecord.write(item.weather);
                subrecord.write(item.chance);
@@ -832,6 +835,7 @@ namespace dovah::loaded_forms {
             subrecord.close();
          } else if (auto* casted = std::get_if<6>(&data.data)) {
             auto& subrecord = record.open_next_subrecord('RDGS');
+            subrecord.reserve_more(casted->entries.size() * 0x08);
             for (auto& item : casted->entries) {
                subrecord.write(item.grass);
                subrecord.write(item.land_texture);
@@ -840,6 +844,7 @@ namespace dovah::loaded_forms {
          } else if (auto* casted = std::get_if<7>(&data.data)) {
             record.write_formID_subrecord('RDMO', casted->music, true);
             auto& subrecord = record.open_next_subrecord('RDSA');
+            subrecord.reserve_more(casted->ambient_sounds.size() * 0x0C);
             for (auto& item : casted->ambient_sounds) {
                subrecord.write(item.form);
                subrecord.write(item.flags);

@@ -296,6 +296,7 @@ namespace dovah::loaded_forms::components {
          }
          void condition::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
             auto& subrecord = record.open_next_subrecord('CTDA');
+            subrecord.reserve_more(0x20);
 
             bool comparison_is_to_global = std::holds_alternative<form_reference_t>(this->comparison.operand);
 

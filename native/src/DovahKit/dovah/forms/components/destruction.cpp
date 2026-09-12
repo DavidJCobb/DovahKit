@@ -185,6 +185,7 @@ namespace dovah::loaded_forms::components {
          return;
       }
       auto& DEST = record.open_next_subrecord(subrecord_header);
+      DEST.reserve_more(0x08);
       DEST.write(this->health);
       DEST.write(uint8_t(stage_count));
       DEST.write(this->flags);
@@ -195,6 +196,7 @@ namespace dovah::loaded_forms::components {
          auto& stage = this->stages[i];
 
          auto& DSTD = record.open_next_subrecord(subrecord_stage_data);
+         DSTD.reserve_more(0x14);
          DSTD.write(stage.healthPercent);
          DSTD.write((uint8_t)i);
          DSTD.write(stage.damageStage);

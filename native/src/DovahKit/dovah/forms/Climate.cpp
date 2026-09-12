@@ -111,6 +111,7 @@ namespace dovah::loaded_forms {
       this->script_data.save(record, intfc);
       for (auto& item : this->weather_types) {
          auto& subrecord = record.open_next_subrecord('WLST');
+         subrecord.reserve_more(0x0C);
          subrecord.write(item.weather);
          subrecord.write(item.chance);
          subrecord.write(item.global);
@@ -121,6 +122,7 @@ namespace dovah::loaded_forms {
       this->night_sky_nif.save(record, intfc, 'MODL', 'MODT');
       {
          auto& subrecord = record.open_next_subrecord('TNAM');
+         subrecord.reserve_more(0x06);
          subrecord.write(this->timing.sunrise.begin.value);
          subrecord.write(this->timing.sunrise.end.value);
          subrecord.write(this->timing.sunset.begin.value);

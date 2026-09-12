@@ -41,6 +41,7 @@ namespace dovah::loaded_forms::components {
       COCT.close();
       for (auto& entry : this->entries) {
          auto& CNTO = record.open_next_subrecord('CNTO');
+         CNTO.reserve_more(8);
          CNTO.write(entry.item);
          CNTO.write(entry.count);
          CNTO.close();

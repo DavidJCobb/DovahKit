@@ -47,6 +47,7 @@ namespace dovah::loaded_forms::components {
    }
    void common_spell_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& subrecord = record.open_next_subrecord(subrecord_signature);
+      subrecord.reserve_more(0x24);
       subrecord.write(this->base_cost);
       subrecord.write(this->flags);
       subrecord.write(this->type);

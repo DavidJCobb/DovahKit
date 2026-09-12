@@ -77,6 +77,7 @@ namespace dovah::loaded_forms {
       this->script_data.save(record, intfc);
       {
          auto& subrecord = record.open_next_subrecord('DATA');
+         subrecord.reserve_more(0x0E);
          subrecord.write(this->decay_time);
          subrecord.write(this->hf_reference);
          subrecord.write(this->room_filter);

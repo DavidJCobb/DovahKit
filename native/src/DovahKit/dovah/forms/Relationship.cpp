@@ -88,6 +88,7 @@ namespace dovah::loaded_forms {
    void Relationship::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& DATA = record.open_next_subrecord('DATA');
+      DATA.reserve_more(0x10);
       DATA.write(this->referrer);
       DATA.write(this->referent);
       DATA.write(this->rank);

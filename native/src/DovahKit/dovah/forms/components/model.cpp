@@ -206,7 +206,6 @@ namespace dovah::loaded_forms::components {
       if (record.version() >= 0x28) {
          uint32_t texture_hashes_count = data.texture_hashes.size();
          uint32_t addon_node_ids_count = data.addon_node_ids.size();
-         //
          if constexpr (clip_the_precached_lists) {
             if (texture_hashes_count > max_usable_texture_hashes) {
                texture_hashes_count = max_usable_texture_hashes;
@@ -242,6 +241,11 @@ namespace dovah::loaded_forms::components {
                subrecord.write(uint32_t(data.material_hashes.size()));
             }
          }
+         subrecord.reserve_more(
+            texture_hashes_count * 0xC +
+            addon_node_ids_count * 0x4 +
+            write_materials ? (data.material_hashes.size() * 0xC) : 0
+         );
          for (size_t i = 0; i < texture_hashes_count; ++i) {
             const auto& item = data.texture_hashes[i];
             subrecord.write(item.file_hash);
@@ -254,34 +258,42 @@ namespace dovah::loaded_forms::components {
             }
          }
          if (write_materials) {
+            subrecord.reserve_more(data.material_hashes.size() * 0xC);
             for (auto& item : data.material_hashes) {
                subrecord.write(item.file_hash);
                subrecord.write_signature(item.extension);
                subrecord.write(item.folder_hash);
             }
          }
+         return;
       }
       if (record.version() >= 0x26) {
          uint32_t texture_hashes_count = data.texture_hashes.size();
-         //
          if constexpr (clip_the_precached_lists) {
             if (texture_hashes_count > max_usable_texture_hashes) {
                texture_hashes_count = max_usable_texture_hashes;
             }
          }
-                  
+
+         subrecord.reserve_more(texture_hashes_count * 0xC);
          for (size_t i = 0; i < texture_hashes_count; ++i) {
             const auto& item = data.texture_hashes[i];
             subrecord.write(item.file_hash);
             subrecord.write_signature(item.extension);
             subrecord.write(item.folder_hash);
          }
+         return;
       }
    }
 
    void model_ts::save_texture_swaps(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       subrecord.write(uint32_t(this->texture_swaps.size()));
       for (auto& entry : this->texture_swaps) {
+         subrecord.reserve_more(
+            4 + entry.nif_block_name.size() +
+            sizeof(bare_form_id_t) +
+            sizeof(uint32_t)
+         );
          subrecord.write_length_prefixed_string<4>(entry.nif_block_name);
          subrecord.write(entry.texture_set);
          subrecord.write(entry.nif_leaf_index);

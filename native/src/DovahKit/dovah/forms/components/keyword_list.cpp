@@ -69,6 +69,7 @@ namespace dovah::loaded_forms::components {
       KSIZ.write(size);
       KSIZ.close();
       auto& KWDA = record.open_next_subrecord(subrecord_signature_array);
+      KWDA.reserve_more(this->forms.size() * 4);
       for (auto& k : this->forms)
          KWDA.write(k);
       KWDA.close();

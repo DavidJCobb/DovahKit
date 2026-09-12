@@ -227,6 +227,7 @@ namespace dovah::loaded_forms {
          int32_t x = 0;
          int32_t y = 0;
          stub.get_grid_coordinates(x, y);
+         XCLC.reserve_more(0x0C);
          XCLC.write(x);
          XCLC.write(y);
          XCLC.write(this->land_flags);
@@ -244,7 +245,8 @@ namespace dovah::loaded_forms {
       }
       if (this->exterior.max_height_data.present) {
          auto& data = this->exterior.max_height_data;
-         auto& MHDT = record.open_next_subrecord('MHDT');
+         auto& MHDT = record.open_next_subrecord('MHDT'); 
+         MHDT.reserve_more(sizeof(float) + 32 * 32 * sizeof(int8_t));
          MHDT.write(data.offset);
          for (auto& row : data.grid)
             for (auto& col : row)

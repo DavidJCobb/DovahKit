@@ -168,6 +168,7 @@ namespace dovah::loaded_forms {
       DESC.close();
       for (auto& word : this->words) {
          auto& SNAM = record.open_next_subrecord('SNAM');
+         SNAM.reserve_more(0xC);
          SNAM.write(word.word_of_power);
          SNAM.write(word.spell);
          SNAM.write(word.recoveryTime);

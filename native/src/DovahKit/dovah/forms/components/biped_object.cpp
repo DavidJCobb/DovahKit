@@ -27,6 +27,7 @@ namespace dovah::loaded_forms::components {
       //
       if (this->flags != 0) {
          auto& BODT = record.open_next_subrecord(subrecord_signature_deprecated);
+         BODT.reserve_more(0x0C);
          BODT.write(this->first_person_slots);
          BODT.write(this->flags);
          BODT.skip_bytes(3);
@@ -34,6 +35,7 @@ namespace dovah::loaded_forms::components {
          BODT.close();
       } else {
          auto& BOD2 = record.open_next_subrecord(subrecord_signature_modern);
+         BOD2.reserve_more(0x08);
          BOD2.write(this->first_person_slots);
          BOD2.write(this->armor_type);
          BOD2.close();

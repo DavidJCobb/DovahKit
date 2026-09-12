@@ -209,6 +209,7 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('RNAM', this->races.primary);
       {
          auto& subrecord = record.open_next_subrecord('DNAM');
+         subrecord.reserve_more(0x0C);
          subrecord.write(this->graphics[sex::male].priority);
          subrecord.write(this->graphics[sex::female].priority);
          subrecord.write(this->graphics[sex::male].flags);
