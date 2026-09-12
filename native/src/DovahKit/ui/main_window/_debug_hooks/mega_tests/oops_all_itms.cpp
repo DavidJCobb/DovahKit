@@ -1,6 +1,7 @@
 #include "./oops_all_itms.h"
 #include <QInputDialog>
 #include <QMessageBox>
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/files/tes_file_reading/file_loader.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
@@ -47,6 +48,8 @@ namespace DovahKitDebug::features::mega_tests {
          if (form->is_none_stub())
             return false;
          if (form->form_type == dovah::form_type::none) // don't try to save PapyrusPersistenceForm, etc.; we can't
+            return false;
+         if (form->formID == dovah::hardcoded_form_ids::PlayerRef) // PlayerRef can't be saved because it isn't in a cell, so don't flag it as edited
             return false;
 
          if (prefix.value().contains_form_id(form->formID)) {
