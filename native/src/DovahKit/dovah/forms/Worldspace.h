@@ -144,8 +144,8 @@ namespace dovah::loaded_forms {
                float y = std::numeric_limits<float>::max();
             } min; // NAM0
             struct {
-               float x = std::numeric_limits<float>::min();
-               float y = std::numeric_limits<float>::min();
+               float x = std::numeric_limits<float>::lowest();
+               float y = std::numeric_limits<float>::lowest();
             } max; // NAM9
          } bounds;
          std::string tree_canopy_shadow; // NNAM // unused
