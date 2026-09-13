@@ -326,3 +326,4 @@ This is only an issue for direct edits to a form's loaded data, as opposed to ed
   To that end, we should do two things. First: We should extend the use info system to be able to track discarded-during-load uses. Then, we should have a non-member `discard_during_load` function similar to the non-member `clear` function proposed above, which we can invoke on managed structs during the load process. Finally, the save process should wipe all discarded-during-load use info on a form after the form is saved.
   
   * See also: [use info builders.md](./use%20info%20builders.md)
+* Form classes can offer a "friendly delete override;" we use this for `REFR` to offer the "bury and disable" hack that xEdit uses. This functionality should be renamed from `friendly_delete_override` to `on_flagged_as_deleted`.

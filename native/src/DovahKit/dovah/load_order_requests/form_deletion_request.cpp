@@ -5,6 +5,7 @@
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../form_stub_addenda/passkeys/ordered_child_collection.h"
+#include "../form_stubs/helpers/get_unique_outbound_use.h"
 #include "../exceptions/form_deletion_failed.h"
 #include "../load_order_processes/file_save.h"
 #include "../forms/factories/construct.h" // can_load_form_data
@@ -13,6 +14,10 @@
 #include "../use_info/entry_flags/dialogue_branch.h"
 #include "../use_info/entry_flags/scene.h"
 #include "../use_info/entry_flags/topic.h"
+
+// For deleting topics that belong solely to a Scene dialogue action:
+#include "../forms/Scene.h"
+#include "../forms/Topic.h"
 
 namespace {
    using exception  = dovah::exceptions::form_deletion_failed;
@@ -63,6 +68,8 @@ namespace dovah {
    bool form_deletion_request::_form_should_be_flagged(form_stub& stub) noexcept {
       if (stub.is_hardcoded()) // we don't currently allow any kind of deletion of hardcoded forms, but it never hurts to be prepared for what might change
          return true;
+      if (stub.is_none_stub()) // none-stubs represent dangling uses and so should never be flagged as deleted; they should be either wholly deleted or left alone
+         return false;
       if (!this->active_file_prefix.contains_form_id(stub.formID)) {
          if (stub.get_file_at_index(0) == this->owner.active_file)
             //
@@ -153,6 +160,59 @@ namespace dovah {
                this->forms_needing_delete.insert(entry.other);
             }
             this->_gather_others(entry.other);
+         }
+      }
+
+      if (this->delete_dialogue_children && start->form_type == form_type::scene) {
+         //
+         // If we're already deleting the scene's parent quest, then we can reasonably 
+         // assume that any topics owned by the scene's dialogue actions will be deleted 
+         // too. Otherwise, we have to manually do the work of finding those topics.
+         //
+         bool is_deleting_parent_quest = false;
+         auto* quest = dovah::form_stub_helpers::get_unique_outbound_use<use_info::entry_flags::scene::parent_quest>(*start);
+         if (quest) {
+            if (this->forms_needing_delete.contains(quest) || this->forms_needing_flag.contains(quest))
+               is_deleting_parent_quest = true;
+         }
+         if (!is_deleting_parent_quest) {
+            auto loaded = start->load().ptr_cast<loaded_forms::Scene>();
+            if (loaded) {
+               for (auto& action : loaded->actions) {
+                  if (action.type() != loaded_forms::Scene::action_type::dialogue)
+                     continue;
+                  auto& data  = std::get<loaded_forms::Scene::action::dialogue_data>(action.data);
+                  auto* topic = data.topic.get_form_stub();
+                  if (topic) {
+                     if (this->seen_stubs.contains(topic))
+                        continue;
+                     this->seen_stubs.insert(topic);
+                     //
+                     // Only mark the topic for delete if it belongs to the scene's parent quest and if 
+                     // its category is "Scene." Otherwise, it's invalid and could potentially belong 
+                     // to something else, so leave it be.
+                     //
+                     auto* topic_quest = dovah::form_stub_helpers::get_unique_outbound_use<use_info::entry_flags::topic::parent_quest>(*topic);
+                     if (topic_quest != quest)
+                        continue;
+                     auto loaded_topic = topic->load().ptr_cast<loaded_forms::Topic>();
+                     if (!loaded_topic)
+                        continue;
+                     if (loaded_topic->subtype != 'SCEN')
+                        continue;
+                     //
+                     // Mark the topic for delete, and grab any descendant forms that need deletion as 
+                     // well.
+                     //
+                     if (_form_should_be_flagged(*topic)) {
+                        this->forms_needing_flag.insert(topic);
+                     } else {
+                        this->forms_needing_delete.insert(topic);
+                     }
+                     this->_gather_others(topic);
+                  }
+               }
+            }
          }
       }
    }
