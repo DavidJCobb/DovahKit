@@ -26,6 +26,14 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
+            case 'OBND':
+               //
+               // The loader checks for this and passes it to a virtual function on TESForm 
+               // that's responsible for loading it. However, this form doesn't derive from 
+               // TESBoundObject, so the TESForm implementation of that virtual function (a 
+               // no-op) isn't overridden and therefore the data is not retained in memory.
+               //
+               break;
 
             case 'NVNM':
                subrecord.read(this->geometry.version);
@@ -285,7 +293,6 @@ namespace dovah::loaded_forms {
       assert(out->type == form_type);
       auto copy = (Navmesh*)out;
 
-      copy->bounds = this->bounds;
       copy->script_data.clone_from(this->script_data, *copy);
 
       copy->geometry.version = this->geometry.version;
@@ -327,9 +334,6 @@ namespace dovah::loaded_forms {
    }
    void Navmesh::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
-      this->bounds.save(OBND, intfc);
-      OBND.close();
 
       {
          auto& subrecord = record.open_next_subrecord('NVNM');
@@ -450,7 +454,6 @@ namespace dovah::loaded_forms {
       }
    }
    void Navmesh::_clear_impl() noexcept {
-      this->bounds.clear();
       this->script_data.clear(*this);
 
       this->geometry.version = 12;

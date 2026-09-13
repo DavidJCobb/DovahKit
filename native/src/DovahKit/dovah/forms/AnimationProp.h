@@ -3,7 +3,6 @@
 #include <string>
 #include "Form.h"
 #include "_common.h"
-#include "components/bounds.h"
 #include "components/model.h"
 #include "components/papyrus.h"
 
@@ -21,7 +20,6 @@ namespace dovah::loaded_forms {
             };
          };
 
-         components::object_bounds bounds; // OBND
          components::model_ts model; // MODL, MODT, MODS
          components::papyrus_attachment_data script_data; // VMAD
          std::string unload_event; // BNAM

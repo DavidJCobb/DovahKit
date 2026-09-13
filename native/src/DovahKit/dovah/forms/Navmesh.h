@@ -4,7 +4,6 @@
 #include <vector>
 #include "./Form.h"
 #include "./_common.h"
-#include "./components/bounds.h"
 #include "./components/papyrus.h"
 #include "helpers/vector3.h"
 #include "./structs/navmesh_pathing_cell.h"
@@ -177,7 +176,6 @@ namespace dovah::loaded_forms {
          };
 
       public:
-         components::object_bounds bounds; // OBND
          components::papyrus_attachment_data script_data; // VMAD
          //
          struct {

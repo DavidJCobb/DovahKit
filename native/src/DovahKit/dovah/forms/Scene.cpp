@@ -552,7 +552,7 @@ namespace dovah::loaded_forms {
             subrecord.close();
          }
          if (auto* casted = std::get_if<dialogue_data>(&this->data)) {
-            record.write_formID_subrecord('DATA', casted->topic, true);
+            record.write_formID_subrecord('DATA', casted->topic, false); // can be omitted if empty, but that will make xEdit v4.1.6o complain
             {
                auto& subrecord = record.open_next_subrecord('HTID');
                subrecord.write(casted->headtrack_alias_id);

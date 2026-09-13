@@ -19,8 +19,13 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
-            case components::object_bounds::subrecord:
-               this->bounds.load(subrecord, intfc);
+            case 'OBND':
+               //
+               // The loader checks for this and passes it to a virtual function on TESForm 
+               // that's responsible for loading it. However, this form doesn't derive from 
+               // TESBoundObject, so the TESForm implementation of that virtual function (a 
+               // no-op) isn't overridden and therefore the data is not retained in memory.
+               //
                break;
             case 'MODL':
             case 'MODS':
@@ -51,9 +56,6 @@ namespace dovah::loaded_forms {
             case 'MOSD':
                decltype(model)::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
                break;
-            case components::object_bounds::subrecord:
-               components::object_bounds::generate_use_info(subrecord, uib);
-               break;
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
@@ -67,20 +69,15 @@ namespace dovah::loaded_forms {
       auto copy = (AnimationProp*)out;
       
       copy->script_data.clone_from(this->script_data, *copy);
-      copy->bounds = this->bounds;
       copy->model.clone_from(this->model, *copy);
       copy->unload_event = this->unload_event;
    }
    void AnimationProp::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
-      this->bounds.save(OBND, intfc);
-      OBND.close();
       this->model.save(record, intfc, 'MODL', 'MODT', 'MODS');
       record.write_string_subrecord('BNAM', this->unload_event);
    }
    void AnimationProp::_clear_impl() noexcept {
-      this->bounds.clear();
       this->model.clear(*this);
       this->script_data.clear(*this);
       this->unload_event.clear();

@@ -352,7 +352,7 @@ namespace dovah::loaded_forms {
       for (size_t i = 0; i < this->noise.layers.size(); ++i) {
          auto& layer = this->noise.layers[i];
 
-         uint32_t signature = 'NAM2' + (i << 24);
+         uint32_t signature = 'NAM2' + (std::endian::native == std::endian::little ? i : (i << 24));
          record.write_string_subrecord(signature, layer.texture);
       }
       {

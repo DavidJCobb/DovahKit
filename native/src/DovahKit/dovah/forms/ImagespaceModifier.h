@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <bit> // std::endian
 #include <cstdint>
 #include "Form.h"
 #include "_common.h"
@@ -12,7 +13,24 @@ namespace dovah::loaded_forms {
          static constexpr const enum form_type form_type = form_type::imagespace_modifier;
          ImagespaceModifier(const constructor_params& c) : Form(form_type, c) {};
 
-         static constexpr uint32_t interpolator_subrecord(uint8_t index) { return (index) | '\x00IAD'; }
+         static constexpr uint32_t interpolator_subrecord(uint8_t index) {
+            uint32_t signature = '\x00IAD';
+            if constexpr (std::endian::native == std::endian::little) {
+               signature |= ((uint32_t)index << 0x18);
+            } else {
+               signature |= index;
+            }
+            return signature;
+         }
+         static constexpr uint32_t index_from_interpolator_subrecord(uint32_t signature) {
+            uint8_t index;
+            if constexpr (std::endian::native == std::endian::little) {
+               index = signature >> 0x18;
+            } else {
+               index = signature & 0xFF;
+            }
+            return index;
+         }
 
          struct modifier_flag {
             enum type : uint32_t {
