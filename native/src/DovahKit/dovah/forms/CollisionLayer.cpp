@@ -105,7 +105,7 @@ namespace dovah::loaded_forms {
    void CollisionLayer::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       {
-         auto& DESC = record.open_next_subrecord('FULL');
+         auto& DESC = record.open_next_subrecord('DESC');
          DESC.write(this->description);
          DESC.close();
       }

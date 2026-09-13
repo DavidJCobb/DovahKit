@@ -366,10 +366,6 @@ namespace dovah::loaded_forms {
          _write_interp_list(interpolator_subrecord(i), subject.mult);
          _write_interp_list(interpolator_subrecord(i + interpolation_index_base_add), subject.add);
       }
-      for (size_t i = 0; i < interpolation_index_count; ++i) {
-         auto& subject = *(interpolated_mult_add*)((uint8_t*)this + interpolation_offsets[i]);
-         _write_interp_list(interpolator_subrecord(i + interpolation_index_base_add), subject.add);
-      }
    }
    void ImagespaceModifier::_clear_impl() noexcept {
       this->script_data.clear(*this);
