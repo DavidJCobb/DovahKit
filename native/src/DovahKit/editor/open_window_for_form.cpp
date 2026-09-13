@@ -1,5 +1,6 @@
 #include "open_window_for_form.h"
 #include <QMessageBox>
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stubs/helpers/get_dialogue_branch_quest.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
@@ -288,6 +289,15 @@ extern void open_use_info_dialog_for_form(dovah::form_stub& stub, QWidget* paren
 }
 extern void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
    auto& pfwins = dovahkit::subsystems::per_form_windows::core::get_or_create();
+
+   if (stub.formID == dovah::hardcoded_form_ids::PlayerRef) {
+      QMessageBox::information(
+         parent,
+         QObject::tr("Error: cannot edit PlayerRef"),
+         QObject::tr("PlayerRef cannot be edited directly. (Did you mean to edit Player, the base form?)")
+      );
+      return;
+   }
 
    if (stub.form_type == dovah::form_type::camera_path) {
       auto* dialog = pfwins.extant_form_type_dialogs.camera_path;
