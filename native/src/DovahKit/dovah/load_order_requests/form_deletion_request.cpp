@@ -83,13 +83,22 @@ namespace dovah {
       if (!start)
          start = &this->target;
       //
-
-      if (!can_load_form_data(start->form_type)) {
+      // Don't allow deletion of forms if we don't know how to load the form types in question. Do 
+      // allow deletion of none-stubs, since they aren't "real" forms: when we save the active file, 
+      // any none-stubs that have since become unreferenced are deleted per this process here.
+      // 
+      // (None-stubs are created as a means to track dangling uses and prevent newly-created forms 
+      // from "filling in" the used form IDs. During save, dangling uses may be cleared, and that 
+      // leads to us invoking the normal form-deletion process on the none-stub. If a frontend runs 
+      // a deletion request on a none-stub outside of the save process, that should just result in 
+      // us forcibly severing uses of the none-stub just as we would any other to-be-deleted form.)
+      //
+      if (!start->is_none_stub() && !can_load_form_data(start->form_type)) {
          auto ex = exception(error_code::unimplemented_form_type, this->target);
          ex.details.referent = start;
          throw ex;
       }
-      //
+
       for (auto& pair : start->inbound) {
          auto& entry = pair.second;
          auto* other = entry.other;
