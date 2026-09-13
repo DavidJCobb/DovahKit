@@ -1,6 +1,7 @@
 #include "landscape.h"
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/istablelike.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
 #include "../../push_native_object.h"
@@ -108,6 +109,7 @@ namespace {
          lua_settop(L, 4);
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          int isnum;
          int x = lua_tointegerx(L, 2, &isnum);

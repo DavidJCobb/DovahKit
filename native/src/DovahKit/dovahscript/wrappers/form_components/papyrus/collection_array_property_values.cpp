@@ -2,6 +2,7 @@
 #include "helpers/lua/error.h"
 #include "helpers/lua/warning.h"
 #include "helpers/type_traits/is_std_vector.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
@@ -183,6 +184,7 @@ namespace {
       core::subsystems::permissions::verify_form_write_permissions();
       
       auto& self  = get_collection_wrapper(L);
+      api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
       auto* prop = unwrap(self);
       if (!prop)
          return 0;
@@ -227,6 +229,7 @@ namespace {
       core::subsystems::permissions::verify_form_write_permissions();
 
       auto& self = get_collection_wrapper(L);
+      api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
       auto* prop = unwrap(self);
       if (!prop)
          return 0;
@@ -260,6 +263,7 @@ namespace {
       core::subsystems::permissions::verify_form_write_permissions();
 
       auto& self = get_collection_wrapper(L);
+      api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
       auto* prop = unwrap(self);
       if (!prop)
          return 0;

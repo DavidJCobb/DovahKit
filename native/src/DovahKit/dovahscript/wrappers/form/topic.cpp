@@ -1,5 +1,6 @@
 #include "./topic.h"
 #include "helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/pull_native_object.h"
@@ -23,6 +24,7 @@ namespace {
       template<bool After>
       void _move_info_by_index(lua_State* L) {
          auto& self    = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, !!self.stub, 2, "method called on zombie object");
          auto* subject = pull_form_stub_argument(L, 2, dovah::form_type::topic_info);
          auto* target  = pull_form_stub_argument(L, 3, dovah::form_type::topic_info);
@@ -186,6 +188,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
 
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "expected boolean");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -199,6 +202,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected number");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -215,6 +219,7 @@ namespace {
          size_t subtype_index = 0;
 
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "expected string");
          {
             const char* param = lua_tostring(L, 2);
@@ -242,6 +247,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "expected string");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)

@@ -1,5 +1,6 @@
 #include "actor.h"
 #include "helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/pull_native_object.h"
 #include "dovahscript/wrapper.h"
@@ -17,6 +18,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2);
          cobb::lua::argcheck(L, value != nullptr, 2, "form expected");

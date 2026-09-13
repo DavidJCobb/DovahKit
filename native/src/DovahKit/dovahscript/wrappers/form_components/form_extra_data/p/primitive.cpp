@@ -1,6 +1,7 @@
 #include "./primitive.h"
 #include <optional>
 #include "helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/api_helpers/fail_table_if_expandos.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
@@ -177,6 +178,7 @@ namespace {
    namespace _setters {
       int halfwidths(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
          auto* data = cls::unwrap(self);
          if (!data)
@@ -197,6 +199,7 @@ namespace {
       }
       int shape(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
          auto* data = cls::unwrap(self);
          if (!data)

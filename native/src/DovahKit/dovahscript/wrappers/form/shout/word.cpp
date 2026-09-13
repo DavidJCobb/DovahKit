@@ -1,5 +1,6 @@
 #include "word.h"
 #include "../../../../helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "../../../core/subsystems/permissions.h"
 #include "../../../core/subsystems/userdata.h"
 #include "../../../core/classes.h"
@@ -60,6 +61,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* word  = _unwrap(self);
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::word_of_power);
          if (!word)
@@ -73,6 +75,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* word  = _unwrap(self);
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::spell);
          if (!word)
@@ -86,6 +89,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected number");
          auto* word = _unwrap(self);
          if (!word)

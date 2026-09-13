@@ -1,5 +1,6 @@
 #include "./collection_properties.h"
 #include "helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
@@ -94,6 +95,7 @@ namespace {
       core::subsystems::permissions::verify_form_write_permissions();
       
       auto& self = get_collection_wrapper(L);
+      api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
       auto* script = parent_wrapper::unwrap(self);
       if (!script)
          return 0;
@@ -123,6 +125,7 @@ namespace {
       core::subsystems::permissions::verify_form_write_permissions();
 
       auto& self = get_collection_wrapper(L);
+      api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
       auto* script = parent_wrapper::unwrap(self);
       if (!script)
          return 0;

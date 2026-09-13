@@ -1,5 +1,6 @@
 #include "./fragment.h"
 #include "helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
@@ -166,6 +167,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
 
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* root = root_wrapper::unwrap(self);
          if (!root)
             cobb::lua::error(L, "papyrus_fragment wrapper has no underlying object (deleted?)");
@@ -186,6 +188,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
 
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* root = root_wrapper::unwrap(self);
          if (!root)
             cobb::lua::error(L, "papyrus_fragment wrapper has no underlying object (deleted?)");

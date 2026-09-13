@@ -1,5 +1,6 @@
 #include "./primitive_bounds.h"
 #include "helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/wrapper.h"
 #include "../primitive.h"
@@ -23,6 +24,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto& data = _unwrap_self(L);
          cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number (x) expected");
          cobb::lua::argcheck(L, lua_isnumber(L, 3), 3, "number (y) expected");
@@ -58,6 +60,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto& data = _unwrap_self(L);
          cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected");
 
@@ -70,6 +73,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto& data = _unwrap_self(L);
          cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected");
 
@@ -82,6 +86,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
 
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto& data = _unwrap_self(L);
          cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected");
 

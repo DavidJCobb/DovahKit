@@ -1,6 +1,7 @@
 #include "quest.h"
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/warning.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
 
@@ -77,6 +78,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
 
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
@@ -107,6 +109,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
 
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
@@ -305,6 +308,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "expected boolean");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -319,6 +323,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "expected string");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -332,6 +337,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "expected string");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -345,6 +351,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "expected number");
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -358,6 +365,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isinteger(L, 2), 2, "expected integer");
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -372,6 +380,7 @@ namespace {
          //
          lua_settop(L, 2);
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto  atype = lua_type(L, 2);
          //
          wrapped_type::quest_type_t value = wrapped_type::quest_type::none;

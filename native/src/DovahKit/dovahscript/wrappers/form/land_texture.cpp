@@ -1,6 +1,5 @@
 #include "./land_texture.h"
-#include "helpers/lua/error.h"
-#include "helpers/lua/warning.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/pull_native_object.h"
@@ -56,6 +55,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          int isnum;
          int value = lua_tointegerx(L, 2, &isnum);
@@ -73,6 +73,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::texture_set);
          if (!form)

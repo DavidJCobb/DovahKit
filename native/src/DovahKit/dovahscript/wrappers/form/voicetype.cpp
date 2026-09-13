@@ -1,5 +1,6 @@
 #include "voicetype.h"
 #include "../../../helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
 #include "../../wrapper.h"
@@ -36,6 +37,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -49,6 +51,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)

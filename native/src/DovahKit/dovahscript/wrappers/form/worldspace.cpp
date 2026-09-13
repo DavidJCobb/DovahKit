@@ -1,6 +1,7 @@
 #include "worldspace.h"
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/istablelike.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
 #include "../../pull_native_object.h"
@@ -225,6 +226,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::climate);
          if (!form)
@@ -238,6 +240,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!form)
@@ -251,6 +254,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!form)
@@ -264,6 +268,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::encounter_zone);
          if (!form)
@@ -277,6 +282,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!form)
@@ -290,6 +296,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!form)
@@ -303,6 +310,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::lighting_template);
          if (!form)
@@ -316,6 +324,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::location);
          if (!form)
@@ -329,6 +338,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!form)
@@ -342,6 +352,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::music_type);
          if (!form)
@@ -353,6 +364,7 @@ namespace {
       }
       int name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "expected string");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -366,6 +378,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::worldspace);
          if (!form)
@@ -379,6 +392,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!form)
@@ -392,6 +406,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!form)
@@ -405,6 +420,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!form)
@@ -418,6 +434,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::water_type);
          if (!form)
@@ -431,6 +448,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::water_type);
          if (!form)

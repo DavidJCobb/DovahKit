@@ -3,6 +3,7 @@
 #include <span>
 #include "helpers/lua/error.h"
 #include "helpers/lua/istablelike.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
 
@@ -226,6 +227,7 @@ namespace {
       int _common_record_flag(lua_State* L) {
          core::subsystems::permissions::verify_form_write_permissions();
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.stub)
             return 0;
@@ -237,6 +239,7 @@ namespace {
       template<uint32_t Flag, auto FormTypes, bool AllItems = false>
       int _typed_record_flag(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.stub)
             return 0;
@@ -256,6 +259,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form  = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2);
          cobb::lua::argcheck(L, value != nullptr, 2, "form expected");
@@ -299,6 +303,7 @@ namespace {
       }
       int hide_from_local_map(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.stub)
             return 0;
@@ -325,6 +330,7 @@ namespace {
       }
       int is_full_lod(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.stub)
             return 0;
@@ -338,6 +344,7 @@ namespace {
       }
       int is_sky_marker(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.stub)
             return 0;
@@ -351,6 +358,7 @@ namespace {
       }
       int navmesh_generation_override(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isstring(L, 2) || lua_isnil(L, 2), 2, "string or nil expected");
          if (!self.stub)
             return 0;
@@ -397,6 +405,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          cobb::lua::argcheck(L, cobb::lua::istablelike(L, 2), 2, "table or userdata (position) expected");
          lua_settop(L, 2);
@@ -447,6 +456,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          //
          cobb::euler value;

@@ -1,6 +1,7 @@
 #include "statik.h"
 #include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/istablelike.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
 #include "../../pull_native_object.h"
@@ -51,6 +52,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          //
          auto* arg_dm = wrapper_from_stack<wrappers::static_directional_material>(L, 2);
@@ -123,6 +125,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          //
          if (cobb::lua::istablelike(L, 2)) {
@@ -164,7 +167,8 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isboolean(L, 2), 2, "expected string");
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "expected boolean");
          if (!self.stub)
             return 0;
          self.before_edit();

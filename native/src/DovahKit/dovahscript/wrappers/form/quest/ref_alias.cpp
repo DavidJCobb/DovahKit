@@ -1,5 +1,6 @@
 #include "./ref_alias.h"
 #include "helpers/lua/error.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
@@ -114,6 +115,7 @@ namespace {
       template<uint32_t Flag>
       int _flag(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* alias = cls::unwrap(self);
          if (alias == nullptr)
             cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
@@ -172,6 +174,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self  = get_wrapper_for_thiscall<wrappers::quest_alias>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* alias = cls::unwrap(self);
          if (alias == nullptr)
             cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
@@ -185,6 +188,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
 
          auto& self = get_wrapper_for_thiscall<wrappers::quest_alias>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* alias = cls::unwrap(self);
          if (alias == nullptr)
             cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");

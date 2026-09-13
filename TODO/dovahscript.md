@@ -46,6 +46,14 @@ Dovahscript has no way to be notified about this, nor any way to signal to any g
 
 Dovahscript's `coordinator` subsystem is notified about the script-initiated deletion of forms, so in theory it could handle this kind of thing. Currently, it doesn't do anything (other than just track what forms are supposed ot be deleted, and verify that it's received signals for them; but it doesn't *do* anything in response to those signals, so this is all just dead code).
 
+### Some API helpers can't cope with non-editable forms
+
+Right now, there's a "native list" API helper that uses tons of template metaprogramming to allow us to quickly and conveniently create API bindings any list-like sub-object of a wrappable object. However, there's no way for us to get these API helpers to properly call `dovahscript::api_helpers::fail_if_form_cannot_be_edited(L, self)`. The same issue exists for the "sub-object property helpers."
+
+Currently, the only non-editable forms are none-stubs, forms with `form_type::none` (e.g. the PapyrusPersistenceForm), and the PlayerRef. However, I want to add calls to the "fail if cannot be edited" function to all APIs that write to form data, as a form of future-proofing. I explicitly can't do this for anything wrapped as a "native list."
+
+Refactors of Dovahscript should have separate means of unwrapping forms/form data, depending on whether we're unwrapping for a read or for a write. Then, we wouldn't even need all this ceremony; the API itself could just call the single "unwrap for write" function, and that would run all needed checks to see if the form still exists (i.e. not a zombie wrapper) and is legal to write to. (Unfortunately, the current design just has a single "get wrapper for thiscall" function for both reads and writes, and a single "get loaded form data" function for both reads and writes.)
+
 
 ## Needed improvements
 

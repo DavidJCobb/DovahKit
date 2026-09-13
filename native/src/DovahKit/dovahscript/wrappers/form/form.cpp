@@ -9,6 +9,7 @@
 #include "../../../dovah/forms/Form.h"
 #include "../../push_native_object.h"
 #include "../../lua_libraries/form_types.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 
 #include "../../tasks/s2m/delete_form.h"
 #include "../../tasks/s2m/duplicate_form.h"
@@ -232,6 +233,7 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "editor ID (string) expected");
          if (!self.stub)
             return 0;
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          //
          auto editorID = lua_tostring(L, 2);
          if (self.stub->editorID == editorID)
@@ -250,6 +252,7 @@ namespace {
          luaL_argcheck(L, lua_type(L, 2) == LUA_TNUMBER, 2, "form ID (number) expected");
          if (!self.stub)
             return 0;
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          //
          int result;
          dovah::bare_form_id_t formID = lua_tointegerx(L, 2, &result);

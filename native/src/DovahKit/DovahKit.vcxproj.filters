@@ -13020,6 +13020,7 @@
     <None Include="dovah\_docs\voicetypes valid for a topic info.md" />
     <None Include="dovah\_docs\form types\s\sound descriptor.md" />
     <None Include="dovah\forms\structs\region\_docs\area.md" />
+    <None Include="dovah\_docs\form types\d\dialogue branch.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

@@ -4,6 +4,7 @@
 #include "dovahscript/core/subsystems/userdata.h"
 
 #include "dovahscript/wrapper.h"
+#include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
 #include "dovahscript/core/classes.h"
 #include "dovahscript/core/collections.h"
 #include "dovahscript/pull_native_object.h"
@@ -102,6 +103,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "expected boolean");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -115,6 +117,7 @@ namespace {
          core::subsystems::permissions::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          auto* form = self.get_loaded_form_data<wrapped_type>();
          auto* value = pull_form_stub_argument(L, 2, dovah::form_type::topic);
          if (!value)
@@ -138,6 +141,7 @@ namespace {
          uint32_t raw = 0;
 
          auto& self = get_wrapper_for_thiscall<cls>(L);
+         api_helpers::fail_if_form_cannot_be_edited(L, self.stub);
          cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "expected string");
          {
             std::string_view v = lua_tostring(L, 2);
