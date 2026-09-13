@@ -177,9 +177,9 @@ void FormDialogTextureSet::_load_impl() {
    this->ui.flagSkinTexture->setChecked(this->form->texture_flags & loaded_form_type::texture_set_flag::is_skin_textures);
    this->ui.flagSpecular->setChecked(!(this->form->texture_flags & loaded_form_type::texture_set_flag::no_specular_map));
    //
-   this->ui.decalData->setChecked(this->form->decal_data != nullptr);
-   if (this->form->decal_data) {
-      auto& decal = *this->form->decal_data;
+   this->ui.decalData->setChecked(this->form->decal_data.has_value());
+   if (this->form->decal_data.has_value()) {
+      auto& decal = this->form->decal_data.value();
       this->ui.decalAlphaBlend->setChecked(decal.flags & decal_type::flag::alpha_blending);
       this->ui.decalAlphaTest->setChecked(decal.flags & decal_type::flag::alpha_testing);
       this->ui.decalFlagParallax->setChecked(decal.flags & decal_type::flag::parallax);
@@ -226,12 +226,9 @@ void FormDialogTextureSet::_save_impl() {
    this->form->texture_by_index<7>() = _get_row_value(widget, 7);
    //
    if (this->ui.decalData->isChecked()) {
-      auto* p = this->form->decal_data;
-      if (!p) {
-         p = this->form->decal_data = new decal_type;
-      }
-      //
-      auto& decal = *p;
+      if (!this->form->decal_data.has_value())
+         this->form->decal_data.emplace();
+      auto& decal = this->form->decal_data.value();
       {
          auto c = this->ui.decalColor->color();
          decal.color.r = c.red();
@@ -251,9 +248,6 @@ void FormDialogTextureSet::_save_impl() {
       decal.parallax.passes = this->ui.decalParallaxPasses->value();
       decal.parallax.scale  = this->ui.decalParallaxScale->value();
    } else {
-      if (auto*& p = this->form->decal_data) {
-         delete p;
-         p = nullptr;
-      }
+      this->form->decal_data = {};
    }
 }

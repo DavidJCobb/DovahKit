@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 #include "helpers/unreachable.h"
@@ -15,7 +16,6 @@ namespace dovah::loaded_forms {
       public:
          static constexpr const enum form_type form_type = form_type::texture_set;
          TextureSet(const constructor_params& c) : Form(form_type, c) {};
-         ~TextureSet();
 
          struct texture_set_flag {
             enum type : uint16_t {
@@ -48,7 +48,7 @@ namespace dovah::loaded_forms {
          texture_list textures;
          texture_set_flags_t texture_flags = 0; // DNAM
          //
-         components::decal_data* decal_data = nullptr; // DODT
+         std::optional<components::decal_data> decal_data; // DODT
          components::papyrus_attachment_data script_data;
          components::object_bounds bounds;
 

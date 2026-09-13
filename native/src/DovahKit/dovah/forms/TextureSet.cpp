@@ -2,13 +2,6 @@
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
-   TextureSet::~TextureSet() {
-      if (auto*& p = this->decal_data) {
-         delete p;
-         p = nullptr;
-      }
-   }
-
    void TextureSet::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
@@ -54,9 +47,9 @@ namespace dovah::loaded_forms {
                subrecord.read(this->texture_flags);
                break;
             case 'DODT':
-               if (!this->decal_data)
-                  this->decal_data = new components::decal_data;
-               this->decal_data->load(subrecord, intfc);
+               if (!this->decal_data.has_value())
+                  this->decal_data.emplace();
+               this->decal_data.value().load(subrecord, intfc);
                break;
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord);
@@ -108,7 +101,9 @@ namespace dovah::loaded_forms {
    void TextureSet::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);
       auto* copy = (TextureSet*)out;
-      
+
+      copy->bounds = this->bounds;
+      copy->decal_data = this->decal_data;
       copy->script_data.clone_from(this->script_data, *copy);
       copy->textures.diffuse     = this->textures.diffuse;
       copy->textures.normal      = this->textures.normal;
@@ -119,16 +114,6 @@ namespace dovah::loaded_forms {
       copy->textures.multilayer  = this->textures.multilayer;
       copy->textures.backlight   = this->textures.backlight;
       copy->texture_flags = this->texture_flags;
-      //
-      if (auto* p = this->decal_data) {
-         copy->decal_data = new components::decal_data;
-         *copy->decal_data = *p;
-      } else {
-         if (auto* q = copy->decal_data)
-            delete q;
-         copy->decal_data = nullptr;
-      }
-      copy->bounds = this->bounds;
    }
    void TextureSet::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
@@ -154,9 +139,10 @@ namespace dovah::loaded_forms {
       if (!this->textures.backlight.empty())
          record.write_string_subrecord('TX07', this->textures.backlight);
       //
-      if (auto* data = this->decal_data) {
+      if (this->decal_data.has_value()) {
+         auto& data = this->decal_data.value();
          auto& DODT = record.open_next_subrecord('DODT');
-         data->save(DODT, intfc);
+         data.save(DODT, intfc);
          DODT.close();
       }
       //
@@ -174,12 +160,9 @@ namespace dovah::loaded_forms {
       this->textures.multilayer.clear();
       this->textures.backlight.clear(); // or backlight mask
       this->texture_flags = 0;
-      //
-      if (auto*& p = this->decal_data) {
-         delete p;
-         p = nullptr;
-      }
+
       this->bounds = components::object_bounds();
+      this->decal_data = {};
       this->script_data.clear(*this);
    }
    void TextureSet::_sever_outbound_references_impl(form_stub& other) noexcept {

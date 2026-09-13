@@ -26,6 +26,7 @@ namespace dovah::loaded_forms::components::papyrus {
          const fragment_type type;
          
          fragment_data_base(fragment_type t) : type(t) {}
+         virtual ~fragment_data_base() {}
          
          virtual void load(attachment_data& owner, tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
          virtual void save(attachment_data& owner, tes_subrecord_writer&, load_order_interfaces::form_save&) = 0;

@@ -26,6 +26,9 @@ namespace dovah::loaded_forms::components::papyrus {
          static constexpr const size_t max_script_count = std::numeric_limits<serialized_script_count_type>::max();
 
       public:
+         ~attachment_data();
+
+      public:
          attachment_header   header;
          std::vector<attached_script> scripts;
          fragment_data_base* fragment_data = nullptr;

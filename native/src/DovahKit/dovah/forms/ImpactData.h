@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <vector>
 #include "Form.h"
 #include "_common.h"
@@ -28,7 +29,7 @@ namespace dovah::loaded_forms {
          };
 
       public:
-         components::decal_data* decal_data = nullptr; // DODT
+         std::optional<components::decal_data> decal_data; // DODT
          components::model model; // MODL, MODT
          components::papyrus_attachment_data script_data; // VMAD
          //

@@ -17,6 +17,13 @@ namespace {
 }
 
 namespace dovah::loaded_forms::components::papyrus {
+   attachment_data::~attachment_data() {
+      if (auto* v = this->fragment_data) {
+         this->fragment_data = nullptr;
+         delete v;
+      }
+   }
+
    bool attachment_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.size() > 1 * 1024 * 1024) {
          specific_load_warnings::vmad_too_large notice(

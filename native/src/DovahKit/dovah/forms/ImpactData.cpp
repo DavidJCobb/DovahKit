@@ -30,9 +30,9 @@ namespace dovah::loaded_forms {
                this->model.load(subrecord, intfc);
                break;
             case 'DODT':
-               if (!this->decal_data)
-                  this->decal_data = new components::decal_data;
-               this->decal_data->load(subrecord, intfc);
+               if (!this->decal_data.has_value())
+                  this->decal_data.emplace();
+               this->decal_data.value().load(subrecord, intfc);
                break;
             case 'DATA':
                subrecord.read(this->effect.duration);
@@ -133,14 +133,7 @@ namespace dovah::loaded_forms {
       assert(out->type == form_type);
       auto copy = (ImpactData*)out;
 
-      if (auto* p = this->decal_data) {
-         copy->decal_data = new components::decal_data;
-         *copy->decal_data = *p;
-      } else {
-         if (auto* q = copy->decal_data)
-            delete q;
-         copy->decal_data = nullptr;
-      }
+      copy->decal_data = this->decal_data;
       copy->model.clone_from(this->model);
       copy->script_data.clone_from(this->script_data, *copy);
 
@@ -177,9 +170,10 @@ namespace dovah::loaded_forms {
          subrecord.skip_bytes(2);
          subrecord.close();
       }
-      if (auto* data = this->decal_data) {
+      if (this->decal_data.has_value()) {
+         auto& data = this->decal_data.value();
          auto& DODT = record.open_next_subrecord('DODT');
-         data->save(DODT, intfc);
+         data.save(DODT, intfc);
          DODT.close();
       }
       record.write_formID_subrecord('DNAM', this->decal.texture_sets.primary,   true);
@@ -189,10 +183,7 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('NAM2', this->hazard,    true);
    }
    void ImpactData::_clear_impl() noexcept {
-      if (auto*& p = this->decal_data) {
-         delete p;
-         p = nullptr;
-      }
+      this->decal_data = {};
       this->model.clear();
       this->script_data.clear(*this);
 

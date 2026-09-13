@@ -54,6 +54,7 @@ namespace dovah::loaded_forms {
          static constexpr const alias_id_t none_id = -1;
 
          Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
+         virtual ~Alias() {}
          
          Quest& owner;
          const alias_type type = alias_type::undifferentiated;

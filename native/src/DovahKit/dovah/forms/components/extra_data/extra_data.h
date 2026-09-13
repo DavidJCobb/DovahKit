@@ -46,6 +46,8 @@ namespace dovah::loaded_forms::components::extra_data_types {
 
       protected:
          constexpr extra_data(typecode_type t) : typecode(t) {}
+      public:
+         virtual ~extra_data() {}
 
       public:
          const typecode_type typecode;

@@ -48,20 +48,21 @@ void FormDialogImpactData::_load_impl() {
    ui::bind(this->ui.angleThreshold, working.angle_threshold);
 
    ui::bind_inverse(this->ui.decalData, working.decal.enabled);
-   if (auto* src = working.decal_data) {
-      this->ui.widthMin->setValue(src->width.min);
-      this->ui.widthMax->setValue(src->width.max);
-      this->ui.heightMin->setValue(src->height.min);
-      this->ui.heightMax->setValue(src->height.max);
-      this->ui.color->setColor(QColor(src->color.r, src->color.g, src->color.b));
-      this->ui.depth->setValue(src->depth);
-      this->ui.shininess->setValue(src->shininess);
-      this->ui.flagDecalAlphaBlend->setChecked(src->flags & decal_flag::alpha_blending);
-      this->ui.flagDecalAlphaTest->setChecked(src->flags & decal_flag::alpha_testing);
-      this->ui.flagParallax->setChecked(src->flags & decal_flag::parallax);
-      this->ui.parallaxPasses->setValue(src->parallax.passes);
-      this->ui.parallaxScale->setValue(src->parallax.scale);
-      this->ui.flag4Subtex->setChecked(!(src->flags & decal_flag::no_subtextures));
+   if (working.decal_data.has_value()) {
+      const auto& src = working.decal_data.value();
+      this->ui.widthMin->setValue(src.width.min);
+      this->ui.widthMax->setValue(src.width.max);
+      this->ui.heightMin->setValue(src.height.min);
+      this->ui.heightMax->setValue(src.height.max);
+      this->ui.color->setColor(QColor(src.color.r, src.color.g, src.color.b));
+      this->ui.depth->setValue(src.depth);
+      this->ui.shininess->setValue(src.shininess);
+      this->ui.flagDecalAlphaBlend->setChecked(src.flags & decal_flag::alpha_blending);
+      this->ui.flagDecalAlphaTest->setChecked(src.flags & decal_flag::alpha_testing);
+      this->ui.flagParallax->setChecked(src.flags & decal_flag::parallax);
+      this->ui.parallaxPasses->setValue(src.parallax.passes);
+      this->ui.parallaxScale->setValue(src.parallax.scale);
+      this->ui.flag4Subtex->setChecked(!(src.flags & decal_flag::no_subtextures));
    }
 
    this->ui.effectModel->initializeFrom(working.model);
@@ -86,40 +87,37 @@ void FormDialogImpactData::_save_impl() {
    auto& working = *this->form;
 
    if (working.decal.enabled) {
-      auto* data = working.decal_data;
-      if (!data) {
-         data = working.decal_data = new dovah::loaded_forms::components::decal_data;
+      if (!working.decal_data.has_value()) {
+         working.decal_data.emplace();
       }
-      data->width = {
+      auto& data = working.decal_data.value();
+      data.width = {
          .min = (float)this->ui.widthMin->value(),
          .max = (float)this->ui.widthMax->value(),
       };
-      data->height = {
+      data.height = {
          .min = (float)this->ui.heightMin->value(),
          .max = (float)this->ui.heightMax->value(),
       };
       {
          auto c = this->ui.color->color();
-         data->color.r = c.red();
-         data->color.g = c.green();
-         data->color.b = c.blue();
+         data.color.r = c.red();
+         data.color.g = c.green();
+         data.color.b = c.blue();
       }
-      data->depth = this->ui.depth->value();
-      data->shininess = this->ui.shininess->value();
-      data->parallax = {
+      data.depth     = this->ui.depth->value();
+      data.shininess = this->ui.shininess->value();
+      data.parallax  = {
          .scale  = (float)this->ui.parallaxScale->value(),
          .passes = (uint8_t)this->ui.parallaxPasses->value(),
       };
 
-      cobb::edit_bit(data->flags, decal_flag::alpha_blending, this->ui.flagDecalAlphaBlend->isChecked());
-      cobb::edit_bit(data->flags, decal_flag::alpha_testing,  this->ui.flagDecalAlphaTest->isChecked());
-      cobb::edit_bit(data->flags, decal_flag::parallax,       this->ui.flagParallax->isChecked());
-      cobb::edit_bit(data->flags, decal_flag::no_subtextures, !this->ui.flag4Subtex->isChecked());
+      cobb::edit_bit(data.flags, decal_flag::alpha_blending, this->ui.flagDecalAlphaBlend->isChecked());
+      cobb::edit_bit(data.flags, decal_flag::alpha_testing,  this->ui.flagDecalAlphaTest->isChecked());
+      cobb::edit_bit(data.flags, decal_flag::parallax,       this->ui.flagParallax->isChecked());
+      cobb::edit_bit(data.flags, decal_flag::no_subtextures, !this->ui.flag4Subtex->isChecked());
    } else {
-      if (auto* data = working.decal_data) {
-         working.decal_data = nullptr;
-         delete data;
-      }
+      working.decal_data = {};
    }
 
    this->ui.effectModel->commitTo(working.model, working);
