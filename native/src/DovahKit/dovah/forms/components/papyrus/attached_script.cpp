@@ -41,6 +41,63 @@ namespace dovah::loaded_forms::components::papyrus {
       return true;
    }
    void attached_script::save(const attachment_header& header, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) noexcept {
+      {  // pre-allocate space in the subrecord for all our properties
+         size_t serialized_size =
+            2 + this->name.size() + // script name
+            ((header.version >= 4) ? sizeof(uint8_t) : 0) + // script status
+            sizeof(uint16_t) + // property count
+            0
+         ;
+         for (auto& prop : this->properties) {
+            serialized_size +=
+               sizeof(uint16_t) + prop.name.size() + // property name
+               sizeof(property_type) +
+               sizeof(property_status)
+            ;
+            switch (prop.type()) {
+               using enum property_type;
+               case object:
+                  serialized_size += 8;
+                  break;
+               case string:
+                  serialized_size += 2 + std::get<std::string>(prop.value).size();
+                  break;
+               case integer:
+               case float32:
+                  serialized_size += 4;
+                  break;
+               case boolean:
+                  serialized_size += 1;
+                  break;
+               case array_of_object:
+                  serialized_size += sizeof(uint32_t); // array element count
+                  serialized_size += 8 * std::get<std::vector<property_object_value>>(prop.value).size();
+                  break;
+               case array_of_string:
+                  serialized_size += sizeof(uint32_t); // array element count
+                  for (const auto& str : std::get<std::vector<std::string>>(prop.value)) {
+                     serialized_size += 2 + str.size();
+                  }
+                  break;
+               case array_of_integer:
+                  serialized_size += sizeof(uint32_t); // array element count
+                  serialized_size += 4 * std::get<std::vector<int32_t>>(prop.value).size();
+                  break;
+               case array_of_float32:
+                  serialized_size += sizeof(uint32_t); // array element count
+                  serialized_size += 4 + std::get<std::vector<float>>(prop.value).size();
+                  break;
+               case array_of_boolean:
+                  serialized_size += sizeof(uint32_t); // array element count
+                  serialized_size += 1 + std::get<std::vector<bool>>(prop.value).size();
+                  break;
+               default:
+                  std::unreachable();
+            }
+         }
+         subrecord.reserve_more(serialized_size);
+      }
+
       subrecord.write_length_prefixed_string<2>(this->name);
       uint16_t count = this->properties.size();
       if (this->properties.size() > std::numeric_limits<decltype(count)>::max()) {

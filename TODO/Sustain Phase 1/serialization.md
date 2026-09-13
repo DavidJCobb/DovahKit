@@ -33,3 +33,8 @@ The main use case here is package data UIDs. I could define them as `using packa
 Color dwords are another common struct where it'd be nice to just shove them into the `read` function.
 
 As for how to expose this kind of customization, without making said types directly dependent on the subrecord reader types? I could look into how `std::format` exposes customization and see if there are techniques I can borrow.
+
+## Memory management during writes
+Currently, every individual value written reallocates the destination buffer for subrecords. We could optimize this if we used similar behavior to `std::vector` and friends and eagerly pre-allocated. That is: if we want to write e.g. a four-byte value, but the buffer doesn't have capacity, then don't just allocate to `current_size + 4`; allocate to `current_size + 64`. Like, expand the buffer in 64-byte chunks whenever we're not writing something larger than that many bytes.
+
+This may potentially even be more efficient than having tons of structs manually call `reserve_more` (plus, with the "multi-write" change proposed above, we could automate `reserve_more` calls rather than the callers manually needing to calculate and run them).
