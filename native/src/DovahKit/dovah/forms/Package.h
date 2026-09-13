@@ -26,6 +26,7 @@ namespace dovah::loaded_forms {
       public:
          static constexpr const enum form_type form_type = form_type::package;
          Package(const constructor_params& c) : Form(form_type, c) {};
+         ~Package();
 
          using interrupt_override_type  = packages::interrupt_override_type;
          using legacy_type              = packages::legacy_type;

@@ -13,6 +13,13 @@ namespace {
 }
 
 namespace dovah::loaded_forms {
+   Package::~Package() {
+      if (auto* v = this->typed_info) {
+         this->typed_info = nullptr;
+         delete v;
+      }
+   }
+
    void Package::_force_type_during_load(legacy_type t, bool complain_on_change, load_order_interfaces::form_load& intfc) {
       if (this->typed_info) {
          if (this->typed_info->is_of_legacy_type(t))
