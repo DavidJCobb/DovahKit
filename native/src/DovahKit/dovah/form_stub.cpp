@@ -17,6 +17,7 @@
 #include "form_stub_heap.h"
 #include "form_stub_use_info_builder.h"
 #include "logging.h"
+#include "./form_stubs/helpers/can_ever_be_edited.h"
 #include "./form_stubs/helpers/for_each_persistent_ref_in_world.h"
 
 namespace {
@@ -436,10 +437,13 @@ namespace dovah {
    void form_stub::set_edited(bool v) {
       if (this->is_edited() == v)
          return;
+      if (v) {
+         assert(form_stub_helpers::can_ever_be_edited(*this) && "Should not flag form stubs as \"edited\" if they cannot actually be edited!");
+      }
       cobb::modify_bit(this->flags, flag::is_edited, v);
-      if (v)
+      if (v) {
          this->_get_load_order().stub_flagged_as_edited(this);
-      else {
+      } else {
          if (this->refcount == 0)
             this->_unload_form();
       }
