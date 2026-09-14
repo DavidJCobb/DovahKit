@@ -7,6 +7,7 @@ namespace dovah::loaded_forms {
       if (!intfc.is_winning_record)
          return;
 
+      uint32_t nth_nnam = 0;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -20,35 +21,10 @@ namespace dovah::loaded_forms {
                subrecord.read(this->name);
                break;
             case 'NNAM':
-               //
-               // This was intended to be three null-terminated strings in a single 
-               // subrecord. However, the texture paths were implemented as TESIcon, 
-               // which reads the entire subrecord... so the first in-memory texture 
-               // path would've swallowed the whole subrecord and then (given that 
-               // it expected a null-terminated string) ignored the latter two of 
-               // the three intended paths.
-               // 
-               // Betting this is why Bethesda replaced NNAM with NAM2+NAM3+NAM4 in 
-               // a game update.
-               //
-               {
-                  size_t i = 0;
-                  char   c = 0;
-                  while (subrecord.read(c)) {
-                     if (c == '\0') {
-                        ++i;
-                        if (i >= 3)
-                           break;
-                     } else {
-                        this->noise.layers[i].texture += c;
-                     }
-                  }
-                  for (auto& layer : this->noise.layers) {
-                     if (layer.texture.starts_with('\\')) {
-                        layer.texture.erase(0, 1);
-                     }
-                  }
+               if (nth_nnam < this->noise.layers.size()) {
+                  subrecord.read(this->noise.layers[nth_nnam].texture);
                }
+               ++nth_nnam;
                break;
             case 'ANAM':
                subrecord.read(this->opacity);
