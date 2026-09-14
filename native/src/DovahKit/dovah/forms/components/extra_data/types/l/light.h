@@ -15,8 +15,8 @@ namespace dovah::loaded_forms::components::extra_data_types {
          float   fade = 1;
          float   end_distance_cap  = 0; // 0 = use the Radius from the Light base form
          float   shadow_depth_bias = 1.0F;
-         uint8_t unk10;
-         uint8_t unk11[3];
+         uint8_t unk10 = 0;
+         uint8_t unk11[3] = { 0, 0, 0 };
 
       public:
          virtual subrecord_load_result load(tes_file_reading::subrecord&, load_interface_t&) override;
