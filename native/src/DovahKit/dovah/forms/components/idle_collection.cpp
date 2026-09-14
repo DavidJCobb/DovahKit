@@ -69,7 +69,7 @@ namespace dovah::loaded_forms::components {
       bool save_flags = true;
       bool save_count = true;
       bool save_timer = true;
-      if constexpr (use_save_behavior == save_behavior::vanilla) {
+      if constexpr (use_save_behavior == save_behavior::always_save_non_zero) {
          if (this->idles.empty()) {
             save_flags = this->flags != 0;
             save_count = false;
