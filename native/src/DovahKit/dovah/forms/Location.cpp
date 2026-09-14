@@ -1134,6 +1134,7 @@ namespace dovah::loaded_forms {
          FULL.write(this->name);
          FULL.close();
       }
+      this->keywords.save(record, intfc);
       record.write_formID_subrecord('PNAM', this->parent_location, true);
       record.write_formID_subrecord('NAM1', this->music, true);
       record.write_formID_subrecord('FNAM', this->unreported_crime_faction, true);
