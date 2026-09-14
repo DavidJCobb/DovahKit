@@ -21,11 +21,20 @@ namespace dovah::loaded_forms::components::extra_data_types {
          return subrecord_load_result::unrecognized;
       auto& item = this->links.emplace_back();
       if (subrecord.size() >= 8) {
-         subrecord.read(item.keyword);
-         intfc.warn_if_ref_is_wrong_type(item.keyword, form_type::keyword, subrecord.signature());
+         //
+         // Modern data.
+         //
+         if (subrecord.read(item.keyword))
+            intfc.warn_if_ref_is_wrong_type(item.keyword, form_type::keyword, subrecord.signature());
+         if (subrecord.read(item.ref))
+            intfc.warn_if_ref_is_wrong_type(item.ref, form_type::reference, subrecord.signature());
+      } else {
+         //
+         // Legacy data.
+         //
+         if (subrecord.read(item.ref))
+            intfc.warn_if_ref_is_wrong_type(item.ref, form_type::reference, subrecord.signature());
       }
-      subrecord.read(item.ref);
-      intfc.warn_if_ref_is_wrong_type(item.ref, form_type::reference, subrecord.signature());
       return subrecord_load_result::succeeded;
    }
    /*virtual*/ record_load_result linked_ref::load(tes_file_reading::record& record, load_interface_t& intfc) /*override*/ {
@@ -70,11 +79,10 @@ namespace dovah::loaded_forms::components::extra_data_types {
    }
    /*virtual*/ void linked_ref::save(tes_file_writing::record& record, save_interface_t& intfc) /*override*/ {
       for (auto& link : this->links) {
-         if (!link.ref)
+         if (!link.ref && !link.keyword)
             continue;
          auto& subrecord = record.open_next_subrecord(signature);
-         if (link.keyword)
-            subrecord.write(link.keyword);
+         subrecord.write(link.keyword);
          subrecord.write(link.ref);
          subrecord.close();
       }
