@@ -569,7 +569,7 @@ namespace dovah::loaded_forms {
          if (this->hidden_flags & 2)
             record.open_next_subrecord('ONAM').close();
       }
-      if (this->force_into_alias_id) {
+      if (this->force_into_alias_id != -1) {
          auto& ALFI = record.open_next_subrecord('ALFI');
          ALFI.write(this->force_into_alias_id);
          ALFI.close();
@@ -728,7 +728,7 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('ALFC', id, true);
       for (auto& id : this->packages)
          record.write_formID_subrecord('ALPC', id, true);
-      record.write_formID_subrecord('VTCK', this->additional_voicetype, true);
+      record.write_formID_subrecord('VTCK', this->additional_voicetype, false);
       //
       if (this->hidden_flags & 4)
          record.open_next_subrecord('QNAM').close();
@@ -1000,7 +1000,7 @@ namespace dovah::loaded_forms {
          }
          void Quest::LogEntry::script_fragment::save(tes_subrecord_writer& subrecord, uint16_t stage_id, uint32_t entry_index) {
             assert(subrecord.signature() == 'VMAD');
-            subrecord.write(stage_id);
+            subrecord.write((uint32_t)stage_id);
             subrecord.write(entry_index);
             subrecord.write(this->unknown08);
             subrecord.write_length_prefixed_string<2>(this->filename);
