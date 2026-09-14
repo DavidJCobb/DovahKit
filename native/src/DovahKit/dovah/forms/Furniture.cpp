@@ -103,7 +103,7 @@ namespace dovah::loaded_forms {
                      if (value == -1)
                         this->workbench.skill = {};
                      else
-                        this->workbench.skill = (dovah::skill)type;
+                        this->workbench.skill = (dovah::skill)(value - dovah::first_skill_actor_value_index);
                   }
                   break;
                case 'NAM1':
@@ -350,7 +350,7 @@ namespace dovah::loaded_forms {
             auto& subrecord = record.open_next_subrecord('WBDT');
             subrecord.write(this->workbench.type);
             if (auto& opt = this->workbench.skill; opt.has_value()) {
-               subrecord.write((int8_t)opt.value());
+               subrecord.write((int8_t)opt.value() + dovah::first_skill_actor_value_index);
             } else {
                subrecord.write((int8_t)-1);
             }
