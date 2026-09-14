@@ -16,6 +16,37 @@
   <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Name</string>
+         </property>
+         <property name="buddy">
+          <cstring>filename</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="filename">
+         <property name="whatsThis">
+          <string>Your desired filename, including the file extension.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Game</string>
+       </property>
+       <property name="buddy">
+        <cstring>game</cstring>
+       </property>
+      </widget>
+     </item>
      <item row="4" column="0">
       <widget class="QLabel" name="label_3">
        <property name="text">
@@ -28,6 +59,10 @@
      </item>
      <item row="4" column="1">
       <widget class="QComboBox" name="compressionPolicy">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Control whether records within this file are compressed. Skyrim Special Edition uses zlib compression, while the original 2011 edition uses LZ4.&lt;/p&gt;
+&lt;p&gt;If you enable compression, you can compress the same records that Skyrim.esm keeps compressed, or you can compress records that are above a given size in bytes.&lt;/p&gt;</string>
+       </property>
        <item>
         <property name="text">
          <string>None</string>
@@ -45,130 +80,6 @@
        </item>
       </widget>
      </item>
-     <item row="2" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagMaster">
-       <property name="whatsThis">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESM&amp;quot; flag are &amp;quot;masters.&amp;quot; The game will always move them to the top of the load order, and will handle various pieces of game data differently.&lt;/p&gt;&lt;p&gt;One of the most notable differences is that if a file &lt;span style=&quot; font-style:italic;&quot;&gt;isn't&lt;/span&gt; a master, then any physical objects that it places in the game world will remain in the game's memory at all times. The game can only keep track of about a million such objects at a time, so mods that define large numbers of objects (e.g. new lands mods) should always be ESMs.&lt;/p&gt;&lt;p&gt;If a file has the *.ESM file extension, then the game will always act as if this flag is set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>ESM</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagUse1Point71FormIDSpace">
-       <property name="whatsThis">
-        <string>&lt;p&gt;Skyrim Special Edition version 1.6.1130 fixed an internal loading bug, making it possible for game data files to use form IDs in the range [xx000000, xx0007FF] as long as they have at least one master. This update also incremented the internal version number for game files from v1.70 to v1.71.&lt;/p&gt;
-&lt;p&gt;The update isn't exclusive to ESL files, but it affects them the most, by doubling the number of forms they can contain. However, v1.71 data files can cause older versions of Skyrim Special Edition to crash, unless they install the Backported Extended ESL Support mod.&lt;/p&gt;</string>
-       </property>
-       <property name="text">
-        <string>Use extended ESL form ID space</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagLight">
-       <property name="whatsThis">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESL&amp;quot; flag are &amp;quot;light plug-ins&amp;quot; intended for use with Skyrim Special Edition. Instead of taking up an entire load order slot, all light plug-ins in a load order will share the 0xFE slot. This is very useful when designing very simple mods that make only minor changes to existing game data.&lt;/p&gt;&lt;p&gt;Light plug-ins have a number of limitations. A load order cannot have more than 4096 light plug-ins. Each light plug-in can only have 2048 forms, which must be &amp;quot;compacted&amp;quot; into the form ID range [xx000800, xx000FFF]. Light plug-ins also cannot be dependencies for other files.&lt;/p&gt;&lt;p&gt;The game will always treat files that have the *.ESL extension as if they are both light plug-ins and master files (ESMs). Among other things, this means that if an *.ESL file has any *.ESP dependencies, it will force those dependencies to load out-of-order with the master files.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>ESL</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="game">
-       <item>
-        <property name="text">
-         <string>Skyrim Classic</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Skyrim Special</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Compression Threshold</string>
-       </property>
-       <property name="buddy">
-        <cstring>compressionThreshold</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Game</string>
-       </property>
-       <property name="buddy">
-        <cstring>game</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0" colspan="2">
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Name</string>
-         </property>
-         <property name="buddy">
-          <cstring>filename</cstring>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="filename"/>
-       </item>
-      </layout>
-     </item>
-     <item row="9" column="0" colspan="2">
-      <spacer name="spacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="7" column="0" colspan="2">
-      <widget class="QCheckBox" name="deleteEmptySeq">
-       <property name="text">
-        <string>Delete SEQ file if empty</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QSpinBox" name="compressionThreshold">
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="suffix">
-        <string> bytes</string>
-       </property>
-       <property name="minimum">
-        <number>64</number>
-       </property>
-       <property name="maximum">
-        <number>65535</number>
-       </property>
-       <property name="value">
-        <number>640</number>
-       </property>
-      </widget>
-     </item>
      <item row="8" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
@@ -182,7 +93,7 @@
      <item row="8" column="1">
       <widget class="QComboBox" name="largeRefPolicy">
        <property name="whatsThis">
-        <string>&lt;p&gt;Worldspaces are capable of storing an index of all &quot;large references,&quot; mapped to their cells. This feature makes it possible for the game to begin rendering these references at greater distances than normal, even before their parent cells are fully loaded. However, the Creation Kit only generates this data when its version control functionality is enabled; most mod authors don't use that functionality.&lt;/p&gt;
+        <string>&lt;p&gt;Worldspaces are capable of storing an index of all &quot;large refs,&quot; mapped to the refs' containing cells. This feature makes it possible for the game to begin rendering these refs at greater distances than normal, even before their parent cells are fully loaded. However, the Creation Kit only generates this data when its version control functionality is enabled; most mod authors don't use that functionality.&lt;/p&gt;
 &lt;p&gt;You can here select what you want DovahKit to do with this data:&lt;/p&gt;
 &lt;dl&gt;
    &lt;dt&gt;&lt;strong&gt;Retain&lt;/strong&gt;&lt;/dt&gt;
@@ -211,6 +122,139 @@
        </item>
       </widget>
      </item>
+     <item row="5" column="1">
+      <widget class="QSpinBox" name="compressionThreshold">
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+       <property name="suffix">
+        <string> bytes</string>
+       </property>
+       <property name="minimum">
+        <number>64</number>
+       </property>
+       <property name="maximum">
+        <number>65535</number>
+       </property>
+       <property name="value">
+        <number>640</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagLight">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Files with the &quot;ESL&quot; flag are &quot;light plug-ins&quot; intended for use with Skyrim Special Edition. Instead of taking up an entire load order slot, all light plug-ins in a load order will share the 0xFE slot. This is very useful when designing very simple mods that make only minor changes to existing game data.&lt;/p&gt;
+&lt;p&gt;Light plug-ins have a number of limitations. A load order cannot have more than 4096 light plug-ins. Each light plug-in can only have 4096 forms, which must be &quot;compacted&quot; into the form ID range [xx000000, xx000FFF].&lt;/p&gt;
+&lt;p&gt;The game will always treat files that have the &lt;code&gt;*.esl&lt;/code&gt; extension as if they are both light plug-ins and master files (ESMs). Among other things, this means that if an &lt;code&gt;*.esl&lt;/code&gt; file has any &lt;code&gt;*.esp&lt;/code&gt; dependencies, it will force those dependencies to load out-of-order with the master files.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>ESL</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0" colspan="2">
+      <widget class="QCheckBox" name="deleteEmptySeq">
+       <property name="whatsThis">
+        <string>&lt;p&gt;If your mod defines a &quot;Start-Game Enabled&quot; quest with dialogue in it, your mod must be bundled with a &lt;code&gt;.seq&lt;/code&gt; file in order for those quests and their dialogue to be properly available at the start of the game. This option controls whether an already-existing &lt;code&gt;.seq&lt;/code&gt; file should be deleted if there are no such quests to save.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>Delete SEQ file if empty</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="game">
+       <item>
+        <property name="text">
+         <string>Skyrim Classic</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Skyrim Special</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagMaster">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Files with the &quot;ESM&quot; flag are &quot;masters.&quot; The game will always move them to the top of the load order, and will handle various pieces of game data differently.&lt;/p&gt;
+&lt;p&gt;One of the most notable differences is that if a file &lt;em&gt;isn't&lt;/em&gt; a master, then any refs that it places in the game world will remain in the game's memory at all times. The game can only keep track of about a million refs at a time, so mods that define large numbers of refs (e.g. new lands mods) should always be ESMs.&lt;/p&gt;
+&lt;p&gt;If a file has the &lt;code&gt;*.esm&lt;/code&gt; or &lt;code&gt;*.esl&lt;/code&gt; file extension, then the game will always act as if this flag is set.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>ESM</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0" colspan="2">
+      <spacer name="spacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="6" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagUse1Point71FormIDSpace">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Skyrim Special Edition version 1.6.1130 fixed an internal loading bug, making it possible for game data files to use form IDs in the range [xx000000, xx0007FF] as long as they have at least one master. This update also incremented the internal version number for game files from v1.70 to v1.71.&lt;/p&gt;
+&lt;p&gt;The update isn't exclusive to ESL files, but it affects them the most, by doubling the number of forms they can contain. However, v1.71 data files can cause older versions of Skyrim Special Edition to crash, unless users install the Backported Extended ESL Support mod.&lt;/p&gt;
+&lt;p&gt;This option controls whether DovahKit will save a v1.71 file. If disabled, DovahKit will check if you have any forms in the [xx000000, xx0007FF] range, and offer to automatically renumber them out of that range if possible.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>Use extended ESL form ID space</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Compression Threshold</string>
+       </property>
+       <property name="buddy">
+        <cstring>compressionThreshold</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Ref Persistence:</string>
+       </property>
+       <property name="buddy">
+        <cstring>refPersistence</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QComboBox" name="refPersistence">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Control whether we automatically update the &quot;Persistent&quot; flags on refs while saving the file:&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Unchanged&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Persistence will not be automatically adjusted.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Update&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Persistence will automatically be applied or cleared as DovahKit sees fit.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Apply Only&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;DovahKit will automatically apply persistence to refs that may benefit from it, but DovahKit will not clear persistence from refs that are already persistent and don't seem to need it.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Clear Only&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;DovahKit will automatically clear persistence off of refs that are already persistent and don't seem to need it, but DovahKit will not apply persistence to refs that seem like they might benefit from it.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;Only refs defined or edited by the active file will be altered.&lt;/p&gt;</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item row="0" column="1">
@@ -226,7 +270,11 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QListWidget" name="dependencies"/>
+      <widget class="QListWidget" name="dependencies">
+       <property name="whatsThis">
+        <string>&lt;p&gt;This is the final list of dependencies (&quot;masters&quot;) that your file will have after it is saved. Users will not be able to run the game with your mod installed unless they also have these files installed.&lt;/p&gt;</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -250,7 +298,7 @@
      <item>
       <spacer>
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -288,6 +336,7 @@
   <tabstop>flagUse1Point71FormIDSpace</tabstop>
   <tabstop>deleteEmptySeq</tabstop>
   <tabstop>largeRefPolicy</tabstop>
+  <tabstop>refPersistence</tabstop>
   <tabstop>dependencies</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>

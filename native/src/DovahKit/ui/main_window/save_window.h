@@ -7,11 +7,10 @@ namespace dovah {
 }
 
 class ActiveFileSaveDialog : public QDialog {
-   Q_OBJECT
-   //
+   Q_OBJECT;
    public:
       ActiveFileSaveDialog(QWidget* parent = Q_NULLPTR);
-      //
+
    private:
       Ui::ActiveFileSaveDialog ui;
 

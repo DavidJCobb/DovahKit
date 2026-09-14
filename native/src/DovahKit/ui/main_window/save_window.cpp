@@ -38,6 +38,28 @@ ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
       widget->addItem(tr("Retain", "large ref policy"), (int)dovah::tes_file_writing::large_ref_index_policy::retain);
       widget->addItem(tr("Update", "large ref policy"), (int)dovah::tes_file_writing::large_ref_index_policy::update);
    }
+   {
+      auto* widget = this->ui.refPersistence;
+      widget->clear();
+      widget->addItem(tr("Unchanged",  "ref persistence policy"), 0b00);
+      widget->addItem(tr("Update",     "ref persistence policy"), 0b11);
+      widget->addItem(tr("Apply Only", "ref persistence policy"), 0b01);
+      widget->addItem(tr("Clear Only", "ref persistence policy"), 0b10);
+
+      using namespace dovahkit::ini::main;
+      bool apply = saving::bApplyRefPersistenceAsNeeded.get_current_value<bool>();
+      bool clear = saving::bClearRefPersistenceWhenAble.get_current_value<bool>();
+
+      int value = 0;
+      if (apply)
+         value |= 1;
+      if (clear)
+         value |= 2;
+
+      auto i = widget->findData(value);
+      if (i >= 0)
+         widget->setCurrentIndex(i);
+   }
    //
    this->ui.compressionThreshold->setRange(64, std::numeric_limits<decltype(dovah::tes_file_writing::write_config::record_compress_threshold)>::max());
    QObject::connect(this->ui.compressionPolicy, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
@@ -452,10 +474,13 @@ void ActiveFileSaveDialog::commit() {
       return;
    }
    {
-      using namespace dovahkit::ini::main;
-
-      config.persistent_refs.add_flag_when_needed      = saving::bApplyRefPersistenceAsNeeded.get_current_value<bool>();
-      config.persistent_refs.remove_flag_when_unneeded = saving::bClearRefPersistenceWhenAble.get_current_value<bool>();
+      int  value = 0b11;
+      auto data  = this->ui.refPersistence->currentData();
+      if (!data.isNull()) {
+         value = data.toInt();
+      }
+      config.persistent_refs.add_flag_when_needed      = value & 1;
+      config.persistent_refs.remove_flag_when_unneeded = value & 2;
    }
    //
    // TODO: We should preserve any flags on the original file, unless they are flags controllable 
