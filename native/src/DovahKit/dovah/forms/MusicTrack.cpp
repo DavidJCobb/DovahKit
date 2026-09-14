@@ -1,4 +1,5 @@
 #include "MusicTrack.h"
+#include <bitset>
 #include "_common_cpp.h"
 
 #include "../notices/form_load_warnings/by_form_type/music_track/invalid_track_type.h"
@@ -350,26 +351,39 @@ namespace dovah::loaded_forms {
             item.save(record, intfc);
       }
       if (auto* casted = std::get_if<palette_data>(&this->data)) {
-         const auto& layers      = casted->tracks_by_layer;
-         size_t      layer_count = 0;
-         for (size_t i = 0; i < layers.size(); ++i)
-            if (!layers.empty())
-               layer_count = i + 1;
-         if (layer_count > 0) {
+         const auto& layers = casted->tracks_by_layer;
+
+         bool   has_non_empty_layers = false;
+         size_t last_non_empty_layer = 0;
+         for (size_t i = 0; i < layers.size(); ++i) {
+            auto& layer = layers[i];
+            for (auto& form : layer) {
+               if (form) {
+                  has_non_empty_layers = true;
+                  last_non_empty_layer = i;
+                  break;
+               }
+            }
+         }
+         if (has_non_empty_layers) {
             auto& subrecord = record.open_next_subrecord('SNAM');
-            for (size_t i = 0; i < layer_count; ++i) {
+            for (size_t i = 0; i <= last_non_empty_layer; ++i) {
                //
                // Palettes' track sets are serialized as a single flat list, with null 
                // form IDs separating layers. This means that we can't allow nulls 
-               // within a layer, and it means we have to insert nulls between layers.
+               // within a layer, and it means we have to insert nulls between layers. 
+               // At the same time, we should not have a trailing null after the last 
+               // layer we save.
                //
-               auto& layer = layers[i];
+               if (i > 0) {
+                  subrecord.write((dovah::form_stub*)nullptr);
+               }
+               const auto& layer = layers[i];
                for (auto& form : layer)
                   if (form)
                      subrecord.write(form);
-               if (i + 1 < layer_count)
-                  subrecord.write((dovah::form_stub*)nullptr);
             }
+            subrecord.close();
          }
       }
    }
