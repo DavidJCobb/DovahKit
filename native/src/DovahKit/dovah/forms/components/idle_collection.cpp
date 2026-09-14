@@ -11,6 +11,16 @@ namespace {
    namespace specific_save_errors {
       using namespace dovah::notices::form_save_errors::by_component::idle_collection;
    }
+
+   enum class save_behavior {
+      // Don't save anything if the idle list is empty.
+      vanilla,
+
+      always_save_non_zero,
+
+      always_save_all,
+   };
+   constexpr const auto use_save_behavior = save_behavior::always_save_non_zero;
 }
 
 namespace dovah::loaded_forms::components {
@@ -52,12 +62,27 @@ namespace dovah::loaded_forms::components {
       }
    }
    void idle_collection::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      {
+      if constexpr (use_save_behavior == save_behavior::vanilla) {
+         if (this->idles.empty())
+            return;
+      }
+      bool save_flags = true;
+      bool save_count = true;
+      bool save_timer = true;
+      if constexpr (use_save_behavior == save_behavior::vanilla) {
+         if (this->idles.empty()) {
+            save_flags = this->flags != 0;
+            save_count = false;
+            save_timer = this->timer != 0;
+         }
+      }
+
+      if (save_flags) {
          auto& subrecord = record.open_next_subrecord('IDLF');
          subrecord.write(this->flags);
          subrecord.close();
       }
-      {
+      if (save_count) {
          const size_t size = this->idles.size();
          if (size > max_idles_count) {
             auto notice = specific_save_errors::too_many_idles(
@@ -70,12 +95,12 @@ namespace dovah::loaded_forms::components {
          subrecord.write((uint8_t)size);
          subrecord.close();
       }
-      {
+      if (save_timer) {
          auto& subrecord = record.open_next_subrecord('IDLT');
          subrecord.write(this->timer);
          subrecord.close();
       }
-      {
+      if (!this->idles.empty()) {
          auto& subrecord = record.open_next_subrecord('IDLA');
          for (auto& idle : this->idles)
             subrecord.write(idle);

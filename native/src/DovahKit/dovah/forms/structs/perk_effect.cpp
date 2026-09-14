@@ -20,6 +20,9 @@ namespace {
    namespace specific_save_errors {
       using namespace dovah::notices::form_save_errors::by_type::perk;
    }
+
+   // CK behavior appears to be `false`.
+   constexpr const bool save_empty_entry_point_condition_lists = false;
 }
 
 namespace dovah::loaded_forms::structs {
@@ -355,7 +358,11 @@ namespace dovah::loaded_forms::structs {
                   subrecord.close();
                }
                for (size_t i = 0; i < casted.condition_groups.size(); ++i) {
-                  auto& group     = casted.condition_groups[i];
+                  auto& group = casted.condition_groups[i];
+                  if constexpr (!save_empty_entry_point_condition_lists) {
+                     if (group.empty())
+                        continue;
+                  }
                   auto& subrecord = record.open_next_subrecord(subrecord_conditions);
                   subrecord.write((uint8_t)i);
                   subrecord.close();

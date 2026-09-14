@@ -98,7 +98,7 @@ namespace dovah::loaded_forms {
                case 'WBDT':
                   subrecord.read(this->workbench.type);
                   {
-                     std::underlying_type_t<dovah::skill> value = -1;
+                     int8_t value = -1;
                      subrecord.read(value);
                      if (value == -1)
                         this->workbench.skill = {};
@@ -350,10 +350,9 @@ namespace dovah::loaded_forms {
             auto& subrecord = record.open_next_subrecord('WBDT');
             subrecord.write(this->workbench.type);
             if (auto& opt = this->workbench.skill; opt.has_value()) {
-               subrecord.write(opt.value());
+               subrecord.write((int8_t)opt.value());
             } else {
-               std::underlying_type_t<dovah::skill> none = -1;
-               subrecord.write(none);
+               subrecord.write((int8_t)-1);
             }
             subrecord.close();
          }

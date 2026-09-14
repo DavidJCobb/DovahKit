@@ -1,5 +1,6 @@
 #include "ActorValueInfo.h"
 #include "_common_cpp.h"
+#include "../data/actor_values.h"
 
 #include "../notices/form_load_warnings/by_form_type/actor_value_info/unexpected_subrecord_in_perk_tree_node.h"
 #include "../notices/form_load_warnings/by_form_type/actor_value_info/unterminated_perk_tree_node.h"
@@ -194,6 +195,14 @@ namespace dovah::loaded_forms {
       }
    }
    void ActorValueInfo::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      const actor_value_info* definition = nullptr;
+      for (const auto& dfn : all_actor_value_info) {
+         if (dfn.formID == this->stub.formID) {
+            definition = &dfn;
+            break;
+         }
+      }
+
       this->script_data.save(record, intfc);
       {
          auto& subrecord = record.open_next_subrecord('FULL');
@@ -213,7 +222,7 @@ namespace dovah::loaded_forms {
          subrecord.write(this->skill_info.category);
          subrecord.close();
       }
-      {
+      if (definition && definition->type == actor_value_type::skill) {
          auto& subrecord = record.open_next_subrecord('AVSK');
          subrecord.write(this->skill_info.skill_use_mult);
          subrecord.write(this->skill_info.skill_use_offset);

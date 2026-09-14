@@ -15,7 +15,7 @@ namespace dovah::loaded_forms {
 
          struct remaster_flag {
             remaster_flag() = delete;
-            enum type : uint8_t {
+            enum type : uint32_t {
                is_snow = 0x01,
             };
          };

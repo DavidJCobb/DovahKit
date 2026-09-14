@@ -14,6 +14,7 @@
 #include "../ActorValueInfo.h"
 #include "../Container.h"
 #include "../DefaultObjectManager.h"
+#include "../Eyes.h"
 #include "../Form.h"
 #include "../FormList.h"
 #include "../Global.h"
@@ -51,7 +52,6 @@ namespace dovah {
       for (auto& item : all_actor_value_info) {
          if (stub.formID == item.formID) {
             auto* form = new loaded_forms::ActorValueInfo(fcp);
-            form->name = std::move(std::string(item.name));
             return form;
          }
       }
@@ -103,6 +103,9 @@ namespace dovah {
          case hardcoded_form_ids::PlayerRef: // PlayerRef
             ((loaded_forms::Actor*)form)->base_form.unmanaged_set(lo.get_form(form_type::actor_base, 0x007)); // PlayerRef's base form is Player
             break;
+         case hardcoded_form_ids::eyeReanimate:
+            ((loaded_forms::Eyes*)form)->name = "Reanimate Eyes";
+            break;
          case hardcoded_form_ids::AdultFemaleVoice1:
             ((loaded_forms::Voicetype*)form)->voicetype_flags |= loaded_forms::Voicetype::voicetype_flag::female;
             break;
@@ -114,6 +117,9 @@ namespace dovah {
             break;
          case hardcoded_form_ids::XMarker:
             ((loaded_forms::Static*)form)->model.model_path = "MarkerX.nif";
+            break;
+         case hardcoded_form_ids::PlayCredits:
+            ((loaded_forms::Global*)form)->value_type = loaded_forms::Global::value_type::int16;
             break;
          default:
             {
@@ -149,7 +155,8 @@ namespace dovah {
             auto stub = new form_stub();
             stub->formID    = item.formID;
             stub->form_type = form_type_info::signature_to_form_type('AVIF');
-            stub->editorID  = item.name;
+            stub->editorID  = "AV";
+            stub->editorID += item.name;
             lo._accept_hardcoded_form(stub);
          }
       }
