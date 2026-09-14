@@ -168,6 +168,7 @@ namespace dovah::utils {
          }
       }
    }
+
    void update_location_content::apply(bool as_base_record) {
       if (!this->location)
          return;
@@ -176,256 +177,302 @@ namespace dovah::utils {
       auto* loaded    = loaded_sp.unwrap();
       assert(loaded != nullptr);
 
-      #pragma region Setup *CID and *CEP
-      {
-         auto _clear_cep = [loaded](auto& list) {
-            for (auto& item : list)
-               item.enable_parent.set(*loaded, nullptr);
-            list.clear();
-         };
+      this->_apply_persist_loc_refs(*loaded, as_base_record); // *CPR and by extension, *CEP and *CID
+      this->_apply_unique_actors(*loaded, as_base_record); // *CUN
+      this->_apply_special_refs(*loaded, as_base_record); // *CSR
+      this->_apply_exterior_cells(*loaded, as_base_record);
+   }
 
-         clear_form_reference_list(loaded->contents.initially_disabled.full, *loaded);
-         _clear_cep(loaded->contents.enable_parents.full);
-         if (as_base_record) {
-            clear_form_reference_list(loaded->contents.initially_disabled.base, *loaded);
-            _clear_cep(loaded->contents.enable_parents.base);
+   namespace {
+      static void _clear_list(loaded_forms::Location& form, std::vector<loaded_forms::Location::enable_parent>& list) {
+         for (auto& item : list) {
+            item.ref.set(form, nullptr);
+            item.enable_parent.set(form, nullptr);
          }
+         list.clear();
       }
-      #pragma endregion
+      static void _clear_list(loaded_forms::Location& form, std::vector<loaded_forms::Location::persist_loc_ref>& list) {
+         for (auto& item : list) {
+            item.ref.set(form, nullptr);
+            item.cell_or_world.set(form, nullptr);
+         }
+         list.clear();
+      }
+      static void _clear_list(loaded_forms::Location& form, std::vector<loaded_forms::Location::special_ref>& list) {
+         for (auto& item : list) {
+            item.reference.set(form, nullptr);
+            item.ref_type.set(form, nullptr);
+            item.cell_or_world.set(form, nullptr);
+         }
+         list.clear();
+      }
+      static void _clear_list(loaded_forms::Location& form, std::vector<loaded_forms::Location::unique_actor>& list) {
+         for (auto& item : list) {
+            item.actor.set(form, nullptr);
+            item.actor_base.set(form, nullptr);
+            item.editor_location.set(form, nullptr);
+         }
+         list.clear();
+      }
+   }
+   void update_location_content::_apply_persist_loc_refs(loaded_forms::Location& loaded, bool as_base_record) {
+      //
+      // First, clear the lists.
+      //
+      _clear_list(loaded, loaded.contents.persistent_refs.full);
+      _clear_list(loaded, loaded.contents.enable_parents.full);
+      clear_form_reference_list(loaded.contents.initially_disabled.full, loaded);
+      if (as_base_record) {
+         _clear_list(loaded, loaded.contents.persistent_refs.base);
+         _clear_list(loaded, loaded.contents.enable_parents.base);
+         clear_form_reference_list(loaded.contents.initially_disabled.base, loaded);
+      }
 
-      #pragma region *CPR and *CID and *CEP
-      {
-         auto& dataset  = loaded->contents.persistent_refs;
-         auto& gathered = this->content.persist_loc_refs;
+      auto& dataset  = loaded.contents.persistent_refs;
+      auto& gathered = this->content.persist_loc_refs;
 
-         auto _clear = [loaded](auto& list) {
-            for (auto& item : list) {
-               item.ref.set(*loaded, nullptr);
-               item.cell_or_world.set(*loaded, nullptr);
-            }
-            list.clear();
-         };
-         auto _append = [loaded](auto& list, form_stub& stub) {
-            auto& item = list.emplace_back();
-            item.ref.set(*loaded, &stub);
+      auto _append_persist_loc_ref = [&loaded](std::vector<loaded_forms::Location::persist_loc_ref>& list, form_stub& stub) {
+         auto& item = list.emplace_back();
+         item.ref.set(loaded, &stub);
 
-            auto* cell  = stub.get_parent_form();
-            auto* world = _get_containing_world(*cell);
-            if (world) {
-               item.cell_or_world.set(*loaded, world);
-               int32_t x = 0;
-               int32_t y = 0;
-               cell->get_grid_coordinates(x, y);
-               item.grid.x = x;
-               item.grid.y = y;
-            } else {
-               item.cell_or_world.set(*loaded, cell);
-               item.grid.x = 0x7FFF;
-               item.grid.y = 0x7FFF;
-            }
-         };
-
-         auto _process_initially_disabled = [loaded](auto& list, form_stub& refr) {
-            if (refr.test_record_flags(loaded_forms::ObjectReference::form_flag::disabled)) {
-               list.emplace_back().set(*loaded, &refr);
-            }
-         };
-         auto _process_enable_parent = [loaded](auto& list, form_stub& refr) {
-            auto loaded_refr = refr.load().ptr_cast<loaded_forms::ObjectReference>();
-            if (!loaded_refr)
-               return;
-            auto* extra = loaded_refr->extra_data.get<extra_data_types::enable_state_parent>();
-            if (!extra)
-               return;
-            auto& item = list.emplace_back();
-            item.ref.set(*loaded, &refr);
-            item.enable_parent.set(*loaded, extra->ref);
-            item.flags = extra->flags;
-         };
-
-         _clear(dataset.full);
-         if (as_base_record) {
-            _clear(dataset.base);
-            for (auto* stub : gathered) {
-               _append(dataset.base, *stub);
-               //
-               // Update "initially disabled" and "enable parents" lists.
-               //
-               _process_initially_disabled(loaded->contents.initially_disabled.base, *stub);
-               _process_enable_parent(loaded->contents.enable_parents.base, *stub);
-            }
+         auto* cell  = stub.get_parent_form();
+         auto* world = _get_containing_world(*cell);
+         if (world) {
+            item.cell_or_world.set(loaded, world);
+            int32_t x = 0;
+            int32_t y = 0;
+            cell->get_grid_coordinates(x, y);
+            item.grid.x = x;
+            item.grid.y = y;
          } else {
-            for (auto* stub : gathered) {
-               _append(dataset.full, *stub);
-               //
-               // ACPR shouldn't contain any entries that are identical to LCPR.
-               //
-               auto& ACPR = dataset.full.back();
-               bool  same = false;
-               for (const auto& LCPR : dataset.base) {
-                  if (LCPR == ACPR) {
-                     same = true;
-                     break;
-                  }
+            item.cell_or_world.set(loaded, cell);
+            item.grid.x = 0x7FFF;
+            item.grid.y = 0x7FFF;
+         }
+      };
+      
+      auto _is_initially_disabled = [](const form_stub& refr) -> bool {
+         return refr.test_record_flags(loaded_forms::ObjectReference::form_flag::disabled);
+      };
+      auto _get_enable_parent = [](form_stub& refr) -> std::pair<dovah::form_stub*, uint8_t> { // parent and flags
+         auto loaded_refr = refr.load().ptr_cast<loaded_forms::ObjectReference>();
+         if (!loaded_refr)
+            return { nullptr, 0 };
+         auto* extra = loaded_refr->extra_data.get<extra_data_types::enable_state_parent>();
+         if (!extra)
+            return { nullptr, 0 };
+         return { extra->ref.get_form_stub(), extra->flags };
+      };
+
+      if (as_base_record) {
+         for (auto* stub : gathered) {
+            _append_persist_loc_ref(dataset.base, *stub);
+            _append_persist_loc_ref(dataset.full, *stub);
+            //
+            // Update "initially disabled" and "enable parents" lists.
+            //
+            if (_is_initially_disabled(*stub)) {
+               loaded.contents.initially_disabled.base.emplace_back().set(loaded, stub);
+               loaded.contents.initially_disabled.full.emplace_back().set(loaded, stub);
+            }
+            if (auto ep = _get_enable_parent(*stub); ep.first) {
+               {
+                  auto& item = loaded.contents.enable_parents.base.emplace_back();
+                  item.ref.set(loaded, stub);
+                  item.enable_parent.set(loaded, ep.first);
+                  item.flags = ep.second;
                }
-               if (same) {
-                  dataset.full.pop_back();
-               } else {
-                  //
-                  // Update "initially disabled" and "enable parents" lists.
-                  //
-                  _process_initially_disabled(loaded->contents.initially_disabled.full, *stub);
-                  _process_enable_parent(loaded->contents.enable_parents.full, *stub);
+               {
+                  auto& item = loaded.contents.enable_parents.full.emplace_back();
+                  item.ref.set(loaded, stub);
+                  item.enable_parent.set(loaded, ep.first);
+                  item.flags = ep.second;
                }
             }
          }
-      }
-      #pragma endregion
-      #pragma region *CUN: Unique Actors
-      {
-         auto& dataset  = loaded->contents.unique_actors;
-         auto& gathered = this->content.unique_actors;
-
-         auto _clear = [loaded](auto& list) {
-            for (auto& item : list) {
-               item.actor.set(*loaded, nullptr);
-               item.actor_base.set(*loaded, nullptr);
-               item.editor_location.set(*loaded, nullptr);
+      } else {
+         for (auto* stub : gathered) {
+            _append_persist_loc_ref(dataset.full, *stub);
+            //
+            // Update "initially disabled" and "enable parents" lists.
+            //
+            if (_is_initially_disabled(*stub)) {
+               loaded.contents.initially_disabled.full.emplace_back().set(loaded, stub);
             }
-            list.clear();
-         };
-         auto _append = [loaded](auto& list, form_stub& stub) {
-            auto& item = list.emplace_back();
-            item.actor.set(*loaded, &stub);
-            item.actor_base.set(*loaded, form_stub_helpers::get_base_form(stub));
-            //
-            // Editor location:
-            //
-            form_stub* editor_loc = nullptr;
+            if (auto ep = _get_enable_parent(*stub); ep.first) {
+               auto& item = loaded.contents.enable_parents.full.emplace_back();
+               item.ref.set(loaded, stub);
+               item.enable_parent.set(loaded, ep.first);
+               item.flags = ep.second;
+            }
+         }
+      }
+   }
+   void update_location_content::_apply_exterior_cells(loaded_forms::Location& loaded, bool as_base_record) {
+      using backend_item_type  = loaded_forms::Location::exterior_cell_list;
+      using pending_item_type = exterior_cell_list;
+
+      using grid_coords = loaded_forms::Location::grid_coords;
+
+      auto& dataset  = loaded.contents.exterior_cells;
+      auto& gathered = this->content.exterior_cell_lists;
+
+      auto _clear = [&loaded](std::vector<backend_item_type>& list) {
+         for (auto& item : list)
+            item.worldspace.set(loaded, nullptr);
+         list.clear();
+      };
+      auto _append = [&loaded](std::vector<backend_item_type>& list, pending_item_type& ecl) {
+         auto& item = list.emplace_back();
+         item.worldspace.set(loaded, ecl.worldspace);
+         for (auto* cell : ecl.cells) {
+            int32_t gx = 0;
+            int32_t gy = 0;
+            cell->get_grid_coordinates(gx, gy);
+            if (gx < std::numeric_limits<int16_t>::lowest() || gx > std::numeric_limits<int16_t>::max())
+               continue;
+            if (gy < std::numeric_limits<int16_t>::lowest() || gy > std::numeric_limits<int16_t>::max())
+               continue;
+            item.cells.emplace_back(grid_coords{
+               .y = (int16_t)gy,
+               .x = (int16_t)gx,
+            });
+         }
+      };
+
+      _clear(dataset.full);
+      if (as_base_record) {
+         _clear(dataset.base);
+         for (auto& pending_item : gathered) {
+            _append(dataset.base, pending_item);
+            _append(dataset.full, pending_item);
+         }
+      } else {
+         for (auto& pending_item : gathered) {
+            _append(dataset.full, pending_item);
+         }
+      }
+   }
+   void update_location_content::_apply_special_refs(loaded_forms::Location& loaded, bool as_base_record) {
+      using grid_coords = loaded_forms::Location::grid_coords;
+
+      auto& dataset  = loaded.contents.special_refs;
+      auto& gathered = this->content.special_refs;
+
+      auto _get_placement = [](form_stub& refr) -> std::pair<form_stub*, grid_coords> { // returns cell-or-world + grid
+         auto* cell  = refr.get_parent_form();
+         auto* world = _get_containing_world(*cell);
+         if (world) {
+            int32_t gx = 0;
+            int32_t gy = 0;
+            cell->get_grid_coordinates(gx, gy);
+            return { world, { .y = (int16_t)gy, .x = (int16_t)gx } };
+         }
+         return { cell, { 0x7FFF, 0x7FFF } };
+      };
+
+      _clear_list(loaded, dataset.full);
+      if (as_base_record) {
+         _clear_list(loaded, dataset.base);
+         for (auto* refr : gathered) {
+            auto* ref_type  = _get_loc_ref_type(*refr);
+            auto  placement = _get_placement(*refr);
             {
-               form_stub* cell = nullptr;
-               cell = stub.get_parent_form();
-               if (cell && cell->form_type != form_type::cell)
-                  cell = nullptr;
-               /*
-                  The CK would check if the REFR has the "persistent" flag or flag 0x4000, 
-                  and if the REFR's parent cell is nullptr or an exterior. If all of these 
-                  conditions are met, the CK would grab the REFR's persistent cell via its 
-                  extra-data.
-
-                  That particular extra-data type isn't serialized to the file;  it exists 
-                  only as run-time state,  and seems to be set when the REFR is added to a 
-                  cell's REFR list.  (Not sure how it differs from the parent cell, then?)
-
-                  (This is all done via TESChildCell's v-func 0x01.)
-
-                  In any case, I think we can just skip that processing.
-               */
-               bool via_cell = false;
-               if (cell) {
-                  auto* world = _get_containing_world(*cell);
-                  if (world) {
-                     via_cell   = true;
-                     editor_loc = _get_explicit_location(*world);
-                  }
-               }
-               if (!via_cell)
-                  editor_loc = _get_explicit_location(stub);
+               auto& item = dataset.base.emplace_back();
+               item.reference.set(loaded, refr);
+               item.ref_type.set(loaded, ref_type);
+               item.cell_or_world.set(loaded, placement.first);
+               item.grid = placement.second;
             }
-            item.editor_location.set(*loaded, editor_loc);
-         };
-
-         _clear(dataset.full);
-         if (as_base_record) {
-            _clear(dataset.base);
-            for (auto* stub : gathered)
-               _append(dataset.base, *stub);
-         } else {
-            for (auto* stub : gathered)
-               _append(dataset.full, *stub);
+            {
+               auto& item = dataset.full.emplace_back();
+               item.reference.set(loaded, refr);
+               item.ref_type.set(loaded, ref_type);
+               item.cell_or_world.set(loaded, placement.first);
+               item.grid = placement.second;
+            }
+         }
+      } else {
+         for (auto* refr : gathered) {
+            auto* ref_type  = _get_loc_ref_type(*refr);
+            auto  placement = _get_placement(*refr);
+            {
+               auto& item = dataset.full.emplace_back();
+               item.reference.set(loaded, refr);
+               item.ref_type.set(loaded, ref_type);
+               item.cell_or_world.set(loaded, placement.first);
+               item.grid = placement.second;
+            }
          }
       }
-      #pragma endregion
-      #pragma region *CSR: Special Refs
-      {
-         auto& dataset  = loaded->contents.special_refs;
-         auto& gathered = this->content.special_refs;
+   }
+   void update_location_content::_apply_unique_actors(loaded_forms::Location& loaded, bool as_base_record) {
+      auto& dataset  = loaded.contents.unique_actors;
+      auto& gathered = this->content.unique_actors;
 
-         auto _clear = [loaded](auto& list) {
-            for (auto& item : list) {
-               item.reference.set(*loaded, nullptr);
-               item.ref_type.set(*loaded, nullptr);
-               item.cell_or_world.set(*loaded, nullptr);
-            }
-            list.clear();
-         };
-         auto _append = [loaded](auto& list, form_stub& stub) {
-            auto& item = list.emplace_back();
-            item.reference.set(*loaded, &stub);
-            item.ref_type.set(*loaded, _get_loc_ref_type(stub));
+      auto _get_editor_location = [](dovah::form_stub& refr) {
+         form_stub* editor_loc = nullptr;
+         form_stub* cell       = nullptr;
+         cell = refr.get_parent_form();
+         if (cell && cell->form_type != form_type::cell)
+            cell = nullptr;
+         /*
+            The CK would check if the REFR has the "persistent" flag or flag 0x4000, 
+            and if the REFR's parent cell is nullptr or an exterior. If all of these 
+            conditions are met, the CK would grab the REFR's persistent cell via its 
+            extra-data.
 
-            auto* cell  = stub.get_parent_form();
+            That particular extra-data type isn't serialized to the file;  it exists 
+            only as run-time state,  and seems to be set when the REFR is added to a 
+            cell's REFR list.  (Not sure how it differs from the parent cell, then?)
+
+            (This is all done via TESChildCell's v-func 0x01.)
+
+            In any case, I think we can just skip that processing.
+         */
+         bool via_cell = false;
+         if (cell) {
             auto* world = _get_containing_world(*cell);
             if (world) {
-               item.cell_or_world.set(*loaded, world);
-               int32_t x = 0;
-               int32_t y = 0;
-               cell->get_grid_coordinates(x, y);
-               item.grid.x = x;
-               item.grid.y = y;
-            } else {
-               item.cell_or_world.set(*loaded, cell);
-               item.grid.x = 0x7FFF;
-               item.grid.y = 0x7FFF;
+               via_cell   = true;
+               editor_loc = _get_explicit_location(*world);
             }
-         };
+         }
+         if (!via_cell)
+            editor_loc = _get_explicit_location(refr);
+         return editor_loc;
+      };
 
-         _clear(dataset.full);
-         if (as_base_record) {
-            _clear(dataset.base);
-            for (auto* stub : gathered)
-               _append(dataset.base, *stub);
-         } else {
-            for (auto* stub : gathered)
-               _append(dataset.full, *stub);
+      _clear_list(loaded, dataset.full);
+      if (as_base_record) {
+         _clear_list(loaded, dataset.base);
+         for (auto* refr : gathered) {
+            form_stub* base_form  = form_stub_helpers::get_base_form(*refr);
+            form_stub* editor_loc = _get_editor_location(*refr);
+            {
+               auto& item = dataset.base.emplace_back();
+               item.actor.set(loaded, refr);
+               item.actor_base.set(loaded, base_form);
+               item.editor_location.set(loaded, editor_loc);
+            }
+            {
+               auto& item = dataset.full.emplace_back();
+               item.actor.set(loaded, refr);
+               item.actor_base.set(loaded, base_form);
+               item.editor_location.set(loaded, editor_loc);
+            }
+         }
+      } else {
+         for (auto* refr : gathered) {
+            form_stub* base_form  = form_stub_helpers::get_base_form(*refr);
+            form_stub* editor_loc = _get_editor_location(*refr);
+            {
+               auto& item = dataset.full.emplace_back();
+               item.actor.set(loaded, refr);
+               item.actor_base.set(loaded, base_form);
+               item.editor_location.set(loaded, editor_loc);
+            }
          }
       }
-      #pragma endregion
-      #pragma region *CEC: Exterior Cells
-      {
-         auto& dataset  = loaded->contents.exterior_cells;
-         auto& gathered = this->content.exterior_cell_lists;
-
-         auto _clear = [loaded](auto& list) {
-            for (auto& item : list) {
-               item.worldspace.set(*loaded, nullptr);
-            }
-            list.clear();
-         };
-         auto _append = [loaded](auto& list, exterior_cell_list& ecl) {
-            auto& item = list.emplace_back();
-            item.worldspace.set(*loaded, ecl.worldspace);
-            for (auto* cell : ecl.cells) {
-               int32_t x = 0;
-               int32_t y = 0;
-               cell->get_grid_coordinates(x, y);
-               
-               auto& dst = item.cells.emplace_back();
-               dst.x = x;
-               dst.y = y;
-            }
-         };
-
-         _clear(dataset.full);
-         if (as_base_record) {
-            _clear(dataset.base);
-            for (auto& item : gathered)
-               _append(dataset.base, item);
-         } else {
-            for (auto& item : gathered)
-               _append(dataset.full, item);
-         }
-      }
-      #pragma endregion
    }
 }

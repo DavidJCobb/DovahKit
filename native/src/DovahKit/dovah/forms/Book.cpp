@@ -243,8 +243,6 @@ namespace dovah::loaded_forms {
             subrecord.write(*casted);
          } else if (auto* casted = std::get_if<form_reference_t>(&this->teaches)) {
             subrecord.write(*casted);
-         } else {
-            subrecord.write((int32_t)-1);
          }
          subrecord.write(this->value);
          subrecord.write(this->weight);

@@ -44,5 +44,11 @@ namespace dovah::utils {
       public:
          void gather(form_stub& location);
          void apply(bool as_base_record);
+
+      protected:
+         void _apply_persist_loc_refs(loaded_forms::Location&, bool as_base_record); // *CPR, and by extension *CEP and *CID
+         void _apply_exterior_cells(loaded_forms::Location&, bool as_base_record); // *CEC
+         void _apply_special_refs(loaded_forms::Location&, bool as_base_record); // *CSR
+         void _apply_unique_actors(loaded_forms::Location&, bool as_base_record); // *CUN
    };
 }

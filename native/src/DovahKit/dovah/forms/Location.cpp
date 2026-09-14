@@ -9,6 +9,19 @@ namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_type::location;
    }
+
+   enum class save_radius_behavior {
+      always,
+
+      // Mostly matches vanilla behavior, except where that behavior would cause a loss of 
+      // data (which is only when that data wouldn't actually be used by the game).
+      always_if_non_zero,
+
+      // Vanilla behavior. Only save LCTN/RNAM if LCTN/MNAM is non-None.
+      only_if_marker,
+   };
+   // Control when we discard LCTN/RNAM during save.
+   constexpr auto use_save_radius_behavior = save_radius_behavior::always_if_non_zero;
 }
 
 #include "../utils/update_location_content.h"
@@ -16,16 +29,69 @@ namespace {
 namespace dovah::loaded_forms {
    void Location::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
-      //
-      bool is_base_record = intfc.current_file == intfc.target_stub.get_file_at_index(0);
-      bool is_active_file = intfc.is_active_file();
-      //
-      form_reference_t formID;
-      uint32_t  keywordCount = 0;
+      
+      const bool is_base_record = intfc.current_file == intfc.target_stub.get_file_at_index(0);
+      const bool is_active_file = intfc.is_active_file();
+      
       while (auto& subrecord = record.next_subrecord()) {
          const auto signature = subrecord.signature();
          if (Form::subrecord_is_handled_elsewhere(signature))
             continue;
+
+         // Helper function for LC**/AC** subrecords. Preemptively reserves space in the 
+         // destination dataset, and then calls a provided "read" lambda in a loop. This 
+         // assumes that every element being read has the same serialized size (i.e. your 
+         // lambda will read the same number of bytes every time).
+         auto read_content_array = [is_base_record, &subrecord](auto& dataset, size_t element_serialized_size, auto&& per_element_lambda) {
+            {
+               size_t count = subrecord.size() / element_serialized_size;
+               dataset.full.reserve(dataset.full.size() + count);
+               if (is_base_record) {
+                  dataset.base.reserve(dataset.base.size() + count);
+               }
+            }
+            #if _DEBUG
+               //
+               // Verify that `per_element_lambda` is reading the correct number of bytes.
+               // (We only verify the first read to avoid tanking performance in Debug; if 
+               // your lambda is conditionally reading bytes, then you're probably doing 
+               // something wrong.)
+               //
+               if (subrecord.is_in_bounds(element_serialized_size)) {
+                  const auto prior = subrecord.offset();
+                  per_element_lambda(subrecord);
+                  const auto after = subrecord.offset();
+                  assert(after - prior == element_serialized_size && "Your per-element lambda must read the correct number of bytes!");
+               }
+            #endif
+            while (subrecord.is_in_bounds(element_serialized_size)) {
+               per_element_lambda(subrecord);
+            }
+         };
+
+         // Helper function for RC** subrecords that are arrays of single form IDs, which 
+         // specify an element to remove. The `get_form_id_to_compare` function should take 
+         // an already-loaded element, and extract from it the form ID to compare to those 
+         // form IDs listed in the RC** subrecord. For example, LCUN/ACUN elements contain 
+         // an NPC_ form ID, an ACHR form ID, and a world-or-cell form ID; RCUN elements 
+         // are the form IDs of NPC_s to remove; so for RCUN, you would pass to this helper 
+         // a lambda that pulls the NPC_ form ID out of an already-loaded LCUN/ACUN element.
+         auto read_and_apply_content_form_id_removal_array = [is_base_record, &subrecord](auto& dataset, auto&& get_form_id_to_compare) {
+            while (subrecord.is_in_bounds(4)) {
+               form_id_t id;
+               subrecord.read(id);
+               if (!id)
+                  continue;
+               std::erase_if(dataset.full, [id, get_form_id_to_compare](auto& item) {
+                  return get_form_id_to_compare(item) == id;
+               });
+               if (is_base_record) {
+                  std::erase_if(dataset.base, [id, get_form_id_to_compare](auto& item) {
+                     return get_form_id_to_compare(item) == id;
+                  });
+               }
+            }
+         };
 
          // *CEC subrecord helpers
          auto cec_get_or_emplace_world = [](auto& worldmap, form_stub* worldspace) -> auto& {
@@ -61,20 +127,27 @@ namespace dovah::loaded_forms {
                            );
                            intfc.log_load_warning(notice);
                         }
-                        auto& group = this->contents.enable_parents;
-                        auto& item  = group.full.emplace_back();
-                        subrecord.read(item.ref);
-                        subrecord.read(item.enable_parent);
-                        subrecord.read(item.flags);
-                        if (is_base_record) {
-                           auto& base_item = group.base.emplace_back();
-                           base_item.ref.unmanaged_set(item.ref.get_form_stub());
-                           base_item.enable_parent.unmanaged_set(item.enable_parent.get_form_stub());
-                           base_item.flags = item.flags;
-                        }
+                        auto& dataset = this->contents.enable_parents;
+                        read_content_array(
+                           dataset,
+                           0xC,
+                           [&dataset, is_base_record](auto& subrecord) {
+                              auto& item = dataset.full.emplace_back();
+                              subrecord.unchecked_read(item.ref);
+                              subrecord.unchecked_read(item.enable_parent);
+                              subrecord.unchecked_read(item.flags);
+                              subrecord.skip_bytes(3);
+                              if (is_base_record) {
+                                 auto& base_item = dataset.base.emplace_back();
+                                 base_item.ref.unmanaged_set(item.ref.get_form_stub());
+                                 base_item.enable_parent.unmanaged_set(item.enable_parent.get_form_stub());
+                                 base_item.flags = item.flags;
+                              }
+                           }
+                        );
                      }
                      break;
-               #pragma 
+               #pragma endregion
                #pragma region Exterior Cells (*CEC)
                   case 'LCEC':
                   case 'ACEC':
@@ -96,13 +169,13 @@ namespace dovah::loaded_forms {
                         subrecord.read(src_item.worldspace);
                         while (subrecord.is_in_bounds(4)) {
                            auto& cell = src_item.grid.emplace_back();
-                           subrecord.read(cell.y);
-                           subrecord.read(cell.x);
+                           subrecord.unchecked_read(cell.y);
+                           subrecord.unchecked_read(cell.x);
                         }
 
                         auto& group = this->contents.exterior_cells;
                         if (is_base_record) {
-                           auto& base_cellmap = cec_get_or_emplace_world(group.base,      src_item.worldspace.get_form_stub());
+                           auto& base_cellmap = cec_get_or_emplace_world(group.base, src_item.worldspace.get_form_stub());
                            auto& adds_cellmap = cec_get_or_emplace_world(group.full, src_item.worldspace.get_form_stub());
                            for (auto& cell : src_item.grid) {
                               cec_insert_cell(base_cellmap, cell);
@@ -165,13 +238,19 @@ namespace dovah::loaded_forms {
                            );
                            intfc.log_load_warning(notice);
                         }
-                        auto& group = this->contents.initially_disabled;
-                        auto& item  = group.full.emplace_back();
-                        subrecord.read(item);
-                        if (is_base_record) {
-                           auto& base_item = group.base.emplace_back();
-                           base_item.unmanaged_set(item.get_form_stub());
-                        }
+                        auto& dataset = this->contents.initially_disabled;
+                        read_content_array(
+                           dataset,
+                           4,
+                           [&dataset, is_base_record](auto& subrecord) {
+                              auto& item = dataset.full.emplace_back();
+                              subrecord.unchecked_read(item);
+                              if (is_base_record) {
+                                 auto& base_item = dataset.base.emplace_back();
+                                 base_item.unmanaged_set(item.get_form_stub());
+                              }
+                           }
+                        );
                      }
                      break;
                #pragma endregion
@@ -188,26 +267,27 @@ namespace dovah::loaded_forms {
                            );
                            intfc.log_load_warning(notice);
                         }
-                        auto& group = this->contents.unique_actors;
-                        auto& item  = group.full.emplace_back();
-                        subrecord.read(item.actor_base);
-                        subrecord.read(item.actor);
-                        subrecord.read(item.editor_location);
-                        if (is_base_record) {
-                           auto& base_item = group.base.emplace_back();
-                           base_item.actor_base.unmanaged_set(item.actor_base.get_form_stub());
-                           base_item.actor.unmanaged_set(item.actor.get_form_stub());
-                           base_item.editor_location.unmanaged_set(item.editor_location.get_form_stub());
-                        }
+                        auto& dataset = this->contents.unique_actors;
+                        read_content_array(
+                           dataset,
+                           0xC,
+                           [&dataset, is_base_record](auto& subrecord) {
+                              auto& item = dataset.full.emplace_back();
+                              subrecord.unchecked_read(item.actor_base);
+                              subrecord.unchecked_read(item.actor);
+                              subrecord.unchecked_read(item.editor_location);
+                              if (is_base_record) {
+                                 auto& base_item = dataset.base.emplace_back();
+                                 base_item.actor_base.unmanaged_set(item.actor_base.get_form_stub());
+                                 base_item.actor.unmanaged_set(item.actor.get_form_stub());
+                                 base_item.editor_location.unmanaged_set(item.editor_location.get_form_stub());
+                              }
+                           }
+                        );
                      }
                      break;
                   case 'RCUN':
                      {
-                        form_id_t id;
-                        subrecord.read(id);
-                        if (!id)
-                           break;
-
                         if (is_base_record) {
                            specific_load_warnings::base_record_should_not_have_content_removals notice(
                               this->stub,
@@ -215,12 +295,14 @@ namespace dovah::loaded_forms {
                            );
                            intfc.log_load_warning(notice);
                         }
-                        auto& group = this->contents.unique_actors;
-                        auto& list  = is_base_record ? group.base : group.full;
-                        std::erase_if(list, [id](auto& item) {
-                           auto* stub = item.actor_base.get_form_stub();
-                           return stub && stub->formID == id;
-                        });
+                        auto& dataset = this->contents.unique_actors;
+                        read_and_apply_content_form_id_removal_array(
+                           dataset,
+                           [](const auto& item) {
+                              auto* stub = item.actor_base.get_form_stub();
+                              return stub ? stub->formID : 0;
+                           }
+                        );
                      }
                      break;
                #pragma endregion
@@ -237,26 +319,28 @@ namespace dovah::loaded_forms {
                            );
                            intfc.log_load_warning(notice);
                         }
-                        auto& group = this->contents.persistent_refs;
-                        auto& item  = group.full.emplace_back();
-                        subrecord.read(item.ref);
-                        subrecord.read(item.cell_or_world);
-                        subrecord.read(item.grid.y);
-                        subrecord.read(item.grid.x);
-                        if (is_base_record) {
-                           auto& base_item = group.base.emplace_back();
-                           base_item.ref.unmanaged_set(item.ref.get_form_stub());
-                           base_item.cell_or_world.unmanaged_set(item.cell_or_world.get_form_stub());
-                           base_item.grid = item.grid;
-                        }
+                        auto& dataset = this->contents.persistent_refs;
+                        read_content_array(
+                           dataset,
+                           0xC,
+                           [&dataset, is_base_record](auto& subrecord) {
+                              auto& item = dataset.full.emplace_back();
+                              subrecord.unchecked_read(item.ref);
+                              subrecord.unchecked_read(item.cell_or_world);
+                              subrecord.unchecked_read(item.grid.y);
+                              subrecord.unchecked_read(item.grid.x);
+                              if (is_base_record) {
+                                 auto& base_item = dataset.base.emplace_back();
+                                 base_item.ref.unmanaged_set(item.ref.get_form_stub());
+                                 base_item.cell_or_world.unmanaged_set(item.cell_or_world.get_form_stub());
+                                 base_item.grid = item.grid;
+                              }
+                           }
+                        );
                      }
                      break;
                   case 'RCPR':
                      {
-                        form_id_t id;
-                        subrecord.read(id);
-                        if (!id)
-                           break;
 
                         if (is_base_record) {
                            specific_load_warnings::base_record_should_not_have_content_removals notice(
@@ -265,12 +349,14 @@ namespace dovah::loaded_forms {
                            );
                            intfc.log_load_warning(notice);
                         }
-                        auto& group = this->contents.persistent_refs;
-                        auto& list  = is_base_record ? group.base : group.full;
-                        std::erase_if(list, [id](auto& item) {
-                           auto* stub = item.ref.get_form_stub();
-                           return stub && stub->formID == id;
-                        });
+                        auto& dataset = this->contents.persistent_refs;
+                        read_and_apply_content_form_id_removal_array(
+                           dataset,
+                           [](const auto& item) {
+                              auto* stub = item.ref.get_form_stub();
+                              return stub ? stub->formID : 0;
+                           }
+                        );
                      }
                      break;
                #pragma endregion
@@ -287,29 +373,30 @@ namespace dovah::loaded_forms {
                            );
                            intfc.log_load_warning(notice);
                         }
-                        auto& group = this->contents.special_refs;
-                        auto& item = group.full.emplace_back();
-                        subrecord.read(item.ref_type);
-                        subrecord.read(item.reference);
-                        subrecord.read(item.cell_or_world);
-                        subrecord.read(item.grid.y);
-                        subrecord.read(item.grid.x);
-                        if (is_base_record) {
-                           auto& base_item = group.base.emplace_back();
-                           base_item.ref_type.unmanaged_set(item.ref_type.get_form_stub());
-                           base_item.reference.unmanaged_set(item.reference.get_form_stub());
-                           base_item.cell_or_world.unmanaged_set(item.cell_or_world.get_form_stub());
-                           base_item.grid = item.grid;
-                        }
+                        auto& dataset = this->contents.special_refs;
+                        read_content_array(
+                           dataset,
+                           0x10,
+                           [&dataset, is_base_record](auto& subrecord) {
+                              auto& item = dataset.full.emplace_back();
+                              subrecord.unchecked_read(item.ref_type);
+                              subrecord.unchecked_read(item.reference);
+                              subrecord.unchecked_read(item.cell_or_world);
+                              subrecord.unchecked_read(item.grid.y);
+                              subrecord.unchecked_read(item.grid.x);
+                              if (is_base_record) {
+                                 auto& base_item = dataset.base.emplace_back();
+                                 base_item.ref_type.unmanaged_set(item.ref_type.get_form_stub());
+                                 base_item.reference.unmanaged_set(item.reference.get_form_stub());
+                                 base_item.cell_or_world.unmanaged_set(item.cell_or_world.get_form_stub());
+                                 base_item.grid = item.grid;
+                              }
+                           }
+                        );
                      }
                      break;
                   case 'RCSR':
                      {
-                        form_id_t id;
-                        subrecord.read(id);
-                        if (!id)
-                           break;
-
                         if (is_base_record) {
                            specific_load_warnings::base_record_should_not_have_content_removals notice(
                               this->stub,
@@ -317,12 +404,14 @@ namespace dovah::loaded_forms {
                            );
                            intfc.log_load_warning(notice);
                         }
-                        auto& group = this->contents.special_refs;
-                        auto& list = is_base_record ? group.base : group.full;
-                        std::erase_if(list, [id](auto& item) {
-                           auto* stub = item.reference.get_form_stub();
-                           return stub && stub->formID == id;
-                        });
+                        auto& dataset = this->contents.special_refs;
+                        read_and_apply_content_form_id_removal_array(
+                           dataset,
+                           [](const auto& item) {
+                              auto* stub = item.reference.get_form_stub();
+                              return stub ? stub->formID : 0;
+                           }
+                        );
                      }
                      break;
                #pragma endregion
@@ -434,16 +523,19 @@ namespace dovah::loaded_forms {
                break;
             //
             #pragma region Contents
-               #pragma region Enable parents
+               #pragma region Enable parents (*CEP)
                   case 'LCEP':
                   case 'ACEP':
                      {
                         auto& dataset = contents.enable_parentages;
-                        auto& item = dataset.full.emplace_back();
-                        subrecord.read(item.ref);
-                        subrecord.read(item.enable_parent);
-                        if (is_base_record) {
-                           dataset.base.push_back(item);
+                        while (subrecord.is_in_bounds(0xC)) {
+                           auto& item = dataset.full.emplace_back();
+                           subrecord.read(item.ref);
+                           subrecord.read(item.enable_parent);
+                           subrecord.skip_bytes(4);
+                           if (is_base_record) {
+                              dataset.base.push_back(item);
+                           }
                         }
                      }
                      break;
@@ -451,14 +543,32 @@ namespace dovah::loaded_forms {
                #pragma region Exterior Cells
                   case 'LCEC':
                   case 'ACEC':
+                     //
+                     // One subrecord per worldspace.
+                     //
                      {
-                        auto& dataset = contents.initially_disabled;
-                        auto& item = dataset.full.emplace_back();
-                        subrecord.read(item);
-                        if (is_base_record) {
-                           dataset.base.push_back(item);
+                        auto& dataset = contents.exterior_cell_parents;
+                        if (subrecord.is_in_bounds(4)) {
+                           form_id_t worldspace;
+                           subrecord.read(worldspace);
+                           {
+                              auto& list = dataset.full;
+                              auto  it   = std::find(list.begin(), list.end(), worldspace);
+                              if (it != list.end())
+                                 list.push_back(worldspace);
+                           }
+                           if (is_base_record) {
+                              auto& list = dataset.base;
+                              auto  it   = std::find(list.begin(), list.end(), worldspace);
+                              if (it != list.end())
+                                 list.push_back(worldspace);
+                           }
                         }
                      }
+                     //
+                     // The rest of the subrecord is cell grid coordinates, which we don't care about 
+                     // for use info.
+                     //
                      break;
                   case 'RCEC':
                      {
@@ -473,10 +583,12 @@ namespace dovah::loaded_forms {
                   case 'ACID':
                      {
                         auto& dataset = contents.initially_disabled;
-                        auto& item = dataset.full.emplace_back();
-                        subrecord.read(item);
-                        if (is_base_record) {
-                           dataset.base.push_back(item);
+                        while (subrecord.is_in_bounds(4)) {
+                           auto& item = dataset.full.emplace_back();
+                           subrecord.read(item);
+                           if (is_base_record) {
+                              dataset.base.push_back(item);
+                           }
                         }
                      }
                      break;
@@ -486,27 +598,31 @@ namespace dovah::loaded_forms {
                   case 'ACPR':
                      {
                         auto& dataset = contents.persist_loc_refs;
-                        auto& item = dataset.full.emplace_back();
-                        subrecord.read(item.ref);
-                        subrecord.read(item.cell_or_world);
-                        if (is_base_record) {
-                           dataset.base.push_back(item);
+                        while (subrecord.is_in_bounds(0xC)) {
+                           auto& item = dataset.full.emplace_back();
+                           subrecord.read(item.ref);
+                           subrecord.read(item.cell_or_world);
+                           subrecord.skip_bytes(4);
+                           if (is_base_record) {
+                              dataset.base.push_back(item);
+                           }
                         }
                      }
                      break;
                   case 'RCPR':
                      {
-                        form_id_t ref;
-                        subrecord.read(ref);
-
-                        auto&  dataset = contents.persist_loc_refs;
-                        auto&  list    = dataset.full;
-                        size_t size    = list.size();
-                        for (size_t i = 0; i < size; ++i) {
-                           if (list[i].ref == ref) {
-                              list.erase(list.begin() + i);
-                              --i;
-                              --size;
+                        auto& dataset = contents.persist_loc_refs;
+                        while (subrecord.is_in_bounds(4)) {
+                           form_id_t ref;
+                           subrecord.read(ref);
+                           
+                           std::erase_if(dataset.full, [ref](auto& item) {
+                              return item.ref == ref;
+                           });
+                           if (is_base_record) {
+                              std::erase_if(dataset.base, [ref](auto& item) {
+                                 return item.ref == ref;
+                              });
                            }
                         }
                      }
@@ -517,28 +633,33 @@ namespace dovah::loaded_forms {
                   case 'ACSR':
                      {
                         auto& dataset = contents.special_refs;
-                        auto& item = dataset.full.emplace_back();
-                        subrecord.read(item.ref_type);
-                        subrecord.read(item.reference);
-                        subrecord.read(item.cell_or_world);
-                        if (is_base_record) {
-                           dataset.base.push_back(item);
+                        while (subrecord.is_in_bounds(0x10)) {
+                           auto& item = dataset.full.emplace_back();
+                           subrecord.read(item.ref_type);
+                           subrecord.read(item.reference);
+                           subrecord.read(item.cell_or_world);
+                           subrecord.skip_bytes(4);
+                           if (is_base_record) {
+                              dataset.base.push_back(item);
+                           }
                         }
                      }
                      break;
                   case 'RCSR':
                      {
-                        form_id_t ref;
-                        subrecord.read(ref);
-
-                        auto&  dataset = contents.special_refs;
-                        auto&  list    = dataset.full;
-                        size_t size    = list.size();
-                        for (size_t i = 0; i < size; ++i) {
-                           if (list[i].reference == ref) {
-                              list.erase(list.begin() + i);
-                              --i;
-                              --size;
+                        auto& dataset = contents.special_refs;
+                        while (subrecord.is_in_bounds(4)) {
+                           form_id_t ref;
+                           subrecord.read(ref);
+                           if (!ref)
+                              continue;
+                           std::erase_if(dataset.full, [ref](auto& item) {
+                              return item.reference == ref;
+                           });
+                           if (is_base_record) {
+                              std::erase_if(dataset.base, [ref](auto& item) {
+                                 return item.reference == ref;
+                              });
                            }
                         }
                      }
@@ -549,28 +670,32 @@ namespace dovah::loaded_forms {
                   case 'ACUN':
                      {
                         auto& dataset = contents.unique_actors;
-                        auto& item = dataset.full.emplace_back();
-                        subrecord.read(item.actor_base);
-                        subrecord.read(item.actor);
-                        subrecord.read(item.editor_location);
-                        if (is_base_record) {
-                           dataset.base.push_back(item);
+                        while (subrecord.is_in_bounds(0xC)) {
+                           auto& item = dataset.full.emplace_back();
+                           subrecord.read(item.actor_base);
+                           subrecord.read(item.actor);
+                           subrecord.read(item.editor_location);
+                           if (is_base_record) {
+                              dataset.base.push_back(item);
+                           }
                         }
                      }
                      break;
                   case 'RCUN':
                      {
-                        form_id_t actor_base;
-                        subrecord.read(actor_base);
-
-                        auto&  dataset = contents.unique_actors;
-                        auto&  list    = dataset.full;
-                        size_t size    = list.size();
-                        for (size_t i = 0; i < size; ++i) {
-                           if (list[i].actor_base == actor_base) {
-                              list.erase(list.begin() + i);
-                              --i;
-                              --size;
+                        auto& dataset = contents.unique_actors;
+                        while (subrecord.is_in_bounds(4)) {
+                           form_id_t actor_base;
+                           subrecord.read(actor_base);
+                           if (!actor_base)
+                              continue;
+                           std::erase_if(dataset.full, [actor_base](auto& item) {
+                              return item.actor_base == actor_base;
+                           });
+                           if (is_base_record) {
+                              std::erase_if(dataset.base, [actor_base](auto& item) {
+                                 return item.actor_base == actor_base;
+                              });
                            }
                         }
                      }
@@ -1105,26 +1230,29 @@ namespace dovah::loaded_forms {
             {
                const auto& dataset = this->contents.initially_disabled;
                const auto& list    = is_base_record ? dataset.base : dataset.full;
-
-               auto& subrecord = record.open_next_subrecord(is_base_record ? 'LCID' : 'ACID');
-               for (const auto& item : list) {
-                  subrecord.write(item);
+               if (!list.empty()) {
+                  auto& subrecord = record.open_next_subrecord(is_base_record ? 'LCID' : 'ACID');
+                  for (const auto& item : list) {
+                     subrecord.write(item);
+                  }
+                  subrecord.close();
                }
-               subrecord.close();
             }
          #pragma endregion
          #pragma region *CEP
             {
                const auto& dataset = this->contents.enable_parents;
                const auto& list    = is_base_record ? dataset.base : dataset.full;
-
-               auto& subrecord = record.open_next_subrecord(is_base_record ? 'LCEP' : 'ACEP');
-               for (const auto& item : list) {
-                  subrecord.write(item.ref);
-                  subrecord.write(item.enable_parent);
-                  subrecord.write(item.flags);
+               if (!list.empty()) {
+                  auto& subrecord = record.open_next_subrecord(is_base_record ? 'LCEP' : 'ACEP');
+                  for (const auto& item : list) {
+                     subrecord.write(item.ref);
+                     subrecord.write(item.enable_parent);
+                     subrecord.write(item.flags);
+                     subrecord.skip_bytes(3);
+                  }
+                  subrecord.close();
                }
-               subrecord.close();
             }
          #pragma endregion
       #pragma endregion
@@ -1140,9 +1268,19 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('FNAM', this->unreported_crime_faction, true);
       record.write_formID_subrecord('MNAM', this->marker, true);
       {
-         auto& subrecord = record.open_next_subrecord('RNAM');
-         subrecord.write(this->radius);
-         subrecord.close();
+         bool save_radius = true;
+         if constexpr (use_save_radius_behavior == save_radius_behavior::always_if_non_zero) {
+            if (!this->marker) {
+               save_radius = this->radius != 0;
+            }
+         } else if constexpr (use_save_radius_behavior == save_radius_behavior::only_if_marker) {
+            save_radius = !!this->marker;
+         }
+         if (save_radius) {
+            auto& subrecord = record.open_next_subrecord('RNAM');
+            subrecord.write(this->radius);
+            subrecord.close();
+         }
       }
       record.write_formID_subrecord('NAM0', this->horse_marker, true);
       {
