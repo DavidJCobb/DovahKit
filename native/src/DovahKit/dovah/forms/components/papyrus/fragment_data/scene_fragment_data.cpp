@@ -60,6 +60,17 @@ namespace dovah::loaded_forms::components::papyrus {
       subrecord.write(flags);
       subrecord.write_length_prefixed_string<2>(this->filename);
 
+      auto _save_frag = [&subrecord](auto& opt) {
+         if (!opt.has_value())
+            return;
+         auto& frag = opt.value();
+         subrecord.write(frag.unknown);
+         subrecord.write_length_prefixed_string<2>(frag.script);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      };
+      _save_frag(this->fragments.on_begin);
+      _save_frag(this->fragments.on_end);
+
       if (this->fragments.on_phase.size() > max_phase_fragment_count) {
          auto notice = specific_save_errors::too_many_scene_phase_fragments(
             *intfc.target_stub,
