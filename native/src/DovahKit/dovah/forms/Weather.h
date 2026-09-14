@@ -89,7 +89,7 @@ namespace dovah::loaded_forms {
          uint32_t max_cloud_layers = 29; // LNAM
          components::model aurora; // MODL+MODT
          struct {
-            uint32_t disabled_layers = 0xFFFFFFFF; // NAM1 // bitset
+            uint32_t disabled_layers = 0; // NAM1 // bitset
             std::array<cloud_layer, max_cloud_layer_count> layers;
          } clouds;
          union _ {
