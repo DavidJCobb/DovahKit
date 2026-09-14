@@ -80,9 +80,9 @@ namespace dovah::loaded_forms {
       auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
       this->bounds.save(OBND, intfc);
       OBND.close();
-      record.write_formID_subrecord('SNAM', this->ambient_sound);
-      record.write_formID_subrecord('RDAT', this->region);
-      record.write_formID_subrecord('BNAM', this->environment_type);
+      record.write_formID_subrecord('SNAM', this->ambient_sound,    true);
+      record.write_formID_subrecord('RDAT', this->region,           true);
+      record.write_formID_subrecord('BNAM', this->environment_type, true);
    }
    void AcousticSpace::_clear_impl() noexcept {
       this->bounds.clear();

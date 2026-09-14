@@ -89,6 +89,7 @@ namespace dovah::loaded_forms::components {
          case 'MOD2':
          case 'MOD3':
          case 'MOD4':
+         case 'MOD5':
          case 'DMDL': // for model path
             this->load_model_path(subrecord, intfc);
             return true;
@@ -96,6 +97,7 @@ namespace dovah::loaded_forms::components {
          case 'MO2T':
          case 'MO3T':
          case 'MO4T':
+         case 'MO5T':
          case 'DMDT': // for texture hashes
             this->load_precached_info(subrecord, intfc);
             return true;
@@ -114,6 +116,7 @@ namespace dovah::loaded_forms::components {
          case 'MO2S':
          case 'MO3S':
          case 'MO4S':
+         case 'MO5S':
          case 'DMDS':
             break;
          case 'MOSD':
@@ -161,10 +164,16 @@ namespace dovah::loaded_forms::components {
       switch (subrecord.signature()) {
          case 'MODL':
          case 'MOD2':
+         case 'MOD3':
+         case 'MOD4':
+         case 'MOD5':
          case 'DMDL': // for the model path
             break;
          case 'MODT':
          case 'MO2T':
+         case 'MO3T':
+         case 'MO4T':
+         case 'MO5T':
          case 'DMDT': // for texture hashes
             break;
       }

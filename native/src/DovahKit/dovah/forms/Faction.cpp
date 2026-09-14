@@ -324,11 +324,13 @@ namespace dovah::loaded_forms {
       auto& PLVD = record.open_next_subrecord(structs::package_location::subrecord_vendor_data);
       this->package_location_vendor.save(PLVD, intfc);
       PLVD.close();
-      auto& CITC = record.open_next_subrecord('CITC');
-      CITC.write(uint32_t(this->vendor_conditions.size()));
-      CITC.close();
-      for (auto& condition : this->vendor_conditions)
-         condition.save(record, intfc);
+      if (!this->vendor_conditions.empty()) {
+         auto& CITC = record.open_next_subrecord('CITC');
+         CITC.write(uint32_t(this->vendor_conditions.size()));
+         CITC.close();
+         for (auto& condition : this->vendor_conditions)
+            condition.save(record, intfc);
+      }
    }
    void Faction::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

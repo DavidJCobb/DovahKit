@@ -92,7 +92,7 @@ namespace dovah::loaded_forms {
       this->inventory.save(record, intfc);
       for (auto& cnd : this->conditions)
          cnd.save(record, intfc);
-      record.write_formID_subrecord('CNAM', this->result.form);
+      record.write_formID_subrecord('CNAM', this->result.form, true);
       record.write_formID_subrecord('BNAM', this->workbench_keyword);
       {
          auto& subrecord = record.open_next_subrecord('NAM1');

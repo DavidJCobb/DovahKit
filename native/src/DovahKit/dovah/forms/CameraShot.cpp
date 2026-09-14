@@ -133,7 +133,7 @@ namespace dovah::loaded_forms {
          subrecord.write(this->near_target_distance);
          subrecord.close();
       }
-      record.write_formID_subrecord('MNAM', this->imagespace_modifier);
+      record.write_formID_subrecord('MNAM', this->imagespace_modifier, true);
    }
    void CameraShot::_clear_impl() noexcept {
       this->script_data.clear(*this);

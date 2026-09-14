@@ -51,7 +51,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'NNAM':
-               if (auto& form = this->next_perk; subrecord.read(icon))
+               if (auto& form = this->next_perk; subrecord.read(form))
                   intfc.warn_if_ref_is_wrong_type(form, form_type::perk, subrecord.signature());
                break;
 

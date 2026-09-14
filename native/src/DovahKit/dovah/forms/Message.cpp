@@ -36,11 +36,11 @@ namespace dovah::loaded_forms {
                subrecord.read(this->description);
                break;
             case 'INAM':
-               if (auto& form = this->icon; subrecord.read(icon))
+               if (auto& form = this->icon; subrecord.read(form))
                   intfc.warn_if_ref_is_wrong_type(form, form_type::menu_icon, subrecord.signature());
                break;
             case 'QNAM':
-               if (auto& form = this->owning_quest; subrecord.read(icon))
+               if (auto& form = this->owning_quest; subrecord.read(form))
                   intfc.warn_if_ref_is_wrong_type(form, form_type::quest, subrecord.signature());
                break;
             case 'DNAM':
