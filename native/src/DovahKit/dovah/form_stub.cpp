@@ -93,7 +93,7 @@ namespace dovah {
          return loaded_form_ptr<loaded_forms::Form>(this); // no files to load from
       if (this->form_type == form_type::setting || this->form_type == form_type::none)
          return loaded_form_ptr<loaded_forms::Form>(this); // skip GMSTs (because they aren't actually forms) and none-stubs
-      //
+      
       auto& lo = this->_get_load_order();
       if (!force) {
          //
@@ -103,21 +103,25 @@ namespace dovah {
          if (lo.is_form_loading_blocked(this))
             return loaded_form_ptr<loaded_forms::Form>(this);
       }
-      //
+      
       file_data* arr;
       uint16_t   size;
       this->_get_source_file_list(arr, size);
       if (!size)
          return loaded_form_ptr<loaded_forms::Form>(this); // no source files (this should never occur; it is only possible while the stub is being built)
-      //
-      auto  intfc  = load_order_interfaces::form_load(lo, *this);
+      
+      auto intfc = load_order_interfaces::form_load(lo, *this);
       if (force) {
          intfc.is_during_file_save_cleanup = true;
       }
+
       auto* loader = get_form_loader_function(this->form_type);
       if (!loader)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
-      bool can_be_parent = form_type_info::lookup(this->form_type).flags & form_type_info::flag::can_have_children;
+
+      const bool can_be_parent = form_type_info::lookup(this->form_type).flags & form_type_info::flag::can_have_children;
+
+      uint16_t first_file_to_load_from = 0;
       if (auto* file = arr[0].pointer) {
          if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
             //
@@ -126,39 +130,35 @@ namespace dovah {
             //
             this->form = instantiate_hardcoded_form(*this);
             assert(this->form != nullptr && "If this assertion fails, then we have an unimplemented hardcoded form!");
+            ++first_file_to_load_from;
          } else {
-            if (arr[0].offset == 0)
-               return loaded_form_ptr<loaded_forms::Form>(this); // file has no actual data (unsaved new active file, etc.). skip it
-            //
-            // This file is a real file. Load from it.
-            //
             loaded_forms::Form::constructor_params fcp;
             fcp.stub = this;
-            //
-            intfc.current_file      = file;
-            intfc.is_winning_record = (1 == size);
-            intfc.is_partial_record = false;
-            if (file->load_record_at(arr[0].offset)) {
-               auto& record = file->get_current_record();
-               this->form = create_blank_loaded_form_by_type(this->form_type, fcp);
-               if (this->form)
-                  (loader)(this->form, record, intfc);
-            }
+            this->form = create_blank_loaded_form_by_type(this->form_type, fcp);
          }
       }
       if (!this->form)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
-      //
+
+      uint16_t winning_record_index = size - 1;
+      if (winning_record_index > 0 && arr[winning_record_index].offset == 0) {
+         //
+         // This can happen if the form's record flags have been altered (such that the active 
+         // file was added to the stub's file list), but the form has otherwise not been edited.
+         //
+         --winning_record_index;
+      }
+      
       uint32_t last_record_flags = arr[0].flags;
-      for (uint16_t i = 1; i < size; ++i) {
-         auto  offset = arr[i].offset;
-         if (offset == 0)
+      for (uint16_t i = first_file_to_load_from; i < size; ++i) {
+         auto offset = arr[i].offset;
+         if (offset == 0) // file has no actual data (unsaved new active file, etc.). skip it
             continue;
          auto* file   = arr[i].pointer;
          //
-         intfc.is_winning_record = (i + 1 == size);
+         intfc.is_winning_record = i == winning_record_index;
          intfc.current_file      = file;
-         intfc.is_partial_record = can_be_parent && (arr[i].flags & tes_file_record_header::flag::partial);
+         intfc.is_partial_record = can_be_parent && i > first_file_to_load_from && (arr[i].flags & tes_file_record_header::flag::partial);
          intfc.last_record_flags = last_record_flags;
          if (file->load_record_at(offset)) {
             auto& record = file->get_current_record();
@@ -166,38 +166,50 @@ namespace dovah {
          }
          last_record_flags = arr[i].flags;
       }
-      //
+      
       return loaded_form_ptr<loaded_forms::Form>(this);
    }
    void form_stub::_do_custom_parse_impl(tes_file_reading::basic_reader* reader, custom_parse_functor_type loader) noexcept {
       if (!this->has_source_files())
          return; // no files to load from
-      //
+      
       auto& lo = this->_get_load_order();
-      //
+      
       file_data* arr;
       uint16_t   size;
       this->_get_source_file_list(arr, size);
       if (!size)
          return; // no source files (this should never occur; it is only possible while the stub is being built)
-      //
+
+      uint16_t first_file_to_load_from = 0;
+      if (auto* file = arr[0].pointer) {
+         if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
+            ++first_file_to_load_from;
+         }
+      }
+
+      uint16_t winning_record_index = size - 1;
+      if (winning_record_index > 0 && arr[winning_record_index].offset == 0) {
+         //
+         // This can happen if the form's record flags have been altered (such that the active 
+         // file was added to the stub's file list), but the form has otherwise not been edited.
+         //
+         --winning_record_index;
+      }
+
       auto     intfc             = load_order_interfaces::form_load(lo, *this);
       bool     can_be_parent     = form_type_info::lookup(this->form_type).flags & form_type_info::flag::can_have_children;
       uint32_t last_record_flags = 0;
-      for (uint16_t i = 0; i < size; ++i) {
+      for (uint16_t i = first_file_to_load_from; i < size; ++i) {
          auto* file   = arr[i].pointer;
          auto  offset = arr[i].offset;
          if (!file || !offset) // no file, or file has no actual data (e.g. unsaved new file); skip it.
             continue;
-         if (i == 0) {
-            if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy)
-               continue;
-         }
-         intfc.is_winning_record = (i + 1 == size);
+         intfc.is_winning_record = i == winning_record_index;
          intfc.current_file      = file;
-         intfc.is_partial_record = can_be_parent && (arr[i].flags & tes_file_record_header::flag::partial);
+         intfc.is_partial_record = can_be_parent && i > first_file_to_load_from && (arr[i].flags & tes_file_record_header::flag::partial);
          intfc.last_record_flags = last_record_flags;
-         //
+         
          bool result;
          if (reader) {
             file->adopt(*reader);
@@ -205,7 +217,7 @@ namespace dovah {
          } else {
             result = file->load_record_at(offset);
          }
-         //
+
          if (result) {
             if (reader)
                (loader)(*this, reader->get_current_record(), intfc);
@@ -214,7 +226,7 @@ namespace dovah {
          }
          last_record_flags = arr[i].flags;
       }
-      //
+      
       if (reader) {
          reader->file_data = nullptr;
          reader->file_size = 0;
