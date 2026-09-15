@@ -251,29 +251,26 @@ namespace dovah::loaded_forms {
          subrecord.write(this->type);
          subrecord.close();
       }
-      record.write_formID_subrecord('GNAM', this->category);
+      record.write_formID_subrecord('GNAM', this->category,      true);
       record.write_formID_subrecord('SNAM', this->alternate_for, true);
       for (auto& path : this->sound_files) {
          auto& subrecord = record.open_next_subrecord('ANAM');
          subrecord.write(path);
          subrecord.close();
       }
-      record.write_formID_subrecord('ONAM', this->output_model);
+      record.write_formID_subrecord('ONAM', this->output_model, true);
       for (auto& cnd : this->conditions)
          cnd.save(record, intfc);
       {
          auto& src = this->length_characteristics;
 
+         uint32_t coalesced = 0;
+         coalesced |= ((uint32_t)src.type) << 8;
+         coalesced |= (((uint32_t)src.rumble_send.large / 7) & 0b1111) << 28;
+         coalesced |= (((uint32_t)src.rumble_send.small / 7) & 0b1111) << 24;
+
          auto& subrecord = record.open_next_subrecord('LNAM');
-         subrecord.write((uint8_t)0);
-         subrecord.write(src.type);
-         subrecord.write((uint8_t)0);
-         {
-            uint8_t coalesced = 0;
-            coalesced = (src.rumble_send.large / 7) << 4;
-            coalesced |= src.rumble_send.small / 7;
-            subrecord.write(coalesced);
-         }
+         subrecord.write(coalesced);
          subrecord.close();
       }
       {
