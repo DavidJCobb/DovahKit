@@ -482,7 +482,7 @@ namespace dovah::loaded_forms {
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->land_flags);
       DATA.close();
-      //
+      
       auto& VNML = record.open_next_subrecord('VNML');
       VNML.reserve_more(total_vertex_count * 3);
       for (int i = 0; i < total_vertex_count; ++i) {
@@ -501,7 +501,7 @@ namespace dovah::loaded_forms {
          VNML.write(z);
       }
       VNML.close();
-      //
+      
       auto& VHGT = record.open_next_subrecord('VHGT');
       {
          auto& list = this->heightmap.heights.list();
@@ -562,16 +562,27 @@ namespace dovah::loaded_forms {
          VHGT.skip_bytes(3);
       }
       VHGT.close();
-      //
-      auto& VCLR = record.open_next_subrecord('VCLR');
-      VCLR.reserve_more(total_vertex_count * 3);
-      for (int i = 0; i < total_vertex_count; ++i) {
-         auto& color = this->heightmap.colors.by_flat_index(i);
-         VCLR.write(color.r);
-         VCLR.write(color.g);
-         VCLR.write(color.b);
+      
+      {
+         bool all_white = true; // white is the default; VCLR is only saved if any color isn't white
+         for (const auto& color : this->heightmap.colors.list()) {
+            if (color.r != 255 || color.g != 255 || color.b != 255) {
+               all_white = false;
+               break;
+            }
+         }
+         if (!all_white) {
+            auto& VCLR = record.open_next_subrecord('VCLR');
+            VCLR.reserve_more(total_vertex_count * 3);
+            for (int i = 0; i < total_vertex_count; ++i) {
+               auto& color = this->heightmap.colors.by_flat_index(i);
+               VCLR.write(color.r);
+               VCLR.write(color.g);
+               VCLR.write(color.b);
+            }
+            VCLR.close();
+         }
       }
-      VCLR.close();
       //
       // Official files have blend data sorted by quad; BTXT, ATXT, and VTXT, per quad.
       //
@@ -615,10 +626,16 @@ namespace dovah::loaded_forms {
 
             auto& VTXT = record.open_next_subrecord('VTXT');
             VTXT.reserve_more(non_zero_opacity_count * 8);
-            for (uint16_t i = 0; i < grid_linear_size; ++i) {
+            for (uint16_t i = 0; i < opacities.size(); ++i) {
                const auto f = opacities[i];
                if (f > 0.0F) {
-                  VTXT.write(uint16_t(i));
+                  int8_t x = i % vertices_per_side;
+                  int8_t y = i / vertices_per_side;
+                  if (!quad_contains_cell_coords(quad, x, y))
+                     cell_coords_to_quad_coords(quad, x, y);
+                  uint16_t qi = x + (y * vertices_per_quad_side);
+
+                  VTXT.write(qi);
                   VTXT.skip_bytes(2);
                   VTXT.write(f);
                }
