@@ -142,12 +142,14 @@ namespace dovah::loaded_forms {
          subrecord.write(this->type);
          subrecord.close();
       }
-      {
+      if (this->type == sound_output_type::defined_speaker_output) {
          auto& subrecord = record.open_next_subrecord('ONAM');
          for (auto& item : this->channels.all) {
             item.save(subrecord);
          }
          subrecord.close();
+      } else {
+         this->channels.all = {};
       }
       if (this->flags & sound_output_flag::attenuates_with_distance) {
          auto& subrecord = record.open_next_subrecord('ANAM');
@@ -159,6 +161,8 @@ namespace dovah::loaded_forms {
             subrecord.write(c);
          subrecord.skip_bytes(3);
          subrecord.close();
+      } else {
+         this->attenuation = {};
       }
    }
    void SoundOutputModel::_clear_impl() noexcept {
