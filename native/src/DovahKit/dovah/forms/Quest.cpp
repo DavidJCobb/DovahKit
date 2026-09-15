@@ -591,7 +591,7 @@ namespace dovah::loaded_forms {
    }
    bool LocationAlias::_save_fill_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (const auto* data = std::get_if<structs::alias_fill_params::loc::preassigned>(&this->fill_params)) {
-         record.write_formID_subrecord('ALFL', data->location);
+         record.write_formID_subrecord('ALFL', data->location, true);
       } else if (const auto* data = std::get_if<structs::alias_fill_params::loc::at_reference_alias>(&this->fill_params)) {
          {
             auto& ALFA = record.open_next_subrecord('ALFA');
