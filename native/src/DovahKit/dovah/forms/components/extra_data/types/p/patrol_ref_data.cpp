@@ -30,8 +30,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
       auto& XPRD = record.open_next_subrecord(signature_time);
       XPRD.write(this->idle_time);
       XPRD.close();
-      if (!this->event.empty())
-         this->event.save(record);
+      this->event.save(record);
    }
    
    /*static*/ void patrol_ref_data::generate_use_info(tes_file_reading::record& record, form_stub_use_info_builder& uib, extra_data_use_info_state& uis) {

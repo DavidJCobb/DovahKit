@@ -60,8 +60,7 @@ namespace dovah::loaded_forms::components {
       return false;
    }
    void package_event_dialogue::save(tes_record_writer& record) {
-      if (this->idle)
-         record.write_formID_subrecord('INAM', this->idle);
+      record.write_formID_subrecord('INAM', this->idle, false);
       auto& PDTO = record.open_next_subrecord('PDTO');
       PDTO.write(this->type);
       switch (this->type) {
