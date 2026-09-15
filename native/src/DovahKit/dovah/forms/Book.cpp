@@ -62,8 +62,10 @@ namespace dovah::loaded_forms {
                {
                   if (this->flags & book_flag::teaches_skill) {
                      subrecord.read(this->teaches.emplace<int32_t>());
-                  } else {
+                  } else if (this->flags & book_flag::teaches_spell) {
                      subrecord.read(this->teaches.emplace<form_reference_t>());
+                  } else {
+                     subrecord.skip_bytes(4);
                   }
                }
                subrecord.read(this->value);
