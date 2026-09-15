@@ -321,9 +321,11 @@ namespace dovah::loaded_forms {
       VENV.write(this->vendor_data.vendor_list_is_blacklist);
       VENV.write(this->vendor_data.unused0A);
       VENV.close();
-      auto& PLVD = record.open_next_subrecord(structs::package_location::subrecord_vendor_data);
-      this->package_location_vendor.save(PLVD, intfc);
-      PLVD.close();
+      if (!this->package_location_vendor.empty()) {
+         auto& PLVD = record.open_next_subrecord(structs::package_location::subrecord_vendor_data);
+         this->package_location_vendor.save(PLVD, intfc);
+         PLVD.close();
+      }
       if (!this->vendor_conditions.empty()) {
          auto& CITC = record.open_next_subrecord('CITC');
          CITC.write(uint32_t(this->vendor_conditions.size()));

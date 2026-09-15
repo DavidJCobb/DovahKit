@@ -60,6 +60,8 @@ namespace dovah::loaded_forms::structs {
             return &std::get<(size_t)PLT>(this->data);
          };
 
+         bool empty() const;
+
       protected:
          void _clear_data(Form& my_owner);
          void _emplace_data_for_type(location_type);
