@@ -66,7 +66,7 @@ namespace dovah::loaded_forms {
       mixins::StoryManagerNode::_save_impl(*this, record, intfc);
       {
          auto& subrecord = record.open_next_subrecord('ENAM');
-         subrecord.write(this->event);
+         subrecord.write_signature(this->event);
          subrecord.close();
       }
    }
