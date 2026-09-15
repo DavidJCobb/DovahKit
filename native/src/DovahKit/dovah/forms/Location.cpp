@@ -1284,7 +1284,7 @@ namespace dovah::loaded_forms {
          }
       }
       record.write_formID_subrecord('NAM0', this->horse_marker, true);
-      if (this->color.r || this->color.g || this->color.b || this->color.a) {
+      if (this->color.r || this->color.g || this->color.b || this->color.unused) {
          auto& subrecord = record.open_next_subrecord('CNAM');
          this->color.save(subrecord);
          subrecord.close();
