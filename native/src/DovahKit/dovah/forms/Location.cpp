@@ -921,6 +921,7 @@ namespace dovah::loaded_forms {
       const bool is_base_record = this->stub.get_owning_load_order().is_defined_in_active_file(this->stub);
       {
          utils::update_location_content updater;
+         updater._set_is_mid_save_location_fixup({});
          updater.gather(this->stub);
          updater.apply(is_base_record);
       }
@@ -1283,7 +1284,7 @@ namespace dovah::loaded_forms {
          }
       }
       record.write_formID_subrecord('NAM0', this->horse_marker, true);
-      {
+      if (this->color.r || this->color.g || this->color.b || this->color.a) {
          auto& subrecord = record.open_next_subrecord('CNAM');
          this->color.save(subrecord);
          subrecord.close();

@@ -30,6 +30,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
       auto& XPRD = record.open_next_subrecord(signature_time);
       XPRD.write(this->idle_time);
       XPRD.close();
+      record.open_next_subrecord(signature_event).close(); // empty; acts as a header for `this->event`
       this->event.save(record);
    }
    

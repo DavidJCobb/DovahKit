@@ -10,5 +10,5 @@ namespace dovah {
 namespace dovah::utils {
    extern form_stub* get_computed_location(const loaded_forms::Cell&);
    extern form_stub* get_computed_location(const loaded_forms::Worldspace&);
-   extern form_stub* get_computed_location(form_stub& stub);
+   extern form_stub* get_computed_location(const form_stub& stub);
 }

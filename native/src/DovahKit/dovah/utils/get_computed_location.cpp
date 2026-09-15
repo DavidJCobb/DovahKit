@@ -8,14 +8,14 @@
 #include "../forms/Worldspace.h"
 
 namespace {
-   static bool _is_valid_zone(dovah::form_stub* zone) {
+   static bool _is_valid_zone(const dovah::form_stub* zone) {
       if (!zone || zone->form_type != dovah::form_type::encounter_zone)
          return false;
       if (zone->formID == dovah::hardcoded_form_ids::NoZoneZone)
          return false;
       return true;
    }
-   static dovah::form_stub* _location_of_zone(dovah::form_stub& zone) {
+   static dovah::form_stub* _location_of_zone(const dovah::form_stub& zone) {
       auto* loc = dovah::form_stub_helpers::get_assigned_location(zone);
       if (loc && loc->form_type == dovah::form_type::location)
          return loc;
@@ -69,7 +69,7 @@ namespace dovah::utils {
             return loc;
       return nullptr;
    }
-   extern form_stub* get_computed_location(form_stub& stub) {
+   extern form_stub* get_computed_location(const form_stub& stub) {
       switch (stub.form_type) {
          case form_type::cell:
             {

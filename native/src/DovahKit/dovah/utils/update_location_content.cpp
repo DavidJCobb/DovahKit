@@ -20,7 +20,7 @@ namespace {
 }
 
 namespace dovah::utils {
-   void update_location_content::_crawl_special_refs(form_stub& cell_or_world) {
+   void update_location_content::_crawl_special_refs(const form_stub& cell_or_world) {
       if (cell_or_world.form_type == form_type::cell) {
          form_stub_helpers::for_each_child_form(cell_or_world, [this](form_stub& child) {
             if (!form_type_is_reference(child.form_type))
@@ -44,7 +44,7 @@ namespace dovah::utils {
             if (!this->location || get_computed_location(*pcell) == this->location)
                this->_crawl_special_refs(*pcell);
          }
-         form_stub_helpers::for_each_child_form(cell_or_world, [this](form_stub& cell) {
+         form_stub_helpers::for_each_child_form(cell_or_world, [this](const form_stub& cell) {
             if (cell.form_type != form_type::cell)
                return;
             if (form_stub_helpers::is_persistent(cell))
@@ -55,19 +55,19 @@ namespace dovah::utils {
          return;
       }
    }
-   /*static*/ form_stub* update_location_content::_get_explicit_location(form_stub& form) {
+   /*static*/ form_stub* update_location_content::_get_explicit_location(const form_stub& form) {
       auto* loc = form_stub_helpers::get_assigned_location(form);
       if (loc && loc->form_type == dovah::form_type::location)
          return loc;
       return nullptr;
    }
-   /*static*/ form_stub* update_location_content::_get_loc_ref_type(form_stub& ref) {
+   /*static*/ form_stub* update_location_content::_get_loc_ref_type(const form_stub& ref) {
       auto* lrt = form_stub_helpers::get_location_ref_type(ref);
       if (lrt && lrt->form_type == form_type::location_ref_type)
          return lrt;
       return nullptr;
    }
-   /*static*/ form_stub* update_location_content::_get_containing_world(form_stub& cell) {
+   /*static*/ form_stub* update_location_content::_get_containing_world(const form_stub& cell) {
       if (cell.form_type != form_type::cell)
          return nullptr;
       auto* stub = cell.get_parent_form();
@@ -75,10 +75,33 @@ namespace dovah::utils {
          return stub;
       return nullptr;
    }
-   /*static*/ bool update_location_content::_is_unique_actor(form_stub& base_form) {
+
+   std::pair<dovah::form_stub*, uint8_t> update_location_content::_get_enable_parent_info(form_stub& refr) { // parent and flags
+      dovah::loaded_form_ptr<loaded_forms::ObjectReference> loaded_refr;
+      if (this->_is_mid_save) {
+         loaded_refr = refr.load_even_if_unsafe({}).ptr_cast<loaded_forms::ObjectReference>();
+      } else {
+         loaded_refr = refr.load().ptr_cast<loaded_forms::ObjectReference>();
+      }
+      if (!loaded_refr)
+         return { nullptr, 0 };
+      auto* extra = loaded_refr->extra_data.get<extra_data_types::enable_state_parent>();
+      if (!extra)
+         return { nullptr, 0 };
+      return { extra->ref.get_form_stub(), extra->flags };
+   };
+   bool update_location_content::_is_unique_actor(form_stub& base_form) {
       if (base_form.form_type != form_type::actor_base)
          return false;
-      auto loaded = base_form.load().ptr_cast<loaded_forms::ActorBase>();
+      dovah::loaded_form_ptr<loaded_forms::ActorBase> loaded;
+      if (this->_is_mid_save) {
+         //
+         // Loading is blocked mid-save; this bypasses the block.
+         //
+         loaded = base_form.load_even_if_unsafe(form_stub_passkeys::force_form_load{}).ptr_cast<loaded_forms::ActorBase>();
+      } else {
+         loaded = base_form.load().ptr_cast<loaded_forms::ActorBase>();
+      }
       if (!loaded)
          return false;
       return (loaded->actor_flags & loaded_forms::ActorBase::actor_flag::unique) != 0;
@@ -96,6 +119,9 @@ namespace dovah::utils {
             }
          }
       }
+   }
+   void update_location_content::_set_is_mid_save_location_fixup(location_update_during_save_passkey) {
+      this->_is_mid_save = true;
    }
    void update_location_content::gather(form_stub& location) {
       if (location.form_type != form_type::location) {
@@ -134,7 +160,7 @@ namespace dovah::utils {
             if (get_computed_location(*stub) != &location)
                continue;
             auto* world = _get_containing_world(*stub);
-            if (!world || get_computed_location(*world) != &location)
+            if (!world || get_computed_location(*world) == &location) // only include a cell if the entire containing world isn't in the location
                continue;
             //
             // Below: *CEC.
@@ -254,15 +280,6 @@ namespace dovah::utils {
       auto _is_initially_disabled = [](const form_stub& refr) -> bool {
          return refr.test_record_flags(loaded_forms::ObjectReference::form_flag::disabled);
       };
-      auto _get_enable_parent = [](form_stub& refr) -> std::pair<dovah::form_stub*, uint8_t> { // parent and flags
-         auto loaded_refr = refr.load().ptr_cast<loaded_forms::ObjectReference>();
-         if (!loaded_refr)
-            return { nullptr, 0 };
-         auto* extra = loaded_refr->extra_data.get<extra_data_types::enable_state_parent>();
-         if (!extra)
-            return { nullptr, 0 };
-         return { extra->ref.get_form_stub(), extra->flags };
-      };
 
       if (as_base_record) {
          for (auto* stub : gathered) {
@@ -275,7 +292,7 @@ namespace dovah::utils {
                loaded.contents.initially_disabled.base.emplace_back().set(loaded, stub);
                loaded.contents.initially_disabled.full.emplace_back().set(loaded, stub);
             }
-            if (auto ep = _get_enable_parent(*stub); ep.first) {
+            if (auto ep = _get_enable_parent_info(*stub); ep.first) {
                {
                   auto& item = loaded.contents.enable_parents.base.emplace_back();
                   item.ref.set(loaded, stub);
@@ -299,7 +316,7 @@ namespace dovah::utils {
             if (_is_initially_disabled(*stub)) {
                loaded.contents.initially_disabled.full.emplace_back().set(loaded, stub);
             }
-            if (auto ep = _get_enable_parent(*stub); ep.first) {
+            if (auto ep = _get_enable_parent_info(*stub); ep.first) {
                auto& item = loaded.contents.enable_parents.full.emplace_back();
                item.ref.set(loaded, stub);
                item.enable_parent.set(loaded, ep.first);
@@ -359,7 +376,7 @@ namespace dovah::utils {
       auto& dataset  = loaded.contents.special_refs;
       auto& gathered = this->content.special_refs;
 
-      auto _get_placement = [](form_stub& refr) -> std::pair<form_stub*, grid_coords> { // returns cell-or-world + grid
+      auto _get_placement = [](const form_stub& refr) -> std::pair<form_stub*, grid_coords> { // returns cell-or-world + grid
          auto* cell  = refr.get_parent_form();
          auto* world = _get_containing_world(*cell);
          if (world) {
@@ -410,7 +427,7 @@ namespace dovah::utils {
       auto& dataset  = loaded.contents.unique_actors;
       auto& gathered = this->content.unique_actors;
 
-      auto _get_editor_location = [](dovah::form_stub& refr) {
+      auto _get_editor_location = [](const dovah::form_stub& refr) {
          form_stub* editor_loc = nullptr;
          form_stub* cell       = nullptr;
          cell = refr.get_parent_form();
