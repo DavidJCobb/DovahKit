@@ -38,7 +38,9 @@ namespace dovah::loaded_forms {
             //  - AA & 0x02 -> LNAM CC | 0x10
             //  - AA & 0x04 -> LNAM CC | 0x20
             //
-            loop_type type = loop_type::none; // LNAM+0x01
+            loop_type type  = loop_type::none; // LNAM+0x01
+            uint8_t   unk00 = 0;
+            uint8_t   unk02 = 0;
             struct {
                uint8_t large = 0; // upper four bits of (LNAM+0x03), times 7
                uint8_t small = 0; // == lower four bits of (LNAM+0x03), times 7

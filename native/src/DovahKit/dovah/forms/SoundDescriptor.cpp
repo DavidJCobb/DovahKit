@@ -157,7 +157,9 @@ namespace dovah::loaded_forms {
                   uint32_t coalesced;
                   subrecord.read(coalesced);
 
-                  this->length_characteristics.type = (loop_type)((coalesced >> 8) & 0xFF);
+                  this->length_characteristics.type  = (loop_type)((coalesced >> 8) & 0xFF);
+                  this->length_characteristics.unk00 = (coalesced & 0xFF);
+                  this->length_characteristics.unk02 = ((coalesced >> 16) & 0xFF);
 
                   uint8_t rumble_send = coalesced >> 24;
                   this->length_characteristics.rumble_send.large = (rumble_send >> 4) * 7;
@@ -265,9 +267,11 @@ namespace dovah::loaded_forms {
          auto& src = this->length_characteristics;
 
          uint32_t coalesced = 0;
-         coalesced |= ((uint32_t)src.type) << 8;
-         coalesced |= (((uint32_t)src.rumble_send.large / 7) & 0b1111) << 28;
+         coalesced |= ((uint32_t)src.unk00) <<  0;
+         coalesced |= ((uint32_t)src.type)  <<  8;
+         coalesced |= ((uint32_t)src.unk02) << 16;
          coalesced |= (((uint32_t)src.rumble_send.small / 7) & 0b1111) << 24;
+         coalesced |= (((uint32_t)src.rumble_send.large / 7) & 0b1111) << 28;
 
          auto& subrecord = record.open_next_subrecord('LNAM');
          subrecord.write(coalesced);
