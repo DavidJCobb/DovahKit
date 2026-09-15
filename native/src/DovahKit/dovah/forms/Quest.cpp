@@ -612,8 +612,10 @@ namespace dovah::loaded_forms {
             auto& ALFE = record.open_next_subrecord('ALFE');
             ALFE.write_signature(ev.code);
             ALFE.close();
+
+            uint32_t alfd_data = (ev.member >> 16) | (ev.member << 16);
             auto& ALFD = record.open_next_subrecord('ALFD');
-            ALFD.write_signature(ev.member);
+            ALFD.write_signature(alfd_data);
             ALFD.close();
          } else {
             //
@@ -1694,31 +1696,33 @@ namespace dovah::loaded_forms {
          if (alias_count || log_count || !this->script_data.empty()) {
             auto& VMAD = record.open_next_subrecord('VMAD');
             this->script_data.save(VMAD, intfc);
-            //
-            VMAD.write(this->script_fragment_root.unknown);
-            VMAD.write(uint16_t(log_count));
-            VMAD.write_length_prefixed_string<2>(this->script_fragment_root.filename);
-            for (auto& s : this->stages) {
-               auto& list = s.entries;
-               auto  size = list.size();
-               for (size_t i = 0; i < size; ++i) {
-                  auto& e = list[i];
-                  if (e.fragment.empty())
+            if (alias_count || log_count) {
+               VMAD.write(this->script_fragment_root.unknown);
+               VMAD.write(uint16_t(log_count));
+               VMAD.write_length_prefixed_string<2>(this->script_fragment_root.filename);
+               for (auto& s : this->stages) {
+                  auto& list = s.entries;
+                  auto  size = list.size();
+                  for (size_t i = 0; i < size; ++i) {
+                     auto& e = list[i];
+                     if (e.fragment.empty())
+                        continue;
+                     e.fragment.save(VMAD, s.index, i);
+                  }
+               }
+               VMAD.write(uint16_t(alias_count));
+               for (auto* a : this->aliases) {
+                  if (a->script_data.empty())
                      continue;
-                  e.fragment.save(VMAD, s.index, i);
+                  components::papyrus::property_object_value owner;
+                  owner.form.unmanaged_set(&this->stub);
+                  owner.alias_id = a->id;
+                  owner.save(this->script_data.header, VMAD);
+                  //
+                  a->script_data.save(VMAD, intfc);
                }
             }
-            VMAD.write(uint16_t(alias_count));
-            for (auto* a : this->aliases) {
-               if (a->script_data.empty())
-                  continue;
-               components::papyrus::property_object_value owner;
-               owner.form.unmanaged_set(&this->stub);
-               owner.alias_id = a->id;
-               owner.save(this->script_data.header, VMAD);
-               //
-               a->script_data.save(VMAD, intfc);
-            }
+            VMAD.close();
          }
       }
       //
