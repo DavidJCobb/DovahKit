@@ -2,6 +2,7 @@
 #include "_common_cpp.h"
 #include "../data/actor_values.h"
 
+#include "../notices/form_load_warnings/by_form_type/actor_value_info/unexpected_skill_info.h"
 #include "../notices/form_load_warnings/by_form_type/actor_value_info/unexpected_subrecord_in_perk_tree_node.h"
 #include "../notices/form_load_warnings/by_form_type/actor_value_info/unterminated_perk_tree_node.h"
 
@@ -16,6 +17,14 @@ namespace dovah::loaded_forms {
       Form::load(record, intfc);
       if (!intfc.is_winning_record)
          return;
+      
+      const actor_value_info* definition = nullptr;
+      for (const auto& dfn : all_actor_value_info) {
+         if (dfn.formID == this->stub.formID) {
+            definition = &dfn;
+            break;
+         }
+      }
 
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
@@ -40,6 +49,11 @@ namespace dovah::loaded_forms {
                subrecord.read(this->skill_info.category);
                break;
             case 'AVSK':
+               if (!definition || definition->type != actor_value_type::skill) {
+                  specific_load_warnings::unexpected_skill_info notice(this->stub);
+                  intfc.log_load_warning(notice);
+                  break;
+               }
                subrecord.read(this->skill_info.skill_use_mult);
                subrecord.read(this->skill_info.skill_use_offset);
                subrecord.read(this->skill_info.skill_improve_mult);

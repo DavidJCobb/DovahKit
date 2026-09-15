@@ -897,6 +897,22 @@ namespace editor_helpers {
          #pragma endregion
          #pragma region by form type
             #pragma region actor value info
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::actor_value_info::unexpected_skill_info*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Actor Value Info %1 is not a skill, but contains skill leveling info. This info will be "
+                     "discarded."
+                  ).arg(subject);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::actor_value_info::unexpected_subrecord_in_perk_tree_node*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString subrecord = cobb::qt::four_cc_to_string(casted->signature);
+                  //
+                  return QObject::tr(
+                     "Actor Value Info %1 contained unrecognized subrecord %2 within a perk tree node.",
+                     disambig
+                  ).arg(subject).arg(subrecord);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::actor_value_info::unterminated_perk_tree_node*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   QString perk    = form_identifiers_to_string(casted->perk);

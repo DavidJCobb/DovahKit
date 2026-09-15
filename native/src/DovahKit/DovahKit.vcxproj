@@ -147,6 +147,7 @@
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_comparison_operator.cpp" />
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_parameter_type_override.cpp" />
     <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_run_on.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\fail_if_form_cannot_be_edited.cpp" />
     <ClCompile Include="dovahscript\api_helpers\native_lists\impl\metamethods.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\actor.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\dialogue_branch.cpp" />
@@ -445,6 +446,7 @@
     <ClCompile Include="dovah\forms\Weapon.cpp" />
     <ClCompile Include="dovah\forms\Weather.cpp" />
     <ClCompile Include="dovah\form_reference_t.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\can_ever_be_edited.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_activator_water_type.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_assigned_encounter_zone.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_assigned_location.cpp" />
@@ -1624,6 +1626,7 @@
     <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_parameter_type_override.h" />
     <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_run_on.h" />
     <ClInclude Include="dovahscript\api_helpers\conditions\_types.h" />
+    <ClInclude Include="dovahscript\api_helpers\fail_if_form_cannot_be_edited.h" />
     <ClInclude Include="dovahscript\api_helpers\fail_table_if_expandos.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\clear.h" />
     <ClInclude Include="dovahscript\api_helpers\native_lists\common\pull_collection.h" />
@@ -2140,6 +2143,7 @@
     <ClInclude Include="dovah\forms\Weather.h" />
     <ClInclude Include="dovah\form_id_t.h" />
     <ClInclude Include="dovah\form_reference_t.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\can_ever_be_edited.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_child_form.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_dialogue_branch_topic.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_inbound_use_with_flag.h" />
@@ -2244,6 +2248,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\inconsistent_fragment_scriptname.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\vmad_too_large.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unexpected_skill_info.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unexpected_subrecord_in_perk_tree_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unterminated_perk_tree_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\body_part_data\multiple_parts_for_the_same_limb.h" />
@@ -4481,6 +4486,10 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\form type common behaviors\class names identified by hashes.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\form types\a\actor base.md">
       <SubType>
       </SubType>
@@ -4494,6 +4503,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\g\grass.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\m\music track.md">
       <SubType>
       </SubType>
     </None>

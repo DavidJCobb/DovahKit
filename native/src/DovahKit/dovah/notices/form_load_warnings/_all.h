@@ -27,6 +27,7 @@
    #include "./by_form_component/papyrus/vmad_too_large.h"
 #pragma endregion
 #pragma region by form type
+   #include "./by_form_type/actor_value_info/unexpected_skill_info.h"
    #include "./by_form_type/actor_value_info/unexpected_subrecord_in_perk_tree_node.h"
    #include "./by_form_type/actor_value_info/unterminated_perk_tree_node.h"
    #include "./by_form_type/body_part_data/multiple_parts_for_the_same_limb.h"
