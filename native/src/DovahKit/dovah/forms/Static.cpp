@@ -149,7 +149,7 @@ namespace dovah::loaded_forms {
                   return;
                }
                MNAM.write(item.data(), size);
-               MNAM.skip_bytes(256 - size);
+               MNAM.skip_bytes(max_lod_mesh_path_length - size);
             }
             MNAM.close();
          }

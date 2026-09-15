@@ -454,12 +454,16 @@ namespace dovah::loaded_forms {
                         if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::weather);
                         } else if (auto* data = this->generable_content.back().as<generable_content::weather_collection>()) {
-                           auto& item = data->weathers.emplace_back();
-                           if (auto& form = item.weather; subrecord.read(form))
-                              intfc.warn_if_ref_is_wrong_type(form, form_type::weather, subrecord.signature());
-                           subrecord.read(item.chance);
-                           if (auto& form = item.global; subrecord.read(form))
-                              intfc.warn_if_ref_is_wrong_type(form, form_type::global, subrecord.signature());
+                           data->weathers.clear(); // unmanaged clear
+                           data->weathers.reserve(subrecord.size() / 0xC);
+                           while (subrecord.is_in_bounds(0xC)) {
+                              auto& item = data->weathers.emplace_back();
+                              if (auto& form = item.weather; subrecord.read(form))
+                                 intfc.warn_if_ref_is_wrong_type(form, form_type::weather, subrecord.signature());
+                              subrecord.read(item.chance);
+                              if (auto& form = item.global; subrecord.read(form))
+                                 intfc.warn_if_ref_is_wrong_type(form, form_type::global, subrecord.signature());
+                           }
                         } else {
                            _warn_on_mismatched_region_data(region_data_type::weather);
                         }
