@@ -1149,42 +1149,51 @@ namespace dovah::loaded_forms {
                } else {
                   struct relevant_cell {
                      grid_coords grid;
-                     bool        retained = false;
+                     bool        is_in_base = false;
+                     bool        is_in_full = false;
                   };
-                  using relevant_world_map = std::unordered_map<form_stub*, std::vector<relevant_cell>>;
+                  using relevant_world_map = std::unordered_map<form_stub*, std::vector<relevant_cell>>; // key = worldspace; value = cell list
                   relevant_world_map relevant_worlds;
 
-                  auto _gather = [&relevant_worlds](const exterior_cell_list& ecl, bool retained) {
+                  auto _gather = [&relevant_worlds](const exterior_cell_list& ecl, bool gathering_from_base) {
                      auto& rcl = relevant_worlds[ecl.worldspace.get_form_stub()];
                      for (auto& src_item : ecl.cells) {
                         bool found = false;
                         for (auto& dst_item : rcl) {
                            if (src_item == dst_item.grid) {
-                              dst_item.retained = retained;
+                              if (gathering_from_base)
+                                 dst_item.is_in_base = true;
+                              else
+                                 dst_item.is_in_full = true;
                               found = true;
                               break;
                            }
                         }
                         if (!found) {
                            auto& dst_item = rcl.emplace_back();
-                           dst_item.grid     = src_item;
-                           dst_item.retained = retained;
+                           dst_item.grid = src_item;
+                           if (gathering_from_base)
+                              dst_item.is_in_base = true;
+                           else
+                              dst_item.is_in_full = true;
                         }
                      }
                   };
                   for (const auto& item : dataset.base)
-                     _gather(item, false);
-                  for (const auto& item : dataset.full)
                      _gather(item, true);
+                  for (const auto& item : dataset.full)
+                     _gather(item, false);
                   //
                   // Added:
                   //
-                  bool any_not_retained = false;
+                  bool any_removed = false;
                   for (auto& pair : relevant_worlds) {
                      bool opened = false;
                      for (auto& cell : pair.second) {
-                        if (!cell.retained) {
-                           any_not_retained = true;
+                        if (cell.is_in_base) {
+                           if (!cell.is_in_full) {
+                              any_removed = true;
+                           }
                            continue;
                         }
                         if (!opened) {
@@ -1200,14 +1209,14 @@ namespace dovah::loaded_forms {
                         record.get_current_subrecord().close();
                      }
                   }
-                  if (any_not_retained) {
+                  if (any_removed) {
                      //
                      // Removed:
                      //
                      for (auto& pair : relevant_worlds) {
                         bool opened = false;
                         for (auto& cell : pair.second) {
-                           if (cell.retained) {
+                           if (!cell.is_in_base || cell.is_in_full) {
                               continue;
                            }
                            if (!opened) {
@@ -1243,16 +1252,43 @@ namespace dovah::loaded_forms {
          #pragma region *CEP
             {
                const auto& dataset = this->contents.enable_parents;
-               const auto& list    = is_base_record ? dataset.base : dataset.full;
-               if (!list.empty()) {
-                  auto& subrecord = record.open_next_subrecord(is_base_record ? 'LCEP' : 'ACEP');
-                  for (const auto& item : list) {
-                     subrecord.write(item.ref);
-                     subrecord.write(item.enable_parent);
-                     subrecord.write(item.flags);
+               if (is_base_record) {
+                  const auto& list = dataset.base;
+                  if (!list.empty()) {
+                     auto& subrecord = record.open_next_subrecord(is_base_record ? 'LCEP' : 'ACEP');
+                     for (const auto& item : list) {
+                        subrecord.write(item.ref);
+                        subrecord.write(item.enable_parent);
+                        subrecord.write(item.flags);
+                        subrecord.skip_bytes(3);
+                     }
+                     subrecord.close();
+                  }
+               } else {
+                  bool opened = false;
+                  for (const auto& full_item : dataset.full) {
+                     bool is_unchanged_in_base = false;
+                     for (const auto& base_item : dataset.base) {
+                        if (base_item.ref != full_item.ref)
+                           continue;
+                        is_unchanged_in_base = base_item == full_item;
+                        break;
+                     }
+                     if (is_unchanged_in_base)
+                        continue;
+                     if (!opened) {
+                        opened = true;
+                        record.open_next_subrecord('ACEP');
+                     }
+                     auto& subrecord = record.get_current_subrecord();
+                     subrecord.write(full_item.ref);
+                     subrecord.write(full_item.enable_parent);
+                     subrecord.write(full_item.flags);
                      subrecord.skip_bytes(3);
                   }
-                  subrecord.close();
+                  if (opened) {
+                     record.get_current_subrecord().close();
+                  }
                }
             }
          #pragma endregion
