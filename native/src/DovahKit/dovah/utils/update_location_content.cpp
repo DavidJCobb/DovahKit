@@ -434,30 +434,31 @@ namespace dovah::utils {
          if (cell && cell->form_type != form_type::cell)
             cell = nullptr;
          /*
-            The CK would check if the REFR has the "persistent" flag or flag 0x4000, 
-            and if the REFR's parent cell is nullptr or an exterior. If all of these 
-            conditions are met, the CK would grab the REFR's persistent cell via its 
-            extra-data.
+            CK logic for unique actor editor locations is as follows:
 
-            That particular extra-data type isn't serialized to the file;  it exists 
-            only as run-time state,  and seems to be set when the REFR is added to a 
-            cell's REFR list.  (Not sure how it differs from the parent cell, then?)
+               BGSLocation* TESObjectREFR::GetEditorLocationForm() {
+                  if (this->parentCell)
+                     return this->parentCell->GetComputedLocation();
 
-            (This is all done via TESChildCell's v-func 0x01.)
+                  // if not persistent:                         parent cell
+                  // if persistent and parent cell is interior: parent cell
+                  // if persistent and parent cell is exterior: worldspace persistent cell
+                  TESObjectCELL* parent_cell = static_cast<TESChildCell*>(this)->Unk_01();
 
-            In any case, I think we can just skip that processing.
+                  if (parent_cell) {
+                     auto* world = parent_cell->GetCurrentContainingWorld();
+                     if (world)
+                        return world->GetComputedLocation();
+                  }
+                  return this->extraData.GetLocation();
+               }
+
+            Can't figure out when or how a ref would have no parent cell, for most of this 
+            behavior to come into play.
          */
-         bool via_cell = false;
-         if (cell) {
-            auto* world = _get_containing_world(*cell);
-            if (world) {
-               via_cell   = true;
-               editor_loc = _get_explicit_location(*world);
-            }
-         }
-         if (!via_cell)
-            editor_loc = _get_explicit_location(refr);
-         return editor_loc;
+         if (cell)
+            return get_computed_location(*cell);
+         return _get_explicit_location(refr);
       };
 
       _clear_list(loaded, dataset.full);
