@@ -129,7 +129,7 @@ namespace dovah::loaded_forms {
                      auto& ev = data->from_event;
                      if (ev.has_value()) {
                         subrecord.read_signature((*ev).member);
-                        ev->member = (ev->member << 16) | (ev->member >> 16);
+                        ev->member = (ev->member << 16) | (ev->member >> 16); // 'W' 'X' '\0' '\0' -> '\0\0WX'
                      }
                   }
                   break;
@@ -239,7 +239,7 @@ namespace dovah::loaded_forms {
                case 'ALFD':
                   if (auto* data = std::get_if<structs::alias_fill_params::ref::find_from_event>(&this->fill_params)) {
                      subrecord.read_signature(data->member);
-                     data->member = (data->member << 16) | (data->member >> 16);
+                     data->member = (data->member << 16) | (data->member >> 16); // 'W' 'X' '\0' '\0' -> '\0\0WX'
                   }
                   break;
             #pragma endregion
@@ -613,7 +613,7 @@ namespace dovah::loaded_forms {
             ALFE.write_signature(ev.code);
             ALFE.close();
 
-            uint32_t alfd_data = (ev.member >> 16) | (ev.member << 16);
+            uint32_t alfd_data = (ev.member >> 16) | (ev.member << 16); // '\0\0WX' -> 'W' 'X' '\0' '\0'
             auto& ALFD = record.open_next_subrecord('ALFD');
             ALFD.write_signature(alfd_data);
             ALFD.close();
@@ -701,8 +701,10 @@ namespace dovah::loaded_forms {
          auto& ALFE = record.open_next_subrecord('ALFE');
          ALFE.write_signature(ev.code);
          ALFE.close();
+         
+         uint32_t alfd_data = (ev.member >> 16) | (ev.member << 16); // '\0\0WX' -> 'W' 'X' '\0' '\0'
          auto& ALFD = record.open_next_subrecord('ALFD');
-         ALFD.write_signature(ev.member);
+         ALFD.write_signature(alfd_data);
          ALFD.close();
       } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::find_near_alias>(&this->fill_params)) {
          auto& ALNA = record.open_next_subrecord('ALNA');
