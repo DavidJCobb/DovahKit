@@ -609,12 +609,9 @@ namespace dovah::loaded_forms {
 
             const auto& opacities              = layer.opacities.list();
             size_t      non_zero_opacity_count = 0;
-            for (auto v : opacities) {
+            for (auto v : opacities)
                if (v > 0.0F)
                   ++non_zero_opacity_count;
-            }
-            if (non_zero_opacity_count == 0)
-               continue;
 
             auto& ATXT = record.open_next_subrecord('ATXT');
             ATXT.reserve_more(4 + sizeof(uint8_t) + 1 + sizeof(decltype(layer.layer)));
@@ -624,23 +621,20 @@ namespace dovah::loaded_forms {
             ATXT.write(layer.layer);
             ATXT.close();
 
-            auto& VTXT = record.open_next_subrecord('VTXT');
-            VTXT.reserve_more(non_zero_opacity_count * 8);
-            for (uint16_t i = 0; i < opacities.size(); ++i) {
-               const auto f = opacities[i];
-               if (f > 0.0F) {
-                  int8_t x = i % vertices_per_side;
-                  int8_t y = i / vertices_per_side;
-                  if (!quad_contains_cell_coords(quad, x, y))
-                     cell_coords_to_quad_coords(quad, x, y);
-                  uint16_t qi = x + (y * vertices_per_quad_side);
-
-                  VTXT.write(qi);
-                  VTXT.skip_bytes(2);
-                  VTXT.write(f);
+            if (non_zero_opacity_count != 0) {
+               auto& VTXT = record.open_next_subrecord('VTXT');
+               VTXT.reserve_more(non_zero_opacity_count * 8);
+               for (uint16_t i = 0; i < opacities.size(); ++i) {
+                  const auto f = opacities[i];
+                  if (f > 0.0F) {
+                     uint16_t qi = cell_relative_vertex_index_to_quad_relative(quad, i);
+                     VTXT.write(qi);
+                     VTXT.skip_bytes(2);
+                     VTXT.write(f);
+                  }
                }
+               VTXT.close();
             }
-            VTXT.close();
          }
       }
       if (!this->textures.empty()) {

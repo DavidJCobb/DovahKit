@@ -80,6 +80,9 @@ namespace dovah::loaded_forms {
          // cells, or there will be tears in the landscape.
          template<typename T> using grid = cobb::corner_square_grid<T, vertices_per_side>;
 
+         static constexpr uint8_t cell_relative_vertex_index_to_quad_relative(uint8_t quad, uint16_t vertex);
+         static constexpr uint8_t quad_relative_vertex_index_to_cell_relative(uint8_t quad, uint16_t vertex);
+
          // Given a vertex index within a quad, retrieve a cell-relative position.
          static constexpr void quad_offset_to_cell_coords(uint8_t quad, uint8_t index, uint8_t& x, uint8_t& y);
 
