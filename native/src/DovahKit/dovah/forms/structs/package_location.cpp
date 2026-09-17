@@ -38,7 +38,7 @@ namespace dovah::loaded_forms::structs {
          [&handled, &result](auto& value) {
             using value_type = std::decay_t<decltype(value)>;
             if constexpr (std::is_same_v<value_type, form_reference_t>) {
-               result  = !!value;
+               result  = !value;
                handled = true;
             } else if constexpr (std::is_same_v<value_type, std::monostate>) {
                result  = true;
