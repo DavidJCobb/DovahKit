@@ -4395,6 +4395,9 @@
     <ClCompile Include="dovahscript\api_helpers\fail_if_form_cannot_be_edited.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\story_event_member_id.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10916,6 +10919,39 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unexpected_skill_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\data\landscapes\vertices_per_cell_side.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\landscapes\vertices_per_quad_side.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\landscapes\quad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\landscapes\cell_vertex_index_to_quad_vertex_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\landscapes\quad_vertex_coords_to_cell_vertex_coords.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\landscapes\cell_vertex_coords_to_quad_vertex_coords.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\landscapes\quad_contains_cell_vertex_coords.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\landscapes\vertices_per_cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\landscapes\vertices_per_quad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\landscapes\vertex_distance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\landscapes\max_usable_layers_per_quad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12634,9 +12670,6 @@
     </None>
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
-    <None Include="dovah\forms\Landscape.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="shaders\rendered_landscape\border.frag" />
     <None Include="shaders\rendered_landscape\border.vert" />
     <None Include="shaders\rendered_landscape\border.frag.spv" />
@@ -13038,6 +13071,7 @@
     <None Include="dovah\_docs\form types\d\dialogue branch.md" />
     <None Include="dovah\_docs\form types\m\music track.md" />
     <None Include="dovah\_docs\form type common behaviors\class names identified by hashes.md" />
+    <None Include="dovah\_docs\form types\s\scene.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

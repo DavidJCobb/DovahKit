@@ -91,6 +91,22 @@ namespace dovah::loaded_forms {
                case components::legacy_script::subrecord_signature_quest:
                case components::legacy_script::subrecord_signature_ref_objects:
                case components::legacy_script::subrecord_signature_ref_variables:
+                  //
+                  // Based on examination of Skyrim.esm, these are vestigial from SCEN record version 30 
+                  // and earlier. The Creation Kit stopped adding these to v31 records, but only removed 
+                  // them from a later record version (v32 at the earliest, v34 at the latest).  Current 
+                  // versions of the Creation Kit ignore these records entirely.
+                  // 
+                  // It's not clear whether phases always had two legacy scripts, or could have multiple 
+                  // legacy scripts.  Phases seen in Skyrim.esm all have two scripts separated from each 
+                  // other (but not from the preceding conditions) by NEXT subrecords.  Since the public 
+                  // build of the CK no longer has code to load these scripts,  the relevant logic isn't 
+                  // clear, and I'm not fully comfortable with just blindly guessing.
+                  // 
+                  // Legacy scripts are only  use-info-relevant for QNAM (which  basically always points 
+                  // to the scene's owning quest) and SCRO (usually empty; in some cases it lists a form 
+                  // that no longer exists in Skyrim.esm).
+                  //
                   break;
                default:
                   break;
@@ -244,6 +260,12 @@ namespace dovah::loaded_forms {
                case components::legacy_script::subrecord_signature_quest:
                case components::legacy_script::subrecord_signature_ref_objects:
                case components::legacy_script::subrecord_signature_ref_variables:
+                  //
+                  // Based on examination of Skyrim.esm, these are vestigial from QUST record version 30 
+                  // and earlier. The Creation Kit stopped adding these to v31 records, but only removed 
+                  // them from a later record version (v32 at the earliest, v34 at the latest).  Current 
+                  // versions of the Creation Kit ignore these records entirely.
+                  //
                   break;
                default:
                   specific_load_warnings::unexpected_subrecord_in_scene_action notice(
@@ -536,7 +558,7 @@ namespace dovah::loaded_forms {
             subrecord.write(this->action_id);
             subrecord.close();
          }
-         {
+         if (this->flags) {
             auto& subrecord = record.open_next_subrecord('FNAM');
             subrecord.write(this->flags);
             subrecord.close();

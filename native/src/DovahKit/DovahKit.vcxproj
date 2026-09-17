@@ -485,6 +485,7 @@
     <ClCompile Include="dovah\utils\location_is_or_is_inside_of_location.cpp" />
     <ClCompile Include="dovah\utils\object_bounds_from_nif.cpp" />
     <ClCompile Include="dovah\utils\refs\light_radius.cpp" />
+    <ClCompile Include="dovah\utils\story_event_member_id.cpp" />
     <ClCompile Include="dovah\utils\subrecord_data_position.cpp" />
     <ClCompile Include="dovah\utils\update_large_ref_index.cpp" />
     <ClCompile Include="dovah\utils\update_location_content.cpp" />
@@ -1821,6 +1822,13 @@
     <ClInclude Include="dovah\data\game\min_file_version.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\headparts.h" />
+    <ClInclude Include="dovah\data\landscapes\max_usable_layers_per_quad.h" />
+    <ClInclude Include="dovah\data\landscapes\quad.h" />
+    <ClInclude Include="dovah\data\landscapes\vertex_distance.h" />
+    <ClInclude Include="dovah\data\landscapes\vertices_per_cell.h" />
+    <ClInclude Include="dovah\data\landscapes\vertices_per_cell_side.h" />
+    <ClInclude Include="dovah\data\landscapes\vertices_per_quad.h" />
+    <ClInclude Include="dovah\data\landscapes\vertices_per_quad_side.h" />
     <ClInclude Include="dovah\data\limbs.h" />
     <ClInclude Include="dovah\data\magic_casting_type.h" />
     <ClInclude Include="dovah\data\magic_delivery_type.h" />
@@ -2439,6 +2447,10 @@
     <ClInclude Include="dovah\utils\form_type_is_cell_child.h" />
     <ClInclude Include="dovah\utils\form_type_is_object_with_bounds.h" />
     <ClInclude Include="dovah\utils\get_region_worldspace.h" />
+    <ClInclude Include="dovah\utils\landscapes\cell_vertex_coords_to_quad_vertex_coords.h" />
+    <ClInclude Include="dovah\utils\landscapes\cell_vertex_index_to_quad_vertex_index.h" />
+    <ClInclude Include="dovah\utils\landscapes\quad_contains_cell_vertex_coords.h" />
+    <ClInclude Include="dovah\utils\landscapes\quad_vertex_coords_to_cell_vertex_coords.h" />
     <ClInclude Include="dovah\utils\location_is_or_is_inside_of_location.h" />
     <ClInclude Include="dovah\utils\magic_effect_list_item_cost_calculator.h" />
     <ClInclude Include="dovah\utils\cell_grid_position.h" />
@@ -4452,7 +4464,6 @@
     <None Include="dovah\forms\components\papyrus\attached_script.inl" />
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
     <None Include="dovah\forms\IdleAnimation.inl" />
-    <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
     <None Include="dovah\forms\structs\region\area.inl" />
     <None Include="dovah\forms\structs\region\_docs\area.md">
@@ -4523,6 +4534,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\r\reference.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\s\scene.md">
       <SubType>
       </SubType>
     </None>

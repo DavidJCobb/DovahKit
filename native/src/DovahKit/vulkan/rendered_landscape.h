@@ -5,7 +5,11 @@
 #include <glm/glm.hpp>
 #include "helpers/array_of_n_values.h"
 #include "dovah/core_constants/exterior_cell_side_length.h"
-#include "dovah/forms/Landscape.h"
+#include "dovah/data/landscapes/max_usable_layers_per_quad.h"
+#include "dovah/data/landscapes/vertex_distance.h"
+#include "dovah/data/landscapes/vertices_per_cell_side.h"
+#include "dovah/data/landscapes/vertices_per_quad.h"
+#include "dovah/data/landscapes/vertices_per_quad_side.h"
 #include "./_vulkan.h"
 #include "./helpers/land/vulkan_vertex_indices_for_outline.h"
 #include "./helpers/vertex_indices_for_quad_grid.h"
@@ -40,20 +44,20 @@ namespace vulkanDK {
          using loaded_form = dovah::loaded_forms::Landscape;
 
          static constexpr size_t cell_side_length = dovah::core_constants::exterior_cell_side_length;
-         static constexpr size_t vertex_distance  = loaded_form::vertex_distance;
+         static constexpr size_t vertex_distance  = dovah::landscapes::vertex_distance;
 
          // All quads overlap by one line of vertices  on each axis;  this is needed to avoid a gap in tris. 
          // In an ESP file, some vertex data is defined per-cell (e.g. heights) and some is defined per-quad 
          // (e.g. texture blends).  We associate both sets of data with vertices in Vulkan, which means that 
          // vertices at quad boundaries must be separate: two vertices that have the same position, but with 
          // different texturing and blend information.
-         static constexpr size_t vertices_per_side = loaded_form::vertices_per_side + 1;
+         static constexpr size_t vertices_per_side = dovah::landscapes::vertices_per_cell_side + 1;
          static constexpr size_t vertices_per_mesh = vertices_per_side * vertices_per_side;
 
-         static constexpr size_t vertices_per_quad_side  = 17;
-         static constexpr size_t vertices_per_quad       = vertices_per_quad_side * vertices_per_quad_side;
+         static constexpr size_t vertices_per_quad_side  = dovah::landscapes::vertices_per_quad_side;
+         static constexpr size_t vertices_per_quad       = dovah::landscapes::vertices_per_quad;
 
-         static constexpr size_t max_usable_layers_per_quad = 6;
+         static constexpr size_t max_usable_layers_per_quad = dovah::landscapes::max_usable_layers_per_quad;
 
          static constexpr auto quad_vertex_indices = vertex_indices_for_quad_grid<vertices_per_quad_side, vertices_per_quad_side, true>;
          static constexpr auto indices_per_quad    = std::tuple_size_v<decltype(quad_vertex_indices)>;

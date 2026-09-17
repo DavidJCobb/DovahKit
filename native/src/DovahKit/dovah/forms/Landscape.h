@@ -1,13 +1,11 @@
 #pragma once
 #include <array>
 #include <cstdint>
-#include <string>
 #include <vector>
-#include "dovah/core_constants/exterior_cell_side_length.h"
+#include "dovah/data/landscapes/vertices_per_cell.h"
+#include "dovah/data/landscapes/vertices_per_cell_side.h"
 #include "./Form.h"
 #include "./_common.h"
-#include "./components/bounds.h"
-#include "./components/model.h"
 #include "helpers/grid.h"
 #include "helpers/vector3.h"
 
@@ -37,26 +35,6 @@ namespace dovah::loaded_forms {
          static constexpr const enum form_type form_type = form_type::land;
          Landscape(const constructor_params& c) : Form(form_type, c) {};
 
-         static constexpr int vertices_per_side  = 33;
-         static constexpr int total_vertex_count = vertices_per_side * vertices_per_side;
-
-         static constexpr int vertex_distance = (dovah::core_constants::exterior_cell_side_length) / (vertices_per_side - 1);
-
-         static constexpr int vertices_per_quad_side  = 17;
-         static constexpr int total_quad_vertex_count = vertices_per_quad_side * vertices_per_quad_side;
-
-         static constexpr int max_usable_layers_per_quad = 6;
-
-         struct quad_indices {
-            quad_indices() = delete;
-            enum {
-               bottom_left  = 0,
-               bottom_right = 1,
-               top_left     = 2,
-               top_right    = 3,
-            };
-         };
-
          struct land_flag {
             land_flag() = delete;
             enum : uint32_t {
@@ -78,20 +56,8 @@ namespace dovah::loaded_forms {
          // northeasternmost vertex, so positive Y is north and negative Y is south. 
          // The western column and southern row must overlap with those of the adjoining 
          // cells, or there will be tears in the landscape.
-         template<typename T> using grid = cobb::corner_square_grid<T, vertices_per_side>;
-
-         static constexpr uint8_t cell_relative_vertex_index_to_quad_relative(uint8_t quad, uint16_t vertex);
-         static constexpr uint8_t quad_relative_vertex_index_to_cell_relative(uint8_t quad, uint16_t vertex);
-
-         // Given a vertex index within a quad, retrieve a cell-relative position.
-         static constexpr void quad_offset_to_cell_coords(uint8_t quad, uint8_t index, uint8_t& x, uint8_t& y);
-
-         // Given a quad-relative position for a vertex, retrieve a cell-relative position.
-         static constexpr void quad_coords_to_cell_coords(uint8_t quad, uint8_t& x, uint8_t& y);
-
-         static constexpr bool quad_contains_cell_coords(uint8_t quad, uint8_t x, uint8_t y);
-
-         static constexpr void cell_coords_to_quad_coords(uint8_t quad, int8_t& x, int8_t& y); // negative == out-of-bounds
+         template<typename T>
+         using grid = cobb::corner_square_grid<T, landscapes::vertices_per_cell_side>;
 
          struct vertex_color {
             uint8_t r = 255;
@@ -108,13 +74,13 @@ namespace dovah::loaded_forms {
          uint32_t land_flags = land_flag::all_common_flags; // DATA
          struct {
             grid<float>                heights = {}; // heights[y][x] // VHGT
-            grid<cobb::vector3<float>> normals = {}; // normals[y][x] // VNML, always 0xCC3 bytes in the file. each normal is encoded as a cobb::vector3<int8_t>; convert to float by dividing by 127.0F
+            grid<cobb::vector3<float>> normals = {}; // normals[y][x] // VNML, always 0xCC3 bytes in the file. each normal is serialized as a cobb::vector3<int8_t>; convert to float by dividing by 127.0F
             grid<vertex_color>         colors  = {}; // colors[y][x]  // VCLR
          } heightmap;
          std::vector<form_reference_t> textures; // VTEX
          std::array<form_reference_t, 4> default_quad_textures; // BTXT: Base TeXTure // index == quad
          std::array<std::vector<alpha_layer>, 4> alpha_layers_by_quad; // ATXT+VTXT
-         std::vector<uint8_t> mpcd; // MPCD // hkMoppCode, the pre-generated collision data for the terrain. we suspect it's optional, with the game doing collision at run-time if it's absent
+         std::vector<uint8_t> mpcd; // MPCD // hkMoppCode, the pre-generated collision data for the terrain. might be optional, with the game doing collision at run-time if it's absent
 
          alpha_layer* get_alpha_layer(uint8_t quad, int16_t index) {
             if (quad >= 4)
@@ -130,11 +96,11 @@ namespace dovah::loaded_forms {
          float height_at(float x, float y) const; // x- and y-coordinates are relative to the cell
 
          void recalc_normals();
-         void recalc_normals_to(std::array<cobb::vector3<float>, total_vertex_count>&) const;
+         void recalc_normals_to(std::array<cobb::vector3<float>, landscapes::vertices_per_cell>&) const;
 
+      public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
       protected:
          virtual void _clone_impl(Form* out) const noexcept override;
          virtual void _save_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
@@ -142,5 +108,3 @@ namespace dovah::loaded_forms {
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
    };
 }
-
-#include "./Landscape.inl"

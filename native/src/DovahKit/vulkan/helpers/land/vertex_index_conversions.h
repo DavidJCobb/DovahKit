@@ -1,8 +1,9 @@
 #pragma once
-#include "dovah/forms/Landscape.h"
+#include "dovah/data/landscapes/vertices_per_cell_side.h"
+#include "dovah/data/landscapes/vertices_per_quad.h"
+#include "dovah/data/landscapes/vertices_per_quad_side.h"
 
 namespace vulkanDK::helpers::land {
-   using loaded_form = dovah::loaded_forms::Landscape;
 
    //
    // Vertex indices are not 1:1 between a loaded Landscape form and a `rendered_landscape` 
@@ -34,7 +35,7 @@ namespace vulkanDK::helpers::land {
 
    // Index of the vertex row/column (within the 33x33 grid) that is shared between adjacent 
    // quads.
-   inline constexpr size_t centerline_rowcol_index = (loaded_form::vertices_per_side - 1) / 2;
+   inline constexpr size_t centerline_rowcol_index = (dovah::landscapes::vertices_per_cell_side - 1) / 2;
 
    // Parameters:
    // 
@@ -54,23 +55,23 @@ namespace vulkanDK::helpers::land {
       size_t offset_x = (quad % 2) * centerline_rowcol_index;
       size_t offset_y = (quad / 2) * centerline_rowcol_index;
 
-      land_vi   = ((quad_y + offset_y) * loaded_form::vertices_per_side) + (quad_x + offset_x);
-      vulkan_vi = (quad * loaded_form::total_quad_vertex_count) + (quad_y * loaded_form::vertices_per_quad_side) + quad_x;
+      land_vi   = ((quad_y + offset_y) * dovah::landscapes::vertices_per_cell_side) + (quad_x + offset_x);
+      vulkan_vi = (quad * dovah::landscapes::vertices_per_quad) + (quad_y * dovah::landscapes::vertices_per_quad_side) + quad_x;
    }
 
    // Given a quad index [0, 3] and a per-cell vertex index, this function returns the 
    // Vulkan-side vertex index for that vertex in that quad.
    //
    constexpr size_t vulkan_vertex_index_for_per_land_vertex_index(size_t quad, size_t per_land_index) {
-      constexpr size_t centerline_rowcol_index = (loaded_form::vertices_per_side - 1) / 2;
+      constexpr size_t centerline_rowcol_index = (dovah::landscapes::vertices_per_cell_side - 1) / 2;
 
       size_t offset_x = (quad % 2) * centerline_rowcol_index;
       size_t offset_y = (quad / 2) * centerline_rowcol_index;
 
-      size_t y = per_land_index / loaded_form::vertices_per_side - offset_y;
-      size_t x = per_land_index % loaded_form::vertices_per_side - offset_x;
+      size_t y = per_land_index / dovah::landscapes::vertices_per_cell_side - offset_y;
+      size_t x = per_land_index % dovah::landscapes::vertices_per_cell_side - offset_x;
 
-      return (quad * loaded_form::total_quad_vertex_count) + (y * loaded_form::vertices_per_quad_side) + x;
+      return (quad * dovah::landscapes::vertices_per_quad) + (y * dovah::landscapes::vertices_per_quad_side) + x;
    }
 
    //
@@ -80,8 +81,8 @@ namespace vulkanDK::helpers::land {
    static_assert(
       []() -> bool {
          for (size_t q = 0; q < 4; ++q) {
-            for (size_t y = 0; y < loaded_form::vertices_per_quad_side; ++y) {
-               for (size_t x = 0; x < loaded_form::vertices_per_quad_side; ++x) {
+            for (size_t y = 0; y < dovah::landscapes::vertices_per_quad_side; ++y) {
+               for (size_t x = 0; x < dovah::landscapes::vertices_per_quad_side; ++x) {
                   size_t land_vi   = 0;
                   size_t vulkan_vi = 0;
                   map_vertex_coords_to_vertex_indices(q, x, y, land_vi, vulkan_vi);

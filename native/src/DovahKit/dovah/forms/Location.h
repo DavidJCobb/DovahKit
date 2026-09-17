@@ -30,6 +30,8 @@ namespace dovah::loaded_forms {
 
          #pragma region Content definitions
             struct enable_parent { // *CEP
+               constexpr bool operator==(const typename Location::enable_parent&) const noexcept = default;
+
                struct flag {
                   enum type : uint8_t {
                      opposite = 1 << 0,

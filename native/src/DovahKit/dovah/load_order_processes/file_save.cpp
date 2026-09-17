@@ -358,12 +358,23 @@ namespace dovah::load_order_processes {
    }
 
    std::vector<form_stub*> file_save::_find_stubs_to_discard_post_save(writer_type& writer) {
+      //
+      // Find forms that were marked as belonging to the active file, but which were not 
+      // saved to the destination file for any reason (e.g. forms of SSE-only form types 
+      // in an active file that was just converted to LE).
+      //
       std::vector<form_stub*> stubs_to_remove;
       for (auto& pair : active_load_order.active_file_forms.forms) {
          bare_form_id_t id = pair.first;
          if (!writer.fixup_data.form_stubs.contains(id))
             stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
       }
+      //
+      // If a none-stub exists solely within the active file (i.e. the none-stub is the 
+      // product of dangling uses inbound from active-file forms only), then the none-stub 
+      // may now be unreferenced now that the active file has been saved. We should detect 
+      // such none-stubs and delete them.
+      //
       size_t only_none_stubs_past_this_point = stubs_to_remove.size();
       for (auto& pair : active_load_order.forms_by_type[form_type::none].forms) {
          auto* stub = pair.second;

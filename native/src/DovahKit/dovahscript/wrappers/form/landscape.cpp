@@ -1,15 +1,16 @@
-#include "landscape.h"
-#include "../../../helpers/lua/error.h"
-#include "../../../helpers/lua/istablelike.h"
+#include "./landscape.h"
+#include "helpers/lua/error.h"
+#include "helpers/lua/istablelike.h"
 #include "dovahscript/api_helpers/fail_if_form_cannot_be_edited.h"
-#include "../../core/subsystems/permissions.h"
-#include "../../core/subsystems/userdata.h"
-#include "../../push_native_object.h"
-#include "../../wrapper.h"
+#include "dovahscript/core/subsystems/permissions.h"
+#include "dovahscript/core/subsystems/userdata.h"
+#include "dovahscript/push_native_object.h"
+#include "dovahscript/wrapper.h"
 
-#include "../../../dovah/forms/Landscape.h"
-#include "../../../dovah/forms/Worldspace.h"
-#include "landscape/quad_list.h"
+#include "dovah/data/landscapes/vertices_per_cell_side.h"
+#include "dovah/forms/Landscape.h"
+#include "dovah/forms/Worldspace.h"
+#include "./landscape/quad_list.h"
 
 //
 // MISSING APIS:
@@ -38,11 +39,11 @@ namespace {
          int x = lua_tointegerx(L, 2, &isnum);
          luaL_argcheck(L, isnum, 2, "integer (x-coordinate) expected");
          luaL_argcheck(L, x > 0, 2, "x-coordinate cannot be less than 1");
-         luaL_argcheck(L, x <= wrapped_type::vertices_per_side, 2, "x-coordinate cannot exceed 33");
+         luaL_argcheck(L, x <= dovah::landscapes::vertices_per_cell_side, 2, "x-coordinate cannot exceed 33");
          int y = lua_tointegerx(L, 3, &isnum);
          luaL_argcheck(L, isnum, 3, "integer (y-coordinate) expected");
          luaL_argcheck(L, y > 0, 3, "y-coordinate cannot be less than 1");
-         luaL_argcheck(L, y <= wrapped_type::vertices_per_side, 2, "y-coordinate cannot exceed 33");
+         luaL_argcheck(L, y <= dovah::landscapes::vertices_per_cell_side, 2, "y-coordinate cannot exceed 33");
          if (!form)
             return 0;
          --x;
@@ -75,11 +76,11 @@ namespace {
          int x = lua_tointegerx(L, 2, &isnum);
          luaL_argcheck(L, isnum, 2, "integer (x-coordinate) expected");
          luaL_argcheck(L, x > 0, 2, "x-coordinate cannot be less than 1");
-         luaL_argcheck(L, x <= wrapped_type::vertices_per_side, 2, "x-coordinate cannot exceed 33");
+         luaL_argcheck(L, x <= dovah::landscapes::vertices_per_cell_side, 2, "x-coordinate cannot exceed 33");
          int y = lua_tointegerx(L, 3, &isnum);
          luaL_argcheck(L, isnum, 3, "integer (y-coordinate) expected");
          luaL_argcheck(L, y > 0, 3, "y-coordinate cannot be less than 1");
-         luaL_argcheck(L, y <= wrapped_type::vertices_per_side, 2, "y-coordinate cannot exceed 33");
+         luaL_argcheck(L, y <= dovah::landscapes::vertices_per_cell_side, 2, "y-coordinate cannot exceed 33");
          if (!form)
             return 0;
          --x;
@@ -115,11 +116,11 @@ namespace {
          int x = lua_tointegerx(L, 2, &isnum);
          luaL_argcheck(L, isnum, 2, "integer (x-coordinate) expected");
          luaL_argcheck(L, x > 0, 2, "x-coordinate cannot be less than 1");
-         luaL_argcheck(L, x <= wrapped_type::vertices_per_side, 2, "x-coordinate cannot exceed 33");
+         luaL_argcheck(L, x <= dovah::landscapes::vertices_per_cell_side, 2, "x-coordinate cannot exceed 33");
          int y = lua_tointegerx(L, 3, &isnum);
          luaL_argcheck(L, isnum, 3, "integer (y-coordinate) expected");
          luaL_argcheck(L, y > 0, 3, "y-coordinate cannot be less than 1");
-         luaL_argcheck(L, y <= wrapped_type::vertices_per_side, 2, "y-coordinate cannot exceed 33");
+         luaL_argcheck(L, y <= dovah::landscapes::vertices_per_cell_side, 2, "y-coordinate cannot exceed 33");
          //
          int r, g, b;
          if (lua_isnoneornil(L, 4)) {

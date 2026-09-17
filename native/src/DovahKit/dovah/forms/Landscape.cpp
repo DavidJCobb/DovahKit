@@ -1,12 +1,14 @@
 #include "Landscape.h"
-//
-#include "helpers/simd/min_and_max.h"
-#include <intrin.h>
-#include "helpers/cpuinfo.h"
-//
 #include "_common_cpp.h"
+#include "helpers/simd/min_and_max.h"
+#include "helpers/cpuinfo.h"
 
-#include "Cell.h"
+#include "dovah/data/landscapes/max_usable_layers_per_quad.h"
+#include "dovah/data/landscapes/vertex_distance.h"
+#include "dovah/data/landscapes/vertices_per_quad.h"
+#include "dovah/data/landscapes/vertices_per_quad_side.h"
+#include "dovah/utils/landscapes/cell_vertex_index_to_quad_vertex_index.h"
+#include "dovah/utils/landscapes/quad_vertex_coords_to_cell_vertex_coords.h"
 
 #include "../notices/form_load_warnings/by_form_type/landscape/excess_layers_per_quad.h"
 #include "../notices/form_load_warnings/by_form_type/landscape/invalid_quad_for_land_texture.h"
@@ -21,7 +23,8 @@ namespace {
       using namespace dovah::notices::form_save_errors::by_type::landscape;
    }
 
-   static constexpr float vertex_distance = dovah::loaded_forms::Cell::side_length / (dovah::loaded_forms::Landscape::vertices_per_side - 1);
+   using namespace dovah::landscapes;
+   using namespace dovah::utils::landscapes;
 }
 
 namespace dovah::loaded_forms {
@@ -71,9 +74,9 @@ namespace dovah::loaded_forms {
       {
          uint8_t vx_b = vx + 1;
          uint8_t vy_b = vy + 1;
-         if (vx_b >= vertices_per_side)
+         if (vx_b >= vertices_per_cell_side)
             vx_b = vx;
-         if (vy_b >= vertices_per_side)
+         if (vy_b >= vertices_per_cell_side)
             vy_b = vy;
          b = this->heightmap.heights.item(vx_b, vy_b);
       }
@@ -83,7 +86,7 @@ namespace dovah::loaded_forms {
    void Landscape::recalc_normals() {
       this->recalc_normals_to(this->heightmap.normals.list());
    }
-   void Landscape::recalc_normals_to(std::array<cobb::vector3<float>, total_vertex_count>& out) const {
+   void Landscape::recalc_normals_to(std::array<cobb::vector3<float>, vertices_per_cell>& out) const {
       using vector3 = cobb::vector3<float>;
       //
       auto _height_at = [this](int x, int y) -> vector3 {
@@ -92,18 +95,18 @@ namespace dovah::loaded_forms {
 
       for (auto& item : out)
          item = { 0, 0, 0 };
-      for (int y = 0; y < vertices_per_side - 1; ++y) {
-         for (int x = 0; x < vertices_per_side - 1; ++x) {
+      for (int y = 0; y < vertices_per_cell_side - 1; ++y) {
+         for (int x = 0; x < vertices_per_cell_side - 1; ++x) {
             vector3 a = _height_at(x,     y);
             vector3 b = _height_at(x + 1, y);
             vector3 c = _height_at(x,     y + 1);
             vector3 d = _height_at(x + 1, y + 1);
             //
             auto normal = (b - a).cross(c - a);
-            out[(y + 0) * vertices_per_side + (x + 0)] += normal;
-            out[(y + 1) * vertices_per_side + (x + 0)] += normal;
-            out[(y + 0) * vertices_per_side + (x + 1)] += normal;
-            out[(y + 1) * vertices_per_side + (x + 1)] += normal;
+            out[(y + 0) * vertices_per_cell_side + (x + 0)] += normal;
+            out[(y + 1) * vertices_per_cell_side + (x + 0)] += normal;
+            out[(y + 0) * vertices_per_cell_side + (x + 1)] += normal;
+            out[(y + 1) * vertices_per_cell_side + (x + 1)] += normal;
          }
       }
       for (auto& item : out)
@@ -131,7 +134,7 @@ namespace dovah::loaded_forms {
             case 'VCLR': // vertex colors
                // The game skips this if the "has color" flag is not set, but that behavior wouldn't be useful for 
                // editor programs, so we won't replicate it.
-               for (int i = 0; i < total_vertex_count; ++i) {
+               for (int i = 0; i < vertices_per_cell; ++i) {
                   if (!subrecord.is_in_bounds(3))
                      break;
                   uint8_t r;
@@ -147,7 +150,7 @@ namespace dovah::loaded_forms {
             case 'VHGT': // vertex heights
                // The game skips this if the "has heightmap" flag is not set, but that behavior wouldn't be useful 
                // for editor programs, so we won't replicate it.
-               if (!subrecord.is_in_bounds(sizeof(float) + total_vertex_count))
+               if (!subrecord.is_in_bounds(sizeof(float) + vertices_per_cell))
                   break;
                {
                   //
@@ -175,12 +178,12 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(base_offset);
                   base_offset *= 8.0F;
                   //
-                  for (int i = 0; i < total_vertex_count; ++i) {
+                  for (int i = 0; i < vertices_per_cell; ++i) {
                      int8_t value;
                      subrecord.unchecked_read(value);
                      //
-                     int x = i % vertices_per_side; // col
-                     int y = i / vertices_per_side; // row
+                     int x = i % vertices_per_cell_side; // col
+                     int y = i / vertices_per_cell_side; // row
                      if (x == 0) {
                         //
                         // The first value in a row serves as a basis for the entire row.
@@ -198,7 +201,7 @@ namespace dovah::loaded_forms {
             case 'VNML': // vertex normals
                // The game skips this if the "has heightmap" flag is not set, but that behavior wouldn't be useful 
                // for editor programs, so we won't replicate it.
-               for (int i = 0; i < total_vertex_count; ++i) {
+               for (int i = 0; i < vertices_per_cell; ++i) {
                   if (!subrecord.is_in_bounds(3))
                      break;
                   int8_t x;
@@ -314,11 +317,11 @@ namespace dovah::loaded_forms {
                      subrecord.skip_bytes(2);
                      subrecord.unchecked_read(opacity);
                      //
-                     if (vertex > vertices_per_quad_side * vertices_per_quad_side)
+                     if (vertex > vertices_per_quad)
                         continue;
-                     uint8_t x = vertex % vertices_per_quad_side;
-                     uint8_t y = vertex / vertices_per_quad_side;
-                     quad_coords_to_cell_coords(last_alpha_quad, x, y);
+                     uint8_t qx = vertex % vertices_per_quad_side;
+                     uint8_t qy = vertex / vertices_per_quad_side;
+                     auto [cx, cy] = utils::landscapes::quad_vertex_coords_to_cell_vertex_coords((quad)last_alpha_quad, { qx, qy });
                      //
                      if (opacity < 0.0F)
                         opacity = 0.0F;
@@ -335,7 +338,7 @@ namespace dovah::loaded_forms {
                      // to load out-of-bounds layers since they may be relevant to editing. We've validated the 
                      // vertex index above as well.
                      //
-                     layer.opacities.item(x, y) = opacity;
+                     layer.opacities.item(cx, cy) = opacity;
                   }
                   //
                   last_alpha_quad  = -1;
@@ -471,9 +474,9 @@ namespace dovah::loaded_forms {
          constexpr const size_t subrecord_header_size = sizeof(uint32_t) + sizeof(uint16_t);
          record.reserve_more(
             subrecord_header_size + sizeof(land_flags) + // DATA
-            subrecord_header_size + (total_vertex_count * 3) + // VNML
-            subrecord_header_size + sizeof(float) + total_vertex_count * sizeof(int8_t) + 3 + // VHGT
-            subrecord_header_size + (total_vertex_count * 3) + // VCLR
+            subrecord_header_size + (vertices_per_cell * 3) + // VNML
+            subrecord_header_size + sizeof(float) + vertices_per_cell * sizeof(int8_t) + 3 + // VHGT
+            subrecord_header_size + (vertices_per_cell * 3) + // VCLR
             4 * (subrecord_header_size + 8) + // BTXT[4] (worst-case)
             0
          );
@@ -484,8 +487,8 @@ namespace dovah::loaded_forms {
       DATA.close();
       
       auto& VNML = record.open_next_subrecord('VNML');
-      VNML.reserve_more(total_vertex_count * 3);
-      for (int i = 0; i < total_vertex_count; ++i) {
+      VNML.reserve_more(vertices_per_cell * 3);
+      for (int i = 0; i < vertices_per_cell; ++i) {
          auto& vec = this->heightmap.normals.by_flat_index(i);
          //
          int8_t x = 0;
@@ -529,13 +532,13 @@ namespace dovah::loaded_forms {
          float span_offset = 0.0F;
          VHGT.reserve_more(sizeof(float) + (list.size() * sizeof(int8_t)) + 3);
          VHGT.write(base_offset);
-         for (size_t i = 0; i < total_vertex_count; ++i) {
-            int x = i % vertices_per_side; // col
-            int y = i / vertices_per_side; // row
+         for (size_t i = 0; i < vertices_per_cell; ++i) {
+            int x = i % vertices_per_cell_side; // col
+            int y = i / vertices_per_cell_side; // row
 
             size_t j = i;
             if (x == 0 && y != 0)
-               j = i - vertices_per_side; // list[j] == height[0][y - 1]
+               j = i - vertices_per_cell_side; // list[j] == height[0][y - 1]
             else if (x == 0)
                j = i;
             else
@@ -573,8 +576,8 @@ namespace dovah::loaded_forms {
          }
          if (!all_white) {
             auto& VCLR = record.open_next_subrecord('VCLR');
-            VCLR.reserve_more(total_vertex_count * 3);
-            for (int i = 0; i < total_vertex_count; ++i) {
+            VCLR.reserve_more(vertices_per_cell * 3);
+            for (int i = 0; i < vertices_per_cell; ++i) {
                auto& color = this->heightmap.colors.by_flat_index(i);
                VCLR.write(color.r);
                VCLR.write(color.g);
@@ -627,8 +630,10 @@ namespace dovah::loaded_forms {
                for (uint16_t i = 0; i < opacities.size(); ++i) {
                   const auto f = opacities[i];
                   if (f > 0.0F) {
-                     uint16_t qi = cell_relative_vertex_index_to_quad_relative(quad, i);
-                     VTXT.write(qi);
+                     auto qi_opt = cell_vertex_index_to_quad_vertex_index((enum quad)quad, i);
+                     if (!qi_opt.has_value())
+                        continue;
+                     VTXT.write(qi_opt.value());
                      VTXT.skip_bytes(2);
                      VTXT.write(f);
                   }

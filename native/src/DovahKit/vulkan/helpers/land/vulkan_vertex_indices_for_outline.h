@@ -1,14 +1,13 @@
 #pragma once
 #include <array>
 #include <cstdint>
-#include "dovah/forms/Landscape.h"
+#include "dovah/data/landscapes/vertices_per_cell_side.h"
 #include "./vertex_index_conversions.h"
 
 namespace vulkanDK::helpers::land {
    static constexpr auto line_vertex_indices = [](){
-      using loaded_form = dovah::loaded_forms::Landscape;
-      constexpr const size_t w = loaded_form::vertices_per_side;
-      constexpr const size_t h = loaded_form::vertices_per_side;
+      constexpr const size_t w = dovah::landscapes::vertices_per_cell_side;
+      constexpr const size_t h = dovah::landscapes::vertices_per_cell_side;
       //
       const auto _quad_of = [](size_t x, size_t y) constexpr -> size_t {
          size_t q = 0;
@@ -18,7 +17,7 @@ namespace vulkanDK::helpers::land {
       };
       const auto _vulkan_index_of = [_quad_of](size_t land_x, size_t land_y) constexpr -> size_t {
          auto q = _quad_of(land_x, land_y);
-         return vulkan_vertex_index_for_per_land_vertex_index(q, land_x + (land_y * loaded_form::vertices_per_side));
+         return vulkan_vertex_index_for_per_land_vertex_index(q, land_x + (land_y * dovah::landscapes::vertices_per_cell_side));
       };
 
       std::array<uint16_t, (w + (h - 2)) * 2 + 1> indices = {};

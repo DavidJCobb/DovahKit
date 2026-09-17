@@ -40,7 +40,7 @@ namespace vulkanDK {
    }
 
    void rendered_landscape::import_vertex_data_from_form(const loaded_form& land) {
-      constexpr size_t centerline_index_src = (loaded_form::vertices_per_side - 1) / 2;
+      constexpr size_t centerline_index_src = (dovah::landscapes::vertices_per_cell_side - 1) / 2;
       //
       auto& vl = this->vertices;
       for (size_t q = 0; q < 4; ++q) {
@@ -49,7 +49,7 @@ namespace vulkanDK {
          //
          for (size_t y = 0; y < vertices_per_quad_side; ++y) {
             for (size_t x = 0; x < vertices_per_quad_side; ++x) {
-               size_t src_i = ((y + offset_y) * loaded_form::vertices_per_side) + (x + offset_x);
+               size_t src_i = ((y + offset_y) * dovah::landscapes::vertices_per_cell_side) + (x + offset_x);
                size_t dst_i = (q * vertices_per_quad) + (y * vertices_per_quad_side) + x;
                //
                const auto& color = land.heightmap.colors.by_flat_index(src_i);
@@ -76,7 +76,7 @@ namespace vulkanDK {
             //
             for (size_t y = 0; y < vertices_per_quad_side; ++y) {
                for (size_t x = 0; x < vertices_per_quad_side; ++x) {
-                  size_t src_i = ((y + offset_y) * loaded_form::vertices_per_side) + (x + offset_x);
+                  size_t src_i = ((y + offset_y) * dovah::landscapes::vertices_per_cell_side) + (x + offset_x);
                   size_t dst_i = (q * vertices_per_quad) + (y * vertices_per_quad_side) + x;
                   //
                   vl[dst_i].normal = normals[src_i].to_struct<glm::vec3>();
@@ -97,8 +97,8 @@ namespace vulkanDK {
                continue;
             //
             auto& alphas = blend.opacities;
-            for (size_t y = 0; y < loaded_form::vertices_per_quad_side; ++y) {
-               for (size_t x = 0; x < loaded_form::vertices_per_quad_side; ++x) {
+            for (size_t y = 0; y < dovah::landscapes::vertices_per_quad_side; ++y) {
+               for (size_t x = 0; x < dovah::landscapes::vertices_per_quad_side; ++x) {
                   auto f = alphas.item(x + offset_x, y + offset_y);
                   if (f <= 0)
                      continue;
