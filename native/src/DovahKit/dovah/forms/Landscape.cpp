@@ -627,13 +627,13 @@ namespace dovah::loaded_forms {
             if (non_zero_opacity_count != 0) {
                auto& VTXT = record.open_next_subrecord('VTXT');
                VTXT.reserve_more(non_zero_opacity_count * 8);
-               for (uint16_t i = 0; i < opacities.size(); ++i) {
+               for (size_t i = 0; i < opacities.size(); ++i) {
                   const auto f = opacities[i];
                   if (f > 0.0F) {
                      auto qi_opt = cell_vertex_index_to_quad_vertex_index((enum quad)quad, i);
                      if (!qi_opt.has_value())
                         continue;
-                     VTXT.write(qi_opt.value());
+                     VTXT.write((uint16_t)qi_opt.value());
                      VTXT.skip_bytes(2);
                      VTXT.write(f);
                   }
