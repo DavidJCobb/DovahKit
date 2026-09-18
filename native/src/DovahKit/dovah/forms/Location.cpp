@@ -1239,13 +1239,27 @@ namespace dovah::loaded_forms {
          #pragma region *CID
             {
                const auto& dataset = this->contents.initially_disabled;
-               const auto& list    = is_base_record ? dataset.base : dataset.full;
-               if (!list.empty()) {
-                  auto& subrecord = record.open_next_subrecord(is_base_record ? 'LCID' : 'ACID');
-                  for (const auto& item : list) {
-                     subrecord.write(item);
+               if (is_base_record) {
+                  if (!dataset.base.empty()) {
+                     auto& subrecord = record.open_next_subrecord('LCID');
+                     for (const auto& item : dataset.base)
+                        subrecord.write(item);
+                     subrecord.close();
                   }
-                  subrecord.close();
+               } else {
+                  bool opened = false;
+                  for (auto& full_item : dataset.full) {
+                     auto it = std::find(dataset.base.begin(), dataset.base.end(), full_item);
+                     if (it == dataset.base.end())
+                        continue;
+                     if (!opened) {
+                        record.open_next_subrecord('ACID');
+                        opened = true;
+                     }
+                     record.get_current_subrecord().write(full_item);
+                  }
+                  if (opened)
+                     record.get_current_subrecord().close();
                }
             }
          #pragma endregion
