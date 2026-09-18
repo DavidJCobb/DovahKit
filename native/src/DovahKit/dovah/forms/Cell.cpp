@@ -26,7 +26,13 @@ namespace dovah::loaded_forms {
             continue;
          switch (subrecord.signature()) {
             case 'DATA':
-               subrecord.read(this->cell_flags);
+               if (subrecord.size() == 1) {
+                  uint8_t legacy = 0;
+                  subrecord.read(legacy);
+                  this->cell_flags = legacy;
+               } else {
+                  subrecord.read(this->cell_flags);
+               }
                loaded_cell_flags = true;
                break;
             case 'FULL':
