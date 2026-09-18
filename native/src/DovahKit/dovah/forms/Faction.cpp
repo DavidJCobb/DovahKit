@@ -238,18 +238,12 @@ namespace dovah::loaded_forms {
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->faction_flags);
       DATA.close();
-      if (this->jail_outfit)
-         record.write_formID_subrecord('JAIL', this->prison_marker);
-      if (this->follower_wait_marker)
-         record.write_formID_subrecord('WAIT', this->follower_wait_marker);
-      if (this->evidence_chest)
-         record.write_formID_subrecord('STOL', this->evidence_chest);
-      if (this->player_belongings_chest)
-         record.write_formID_subrecord('PLCN', this->player_belongings_chest);
-      if (this->crime_group)
-         record.write_formID_subrecord('CRGR', this->crime_group);
-      if (this->jail_outfit)
-         record.write_formID_subrecord('JOUT', this->jail_outfit);
+      record.write_formID_subrecord('JAIL', this->prison_marker,           true);
+      record.write_formID_subrecord('WAIT', this->follower_wait_marker,    true);
+      record.write_formID_subrecord('STOL', this->evidence_chest,          true);
+      record.write_formID_subrecord('PLCN', this->player_belongings_chest, true);
+      record.write_formID_subrecord('CRGR', this->crime_group,             true);
+      record.write_formID_subrecord('JOUT', this->jail_outfit,             true);
       auto& CRVA = record.open_next_subrecord('CRVA');
       CRVA.write(this->crime_values.arrest);
       CRVA.write(this->crime_values.attack_on_sight);

@@ -32,6 +32,22 @@ namespace dovah::loaded_forms::structs {
       if (this->radius != 0)
          return false;
 
+      switch (this->get_type()) {
+         case location_type::object_type:
+            return std::get<object_type>(this->data) == object_type::none;
+         case location_type::reference_alias:
+            return std::get<(size_t)location_type::reference_alias>(this->data) == -1;
+         case location_type::location_alias:
+            return std::get<(size_t)location_type::location_alias>(this->data) == -1;
+         case location_type::interrupt_override_target:
+            return false;
+         case location_type::package_data_target:
+            return std::get<(size_t)location_type::package_data_target>(this->data) == -1;
+         case location_type::self:
+            return false;
+      }
+      
+
       bool handled = false;
       bool result  = false;
       std::visit(
@@ -50,20 +66,6 @@ namespace dovah::loaded_forms::structs {
       if (handled)
          return result;
 
-      switch (this->get_type()) {
-         case location_type::object_type:
-            return std::get<object_type>(this->data) == object_type::none;
-         case location_type::reference_alias:
-            return std::get<(size_t)location_type::reference_alias>(this->data) == -1;
-         case location_type::location_alias:
-            return std::get<(size_t)location_type::location_alias>(this->data) == -1;
-         case location_type::interrupt_override_target:
-            return false;
-         case location_type::package_data_target:
-            return std::get<(size_t)location_type::package_data_target>(this->data) == -1;
-         case location_type::self:
-            return false;
-      }
       return false;
    }
 
