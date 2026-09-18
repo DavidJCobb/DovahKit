@@ -10958,6 +10958,9 @@
     <ClInclude Include="dovah\utils\landscapes\containing_quad_of_cell_vertex_coords.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\location_ignored_if_zone_has_one.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

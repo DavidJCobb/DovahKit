@@ -36,6 +36,7 @@
    #include "./by_form_type/body_part_data/two_parts_have_the_same_main_node.h"
    #include "./by_form_type/cell/cell_type_not_yet_known.h"
    #include "./by_form_type/cell/data_for_wrong_cell_type.h"
+   #include "./by_form_type/cell/location_ignored_if_zone_has_one.h"
    #include "./by_form_type/collision_layer/invalid_uid.h"
    #include "./by_form_type/dialogue_branch/invalid_topic_category.h"
    #include "./by_form_type/dialogue_branch/mishandled_owning_quest_id.h"

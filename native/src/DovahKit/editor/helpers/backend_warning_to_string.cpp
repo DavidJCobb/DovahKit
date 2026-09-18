@@ -977,6 +977,18 @@ namespace editor_helpers {
                      disambig
                   ).arg(form).arg(subrecord);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::cell::location_ignored_if_zone_has_one*>(&warning)) {
+                  QString cell      = form_identifiers_to_string(&casted->subject);
+                  QString cell_loc  = form_identifiers_to_string(casted->subject_location);
+                  QString zone      = form_identifiers_to_string(casted->zone);
+                  QString zone_loc  = form_identifiers_to_string(casted->zone_location);
+                  //
+                  return QObject::tr(
+                     "%1 is tagged with Location %2. However, the cell is also tagged with Encounter Zone %3, and the "
+                     "zone is tagged with Location %4. The zone's location will be used; the cell's location will not.",
+                     disambig
+                  ).arg(cell).arg(cell_loc).arg(zone).arg(zone_loc);
+               }
             #pragma endregion
             #pragma region collision layer
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::collision_layer::invalid_uid*>(&warning)) {

@@ -2,9 +2,13 @@
 #include "_common_cpp.h"
 #include "../form_stub_addenda.h"
 #include "components/extra_data/use_info_state.h"
+#include "components/extra_data/types/e/encounter_zone.h"
+#include "components/extra_data/types/l/location.h"
+#include "../form_stubs/helpers/get_assigned_location.h"
 
 #include "../notices/form_load_warnings/by_form_type/cell/cell_type_not_yet_known.h"
 #include "../notices/form_load_warnings/by_form_type/cell/data_for_wrong_cell_type.h"
+#include "../notices/form_load_warnings/by_form_type/cell/location_ignored_if_zone_has_one.h"
 
 namespace dovah::loaded_forms {
    void Cell::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -128,6 +132,28 @@ namespace dovah::loaded_forms {
       }
 
       this->extra_data.post_load_validation(intfc);
+
+      // If a Cell is tagged with both a location and an encounter zone, but the zone 
+      // itself is also tagged with a location, then the zone location is used and the 
+      // cell location is ignored.
+      if (auto* extra_zone = this->extra_data.get<components::extra_data_types::encounter_zone>()) {
+         auto* zone = extra_zone->form.get_form_stub();
+         if (zone && zone->form_type == dovah::form_type::encounter_zone) {
+            auto* cell_loc = form_stub_helpers::get_assigned_location(this->stub);
+            if (cell_loc && cell_loc->form_type == dovah::form_type::location) {
+               auto* zone_loc = form_stub_helpers::get_assigned_location(*zone);
+               if (zone_loc && zone_loc->form_type == dovah::form_type::location) {
+                  notices::form_load_warnings::by_type::cell::location_ignored_if_zone_has_one notice(
+                     this->stub,
+                     *cell_loc,
+                     *zone,
+                     *zone_loc
+                  );
+                  intfc.log_load_warning(notice);
+               }
+            }
+         }
+      }
    }
    /*static*/ void Cell::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (uib.is_partial_record) // TESObjectCELL::LoadPartial is a no-op.
