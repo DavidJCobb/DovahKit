@@ -470,121 +470,159 @@ namespace dovah::loaded_forms {
       copy->mpcd = this->mpcd;
    }
    void Landscape::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      bool has_heightmap = false;
+      bool has_colors    = false;
+      #pragma region Update presence bools and flags as needed
+         if (this->land_flags & land_flag::has_heightmap) {
+            has_heightmap = true;
+         } else {
+            for (const auto v : this->heightmap.heights.list()) {
+               if (v != 0) {
+                  has_heightmap = true;
+                  break;
+               }
+            }
+            if (!has_heightmap) {
+               for (const auto v : this->heightmap.normals.list()) {
+                  if (v.x || v.y || v.z) {
+                     has_heightmap = true;
+                     break;
+                  }
+               }
+            }
+            //
+            if (has_heightmap) {
+               this->land_flags |= land_flag::has_heightmap;
+            }
+         }
+
+         if (this->land_flags & land_flag::has_colors) {
+            has_colors = true;
+         } else {
+            for (const auto& color : this->heightmap.colors.list()) {
+               if (color.r != 255 || color.g != 255 || color.b != 255) {
+                  has_colors = true; // if any color isn't white, force the flag to true.
+                  break;
+               }
+            }
+            if (has_colors)
+               this->land_flags |= land_flag::has_colors;
+         }
+      #pragma endregion
+
       {
          constexpr const size_t subrecord_header_size = sizeof(uint32_t) + sizeof(uint16_t);
-         record.reserve_more(
-            subrecord_header_size + sizeof(land_flags) + // DATA
-            subrecord_header_size + (vertices_per_cell * 3) + // VNML
-            subrecord_header_size + sizeof(float) + vertices_per_cell * sizeof(int8_t) + 3 + // VHGT
-            subrecord_header_size + (vertices_per_cell * 3) + // VCLR
-            4 * (subrecord_header_size + 8) + // BTXT[4] (worst-case)
-            0
-         );
+         size_t estimated_size = subrecord_header_size + sizeof(land_flags); // DATA
+         if (has_heightmap) {
+            estimated_size += (
+               subrecord_header_size + (vertices_per_cell * 3) + // VNML
+               subrecord_header_size + sizeof(float) + vertices_per_cell * sizeof(int8_t) + 3 // VHGT
+            );
+         }
+         if (has_colors) {
+            estimated_size += subrecord_header_size + (vertices_per_cell * 3); // VCLR
+         }
+         estimated_size += 4 * (subrecord_header_size + 8); // BTXT[4] (worst-case)
+
+         record.reserve_more(estimated_size);
       }
 
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->land_flags);
       DATA.close();
       
-      auto& VNML = record.open_next_subrecord('VNML');
-      VNML.reserve_more(vertices_per_cell * 3);
-      for (int i = 0; i < vertices_per_cell; ++i) {
-         auto& vec = this->heightmap.normals.by_flat_index(i);
-         //
-         int8_t x = 0;
-         int8_t y = 0;
-         int8_t z = 0;
-         if (vec.length() >= 0.000001F) {
-            x = vec.x * 127.0F;
-            y = vec.y * 127.0F;
-            z = vec.z * 127.0F;
-         }
-         VNML.write(x);
-         VNML.write(y);
-         VNML.write(z);
-      }
-      VNML.close();
-      
-      auto& VHGT = record.open_next_subrecord('VHGT');
-      {
-         auto& list = this->heightmap.heights.list();
-         //
-         // Landscapes are encoded as follows:
-         // 
-         //  - There is a base height consisting of a float divided by eight, followed by a grid of 33x33 
-         //    vertex deltas encoded as signed bytes.
-         // 
-         //  - The first vertex in each row is encoded as the delta from the first vertex in the previous 
-         //    row, divided by eight. The first vertex in the first row has a delta of zero.
-         // 
-         //  - After that, Each vertex in a row is encoded as the delta from the previous vertex, divided 
-         //    by eight.
-         // 
-         // Accordingly, the following relationships exist, in order of decreasing priority:
-         // 
-         //  - bytes[0][0] == 0
-         // 
-         //  - bytes[0][y] == (height[0][y] - height[0][y - 1]) / 8
-         // 
-         //  - bytes[x][y] == (height[x][y] - height[x - 1][y]) / 8
-         //
-         float base_offset = floor(list[0] / 8.0F);
-         float span_offset = 0.0F;
-         VHGT.reserve_more(sizeof(float) + (list.size() * sizeof(int8_t)) + 3);
-         VHGT.write(base_offset);
-         for (size_t i = 0; i < vertices_per_cell; ++i) {
-            int x = i % vertices_per_cell_side; // col
-            int y = i / vertices_per_cell_side; // row
-
-            size_t j = i;
-            if (x == 0 && y != 0)
-               j = i - vertices_per_cell_side; // list[j] == height[0][y - 1]
-            else if (x == 0)
-               j = i;
-            else
-               j = i - 1;
-
-            float  raw = 0.0F;
-            if (i != j) {
-               raw = round((list[i] - list[j]) / 8.0F);
+      if (has_heightmap) {
+         auto& VNML = record.open_next_subrecord('VNML');
+         VNML.reserve_more(vertices_per_cell * 3);
+         for (int i = 0; i < vertices_per_cell; ++i) {
+            auto& vec = this->heightmap.normals.by_flat_index(i);
+            //
+            int8_t x = 0;
+            int8_t y = 0;
+            int8_t z = 0;
+            if (vec.length() >= 0.000001F) {
+               x = vec.x * 127.0F;
+               y = vec.y * 127.0F;
+               z = vec.z * 127.0F;
             }
+            VNML.write(x);
+            VNML.write(y);
+            VNML.write(z);
+         }
+         VNML.close();
+      
+         auto& VHGT = record.open_next_subrecord('VHGT');
+         {
+            auto& list = this->heightmap.heights.list();
+            //
+            // Landscapes are encoded as follows:
+            // 
+            //  - There is a base height consisting of a float divided by eight, followed by a grid of 33x33 
+            //    vertex deltas encoded as signed bytes.
+            // 
+            //  - The first vertex in each row is encoded as the delta from the first vertex in the previous 
+            //    row, divided by eight. The first vertex in the first row has a delta of zero.
+            // 
+            //  - After that, Each vertex in a row is encoded as the delta from the previous vertex, divided 
+            //    by eight.
+            // 
+            // Accordingly, the following relationships exist, in order of decreasing priority:
+            // 
+            //  - bytes[0][0] == 0
+            // 
+            //  - bytes[0][y] == (height[0][y] - height[0][y - 1]) / 8
+            // 
+            //  - bytes[x][y] == (height[x][y] - height[x - 1][y]) / 8
+            //
+            float base_offset = floor(list[0] / 8.0F);
+            float span_offset = 0.0F;
+            VHGT.reserve_more(sizeof(float) + (list.size() * sizeof(int8_t)) + 3);
+            VHGT.write(base_offset);
+            for (size_t i = 0; i < vertices_per_cell; ++i) {
+               int x = i % vertices_per_cell_side; // col
+               int y = i / vertices_per_cell_side; // row
+
+               size_t j = i;
+               if (x == 0 && y != 0)
+                  j = i - vertices_per_cell_side; // list[j] == height[0][y - 1]
+               else if (x == 0)
+                  j = i;
+               else
+                  j = i - 1;
+
+               float  raw = 0.0F;
+               if (i != j) {
+                  raw = round((list[i] - list[j]) / 8.0F);
+               }
             
-            if (raw < std::numeric_limits<int8_t>::min() || raw > std::numeric_limits<int8_t>::max()) {
-               auto notice = specific_save_errors::heightmap_contains_too_steep_a_slope(
-                  this->stub,
-                  i,
-                  j,
-                  list[i],
-                  list[j]
-               );
-               intfc.throw_save_error(notice);
+               if (raw < std::numeric_limits<int8_t>::min() || raw > std::numeric_limits<int8_t>::max()) {
+                  auto notice = specific_save_errors::heightmap_contains_too_steep_a_slope(
+                     this->stub,
+                     i,
+                     j,
+                     list[i],
+                     list[j]
+                  );
+                  intfc.throw_save_error(notice);
+               }
+               int8_t out = raw;
+               VHGT.write(out);
             }
-            int8_t out = raw;
-            VHGT.write(out);
+            VHGT.skip_bytes(3);
          }
-         VHGT.skip_bytes(3);
+         VHGT.close();
       }
-      VHGT.close();
       
-      {
-         bool all_white = true; // white is the default; VCLR is only saved if any color isn't white
-         for (const auto& color : this->heightmap.colors.list()) {
-            if (color.r != 255 || color.g != 255 || color.b != 255) {
-               all_white = false;
-               break;
-            }
+      if (has_colors) {
+         auto& VCLR = record.open_next_subrecord('VCLR');
+         VCLR.reserve_more(vertices_per_cell * 3);
+         for (int i = 0; i < vertices_per_cell; ++i) {
+            auto& color = this->heightmap.colors.by_flat_index(i);
+            VCLR.write(color.r);
+            VCLR.write(color.g);
+            VCLR.write(color.b);
          }
-         if (!all_white) {
-            auto& VCLR = record.open_next_subrecord('VCLR');
-            VCLR.reserve_more(vertices_per_cell * 3);
-            for (int i = 0; i < vertices_per_cell; ++i) {
-               auto& color = this->heightmap.colors.by_flat_index(i);
-               VCLR.write(color.r);
-               VCLR.write(color.g);
-               VCLR.write(color.b);
-            }
-            VCLR.close();
-         }
+         VCLR.close();
       }
       //
       // Official files have blend data sorted by quad; BTXT, ATXT, and VTXT, per quad.
