@@ -284,7 +284,7 @@ namespace dovah::loaded_forms {
          case 'COED':
             this->inventory.load(subrecord, intfc);
             break;
-         case 'SCOR':
+         case 'SPOR':
             if (subrecord.read(this->package_override_lists.spectator)) {
                intfc.warn_if_ref_is_wrong_type(this->package_override_lists.spectator, form_type::formlist, subrecord.signature());
             }
@@ -537,7 +537,7 @@ namespace dovah::loaded_forms {
          case 'COED':
             components::container_data::generate_use_info(subrecord, uib);
             break;
-         case 'SCOR':
+         case 'SPOR':
             subrecord.read(state.package_override_lists.spectator);
             break;
          case 'OCOR':
