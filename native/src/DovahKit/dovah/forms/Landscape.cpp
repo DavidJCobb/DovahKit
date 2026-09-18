@@ -592,16 +592,23 @@ namespace dovah::loaded_forms {
       for (size_t quad = 0; quad < 4; ++quad) {
          auto& bases = this->default_quad_textures;
          {  // BTXT
+            //
+            // BTXT is missing in some vanilla records, e.g. [LAND:0000A524], child of 
+            // [CELL:00009524]DustmansCairnExterior01. I'm not sure why; my blind guess 
+            // would be that all of the alpha-blend layers combined are totally painting 
+            // each vertex such that a base layer would never even show through, but I 
+            // haven't made any effort at all to check that guess.
+            //
             auto& ref = bases[quad];
-            if (ref == nullptr)
-               continue;
-            auto& BTXT = record.open_next_subrecord('BTXT');
-            BTXT.reserve_more(8);
-            BTXT.write(ref);
-            BTXT.write(uint8_t(quad));
-            BTXT.skip_bytes(1);
-            BTXT.write(int16_t(-1));
-            BTXT.close();
+            if (ref) {
+               auto& BTXT = record.open_next_subrecord('BTXT');
+               BTXT.reserve_more(8);
+               BTXT.write(ref);
+               BTXT.write(uint8_t(quad));
+               BTXT.skip_bytes(1);
+               BTXT.write(int16_t(-1));
+               BTXT.close();
+            }
          }
          //
          // Blends:
@@ -616,29 +623,35 @@ namespace dovah::loaded_forms {
                if (v > 0.0F)
                   ++non_zero_opacity_count;
 
-            auto& ATXT = record.open_next_subrecord('ATXT');
-            ATXT.reserve_more(4 + sizeof(uint8_t) + 1 + sizeof(decltype(layer.layer)));
-            ATXT.write(layer.texture);
-            ATXT.write(uint8_t(quad));
-            ATXT.skip_bytes(1);
-            ATXT.write(layer.layer);
-            ATXT.close();
-
-            if (non_zero_opacity_count != 0) {
-               auto& VTXT = record.open_next_subrecord('VTXT');
-               VTXT.reserve_more(non_zero_opacity_count * 8);
-               for (size_t i = 0; i < opacities.size(); ++i) {
-                  const auto f = opacities[i];
-                  if (f > 0.0F) {
-                     auto qi_opt = cell_vertex_index_to_quad_vertex_index((enum quad)quad, i);
-                     if (!qi_opt.has_value())
-                        continue;
-                     VTXT.write((uint16_t)qi_opt.value());
-                     VTXT.skip_bytes(2);
-                     VTXT.write(f);
+            if (layer.texture || non_zero_opacity_count != 0) {
+               //
+               // Layers are optional, per quad. For example, [LAND:00030F9F] in Sovngarde 
+               // cell [CELL:000305E0] (-2, 7) has only a single ATXT+VTXT for the top-right 
+               // quad layer 0, where some snow paint grazed the otherwise-totally-bare cell.
+               //
+               auto& ATXT = record.open_next_subrecord('ATXT');
+               ATXT.reserve_more(4 + sizeof(uint8_t) + 1 + sizeof(decltype(layer.layer)));
+               ATXT.write(layer.texture);
+               ATXT.write(uint8_t(quad));
+               ATXT.skip_bytes(1);
+               ATXT.write(layer.layer);
+               ATXT.close();
+               if (non_zero_opacity_count != 0) {
+                  auto& VTXT = record.open_next_subrecord('VTXT');
+                  VTXT.reserve_more(non_zero_opacity_count * 8);
+                  for (size_t i = 0; i < opacities.size(); ++i) {
+                     const auto f = opacities[i];
+                     if (f > 0.0F) {
+                        auto qi_opt = cell_vertex_index_to_quad_vertex_index((enum quad)quad, i);
+                        if (!qi_opt.has_value())
+                           continue;
+                        VTXT.write((uint16_t)qi_opt.value());
+                        VTXT.skip_bytes(2);
+                        VTXT.write(f);
+                     }
                   }
+                  VTXT.close();
                }
-               VTXT.close();
             }
          }
       }

@@ -47,10 +47,10 @@ namespace dovah::loaded_forms {
          using radial_blur_flags_t = std::underlying_type_t<radial_blur_flag::type>;
 
          struct color_float_t {
-            float r = 0;
-            float g = 0;
-            float b = 0;
-            float a = 1;
+            float r = 1;
+            float g = 1;
+            float b = 1;
+            float a = 0;
          };
 
          template<typename T>
@@ -71,7 +71,7 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data; // VMAD
          //
          modifier_flags_t flags    = 0; // DNAM+0x00
-         float            duration = 0; // DNAM+0x04
+         float            duration = 1; // DNAM+0x04
          struct {
             struct {
                interpolated_float radius; // base: DNAM+0xB4; interp: BNAM
