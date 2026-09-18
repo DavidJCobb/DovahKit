@@ -482,6 +482,7 @@
     <ClCompile Include="dovah\utils\form_type_is_object_with_bounds.cpp" />
     <ClCompile Include="dovah\utils\get_computed_location.cpp" />
     <ClCompile Include="dovah\utils\get_region_worldspace.cpp" />
+    <ClCompile Include="dovah\utils\landscapes\unit_tests.cpp" />
     <ClCompile Include="dovah\utils\location_is_or_is_inside_of_location.cpp" />
     <ClCompile Include="dovah\utils\object_bounds_from_nif.cpp" />
     <ClCompile Include="dovah\utils\refs\light_radius.cpp" />
@@ -2449,6 +2450,7 @@
     <ClInclude Include="dovah\utils\get_region_worldspace.h" />
     <ClInclude Include="dovah\utils\landscapes\cell_vertex_coords_to_quad_vertex_coords.h" />
     <ClInclude Include="dovah\utils\landscapes\cell_vertex_index_to_quad_vertex_index.h" />
+    <ClInclude Include="dovah\utils\landscapes\containing_quad_of_cell_vertex_coords.h" />
     <ClInclude Include="dovah\utils\landscapes\quad_contains_cell_vertex_coords.h" />
     <ClInclude Include="dovah\utils\landscapes\quad_vertex_coords_to_cell_vertex_coords.h" />
     <ClInclude Include="dovah\utils\location_is_or_is_inside_of_location.h" />

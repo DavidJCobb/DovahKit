@@ -4398,6 +4398,9 @@
     <ClCompile Include="dovah\utils\story_event_member_id.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\landscapes\unit_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10950,6 +10953,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\landscapes\max_usable_layers_per_quad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\landscapes\containing_quad_of_cell_vertex_coords.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

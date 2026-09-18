@@ -18,6 +18,7 @@
 #include "../Form.h"
 #include "../FormList.h"
 #include "../Global.h"
+#include "../ImagespaceModifier.h"
 #include "../Static.h"
 #include "../TextureSet.h"
 #include "../Voicetype.h"
@@ -72,6 +73,8 @@ namespace dovah {
       }
       auto& lo   = file->get_load_order();
       auto* form = create_blank_loaded_form_by_type(stub.form_type, fcp);
+      if (!form)
+         return nullptr;
       switch (stub.formID) {
          //
          // Extra configuration:
@@ -120,6 +123,12 @@ namespace dovah {
             break;
          case hardcoded_form_ids::PlayCredits:
             ((loaded_forms::Global*)form)->value_type = loaded_forms::Global::value_type::int16;
+            break;
+         case hardcoded_form_ids::ImageSpaceConcussion:
+            {
+               auto& imad = *(loaded_forms::ImagespaceModifier*)form;
+
+            }
             break;
          default:
             {

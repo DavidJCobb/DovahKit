@@ -653,7 +653,7 @@ namespace dovah::loaded_forms {
    }
    bool ReferenceAlias::_save_fill_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (const auto* data = std::get_if<structs::alias_fill_params::ref::preassigned>(&this->fill_params)) {
-         record.write_formID_subrecord('ALFR', data->ref);
+         record.write_formID_subrecord('ALFR', data->ref, true);
       } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::unique_actor>(&this->fill_params)) {
          record.write_formID_subrecord('ALUA', data->actor_base);
       } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::at_location_alias>(&this->fill_params)) {
