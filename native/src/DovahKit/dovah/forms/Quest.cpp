@@ -6,6 +6,7 @@
 #include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
 #include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"
 #include "../notices/form_load_warnings/by_form_type/quest/papyrus_fragment_belongs_to_missing_log_entry.h"
+#include "../notices/form_load_warnings/by_form_type/quest/unexpected_subrecord_in_alias.h"
 #include "../notices/form_load_warnings/by_form_type/quest/unexpected_subrecord_in_objective.h"
 #include "../notices/form_save_errors/by_form_type/quest/too_many_log_entry_papyrus_fragments.h"
 #include "../notices/form_save_errors/by_form_type/quest/too_many_scripted_aliases.h"
@@ -68,13 +69,18 @@ namespace dovah::loaded_forms {
 
             default:
                if (!this->_load_impl(subrecord, intfc)) {
-                  //
-                  // TODO: log unrecognized subrecord warning
-                  //
+                  specific_load_warnings::unexpected_subrecord_in_alias notice(
+                     intfc.target_stub,
+                     this->id,
+                     subrecord.signature()
+                  );
+                  intfc.log_load_warning(notice);
                }
                break;
          }
       }
+
+      this->_post_load();
    }
    bool LocationAlias::_load_impl(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       switch (subrecord.signature()) {
@@ -140,13 +146,11 @@ namespace dovah::loaded_forms {
    }
    bool ReferenceAlias::_load_impl(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       form_reference_t formID;
-      bool preassigned_present = false;
       switch (subrecord.signature()) {
          #pragma region Fill params
             #pragma region Specific Reference
                case 'ALFR':
                   {
-                     preassigned_present = true;
                      auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::preassigned>();
                      subrecord.read(data.ref);
                      //intfc.warn_if_ref_is_wrong_type(data.actor_base, form_type::actor_base, subrecord.signature());
@@ -306,17 +310,22 @@ namespace dovah::loaded_forms {
          default:
             return false;
       }
-
-      if (!preassigned_present && std::holds_alternative<structs::alias_fill_params::ref::preassigned>(this->fill_params)) {
-         //
-         // If no fill-type subrecords are loaded, then the alias defaults to Conditions if it has at 
-         // least 1 condition, or to Preassigned (ref: None) otherwise.
-         //
-         if (!this->conditions.empty()) {
-            if (this->flags & flag::limit_to_loaded_area) {
-               auto& casted = this->fill_params.emplace<structs::alias_fill_params::ref::find_in_loaded_area>();
-            } else {
-               this->fill_params.emplace<structs::alias_fill_params::ref::find_anywhere>();
+      return true;
+   }
+   /*virtual*/ void ReferenceAlias::_post_load() /*override*/ {
+      if (std::holds_alternative<structs::alias_fill_params::ref::preassigned>(this->fill_params)) {
+         auto& preassigned = std::get<structs::alias_fill_params::ref::preassigned>(this->fill_params);
+         if (!preassigned.ref) {
+            //
+            // If no fill-type subrecords are loaded, then the alias defaults to Conditions if it has at 
+            // least 1 condition, or to Preassigned (ref: None) otherwise.
+            //
+            if (!this->conditions.empty()) {
+               if (this->flags & flag::limit_to_loaded_area) {
+                  auto& casted = this->fill_params.emplace<structs::alias_fill_params::ref::find_in_loaded_area>();
+               } else {
+                  this->fill_params.emplace<structs::alias_fill_params::ref::find_anywhere>();
+               }
             }
          }
       }
@@ -326,8 +335,6 @@ namespace dovah::loaded_forms {
       } else if (auto* casted = std::get_if<structs::alias_fill_params::ref::find_in_loaded_area>(&this->fill_params)) {
          casted->closest = this->flags & flag::use_closest;
       }
-
-      return true;
    }
 
    /*static*/ alias_id_t Alias::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {

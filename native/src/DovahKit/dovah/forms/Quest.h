@@ -78,6 +78,7 @@ namespace dovah::loaded_forms {
          
       protected:
          virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
+         virtual void _post_load() {}
          virtual void _adjust_flags_for_save(uint32_t&) = 0;
          virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0; // handle the fill-type, if it is (or has any data) specific to the alias type. return true if type handled; false if not
          virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0;
@@ -137,6 +138,7 @@ namespace dovah::loaded_forms {
 
       protected:
          virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) override;
+         virtual void _post_load() override;
          virtual void _adjust_flags_for_save(uint32_t&) override;
          virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) override;

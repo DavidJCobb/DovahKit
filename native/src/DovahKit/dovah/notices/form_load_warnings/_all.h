@@ -104,6 +104,7 @@
    #include "./by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
    #include "./by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"
    #include "./by_form_type/quest/papyrus_fragment_belongs_to_missing_log_entry.h"
+   #include "./by_form_type/quest/unexpected_subrecord_in_alias.h"
    #include "./by_form_type/quest/unexpected_subrecord_in_objective.h"
    #include "./by_form_type/race/biped_object_name_too_long.h"
    #include "./by_form_type/race/invalid_boosted_skill.h"

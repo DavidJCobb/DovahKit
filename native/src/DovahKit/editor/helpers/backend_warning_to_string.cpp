@@ -1856,6 +1856,17 @@ namespace editor_helpers {
                      disambig
                   ).arg(subject).arg(casted->stage_id).arg(casted->entry_index);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::quest::unexpected_subrecord_in_alias*>(&warning)) {
+                  auto subject   = form_identifiers_to_string(&casted->subject);
+                  auto signature = cobb::qt::four_cc_to_string(casted->signature);
+                  
+                  return QObject::tr(
+                     "Quest %1 alias ID %2 contained an unexpected subrecord with signature %3. A quest "
+                     "alias will blindly consume subrecords until it finds one it expects; if the alias "
+                     "is missing its \"end\" subrecord, then the quest will not load properly.",
+                     disambig
+                  ).arg(subject).arg(casted->alias_id).arg(signature);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::quest::unexpected_subrecord_in_objective*>(&warning)) {
                   auto subject   = form_identifiers_to_string(&casted->subject);
                   auto signature = cobb::qt::four_cc_to_string(casted->signature);
