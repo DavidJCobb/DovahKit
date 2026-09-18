@@ -522,6 +522,7 @@
     <ClCompile Include="editor\localize\dialogue_topic_subtype.cpp" />
     <ClCompile Include="editor\localize\entry_point_function.cpp" />
     <ClCompile Include="editor\localize\form_creation_error_code.cpp" />
+    <ClCompile Include="editor\localize\imagespace_modifier_subrecord_friendly_name.cpp" />
     <ClCompile Include="editor\localize\limb.cpp" />
     <ClCompile Include="editor\localize\magic_casting_type.cpp" />
     <ClCompile Include="editor\localize\magic_delivery_type.cpp" />
@@ -2275,6 +2276,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\idle\event_name_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\idle\filename_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\idle_collection\incorrect_idle_count.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\imagespace_modifier\keyframe_position_out_of_range.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\imagespace_modifier\not_enough_keyframes.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\impact_data_set\mapping_missing_data.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\excess_layers_per_quad.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\invalid_quad_for_land_texture.h" />
@@ -2497,6 +2500,7 @@
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
     <ClInclude Include="editor\localize\dialogue_category.h" />
     <ClInclude Include="editor\localize\form_creation_error_code.h" />
+    <ClInclude Include="editor\localize\imagespace_modifier_subrecord_friendly_name.h" />
     <ClInclude Include="editor\localize\limb.h" />
     <ClInclude Include="editor\localize\magic_spell_type.h" />
     <ClInclude Include="editor\localize\perk_entry_point_explanation.h" />

@@ -43,6 +43,8 @@
    #include "./by_form_type/faction/interrupt_override_target_not_in_a_package.h"
    #include "./by_form_type/footstep_set/footstep_count_mismatch.h"
    #include "./by_form_type/head_part/invalid_morph_type.h"
+   #include "./by_form_type/imagespace_modifier/keyframe_position_out_of_range.h"
+   #include "./by_form_type/imagespace_modifier/not_enough_keyframes.h"
    #include "./by_form_type/idle/event_name_too_long.h"
    #include "./by_form_type/idle/filename_too_long.h"
    #include "./by_form_type/impact_data_set/mapping_missing_data.h"

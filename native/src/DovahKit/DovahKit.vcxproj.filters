@@ -4401,6 +4401,9 @@
     <ClCompile Include="dovah\utils\landscapes\unit_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\localize\imagespace_modifier_subrecord_friendly_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10962,6 +10965,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\unexpected_subrecord_in_alias.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\imagespace_modifier\keyframe_position_out_of_range.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\imagespace_modifier\not_enough_keyframes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\imagespace_modifier_subrecord_friendly_name.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -55,7 +55,7 @@ namespace dovah::loaded_forms {
 
          template<typename T>
          struct keyframe {
-            float time  = 0;
+            float time  = 0; // normalized to the range [0, 1]
             T     value = {};
          };
          //
@@ -81,8 +81,8 @@ namespace dovah::loaded_forms {
             } motion;
             struct {
                struct {
-                  float x = 0; // DNAM+0xCC
-                  float y = 0; // DNAM+0xD0
+                  float x = 0.5; // DNAM+0xCC
+                  float y = 0.5; // DNAM+0xD0
                } center;
                interpolated_float strength; // base: DNAM+0xBC; interp: RNAM
                interpolated_float ramp_up;  // base: DNAM+0xC0; interp: SNAM
@@ -138,6 +138,7 @@ namespace dovah::loaded_forms {
          std::array<interpolated_mult_add, 9> unknown; // base: DNAM+0x48,0x4C ... DNAM+0x88,0x8C; interp subrecord indices are mult:[0x08, 0x10] and add:[0x48, 0x50]
 
       public:
+         virtual void setup(const file_load_order&) noexcept override;
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
       protected:

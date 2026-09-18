@@ -2,6 +2,15 @@
 #include "_common_cpp.h"
 #include <array>
 
+#include "../notices/form_load_warnings/by_form_type/imagespace_modifier/keyframe_position_out_of_range.h"
+#include "../notices/form_load_warnings/by_form_type/imagespace_modifier/not_enough_keyframes.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::imagespace_modifier;
+   }
+}
+
 namespace {
    //
    // Bethesda ran out of subrecord names, so they started writing raw indices into 
@@ -24,7 +33,7 @@ namespace {
          offsetof(loaded_form_type, hdr.target_luminescence.max),
          offsetof(loaded_form_type, hdr.sunlight_scale),
          offsetof(loaded_form_type, hdr.sky_scale),
-         // [0x07, 0x10] and [0x47, 0x50]:
+         // [0x08, 0x10] and [0x48, 0x50]:
          offsetof(loaded_form_type, unknown) + sizeof(loaded_form_type::unknown[0]) * 0,
          offsetof(loaded_form_type, unknown) + sizeof(loaded_form_type::unknown[0]) * 1,
          offsetof(loaded_form_type, unknown) + sizeof(loaded_form_type::unknown[0]) * 2,
@@ -47,6 +56,68 @@ namespace {
 }
 
 namespace dovah::loaded_forms {
+   void ImagespaceModifier::setup(const file_load_order& load_order) noexcept {
+      if (this->is_working_copy)
+         return;
+      //
+      // Default interpolators for start- and end-position values:
+      //
+      for (interpolated_float* interpolator_ptr : std::array{
+         &blurs.basic.radius,
+         &blurs.motion.strength,
+         &blurs.radial.strength,
+         &blurs.radial.ramp_up,
+         &blurs.radial.start,
+         &blurs.radial.ramp_down.start,
+         &blurs.radial.ramp_down.value,
+         &depth_of_field.strength,
+         &depth_of_field.distance,
+         &depth_of_field.range,
+         &double_vision.strength,
+      }) {
+         auto& interpolator = *interpolator_ptr;
+         interpolator = {
+            { 0, 0 },
+            { 1, 0 }
+         };
+      }
+      for (interpolated_color* interpolator_ptr : std::array{
+         &colors.fade,
+         &colors.tint,
+      }) {
+         auto& interpolator = *interpolator_ptr;
+         interpolator = {
+            { 0, {} },
+            { 1, {} }
+         };
+      }
+      for (interpolated_mult_add* interpolator_ptr : std::array{
+         &cinematic.saturation,
+         &cinematic.brightness,
+         &cinematic.contrast,
+         &cinematic.unused,
+         &hdr.bloom.blur_radius,
+         &hdr.bloom.scale,
+         &hdr.bloom.threshold,
+         &hdr.eye_adapt_speed,
+         &hdr.target_luminescence.min,
+         &hdr.target_luminescence.max,
+         &hdr.sky_scale,
+         &hdr.sunlight_scale,
+      }) {
+         auto& interpolator = *interpolator_ptr;
+         interpolator = {
+            .mult = { { 0, 1 }, { 1, 1 } },
+            .add  = { { 0, 0 }, { 1, 0 } },
+         };
+      }
+      for (auto& interpolator : this->unknown) {
+         interpolator = {
+            .mult = { { 0, 1 }, { 1, 1 } },
+            .add  = { { 0, 0 }, { 1, 0 } },
+         };
+      }
+   }
    void ImagespaceModifier::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       
@@ -89,11 +160,20 @@ namespace dovah::loaded_forms {
          list.resize(count);
       };
 
-      auto _read_interp_list = []<typename T>(tes_subrecord_reader& subrecord, std::vector<keyframe<T>>&list) {
+      auto _read_interp_list = [&intfc]<typename T>(tes_subrecord_reader& subrecord, std::vector<keyframe<T>>&list) {
          size_t i = 0;
          for (; i < list.size(); ++i) {
             if (!subrecord.read(list[i].time))
                break;
+            if (list[i].time < 0 || list[i].time > 1) {
+               specific_load_warnings::keyframe_position_out_of_range notice(
+                  intfc.target_stub,
+                  subrecord.signature(),
+                  i,
+                  list[i].time
+               );
+               intfc.log_load_warning(notice);
+            }
             if constexpr (std::is_same_v<T, color_float_t>) {
                if (!subrecord.is_in_bounds(sizeof(float) * 4))
                   break;
@@ -106,8 +186,16 @@ namespace dovah::loaded_forms {
                   break;
             }
          }
-         for (; i < list.size(); ++i)
-            list[i] = {};
+         if (i < list.size()) {
+            specific_load_warnings::not_enough_keyframes notice(
+               intfc.target_stub,
+               subrecord.signature(),
+               list.size(),
+               i
+            );
+            intfc.log_load_warning(notice);
+            list.resize(i);
+         }
       };
       
       while (auto& subrecord = record.next_subrecord()) {

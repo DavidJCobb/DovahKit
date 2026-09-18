@@ -1,4 +1,5 @@
 #include "./backend_warning_to_string.h"
+#include <QCoreApplication>
 #include <QObject>
 #include "helpers/dynamic_fast_cast.h"
 #include "dovah/data/actor_values.h"
@@ -10,6 +11,7 @@
 #include "../localize/collision_layer.h"
 #include "../localize/dialogue_Category.h"
 #include "../localize/entry_point_function.h"
+#include "../localize/imagespace_modifier_subrecord_friendly_name.h"
 #include "../localize/limb.h"
 #include "../localize/magic_spell_type.h"
 #include "../localize/package_data_type.h"
@@ -1123,6 +1125,24 @@ namespace editor_helpers {
                      "and the game will only load the first %3 bytes.",
                      disambig
                   ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+               }
+            #pragma endregion
+            #pragma region imagespace modifier
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::imagespace_modifier::keyframe_position_out_of_range*>(&warning)) {
+                  QString subject  = form_identifiers_to_string(&casted->subject);
+                  QString property = editor::localize::imagespace_modifier_subrecord_friendly_name(casted->subrecord_signature);
+                  return QObject::tr(
+                     "Imagespace Modifier %1 specifies a keyframe position that is out of range (property %2, keyframe #%3, "
+                     "at position %4). Positions are basically percentages, not absolute timestamps; they must be in the "
+                     "range [0, 1]."
+                  ).arg(subject).arg(property).arg(casted->keyframe.index).arg(casted->keyframe.position);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::imagespace_modifier::not_enough_keyframes*>(&warning)) {
+                  QString subject  = form_identifiers_to_string(&casted->subject);
+                  QString property = editor::localize::imagespace_modifier_subrecord_friendly_name(casted->subrecord_signature);
+                  return QObject::tr(
+                     "Imagespace Modifier %1 claimed to have %2 keyframes for property %3, but it only had %4 keyframes."
+                  ).arg(subject).arg(casted->count_expected).arg(property).arg(casted->count_loaded);
                }
             #pragma endregion
             #pragma region impact data set
