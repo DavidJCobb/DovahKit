@@ -70,7 +70,7 @@ namespace dovah::loaded_forms {
       public:
          components::papyrus_attachment_data script_data; // VMAD
          //
-         modifier_flags_t flags    = 0; // DNAM+0x00
+         modifier_flags_t flags    = modifier_flag::animatable; // DNAM+0x00
          float            duration = 1; // DNAM+0x04
          struct {
             struct {
