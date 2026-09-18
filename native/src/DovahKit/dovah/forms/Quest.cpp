@@ -605,7 +605,7 @@ namespace dovah::loaded_forms {
             ALFA.write(data->alias);
             ALFA.close();
          }
-         record.write_formID_subrecord('KNAM', data->keyword);
+         record.write_formID_subrecord('KNAM', data->keyword, true);
       } else if (const auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
          record.write_formID_subrecord('ALEQ', data->quest);
          {
@@ -715,10 +715,10 @@ namespace dovah::loaded_forms {
          ALFD.close();
       } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::find_near_alias>(&this->fill_params)) {
          auto& ALNA = record.open_next_subrecord('ALNA');
-         ALNA.write_signature(data->alias);
+         ALNA.write(data->alias);
          ALNA.close();
          auto& ALNT = record.open_next_subrecord('ALNT');
-         ALNT.write_signature(data->near_type);
+         ALNT.write(data->near_type);
          ALNT.close();
       } else {
          return false;
