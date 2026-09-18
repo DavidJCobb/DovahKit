@@ -10976,6 +10976,9 @@
     <ClInclude Include="editor\localize\imagespace_modifier_subrecord_friendly_name.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\data\landscapes\centerline_vertex_cell_coord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -13096,6 +13099,7 @@
     <None Include="dovah\_docs\form types\m\music track.md" />
     <None Include="dovah\_docs\form type common behaviors\class names identified by hashes.md" />
     <None Include="dovah\_docs\form types\s\scene.md" />
+    <None Include="dovah\_docs\form types\l\landscape.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

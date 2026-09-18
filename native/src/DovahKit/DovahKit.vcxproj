@@ -1824,6 +1824,7 @@
     <ClInclude Include="dovah\data\game\min_file_version.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\headparts.h" />
+    <ClInclude Include="dovah\data\landscapes\centerline_vertex_cell_coord.h" />
     <ClInclude Include="dovah\data\landscapes\max_usable_layers_per_quad.h" />
     <ClInclude Include="dovah\data\landscapes\quad.h" />
     <ClInclude Include="dovah\data\landscapes\vertex_distance.h" />
@@ -4522,6 +4523,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\g\grass.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\l\landscape.md">
       <SubType>
       </SubType>
     </None>
