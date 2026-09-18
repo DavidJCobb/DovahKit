@@ -50,10 +50,12 @@ namespace dovah {
       //
       // Next, we'll check the form ID. First, we'll look into the actor values.
       //
-      for (auto& item : all_actor_value_info) {
-         if (stub.formID == item.formID) {
-            auto* form = new loaded_forms::ActorValueInfo(fcp);
-            return form;
+      if (stub.form_type == form_type::actor_value_info) {
+         for (auto& item : all_actor_value_info) {
+            if (stub.formID == item.formID) {
+               auto* form = new loaded_forms::ActorValueInfo(fcp);
+               return form;
+            }
          }
       }
       //
@@ -75,6 +77,7 @@ namespace dovah {
       auto* form = create_blank_loaded_form_by_type(stub.form_type, fcp);
       if (!form)
          return nullptr;
+      form->setup(lo); // currently only needed for ImagespaceModifier forms
       switch (stub.formID) {
          //
          // Extra configuration:
@@ -123,12 +126,6 @@ namespace dovah {
             break;
          case hardcoded_form_ids::PlayCredits:
             ((loaded_forms::Global*)form)->value_type = loaded_forms::Global::value_type::int16;
-            break;
-         case hardcoded_form_ids::ImageSpaceConcussion:
-            {
-               auto& imad = *(loaded_forms::ImagespaceModifier*)form;
-
-            }
             break;
          default:
             {
