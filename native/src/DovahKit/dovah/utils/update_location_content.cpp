@@ -17,6 +17,12 @@ namespace {
    namespace extra_data_types {
       using namespace dovah::loaded_forms::components::extra_data_types;
    }
+
+   // If a ref is in both *CSR and *CUN, this bool controls whether we prevent the 
+   // ref from being listed in *CID or *CEP twice.
+   // 
+   // The Creation Kit *does not* prevent such duplicates.
+   constexpr bool avoid_duplicate_refs_with_traits = true;
 }
 
 namespace dovah::utils {
@@ -88,7 +94,7 @@ namespace dovah::utils {
       auto* extra = loaded_refr->extra_data.get<extra_data_types::enable_state_parent>();
       if (!extra)
          return { nullptr, 0 };
-      return { extra->ref.get_form_stub(), extra->flags };
+      return { extra->ref.get_form_stub(), extra->flags & extra_data_types::enable_state_parent::flag::opposite };
    };
    bool update_location_content::_is_unique_actor(form_stub& base_form) {
       if (base_form.form_type != form_type::actor_base)
@@ -276,52 +282,17 @@ namespace dovah::utils {
             item.grid.y = 0x7FFF;
          }
       };
-      
-      auto _is_initially_disabled = [](const form_stub& refr) -> bool {
-         return refr.test_record_flags(loaded_forms::ObjectReference::form_flag::disabled);
-      };
 
       if (as_base_record) {
          for (auto* stub : gathered) {
             _append_persist_loc_ref(dataset.base, *stub);
             _append_persist_loc_ref(dataset.full, *stub);
-            //
-            // Update "initially disabled" and "enable parents" lists.
-            //
-            if (_is_initially_disabled(*stub)) {
-               loaded.contents.initially_disabled.base.emplace_back().set(loaded, stub);
-               loaded.contents.initially_disabled.full.emplace_back().set(loaded, stub);
-            }
-            if (auto ep = _get_enable_parent_info(*stub); ep.first) {
-               {
-                  auto& item = loaded.contents.enable_parents.base.emplace_back();
-                  item.ref.set(loaded, stub);
-                  item.enable_parent.set(loaded, ep.first);
-                  item.flags = ep.second;
-               }
-               {
-                  auto& item = loaded.contents.enable_parents.full.emplace_back();
-                  item.ref.set(loaded, stub);
-                  item.enable_parent.set(loaded, ep.first);
-                  item.flags = ep.second;
-               }
-            }
+            _apply_ref_with_traits(loaded, as_base_record, *stub);
          }
       } else {
          for (auto* stub : gathered) {
             _append_persist_loc_ref(dataset.full, *stub);
-            //
-            // Update "initially disabled" and "enable parents" lists.
-            //
-            if (_is_initially_disabled(*stub)) {
-               loaded.contents.initially_disabled.full.emplace_back().set(loaded, stub);
-            }
-            if (auto ep = _get_enable_parent_info(*stub); ep.first) {
-               auto& item = loaded.contents.enable_parents.full.emplace_back();
-               item.ref.set(loaded, stub);
-               item.enable_parent.set(loaded, ep.first);
-               item.flags = ep.second;
-            }
+            _apply_ref_with_traits(loaded, as_base_record, *stub);
          }
       }
    }
@@ -408,6 +379,7 @@ namespace dovah::utils {
                item.cell_or_world.set(loaded, placement.first);
                item.grid = placement.second;
             }
+            _apply_ref_with_traits(loaded, as_base_record, *refr);
          }
       } else {
          for (auto* refr : gathered) {
@@ -420,6 +392,7 @@ namespace dovah::utils {
                item.cell_or_world.set(loaded, placement.first);
                item.grid = placement.second;
             }
+            _apply_ref_with_traits(loaded, as_base_record, *refr);
          }
       }
    }
@@ -479,6 +452,7 @@ namespace dovah::utils {
                item.actor_base.set(loaded, base_form);
                item.editor_location.set(loaded, editor_loc);
             }
+            _apply_ref_with_traits(loaded, as_base_record, *refr);
          }
       } else {
          for (auto* refr : gathered) {
@@ -490,7 +464,46 @@ namespace dovah::utils {
                item.actor_base.set(loaded, base_form);
                item.editor_location.set(loaded, editor_loc);
             }
+            _apply_ref_with_traits(loaded, as_base_record, *refr);
          }
+      }
+   }
+
+   namespace {
+      bool _is_initially_disabled(const form_stub& refr) {
+         return refr.test_record_flags(loaded_forms::ObjectReference::form_flag::disabled);
+      }
+   }
+   void update_location_content::_apply_ref_with_traits(loaded_forms::Location& loaded, bool as_base_record, form_stub& ref) {
+      auto _add_enable_parent = [&loaded, &ref](auto& list, const auto& ep) {
+         if constexpr (avoid_duplicate_refs_with_traits) {
+            for (const auto& existing : list)
+               if (existing.ref.get_form_stub() == &ref)
+                  return;
+         }
+         auto& item = list.emplace_back();
+         item.ref.set(loaded, &ref);
+         item.enable_parent.set(loaded, ep.first);
+         item.flags = ep.second;
+      };
+      auto _add_initially_disabled = [&loaded, &ref](auto& list) {
+         if constexpr (avoid_duplicate_refs_with_traits) {
+            auto it = std::find(list.begin(), list.end(), &ref);
+            if (it != list.end())
+               return;
+         }
+         list.emplace_back().set(loaded, &ref);
+      };
+
+
+      if (auto ep = _get_enable_parent_info(ref); ep.first) {
+         if (as_base_record)
+            _add_enable_parent(loaded.contents.enable_parents.base, ep);
+         _add_enable_parent(loaded.contents.enable_parents.full, ep);
+      } else if (_is_initially_disabled(ref)) {
+         if (as_base_record)
+            _add_initially_disabled(loaded.contents.initially_disabled.base);
+         _add_initially_disabled(loaded.contents.initially_disabled.full);
       }
    }
 }

@@ -62,5 +62,7 @@ namespace dovah::utils {
          void _apply_exterior_cells(loaded_forms::Location&, bool as_base_record); // *CEC
          void _apply_special_refs(loaded_forms::Location&, bool as_base_record); // *CSR
          void _apply_unique_actors(loaded_forms::Location&, bool as_base_record); // *CUN
+
+         void _apply_ref_with_traits(loaded_forms::Location&, bool as_base_record, form_stub& ref);
    };
 }
