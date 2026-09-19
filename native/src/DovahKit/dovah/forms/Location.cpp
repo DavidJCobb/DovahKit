@@ -1250,7 +1250,7 @@ namespace dovah::loaded_forms {
                   bool opened = false;
                   for (auto& full_item : dataset.full) {
                      auto it = std::find(dataset.base.begin(), dataset.base.end(), full_item);
-                     if (it == dataset.base.end())
+                     if (it != dataset.base.end())
                         continue;
                      if (!opened) {
                         record.open_next_subrecord('ACID');
