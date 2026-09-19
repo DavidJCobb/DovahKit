@@ -25,6 +25,16 @@ namespace {
    constexpr bool avoid_duplicate_refs_with_traits = true;
 }
 
+namespace {
+   static bool _is_persistent_exterior_ref(dovah::form_stub& refr) {
+      if (!dovah::form_stub_helpers::is_persistent(refr))
+         return false;
+      if (auto* cell = refr.get_parent_form())
+         return cell->is_exterior_cell();
+      return false;
+   }
+}
+
 namespace dovah::utils {
    void update_location_content::_crawl_special_refs(const form_stub& cell_or_world) {
       if (cell_or_world.form_type == form_type::cell) {
@@ -45,11 +55,6 @@ namespace dovah::utils {
          // this is because persistent-flagged cells should only contain persistent-flagged 
          // refs, which wouldn't need to be cached by LCTN... but that's just a guess.
          //
-         auto* pcell = form_stub_helpers::get_worldspace_persistent_cell(cell_or_world);
-         if (pcell && !form_stub_helpers::is_persistent(*pcell)) {
-            if (!this->location || get_computed_location(*pcell) == this->location)
-               this->_crawl_special_refs(*pcell);
-         }
          form_stub_helpers::for_each_child_form(cell_or_world, [this](const form_stub& cell) {
             if (cell.form_type != form_type::cell)
                return;
@@ -119,7 +124,12 @@ namespace dovah::utils {
       {  // PersistLoc
          auto* dobj_man = lo.get_canonical_instance_of_singleton_form(form_type::default_object_manager);
          if (dobj_man) {
-            auto loaded = dobj_man->load().ptr_cast<loaded_forms::DefaultObjectManager>();
+            loaded_form_ptr<loaded_forms::DefaultObjectManager> loaded;
+            if (this->_is_mid_save) {
+               loaded = dobj_man->load_even_if_unsafe({}).ptr_cast<loaded_forms::DefaultObjectManager>();
+            } else {
+               loaded = dobj_man->load().ptr_cast<loaded_forms::DefaultObjectManager>();
+            }
             if (loaded) {
                this->_cache.PersistLoc = loaded->get_entry('PLOC');
             }
@@ -157,6 +167,8 @@ namespace dovah::utils {
             if (base && !base->is_deleted() && _is_unique_actor(*base))
                this->content.unique_actors.push_back(stub); // *CUN
          } else if (stub->form_type == form_type::cell) {
+            if (form_stub_helpers::is_persistent(*stub))
+               continue;
             this->_crawl_special_refs(*stub); // *CSR
             //
             // Below: Criteria for inclusion in *CEC.
@@ -470,11 +482,14 @@ namespace dovah::utils {
    }
 
    namespace {
-      bool _is_initially_disabled(const form_stub& refr) {
+      static bool _is_initially_disabled(const form_stub& refr) {
          return refr.test_record_flags(loaded_forms::ObjectReference::form_flag::disabled);
       }
    }
    void update_location_content::_apply_ref_with_traits(loaded_forms::Location& loaded, bool as_base_record, form_stub& ref) {
+      if (ref.test_record_flags(loaded_forms::ObjectReference::form_flag::persistent))
+         return;
+
       auto _add_enable_parent = [&loaded, &ref](auto& list, const auto& ep) {
          if constexpr (avoid_duplicate_refs_with_traits) {
             for (const auto& existing : list)

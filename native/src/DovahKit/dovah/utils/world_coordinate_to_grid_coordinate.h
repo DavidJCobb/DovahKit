@@ -18,7 +18,7 @@ namespace dovah {
       constexpr bool signed_shift = ((int32_t)(-90) >> 2 == -23);
       //
       auto ci = (int32_t)c;
-      if constexpr (side_length == (1 << shift_by)) {
+      if constexpr (side_length == (1 << shift_by)) { // optimized implementation
          if constexpr (!signed_shift) {
             //
             // Not all compilers extend the sign bit when shifting to the left. If we're 
@@ -27,8 +27,11 @@ namespace dovah {
             if (c < 0)
                return (ci / side_length) - 1;
          }
-         return ci >> shift_by;
-      } else {
+         auto out = ci >> shift_by;
+         if (ci < 0 && ci > -side_length)
+            --out;
+         return out;
+      } else { // "canonical" implementation
          auto out = ci / side_length;
          if (ci < 0 && ci > -side_length)
             --out;

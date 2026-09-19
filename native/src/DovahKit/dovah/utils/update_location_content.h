@@ -53,7 +53,7 @@ namespace dovah::utils {
       protected:
          void _recache_notable_forms(file_load_order&);
       public:
-         void _set_is_mid_save_location_fixup(location_update_during_save_passkey); // HACK HACK HACK; see `_is_unique_actor` and enable-parent checks in `_apply_persist_loc_refs`
+         void _set_is_mid_save_location_fixup(location_update_during_save_passkey); // HACK HACK HACK; see `_get_enable_parent_info`, `_is_unique_actor`, and `_recache_notable_forms`
          void gather(form_stub& location);
          void apply(bool as_base_record);
 

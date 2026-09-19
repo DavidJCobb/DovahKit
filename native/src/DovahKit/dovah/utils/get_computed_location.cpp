@@ -82,6 +82,7 @@ namespace dovah::utils {
                //
                auto* zone = form_stub_helpers::get_assigned_encounter_zone(stub);
                if (!zone || zone->form_type != dovah::form_type::encounter_zone) {
+                  zone = nullptr;
                   if (world) {
                      zone = form_stub_helpers::get_assigned_encounter_zone(*world);
                      if (zone && zone->form_type != dovah::form_type::encounter_zone)
@@ -93,7 +94,6 @@ namespace dovah::utils {
                      return loc;
                //
                // If that fails, then it checks for an explicitly-set location on the cell.
-               //
                //
                auto* loc = form_stub_helpers::get_assigned_location(stub);
                if (loc && loc->form_type == dovah::form_type::location)
