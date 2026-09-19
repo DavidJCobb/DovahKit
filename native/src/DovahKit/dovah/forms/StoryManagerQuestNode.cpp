@@ -18,7 +18,9 @@ namespace dovah::loaded_forms {
       mixins::StoryManagerNode::load(*this, record, intfc);
 
       if (auto& subrecord = record.get_current_subrecord(); subrecord.signature() == 'MNAM') {
-         subrecord.read(this->num_quests_to_run);
+         uint32_t v = 1;
+         subrecord.read(v);
+         this->num_quests_to_run = v;
          record.next_subrecord();
       }
       if (auto& subrecord = record.get_current_subrecord(); subrecord.signature() == 'QNAM') {
@@ -49,6 +51,11 @@ namespace dovah::loaded_forms {
                record.next_subrecord();
             }
          }
+      }
+
+      if (this->flags & flag::has_num_quests_to_run) {
+         if (!this->num_quests_to_run.has_value())
+            this->num_quests_to_run = 1;
       }
    }
    /*static*/ void StoryManagerQuestNode::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -87,7 +94,7 @@ namespace dovah::loaded_forms {
 
       mixins::StoryManagerNode::_clone_impl(*copy, *copy);
 
-      copy->num_quests_to_run = this->num_quests_to_run;
+      copy->max_concurrent_quests = this->max_concurrent_quests;
       {
          auto& src_list = this->quests;
          auto& dst_list = copy->quests;
@@ -103,10 +110,16 @@ namespace dovah::loaded_forms {
       }
    }
    void StoryManagerQuestNode::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      if (this->num_quests_to_run.has_value())
+         this->flags |= flag::has_num_quests_to_run;
+      else
+         this->flags &= ~flag::has_num_quests_to_run;
+
       mixins::StoryManagerNode::_save_impl(*this, record, intfc);
-      {
+
+      if (this->num_quests_to_run.has_value()) {
          auto& subrecord = record.open_next_subrecord('MNAM');
-         subrecord.write(this->num_quests_to_run);
+         subrecord.write(this->num_quests_to_run.value());
          subrecord.close();
       }
       {
@@ -131,7 +144,7 @@ namespace dovah::loaded_forms {
    void StoryManagerQuestNode::_clear_impl() noexcept {
       mixins::StoryManagerNode::_clear_impl(*this);
 
-      this->num_quests_to_run = 1;
+      this->num_quests_to_run = {};
       for (auto& item : this->quests)
          item.form.set(*this, nullptr);
       this->quests.clear();

@@ -398,9 +398,9 @@ void FormDialogStoryManagerNodes::_pull_selected_node_to_ui() {
          this->ui.nodeFieldsQuestList->setVisible(true);
          this->ui.nodeFlagDoAll->setChecked(loaded_qnode->flags & loaded_node_base_type::flag::do_all_before_repeating);
          this->ui.nodeFlagShares->setChecked(loaded_qnode->flags & loaded_node_base_type::flag::shares_event);
-         this->ui.nodeFlagNumToRun->setChecked(loaded_qnode->flags & loaded_node_base_type::flag::num_quests_to_run);
+         this->ui.nodeFlagNumToRun->setChecked(loaded_qnode->num_quests_to_run.has_value());
          this->ui.nodeFlagMaxConcurrent->setChecked(loaded_qnode->max_concurrent_quests != 0);
-         this->ui.nodeNumToRun->setValue(loaded_qnode->num_quests_to_run);
+         this->ui.nodeNumToRun->setValue(loaded_qnode->num_quests_to_run.value_or(1));
          this->ui.nodeMaxConcurrent->setValue(loaded_qnode->max_concurrent_quests);
 
          this->ui.nodeNumToRun->setEnabled(this->ui.nodeFlagNumToRun->isChecked());
@@ -468,8 +468,11 @@ void FormDialogStoryManagerNodes::_push_selected_node_from_ui() {
       assert(!!loaded_qnode);
       cobb::edit_bit(loaded_qnode->flags, loaded_node_base_type::flag::do_all_before_repeating, this->ui.nodeFlagDoAll->isChecked());
       cobb::edit_bit(loaded_qnode->flags, loaded_node_base_type::flag::shares_event,            this->ui.nodeFlagShares->isChecked());
-      cobb::edit_bit(loaded_qnode->flags, loaded_node_base_type::flag::num_quests_to_run,       this->ui.nodeFlagNumToRun->isChecked());
-      loaded_qnode->num_quests_to_run = this->ui.nodeNumToRun->value();
+      cobb::edit_bit(loaded_qnode->flags, loaded_node_base_type::flag::has_num_quests_to_run,   this->ui.nodeFlagNumToRun->isChecked());
+      if (this->ui.nodeFlagNumToRun->isChecked())
+         loaded_qnode->num_quests_to_run = this->ui.nodeNumToRun->value();
+      else
+         loaded_qnode->num_quests_to_run = {};
       if (this->ui.nodeFlagMaxConcurrent->isChecked()) {
          loaded_qnode->max_concurrent_quests = this->ui.nodeMaxConcurrent->value();
       } else {

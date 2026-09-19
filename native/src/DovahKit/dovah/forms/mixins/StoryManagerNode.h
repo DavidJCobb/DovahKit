@@ -15,8 +15,8 @@ namespace dovah::loaded_forms::mixins {
 
                // quest nodes only
                do_all_before_repeating = 1 << 16,
-               shares_event = 1 << 17,
-               num_quests_to_run = 1 << 18,
+               shares_event            = 1 << 17,
+               has_num_quests_to_run   = 1 << 18, // DovahKit uses this flag only during load, and updates it during save
             };
          };
          using flags_t = std::underlying_type_t<flag::type>;

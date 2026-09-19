@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <vector>
 #include "./Form.h"
 #include "./_common.h"
@@ -37,7 +38,7 @@ namespace dovah::loaded_forms {
          };
 
       public:
-         uint32_t num_quests_to_run = 1; // MNAM
+         std::optional<uint32_t> num_quests_to_run; // MNAM, if flag 1 << 18 is set; else, treat as if == 1
          std::vector<quest_entry> quests;
 
       public:
