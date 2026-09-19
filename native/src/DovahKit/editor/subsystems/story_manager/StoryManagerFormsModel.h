@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <QAbstractItemModel>
 #include <QIcon>
@@ -63,8 +64,8 @@ class StoryManagerFormsModel : public QAbstractItemModel {
          dovah::story_event_code_t event = {};
       };
       struct cached_quest_data {
-         uint32_t num_to_run     = 0;
-         uint32_t max_concurrent = 0;
+         std::optional<uint32_t> num_to_run     = 0;
+         uint32_t                max_concurrent = 0;
          std::vector<std::unique_ptr<quest_node>> quests;
       };
       //
