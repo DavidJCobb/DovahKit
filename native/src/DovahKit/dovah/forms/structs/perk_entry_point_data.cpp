@@ -274,54 +274,61 @@ namespace dovah::loaded_forms::structs {
             subrecord.close();
          }
       }
-      if (type != entry_point_function_type::none) {
-         auto& subrecord = record.open_next_subrecord(subrecord_function_data_1);
+      if (type != entry_point_function_type::none) { // EPFD
+         constexpr const auto signature = subrecord_function_data_1;
          switch (type) {
             case entry_point_function_type::one_float:
                {
-                  auto& casted = std::get<data_types::one_float>(this->data);
+                  auto& casted    = std::get<data_types::one_float>(this->data);
+                  auto& subrecord = record.open_next_subrecord(signature);
                   subrecord.write(casted.value);
+                  subrecord.close();
                }
                break;
             case entry_point_function_type::two_floats:
                {
-                  auto& casted = std::get<data_types::two_floats>(this->data);
+                  auto& casted    = std::get<data_types::two_floats>(this->data);
+                  auto& subrecord = record.open_next_subrecord(signature);
                   subrecord.write(casted.a);
                   subrecord.write(casted.b);
+                  subrecord.close();
                }
                break;
             case entry_point_function_type::leveled_item:
                {
                   auto& casted = std::get<data_types::leveled_item>(this->data);
-                  subrecord.write(casted.form);
+                  record.write_formID_subrecord(signature, casted.form, true);
                }
                break;
             case entry_point_function_type::activate_choice:
                {
                   auto& casted = std::get<data_types::activate_choice>(this->data);
-                  subrecord.write(casted.spell);
+                  record.write_formID_subrecord(signature, casted.spell, true);
                }
                break;
             case entry_point_function_type::spell:
                {
                   auto& casted = std::get<data_types::spell>(this->data);
-                  subrecord.write(casted.form);
+                  record.write_formID_subrecord(signature, casted.form, true);
                }
                break;
             case entry_point_function_type::animation_graph_var:
                {
-                  auto& casted = std::get<std::string>(this->data);
+                  auto& casted    = std::get<std::string>(this->data);
+                  auto& subrecord = record.open_next_subrecord(signature);
                   subrecord.write(casted);
+                  subrecord.close();
                }
                break;
             case entry_point_function_type::localized_string:
                {
-                  auto& casted = std::get<localized_string>(this->data);
+                  auto& casted    = std::get<localized_string>(this->data);
+                  auto& subrecord = record.open_next_subrecord(signature);
                   subrecord.write(casted);
+                  subrecord.close();
                }
                break;
          }
-         subrecord.close();
       }
    }
    void perk_entry_point_data::clone_from(const perk_entry_point_data& original, loaded_forms::Form& my_owner) noexcept {
