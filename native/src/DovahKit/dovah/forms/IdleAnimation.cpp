@@ -485,8 +485,10 @@ namespace dovah::loaded_forms {
       this->script_data.save(record, intfc);
       for (auto& cnd : this->conditions)
          cnd.save(record, intfc);
-      record.write_string_subrecord('DNAM', this->_hierarchy.behavior_graph.verbatim);
-      record.write_string_subrecord('ENAM', this->animation_event);
+      if (auto& str = this->_hierarchy.behavior_graph.verbatim; !str.empty())
+         record.write_string_subrecord('DNAM', str);
+      if (auto& str = this->animation_event; !str.empty())
+         record.write_string_subrecord('ENAM', str);
       {
          const auto& active_file_candidacies = this->_as_action_root.active;
          const auto  size = active_file_candidacies.size();
