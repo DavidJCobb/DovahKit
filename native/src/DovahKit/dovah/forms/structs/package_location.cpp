@@ -39,14 +39,9 @@ namespace dovah::loaded_forms::structs {
             return std::get<(size_t)location_type::reference_alias>(this->data) == -1;
          case location_type::location_alias:
             return std::get<(size_t)location_type::location_alias>(this->data) == -1;
-         case location_type::interrupt_override_target:
-            return false;
          case location_type::package_data_target:
             return std::get<(size_t)location_type::package_data_target>(this->data) == -1;
-         case location_type::self:
-            return false;
       }
-      
 
       bool handled = false;
       bool result  = false;
@@ -57,7 +52,7 @@ namespace dovah::loaded_forms::structs {
                result  = !value;
                handled = true;
             } else if constexpr (std::is_same_v<value_type, std::monostate>) {
-               result  = true;
+               result  = false;
                handled = true;
             }
          },
