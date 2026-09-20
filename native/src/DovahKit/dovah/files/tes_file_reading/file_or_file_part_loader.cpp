@@ -115,12 +115,15 @@ namespace dovah::tes_file_reading {
       }
       #pragma endregion
       
+      bool editor_id_seen = false;
+
       form_stub* previous_sibling_info = nullptr;
       bool info_is_appended = true;
 
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'EDID':
+               editor_id_seen = true;
                if (!(form_type_info::lookup(stub.form_type).flags & form_type_info::flag::no_editor_id)) {
                   subrecord.read(stub.editorID);
                }
@@ -152,7 +155,14 @@ namespace dovah::tes_file_reading {
                continue;
          }
       }
-      //
+
+      if (!editor_id_seen) {
+         //
+         // Edge-case: losing record supplies an editor ID; winning record clears it.
+         //
+         stub.editorID.clear();
+      }
+      
       #pragma region INFO post-handling
       if (parent_topic && !stub.test_record_flags(tes_file_record_header::flag::deleted)) {
          bool is_active_file = this->get_load_order().get_active_file() == this->loader;
