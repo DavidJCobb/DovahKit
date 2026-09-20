@@ -33,7 +33,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->directional_material.single_pass_color.g);
                subrecord.read(this->directional_material.single_pass_color.b);
                subrecord.read(this->directional_material.flags);
-               if (record.version() >= 44) {
+               if (record.is_skyrim_special()) {
                   subrecord.read(this->directional_material.flags_ex);
                   subrecord.skip_bytes(3);
                }
@@ -99,7 +99,7 @@ namespace dovah::loaded_forms {
          subrecord.write(this->directional_material.single_pass_color.g);
          subrecord.write(this->directional_material.single_pass_color.b);
          subrecord.write(this->directional_material.flags);
-         if (record.version() >= 44) {
+         if (record.is_skyrim_special()) {
             subrecord.write(this->directional_material.flags_ex);
             subrecord.skip_bytes(3);
          }
