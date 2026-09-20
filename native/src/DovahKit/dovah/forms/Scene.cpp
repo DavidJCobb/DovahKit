@@ -546,8 +546,7 @@ namespace dovah::loaded_forms {
             subrecord.write(this->type());
             subrecord.close();
          }
-         if (!this->name.empty())
-            record.write_string_subrecord('NAM0', this->name);
+         record.write_string_subrecord('NAM0', this->name);
          {
             auto& subrecord = record.open_next_subrecord('ALID');
             subrecord.write(this->alias_id);
