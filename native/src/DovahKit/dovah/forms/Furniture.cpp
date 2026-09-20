@@ -349,11 +349,11 @@ namespace dovah::loaded_forms {
          {
             auto& subrecord = record.open_next_subrecord('WBDT');
             subrecord.write(this->workbench.type);
+            int8_t skill = -1;
             if (auto& opt = this->workbench.skill; opt.has_value()) {
-               subrecord.write((int8_t)opt.value() + dovah::first_skill_actor_value_index);
-            } else {
-               subrecord.write((int8_t)-1);
+               skill = (int8_t)opt.value() + dovah::first_skill_actor_value_index;
             }
+            subrecord.write(skill);
             subrecord.close();
          }
          record.write_formID_subrecord('NAM1', this->associated_spell, true);
