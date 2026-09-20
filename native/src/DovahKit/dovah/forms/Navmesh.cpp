@@ -9,6 +9,15 @@ namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_type::navmesh;
    }
+
+   // The CK doesn't save any navmesh-specific data (i.e. only EDID+VMAD are saved) if 
+   // the navmesh is flagged as "deleted."
+   //
+   // There is an edge-case to this behavior: the navmesh is cleared, and its list of 
+   // door links is therefore cleared with it; but the doors themselves may still refer 
+   // to triangles in this navmesh by virtue of REFR/XNDP. Ideally, whatever's doing the 
+   // deleting will properly update the door as well. (DovahKit's backend does.)
+   static constexpr bool discard_data_on_save_if_deleted = true;
 }
 
 namespace dovah::loaded_forms {
@@ -334,6 +343,33 @@ namespace dovah::loaded_forms {
    }
    void Navmesh::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
+
+      if constexpr (discard_data_on_save_if_deleted) {
+         {  // NVNM
+            this->geometry.version = 12;
+            this->geometry.pathing_cell.clear(*this);
+            this->geometry.vertices.clear();
+            this->geometry.triangles.clear();
+            {
+               auto& list = this->geometry.edge_links;
+               for (auto& item : list)
+                  item.navmesh.set(*this, nullptr);
+               list.clear();
+            }
+            {
+               auto& list = this->geometry.door_links;
+               for (auto& item : list)
+                  item.door_ref.set(*this, nullptr);
+               list.clear();
+            }
+            this->geometry.cover_triangles.clear();
+            this->geometry.navmesh_grid = {};
+         }
+         clear_form_reference_list(this->base_objects, *this); // ONAM
+         this->preferred_connectors.clear(); // PNAM
+         this->non_connectors.clear(); // NNAM
+         return;
+      }
 
       {
          auto& subrecord = record.open_next_subrecord('NVNM');
