@@ -42,6 +42,25 @@ namespace DovahKitDebug::features::mega_tests {
          QMessageBox::critical(from, "Error", "File not found in current load order");
          return;
       }
+      
+      //
+      // NOTE: This will miss GMSTs. This is because while we can flag their stubs as edited, 
+      // DovahKit's backend doesn't care that much about the stubs. The actual values of the 
+      // GMSTs are stored elsewhere (since GMSTs aren't "real forms").
+      // 
+      // The only way to correlate a loaded game setting to its source stubs (yes, possibly 
+      // multiple) and thus to its source files is via the `loaded_game_setting` objects. The 
+      // file-load-order does maintain one `loaded_game_setting` per source stub, but it only 
+      // allows the outside world to access the last-loaded one.
+      // 
+      // Thus we can see the stubs, but we don't know what game settings they define; and we 
+      // can see only the last-loaded game setting; so we can't tell, from out here, whether 
+      // a given GMST was defined or overridden in a particular file unless that file was the 
+      // winning definition. Changing this would require editing the API that the FLO provides, 
+      // and I don't want to have to recompile the entire program just for this. But since a 
+      // GMST is so simple, I don't think we need the "Oops! All ITMs" test to know that we 
+      // handle them properly.
+      //
 
       size_t count = 0;
       editor.for_each_form([&prefix, desired_file, &count](dovah::form_stub* form) -> bool {

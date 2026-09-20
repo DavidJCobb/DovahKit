@@ -1008,11 +1008,11 @@ namespace dovah {
             // time, however, we need to make sure that we handle redundant GMST records in dependencies 
             // properly. We want to support record injection to the fullest extent possible, and if redundant 
             // game settings cause a single setting to take up multiple form IDs within a given file, then we 
-            // need to make sure that the user doesn't inject a record onto either of those form IDs -- which 
-            // means that we need a stub for each of them.
+            // need to make sure that the user doesn't inject a record onto either of those form IDs; thus, we 
+            // need a stub for each of them.
             //
             // Accordingly, we'll delete the old stub. That will give us consistent behavior with the Creation 
-            // Kit: a game setting will have the load seen form ID.
+            // Kit: a game setting will have the last seen form ID.
             //
             if (file == this->active_file) {
                if (this->_count_game_settings_with_form_id(priorID) == 1) { // Only delete the form stub if no other settings are using it.
