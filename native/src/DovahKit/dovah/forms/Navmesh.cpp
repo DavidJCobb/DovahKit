@@ -345,30 +345,32 @@ namespace dovah::loaded_forms {
       this->script_data.save(record, intfc);
 
       if constexpr (discard_data_on_save_if_deleted) {
-         {  // NVNM
-            this->geometry.version = 12;
-            this->geometry.pathing_cell.clear(*this);
-            this->geometry.vertices.clear();
-            this->geometry.triangles.clear();
-            {
-               auto& list = this->geometry.edge_links;
-               for (auto& item : list)
-                  item.navmesh.set(*this, nullptr);
-               list.clear();
+         if (this->stub.is_deleted()) {
+            {  // NVNM
+               this->geometry.version = 12;
+               this->geometry.pathing_cell.clear(*this);
+               this->geometry.vertices.clear();
+               this->geometry.triangles.clear();
+               {
+                  auto& list = this->geometry.edge_links;
+                  for (auto& item : list)
+                     item.navmesh.set(*this, nullptr);
+                  list.clear();
+               }
+               {
+                  auto& list = this->geometry.door_links;
+                  for (auto& item : list)
+                     item.door_ref.set(*this, nullptr);
+                  list.clear();
+               }
+               this->geometry.cover_triangles.clear();
+               this->geometry.navmesh_grid = {};
             }
-            {
-               auto& list = this->geometry.door_links;
-               for (auto& item : list)
-                  item.door_ref.set(*this, nullptr);
-               list.clear();
-            }
-            this->geometry.cover_triangles.clear();
-            this->geometry.navmesh_grid = {};
+            clear_form_reference_list(this->base_objects, *this); // ONAM
+            this->preferred_connectors.clear(); // PNAM
+            this->non_connectors.clear(); // NNAM
+            return;
          }
-         clear_form_reference_list(this->base_objects, *this); // ONAM
-         this->preferred_connectors.clear(); // PNAM
-         this->non_connectors.clear(); // NNAM
-         return;
       }
 
       {
