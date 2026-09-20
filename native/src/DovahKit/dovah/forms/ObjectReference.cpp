@@ -35,6 +35,18 @@ namespace {
 #include "../exceptions/object_reference_move_failed.h"
 #include "../load_order_requests/form_creation_request.h"
 
+namespace {
+   enum class position_save_behavior {
+      always_save,
+
+      // The vanilla/CK behavior: if a ref is deleted, don't save its position.
+      omit_if_deleted,
+
+      omit_if_deleted_and_zero,
+   };
+   static constexpr const auto use_position_save_behavior = position_save_behavior::omit_if_deleted;
+}
+
 namespace dovah::loaded_forms {
    void ObjectReference::set_position(cobb::vector3<float> position) {
       using exception  = exceptions::object_reference_move_failed;
@@ -377,15 +389,31 @@ namespace dovah::loaded_forms {
             record.open_next_subrecord('ONAM').close();
       }
       //
-      auto& DATA = record.open_next_subrecord('DATA');
-      DATA.reserve_more(sizeof(float) * 6);
-      DATA.write(this->position.x);
-      DATA.write(this->position.y);
-      DATA.write(this->position.z);
-      DATA.write(this->rotation.x);
-      DATA.write(this->rotation.y);
-      DATA.write(this->rotation.z);
-      DATA.close();
+      {
+         bool save_position = true;
+         if constexpr (use_position_save_behavior != position_save_behavior::always_save) {
+            if (this->stub.is_deleted()) {
+               save_position = false;
+               if (use_position_save_behavior == position_save_behavior::omit_if_deleted_and_zero) {
+                  save_position = !!this->position.x || !!this->position.y || !!this->position.z || !!this->rotation.x || !!this->rotation.y || !!this->rotation.z;
+               } else {
+                  this->position = { 0, 0, 0 };
+                  this->rotation = { 0, 0, 0 };
+               }
+            }
+         }
+         if (save_position) {
+            auto& DATA = record.open_next_subrecord('DATA');
+            DATA.reserve_more(sizeof(float) * 6);
+            DATA.write(this->position.x);
+            DATA.write(this->position.y);
+            DATA.write(this->position.z);
+            DATA.write(this->rotation.x);
+            DATA.write(this->rotation.y);
+            DATA.write(this->rotation.z);
+            DATA.close();
+         }
+      }
    }
    void ObjectReference::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);
