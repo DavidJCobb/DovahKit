@@ -38,6 +38,7 @@ namespace vulkanDK {
 
 namespace dovahkit::subsystems::worldedit {
    namespace passkeys {
+      class attempt_on_screen_selection;
       class attempt_pick_ref;
    }
    class ref_pick_task;
@@ -146,6 +147,7 @@ namespace dovahkit::subsystems::worldedit {
 
             struct {
                std::vector<selected_refr_info> refs;
+               form_stub* swept_ref = nullptr; // for "Attempt On-Screen Selection" tool's "sweep" mode
             } selection;
 
             // for "Orbit Camera" tool
@@ -242,6 +244,8 @@ namespace dovahkit::subsystems::worldedit {
 
          #pragma region Passkeyed functions for tools
          void _debug_dump_landscape_raycast(cobb::passkey<core, class tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position);
+         dovah::form_stub* _get_selection_swept_ref(passkeys::attempt_on_screen_selection) const;
+         void _set_selection_swept_ref(passkeys::attempt_on_screen_selection, dovah::form_stub*);
          #pragma endregion
 
          #pragma region Pick ref

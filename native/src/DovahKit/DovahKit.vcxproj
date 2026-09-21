@@ -2532,6 +2532,7 @@
     <ClInclude Include="editor\subsystems\game_localized_strings\convert_string.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set.h" />
     <ClInclude Include="editor\subsystems\game_localized_strings\narrow_character_set_definitions.h" />
+    <ClInclude Include="editor\subsystems\worldedit\passkeys\attempt_on_screen_selection.h" />
     <ClInclude Include="helpers\arrays\construct_from.h" />
     <ClInclude Include="helpers\attributes\forceinline.h" />
     <ClInclude Include="helpers\lua\for_each_in_pairs.h" />
@@ -4506,6 +4507,10 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\file-reading classes.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\form type common behaviors\class names identified by hashes.md">
       <SubType>
       </SubType>
@@ -4543,6 +4548,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\q\quest\reference aliases.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\q\quest\remote definitions of alias scripts.md">
       <SubType>
       </SubType>
     </None>

@@ -10979,6 +10979,9 @@
     <ClInclude Include="dovah\data\landscapes\centerline_vertex_cell_coord.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\passkeys\attempt_on_screen_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -13100,6 +13103,8 @@
     <None Include="dovah\_docs\form type common behaviors\class names identified by hashes.md" />
     <None Include="dovah\_docs\form types\s\scene.md" />
     <None Include="dovah\_docs\form types\l\landscape.md" />
+    <None Include="dovah\_docs\form types\q\quest\remote definitions of alias scripts.md" />
+    <None Include="dovah\_docs\file-reading classes.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

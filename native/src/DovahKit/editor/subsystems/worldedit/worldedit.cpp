@@ -38,6 +38,7 @@
 #include "vulkan/surface_renderer.h"
 #include "widgets/DKVulkanView.h"
 
+#include "./passkeys/attempt_on_screen_selection.h"
 #include "./passkeys/attempt_pick_ref.h"
 #include "./ref_pick_task.h"
 
@@ -139,6 +140,8 @@ namespace dovahkit::subsystems::worldedit {
             return;
          }
          if (dovah::form_type_is_reference(form->form_type)) {
+            if (this->state.selection.swept_ref == form)
+               this->state.selection.swept_ref = nullptr;
             this->_unload_refr(*form);
             return;
          }
@@ -2028,6 +2031,12 @@ namespace dovahkit::subsystems::worldedit {
          // TODO: console-print the nearest vertex's attributes.
          //
       }
+   }
+   dovah::form_stub* core::_get_selection_swept_ref(passkeys::attempt_on_screen_selection) const {
+      return this->state.selection.swept_ref;
+   }
+   void core::_set_selection_swept_ref(passkeys::attempt_on_screen_selection, dovah::form_stub* ref) {
+      this->state.selection.swept_ref = ref;
    }
    #pragma endregion
 
