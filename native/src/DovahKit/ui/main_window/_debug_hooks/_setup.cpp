@@ -146,21 +146,22 @@ namespace DovahKitDebug {
    }
 
    extern void add_features_to_menu(QMenu* menu) {
+      bool show_menu = false;
       #if !_DEBUG
-         menu->setVisible(false);
-         menu->setEnabled(false);
          if (dovahkit::ini::main::debug::bShowMegaTests.get_current_value<bool>()) {
             auto* p = menu->parentWidget();
             if (p)
                p = p->window();
             _add_functor<features::mega_tests::full_load_every_form>::execute(menu, p);
             _add_functor<features::mega_tests::oops_all_itms>::execute(menu, p);
-            menu->setVisible(true);
-            menu->setEnabled(true);
+
+            show_menu = true;
+         } else {
+            show_menu = false;
          }
       #else
-         menu->setVisible(true);
-         menu->setEnabled(true);
+         show_menu = true;
+
          auto* p = menu->parentWidget();
          if (p)
             p = p->window();
@@ -172,5 +173,10 @@ namespace DovahKitDebug {
          _add_menu<mega_tests>(p, menu, QString("Mega-Tests"));
          all_features::for_each_with_args<_add_functor>(menu, p);
       #endif
+         
+      menu->setEnabled(show_menu);
+      if (auto* action = menu->menuAction()) {
+         action->setVisible(show_menu);
+      }
    }
 }
