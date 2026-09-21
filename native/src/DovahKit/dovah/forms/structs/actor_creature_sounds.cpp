@@ -78,6 +78,8 @@ namespace dovah::loaded_forms::structs {
       switch (subrecord.signature()) {
          case subrecord_signature_inherit:
             this->_own_sounds.clear();
+            this->_loader_state.pending_type = {};
+            this->_loader_state.pending_form = {};
 
             if (subrecord.read(this->_inherit_from)) {
                intfc.warn_if_ref_is_wrong_type(this->_inherit_from, form_type::actor_base, subrecord.signature());
@@ -102,17 +104,22 @@ namespace dovah::loaded_forms::structs {
 
          case subrecord_signature_sound_start:
             {
-               auto& e = this->_loader_state.pending_entry.emplace();
-               subrecord.read(e.type);
+               creature_sound_type v;
+               if (subrecord.read(v)) {
+                  this->_loader_state.pending_type = v;
+               } else {
+                  this->_loader_state.pending_type = {};
+               }
+               this->_loader_state.pending_form = {};
             }
             break;
          case subrecord_signature_sound_form:
             {
-               auto& pending_opt = this->_loader_state.pending_entry;
-               if (!pending_opt.has_value())
+               if (!this->_loader_state.pending_type.has_value())
                   break;
+               auto& dst = this->_loader_state.pending_form;
                if (subrecord.get_containing_record().peek_next_subrecord_type() != subrecord_signature_sound_chance) {
-                  pending_opt = {};
+                  dst = {};
                   break;
                }
 
@@ -121,24 +128,24 @@ namespace dovah::loaded_forms::structs {
                form_reference_t form_id;
                if (subrecord.read(form_id)) {
                   intfc.warn_if_ref_is_wrong_type(form_id, form_type::sound_descriptor, subrecord.signature());
-                  pending_opt.value().sound = form_id.get_form_stub();
+                  dst = form_id.get_form_stub();
                }
             }
             break;
          case subrecord_signature_sound_chance:
             {
-               auto& pending_opt = this->_loader_state.pending_entry;
-               if (!pending_opt.has_value())
+               if (!this->_loader_state.pending_type.has_value())
                   break;
-               auto& pending = pending_opt.value();
-               subrecord.read(pending.chance);
+               if (!this->_loader_state.pending_form.has_value())
+                  break;
+               auto* form = this->_loader_state.pending_form.value().get_form_stub();
 
                auto& dst = this->_own_sounds.emplace_back();
-               dst.chance = pending.chance;
-               dst.type   = pending.type;
-               dst.sound.unmanaged_set(pending.sound);
+               subrecord.read(dst.chance);
+               dst.type = this->_loader_state.pending_type.value();
+               dst.sound.unmanaged_set(form);
 
-               pending_opt = {};
+               this->_loader_state.pending_form = {};
             }
             break;
       }
@@ -147,10 +154,19 @@ namespace dovah::loaded_forms::structs {
       if (this->_inherit_from)
          record.write_formID_subrecord(subrecord_signature_inherit, this->_inherit_from);
       else {
+         //
+         // We *should* store separate lists for each creature sound type, as the CK does, 
+         // but I'm super tired right now. This data won't be "canonical" but it should be 
+         // valid.
+         //
+         std::optional<creature_sound_type> last_type;
          for (auto& item : this->_own_sounds) {
-            auto& subrecord_a = record.open_next_subrecord(subrecord_signature_sound_start);
-            subrecord_a.write(item.type);
-            subrecord_a.close();
+            if (last_type != item.type) {
+               auto& subrecord_a = record.open_next_subrecord(subrecord_signature_sound_start);
+               subrecord_a.write(item.type);
+               subrecord_a.close();
+               last_type = item.type;
+            }
             record.write_formID_subrecord(subrecord_signature_sound_form, item.sound.get_form_stub(), false);
             auto& subrecord_c = record.open_next_subrecord(subrecord_signature_sound_chance);
             subrecord_c.write(item.chance);
@@ -167,26 +183,26 @@ namespace dovah::loaded_forms::structs {
             break;
 
          case subrecord_signature_sound_start:
-            uib.pending_entry_is_valid = true;
+            uib.seen_type = true;
             break;
          case subrecord_signature_sound_form:
-            if (!uib.pending_entry_is_valid)
+            if (!uib.seen_type)
                break;
-            {
-               if (subrecord.get_containing_record().peek_next_subrecord_type() != subrecord_signature_sound_chance) {
-                  uib.pending_entry_is_valid = false;
-                  break;
-               }
-               uib.inherit_from = {};
-
-               form_id_t form_id;
-               if (subrecord.read(form_id)) {
-                  uib.sounds.push_back(form_id);
-               }
+            if (subrecord.get_containing_record().peek_next_subrecord_type() != subrecord_signature_sound_chance) {
+               uib.seen_form = false;
+               break;
             }
+            uib.inherit_from = {};
+            uib.seen_form    = true;
+            subrecord.read(uib.last_seen_form);
             break;
          case subrecord_signature_sound_chance:
-            uib.pending_entry_is_valid = false;
+            if (uib.seen_type && uib.seen_form) {
+               if (uib.last_seen_form)
+                  uib.sounds.push_back(uib.last_seen_form);
+               uib.last_seen_form = {};
+            }
+            uib.seen_form = false;
             break;
       }
    }

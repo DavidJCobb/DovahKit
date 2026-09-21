@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <vector>
 #include "../_common.h"
 
 namespace dovah {
@@ -18,6 +20,8 @@ namespace dovah {
       weapon,
       movement_loop,
       conscious_loop,
+
+      __COUNT
    };
 }
 
@@ -35,6 +39,8 @@ namespace dovah::loaded_forms::structs {
          static constexpr const uint32_t subrecord_signature_sound_form   = 'CSDI';
          static constexpr const uint32_t subrecord_signature_sound_chance = 'CSDC';
 
+         static constexpr const size_t num_creature_sound_types = (size_t)creature_sound_type::__COUNT;
+
          struct entry {
             creature_sound_type type   = creature_sound_type::idle;
             form_stub*          sound;
@@ -48,7 +54,10 @@ namespace dovah::loaded_forms::structs {
                form_stub_use_info_builder& owner;
                form_id_t inherit_from = 0; // must be form_id_t to load properly
                std::vector<bare_form_id_t> sounds; // we use a form_id_t local variable. making that the value_type causes an MSVC internal compiler error
-               bool pending_entry_is_valid = false;
+
+               bool seen_type = false;
+               bool seen_form = false;
+               form_id_t last_seen_form = 0;
 
             public:
                void done();
@@ -65,7 +74,8 @@ namespace dovah::loaded_forms::structs {
          std::vector<_stored_entry> _own_sounds;
 
          struct {
-            std::optional<entry> pending_entry;
+            std::optional<creature_sound_type> pending_type;
+            std::optional<form_reference_t>    pending_form;
          } _loader_state; // used to track loader state across subrecords; not safe to read from otherwise
 
       public:
