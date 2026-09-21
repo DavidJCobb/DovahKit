@@ -487,12 +487,19 @@ namespace dovah::tes_file_writing {
          // If this DIAL is new -- defined in the active file -- then we don't have 
          // to worry about the pre-active-file ordering of its INFOs.
          //
-         for (dovah::form_stub* child : list_a) {
+         for (size_t ia = 0; ia < list_a.size(); ++ia) {
+            auto* child = list_a[ia];
             if (child->form_type != form_type::topic_info)
                continue;
             if (!form_stub_helpers::needs_to_be_saved(*child))
                continue;
-            this->_write_form(child);
+
+            dovah::form_stub* previous = nullptr;
+            if (ia > 0) {
+               previous = list_a[ia - 1];
+            }
+
+            this->_write_form(child, previous);
          }
       } else {
          //
