@@ -108,7 +108,7 @@ namespace dovahkit::subsystems::message_log {
          if (fn.isEmpty()) {
             text = tr("The active file has been successfully saved.", "log window");
          } else {
-            text = tr("The active file, %1, has been successfully saved.", "log window").arg(text);
+            text = tr("The active file, %1, has been successfully saved.", "log window").arg(fn);
          }
          this->_createLogItem(text);
       }
