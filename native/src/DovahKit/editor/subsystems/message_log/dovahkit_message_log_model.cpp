@@ -103,7 +103,14 @@ namespace dovahkit::subsystems::message_log {
          this->_createLogItem(tr("Saving active file...", "log window"));
       }
       void model::dataSaveComplete() {
-         this->_createLogItem(tr("The active file has been successfully saved.", "log window"));
+         QString text;
+         auto    fn = DovahKitCore::get().get_active_file_name();
+         if (fn.isEmpty()) {
+            text = tr("The active file has been successfully saved.", "log window");
+         } else {
+            text = tr("The active file, %1, has been successfully saved.", "log window").arg(text);
+         }
+         this->_createLogItem(text);
       }
       void model::formRenumbered(dovah::form_stub*, dovah::bare_form_id_t prior, dovah::bare_form_id_t after) {
          //

@@ -80,3 +80,4 @@ Miscellaneous:
 
 * `form_creation_request::commit` and friends should return a `form_stub&`, so callers don't have to check whether the request succeeded even when it doesn't throw an exception.
 * Improve `base_form_load_warning`: it should probably be possible to specify an alias ID when warnings occur while loading a quest alias.
+* We should do a better job about reporting misplaced records and groups; misplaced records within cell-child groups (e.g. an `ACTI` that is supposedly the child of a cell) don't warn in DovahKit's alpha.
