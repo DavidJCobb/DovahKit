@@ -2,6 +2,20 @@
 //
 #include "resource.h"
 
+#include "dovahkit_version_macros.h"
+#define VERSION_NUM VER_MAJOR,VER_MINOR,VER_PATCH,VER_BUILD
+
+#define STR(x) #x
+#define XSTR(x) STR(x)
+#define VERSION_STR VER_MAJOR.VER_MINOR.VER_PATCH.VER_BUILD
+#if VER_BUILD == 0
+   // Do "a.b.c" rather than "a.b.c.0" when the build number is zero
+   // Won't show up in Qt because that relies on PRODUCTVERSION, not "ProductVersion"
+   #undef VERSION_STR
+   #define VERSION_STR VER_MAJOR.VER_MINOR.VER_PATCH
+#endif
+#define VERSION_XSTR XSTR(VERSION_STR)
+
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -61,8 +75,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,1
- PRODUCTVERSION 0,0,0,1
+ FILEVERSION VERSION_NUM
+ PRODUCTVERSION VERSION_NUM
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -79,12 +93,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "DavidJCobb"
             VALUE "FileDescription", "DovahKit"
-            VALUE "FileVersion", "0.0.0.1"
+            VALUE "FileVersion", VERSION_XSTR
             VALUE "InternalName", "DovahKit"
             VALUE "LegalCopyright", "Copyright (C) 2020"
             VALUE "OriginalFilename", "DovahKit.exe"
             VALUE "ProductName", "DovahKit"
-            VALUE "ProductVersion", "0.0.0.1"
+            VALUE "ProductVersion", VERSION_XSTR
         END
     END
     BLOCK "VarFileInfo"

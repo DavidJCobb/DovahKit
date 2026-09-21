@@ -47,9 +47,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <EnableCppModules>false</EnableCppModules>
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)_output\$(ShortProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <EnableCppModules>false</EnableCppModules>
+    <OutDir>$(SolutionDir)_output\$(ShortProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)_build\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -2239,6 +2243,7 @@
     <ClInclude Include="dovah\notices\file_load_warnings\singleton_form_is_redundantly_defined.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\the_game_doesnt_load_new_actor_value_infos.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\_all.h" />
+    <ClInclude Include="dovahkit_version_macros.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\actor_creature_sounds\invalid_sound_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\attack_data\expected_event_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\container\item_has_bad_owner_form_type.h" />
