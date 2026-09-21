@@ -25,7 +25,12 @@
 
 namespace dovahkit::ini::main {
    cobb::ini::file file_data = cobb::ini::file{};
+   
+   namespace debug {
+      cobb::ini::category category_data = cobb::ini::category(file_data, "debug");
 
+      MAKE_INI_SETTING(bShowMegaTests, false);
+   }
    namespace saving {
       cobb::ini::category category_data = cobb::ini::category(file_data, "saving");
 
