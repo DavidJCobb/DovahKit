@@ -17,7 +17,7 @@ namespace dovah::loaded_forms {
                this->script_data.load(subrecord, intfc);
                break;
             case 'WLST':
-               {
+               while (subrecord.is_in_bounds(0xC)) {
                   auto& item = this->weather_types.emplace_back();
                   if (auto& form = item.weather; subrecord.read(form))
                      intfc.warn_if_ref_is_wrong_type(form, form_type::weather, subrecord.signature());
@@ -66,7 +66,7 @@ namespace dovah::loaded_forms {
             continue;
          switch (subrecord.signature()) {
             case 'WLST':
-               {
+               while (subrecord.is_in_bounds(0xC)) {
                   auto& item = weather_types.emplace_back();
                   subrecord.read(item.weather);
                   subrecord.skip_bytes(sizeof(weather_type::chance));
@@ -109,12 +109,17 @@ namespace dovah::loaded_forms {
    }
    void Climate::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      for (auto& item : this->weather_types) {
+      if (!this->weather_types.empty()) {
+         //
+         // NOTE: The CK prunes entries with no weather form before saving.
+         //
          auto& subrecord = record.open_next_subrecord('WLST');
-         subrecord.reserve_more(0x0C);
-         subrecord.write(item.weather);
-         subrecord.write(item.chance);
-         subrecord.write(item.global);
+         subrecord.reserve_more(this->weather_types.size() * 0x0C);
+         for (auto& item : this->weather_types) {
+            subrecord.write(item.weather);
+            subrecord.write(item.chance);
+            subrecord.write(item.global);
+         }
          subrecord.close();
       }
       record.write_string_subrecord('FNAM', this->textures.sun);
