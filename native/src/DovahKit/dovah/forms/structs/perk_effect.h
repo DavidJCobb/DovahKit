@@ -27,7 +27,7 @@ namespace dovah::loaded_forms::structs {
 
             struct quest {
                form_reference_t quest;
-               uint8_t          stage = 0;
+               uint16_t         stage = 0;
             };
             struct ability {
                form_reference_t spell;

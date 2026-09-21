@@ -325,8 +325,8 @@ namespace dovah::loaded_forms::structs {
                auto& subrecord = record.open_next_subrecord('DATA');
                subrecord.write(casted.quest);
                subrecord.write(casted.stage);
+               subrecord.skip_bytes(2);
                subrecord.close();
-
             }
             break;
          case type::ability:
