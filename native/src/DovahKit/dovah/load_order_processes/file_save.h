@@ -2,6 +2,7 @@
 #include <string>
 #include "../files/tes_file_writing/config.h"
 #include "../files/tes_file_writing/file_writer.h"
+#include "../files/tes_file_writing/results.h"
 #include "../utils/file_prefix.h"
 
 namespace dovah {
@@ -19,11 +20,8 @@ namespace dovah::load_order_processes {
       public:
          file_load_order& active_load_order;
          std::string      desired_filename;
-         tes_file_writing::write_config write_config;
-         struct {
-            std::string filename;
-            bool        saved_to_temporary_file = false;
-         } results;
+         tes_file_writing::write_config  write_config;
+         tes_file_writing::write_results results;
       protected:
          file_prefix _old_active_file_prefix;
          bool _save_as_light_plugin = false;

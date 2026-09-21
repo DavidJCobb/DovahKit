@@ -2676,6 +2676,12 @@ namespace dovah {
       auto process = load_order_processes::file_save(*this);
       process.desired_filename = requested_filename.string();
       process.write_config = cfg;
-      process.execute();
+      try {
+         process.execute();
+         results = process.results;
+      } catch (...) {
+         results = process.results;
+         throw;
+      }
    }
 }
