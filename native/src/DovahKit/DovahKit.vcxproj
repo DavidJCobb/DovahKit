@@ -2239,6 +2239,7 @@
     <ClInclude Include="dovah\notices\file_load_warnings\singleton_form_is_redundantly_defined.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\the_game_doesnt_load_new_actor_value_infos.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\_all.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\actor_creature_sounds\invalid_sound_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\attack_data\expected_event_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\container\item_has_bad_owner_form_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\destruction\stage_serialized_index_out_of_bounds.h" />

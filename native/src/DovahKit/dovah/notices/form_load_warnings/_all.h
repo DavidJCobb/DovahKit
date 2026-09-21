@@ -4,6 +4,7 @@
 #include "./invalid_actor_value_index.h"
 #include "./unrecognized_subrecord.h"
 #pragma region by form component
+   #include "./by_form_component/actor_creature_sounds/invalid_sound_type.h"
    #include "./by_form_component/attack_data/expected_event_subrecord.h"
    #include "./by_form_component/container/item_has_bad_owner_form_type.h"
    #include "./by_form_component/destruction/stage_serialized_index_out_of_bounds.h"

@@ -65,13 +65,12 @@ namespace dovah::loaded_forms::structs {
 
       protected:
          struct _stored_entry {
-            creature_sound_type type   = creature_sound_type::idle;
-            form_reference_t    sound;
-            uint8_t             chance = 100; // chance to play (percentage)
+            form_reference_t sound;
+            uint8_t          chance = 100; // chance to play (percentage)
          };
 
          form_reference_t _inherit_from = nullptr;
-         std::vector<_stored_entry> _own_sounds;
+         std::array<std::vector<_stored_entry>, num_creature_sound_types> _own_sounds; // _own_sounds[creature_sound_type][n] == a sound
 
          struct {
             std::optional<creature_sound_type> pending_type;

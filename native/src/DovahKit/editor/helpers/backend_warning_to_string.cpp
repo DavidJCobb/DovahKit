@@ -566,6 +566,15 @@ namespace editor_helpers {
          // Specific warnings:
          //
          #pragma region by form component
+            #pragma region actor creature sounds
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::actor_creature_sounds::invalid_sound_type*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Form %1 specified a creature sound with invalid type %2.",
+                     disambig
+                  ).arg(subject).arg(casted->type);
+               }
+            #pragma endregion
             #pragma region attack data
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::attack_data::expected_event_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
