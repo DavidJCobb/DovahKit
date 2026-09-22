@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <InnoSetupCompilerPath>C:\Program Files (x86)\Inno Setup 6\ISCC.exe</InnoSetupCompilerPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup />
+  <ItemGroup />
+  
+  <!-- UPDATE VC VERSION NUMBERS -->
+  <UsingTask TaskName="UpdateVCVersionHeaderTask" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <ArchitectureSuffix ParameterType="System.String" Required="true" />
+      <ProjectDir ParameterType="System.String" Required="true" />
+      <VcInstallDir ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Method" Language="cs"><![CDATA[
+public override bool Execute() {
+   string LOG_PREFIX = "[Cobb:Get-VC-Version] ";
+
+   Log.LogMessage(MessageImportance.High, VcInstallDir);
+   Log.LogMessage(MessageImportance.High, ArchitectureSuffix);
+   
+   string filename = "vc_redist." + ArchitectureSuffix + ".exe";
+   
+   System.Version version = null;
+   string src = VcInstallDir + "redist/MSVC";
+   {
+      System.Version newest = null;
+      string newest_str = "";
+      
+      var directory = new System.IO.DirectoryInfo(src);
+      src += "/";
+      var list = directory.GetDirectories();
+      foreach(System.IO.DirectoryInfo subfolder in list) {
+         System.Version here = null;
+         try {
+            here = new System.Version(subfolder.Name);
+         } catch (System.ArgumentException) {
+            continue;
+         }
+         if (newest == null || newest < here) {
+            newest     = here;
+            newest_str = subfolder.Name;
+         }
+      }
+      if (newest == null) {
+         Log.LogError(LOG_PREFIX + "failed to find VC Redist folder.");
+         return false;
+      }
+      version = newest;
+   }
+   src += filename;
+   
+   int revision = version.Revision;
+   if (revision == -1)
+      revision = 0;
+   
+   string output = "";
+   output += "#define vc_version_major " + version.Major.ToString() + "\n";
+   output += "#define vc_version_minor " + version.Minor.ToString() + "\n";
+   output += "#define vc_version_bld   " + version.Build.ToString() + "\n";
+   output += "#define vc_version_rbld  " + revision.ToString();
+   
+   string dst = ProjectDir + "vc-version.iss";
+   
+   File.WriteAllText(dst, output);
+   Log.LogMessage(
+      MessageImportance.High,
+      "VC version found is: "
+         + version.Major.ToString() + "."
+         + version.Minor.ToString() + "."
+         + version.Build.ToString() + "."
+         + revision.ToString()
+         + ". Writing to:\n"
+         + dst
+   );
+   return true;
+}
+      ]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="UpdateVCVersionHeader" BeforeTargets="Build">
+    <UpdateVCVersionHeaderTask VcInstallDir="$(VCInstallDir)" ArchitectureSuffix="x64" ProjectDir="$(ProjectDir)" />
+  </Target>
+  <!-- END: UPDATE VC VERSION NUMBERS -->
+  
+</Project>
