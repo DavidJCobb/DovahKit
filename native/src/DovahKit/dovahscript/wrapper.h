@@ -114,7 +114,7 @@ namespace dovahscript {
          // We may at some point in the future allow scripts to disable "loose" form type errors. 
          // Maybe.
          //
-         [[noreturn]] void error_if_wrong_form_type(lua_State* L, int arg_index, dovah::form_type, bool loose = true);
+         void error_if_wrong_form_type(lua_State* L, int arg_index, dovah::form_type, bool loose = true);
 
          template<typename c> c* get_loaded_form_data() {
             this->load_form();
