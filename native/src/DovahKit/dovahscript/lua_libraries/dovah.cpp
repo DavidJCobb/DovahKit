@@ -23,6 +23,7 @@
 #include "editor/core.h"
 
 #include "dovah/data/ini_settings.h"
+#include "dovah/files/tes_file_reading/file_loader.h"
 
 #include "../lua_classes/benchmark.h"
 
@@ -175,6 +176,27 @@ namespace {
          });
          //
          return 0;
+      }
+      int get_active_file_info(lua_State* L) {
+         auto& editor = DovahKitCore::get();
+         if (!editor.has_data())
+            return 0;
+         auto* file = editor.get_file_load_order()->get_active_file();
+         if (!file) {
+            lua_pushnil(L);
+            return 1;
+         }
+         lua_newtable(L);
+         {
+            const auto str = file->get_filename();
+            lua_pushlstring(L, str.c_str(), str.size());
+            lua_setfield(L, -2, "filename");
+         }
+         lua_pushboolean(L, file->is_master());
+         lua_setfield(L, -2, "is_master");
+         lua_pushboolean(L, file->is_light());
+         lua_setfield(L, -2, "is_light");
+         return 1;
       }
       int get_form_by_editor_id(lua_State* L) {
          cobb::lua::argcheck(L, lua_isstring(L, 1), 1, "string expected");
@@ -441,6 +463,7 @@ namespace {
       luaL_Reg{ "deep_stringify",          &_definitions::deep_stringify },
       luaL_Reg{ "dump",                    &_definitions::dump },
       luaL_Reg{ "for_each_form_of_type",   &_definitions::for_each_form_of_type },
+      luaL_Reg{ "get_active_file_info",    &_definitions::get_active_file_info },
       luaL_Reg{ "get_form_by_editor_id",   &_definitions::get_form_by_editor_id },
       luaL_Reg{ "get_form_by_id",          &_definitions::get_form_by_id },
       luaL_Reg{ "log_message",             &_definitions::log_message },

@@ -103,7 +103,7 @@ constexpr auto subobject_properties = std::tuple{
       SUBOBJECT_FIELD_ACCESSOR(idles.speaker)
    ),
 
-   subobject_property_helpers::form_property<dovah::form_type::sound>::define(
+   subobject_property_helpers::form_property<dovah::form_type::sound_descriptor>::define(
       "substitute_sound",
       SUBOBJECT_FIELD_ACCESSOR(sound)
    ),
