@@ -88,9 +88,9 @@ namespace SceneFormVisualEditor_impl {
       {  // Header
          QString text;
          if (this->data.name.isEmpty()) {
-            text = SceneFormVisualEditor::tr("Action %1: %2").arg(index).arg(this->data.name);
+            text = SceneFormVisualEditor::tr("Phase %1: %2").arg(index).arg(this->data.name);
          } else {
-            text = SceneFormVisualEditor::tr("Action %1").arg(index);
+            text = SceneFormVisualEditor::tr("Phase %1").arg(index);
          }
          const QRect& rect = this->geometry.rel.header;
          if (option.selected && option.active) {
