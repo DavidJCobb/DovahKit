@@ -5,6 +5,10 @@
 
 When converting a file across games, we don't check whether its masters also exist cross-game. We also don't check whether any forms overridden in the active file still exist in the masters for the destination game.
 
+## Direct upload to NexusMods
+
+The Creation Kit can upload directly to Bethesda.net. I've had someone suggest a comparable upload for NexusMods.
+
 ## Mod merging
 
 Mod merging could be useful, particularly if we write a co-save file that describes the mapping of forms from the source files to the destination file (so that later re-merges produce consistent results).
