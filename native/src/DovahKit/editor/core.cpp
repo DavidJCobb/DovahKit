@@ -54,6 +54,8 @@
 #include "./helpers/backend_error_to_string.h"
 #include "./localize/form_creation_error_code.h"
 
+#include "./ini/main.h"
+
 namespace {
    void _on_form_created(dovah::form_stub* stub) {
       if (stub)
@@ -957,6 +959,22 @@ const dovah::bsa_load_order* DovahKitCore::get_bsa_load_order() {
 }
 
 bool DovahKitCore::get_game_path(std::filesystem::path& out, dovah::game game) const noexcept {
+   {
+      std::string override_path;
+      switch (game) {
+         case dovah::game::skyrim_classic:
+            override_path = dovahkit::ini::main::skyrim::sOverridePathClassic.get_current_value<std::string>();
+            break;
+         case dovah::game::skyrim_special:
+            override_path = dovahkit::ini::main::skyrim::sOverridePathSpecial.get_current_value<std::string>();
+            break;
+      }
+      if (!override_path.empty()) {
+         out = (const char8_t*)override_path.c_str();
+         return true;
+      }
+   }
+
    std::wstring value(512, 0);
    const wchar_t* key;
    switch (game) {

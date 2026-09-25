@@ -2,6 +2,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <QButtonGroup>
+#include <QFileDialog>
 #include "editor/subsystems/options/core.h"
 #include "editor/ini/main.h"
 
@@ -136,6 +137,8 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
    // their widgets, for basic things like checkboxes, radio buttons, and spinboxes.
    //
    #pragma region Loading and Saving
+      this->_mappings.basic.emplace_back(&dovahkit::ini::main::skyrim::sOverridePathClassic, this->ui.gamePathClassic);
+      this->_mappings.basic.emplace_back(&dovahkit::ini::main::skyrim::sOverridePathSpecial, this->ui.gamePathSpecial);
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::saving::bApplyRefPersistenceAsNeeded, this->ui.iniPref_bApplyRefPersistenceAsNeeded);
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::saving::bClearRefPersistenceWhenAble, this->ui.iniPref_bClearRefPersistenceWhenAble);
    #pragma endregion
@@ -402,9 +405,34 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
    this->revertChanges();
 
    #pragma region Special-cases: interdependent widgets
-   QObject::connect(this->ui.iniPref_bLoadedGridSizeOverrideFromSkyrimINI_false, &QRadioButton::toggled, this, [this](bool checked) {
-      this->ui.iniPref_uLoadedGridSize->setEnabled(checked);
-   });
+      QObject::connect(this->ui.iniPref_bLoadedGridSizeOverrideFromSkyrimINI_false, &QRadioButton::toggled, this, [this](bool checked) {
+         this->ui.iniPref_uLoadedGridSize->setEnabled(checked);
+      });
+
+      QObject::connect(this->ui.gamePathClassicBrowse, &QPushButton::clicked, this, [this]() {
+         auto* widget = this->ui.gamePathClassic;
+         auto  prior  = widget->text();
+         auto  dir    = QFileDialog::getExistingDirectory(
+            this,
+            tr("Select game folder (Skyrim Classic"),
+            prior
+         );
+         if (!dir.isEmpty()) {
+            widget->setText(dir);
+         }
+      });
+      QObject::connect(this->ui.gamePathSpecialBrowse, &QPushButton::clicked, this, [this]() {
+         auto* widget = this->ui.gamePathSpecial;
+         auto  prior  = widget->text();
+         auto  dir    = QFileDialog::getExistingDirectory(
+            this,
+            tr("Select game folder (Skyrim Special"),
+            prior
+         );
+         if (!dir.isEmpty()) {
+            widget->setText(dir);
+         }
+      });
    #pragma endregion
 
    QObject::connect(this->ui.buttonSave, &QPushButton::clicked, this, [this]() {
@@ -478,6 +506,9 @@ void OptionsWindow::revertChanges() {
          }
       } else if (auto* casted = dynamic_cast<QDoubleSpinBox*>(widget)) {
          casted->setValue(setting.get_current_value<double>());
+      } else if (auto* casted = dynamic_cast<QLineEdit*>(widget)) {
+         auto v = setting.get_current_value<std::string>();
+         casted->setText(QString::fromUtf8(QByteArrayView(v.data(), v.size())));
       }
    }
    for (auto& item : this->_mappings.radio_bool) {
@@ -553,6 +584,10 @@ void OptionsWindow::save() {
          }
       } else if (auto* casted = dynamic_cast<QDoubleSpinBox*>(widget)) {
          setting->set_current_value<double>(casted->value());
+      } else if (auto* casted = dynamic_cast<QLineEdit*>(widget)) {
+         auto        bytes = casted->text().toUtf8();
+         std::string value(bytes.data(), bytes.size());
+         setting->set_current_value<std::string>(std::move(value));
       }
    }
    for (auto& item : this->_mappings.radio_bool) {

@@ -91,7 +91,10 @@ class LoadOrderFileList : public QTableView {
             return model->game();
          return dovah::game::skyrim_special;
       }
-      //
+      
    public slots:
       void listFiles(dovah::game);
+
+   public:
+      virtual void paintEvent(QPaintEvent*);
 };

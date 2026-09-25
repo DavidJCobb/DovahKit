@@ -3,6 +3,8 @@
 #include <QDirIterator>
 #include <QHeaderView>
 #include <QLineEdit>
+#include <QPainter>
+#include <QTextOption>
 #include "helpers/windows.h"
 #include "dovah/exceptions/file_load_failed.h"
 #include "dovah/files/tes_file_reading/file_header.h"
@@ -268,5 +270,24 @@ void LoadOrderFileList::listFiles(dovah::game g) {
    }
    //
    model->sortByPluginsTxt();
+}
+void LoadOrderFileList::paintEvent(QPaintEvent* e) {
+   QTableView::paintEvent(e);
+
+   auto* model = (model_type*)this->model();
+   if (!model)
+      return;
+   if (model->rowCount({}) == 0) {
+      QPainter painter(this->viewport());
+
+      QPen pen(QColor(128, 128, 128));
+      pen.setCosmetic(true);
+      painter.setPen(pen);
+
+      QTextOption options;
+      options.setWrapMode(QTextOption::WordWrap);
+      options.setAlignment(Qt::AlignCenter);
+      painter.drawText(this->rect().adjusted(3, 3, -3, -3), tr("No files found. You might want to set your game path manually, in DovahKit's options."), options);
+   }
 }
 #pragma endregion

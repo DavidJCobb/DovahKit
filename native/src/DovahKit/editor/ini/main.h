@@ -46,6 +46,12 @@ namespace dovahkit::ini::main {
       MAKE_INI_SETTING(bApplyRefPersistenceAsNeeded, true);
       MAKE_INI_SETTING(bClearRefPersistenceWhenAble, false);
    }
+   namespace skyrim {
+      extern cobb::ini::category category_data;
+
+      MAKE_INI_STRING_SETTING(sOverridePathClassic, "");
+      MAKE_INI_STRING_SETTING(sOverridePathSpecial, "");
+   }
    namespace worldedit {
       extern cobb::ini::category category_data;
 
