@@ -2,6 +2,8 @@
 #include "../rendered_nif.h"
 #include "../surface_renderer.h"
 
+#include "editor/subsystems/crash_dumper/register_new_thread.h"
+
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "editor/subsystems/assets.h"
 
@@ -39,6 +41,7 @@ namespace vulkanDK::asset_loading {
    }
 
    void worker_thread_for_nifs::run() {
+      dovahkit::subsystems::crash_dumper::register_new_thread();
       auto& list = this->owner.loading.meshes.batches[this->index];
       for (auto& item : list) {
          if (item.nif->is_cancel_requested()) {

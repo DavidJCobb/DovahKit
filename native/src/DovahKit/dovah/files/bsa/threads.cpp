@@ -1,12 +1,15 @@
 #include "threads.h"
 #include "bsa_archive.h"
 #include "bsa_load_order.h"
+#include "../../worker_thread_termination_handler.h"
 
 namespace dovah {
    bsa_threaded_reader::bsa_threaded_reader(bsa_load_order& o) : owner(o) {
    }
 
    /*static*/ void bsa_threaded_reader::_exec(bsa_threaded_reader* instance) {
+      worker_thread_termination_handler::update_this_thread();
+
       auto& self = *instance;
       for (auto* archive : self.archives) {
          if (!archive)

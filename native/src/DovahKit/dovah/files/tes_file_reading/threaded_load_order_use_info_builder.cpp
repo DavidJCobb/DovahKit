@@ -1,12 +1,14 @@
 #include "threaded_load_order_use_info_builder.h"
 #include "file_loader.h"
 #include "../../form_stub.h"
+#include "../../worker_thread_termination_handler.h"
 
 #include "../../exceptions/file_load_failed.h"
 #include "../../notices/base_file_load_error.h"
 
 namespace dovah::tes_file_reading {
    void threaded_load_order_use_info_builder::_execute() {
+      worker_thread_termination_handler::update_this_thread();
       //_DEBUGMSG("[dovah::threaded_load_order_use_info_builder] Thread %08X has started processing %d forms.", std::this_thread::get_id(), this->queue.size());
       #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
          struct timeb bench_start;

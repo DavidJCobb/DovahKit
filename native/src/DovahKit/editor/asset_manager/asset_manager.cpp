@@ -3,12 +3,14 @@
 #include <QRegularExpression>
 #include <QStringView>
 #include <QThread>
-#include "../../helpers/cpuinfo.h"
-#include "../../dovahscript/dovahscript_host.h"
-#include "../../editor/core.h"
+#include "helpers/cpuinfo.h"
+#include "dovahscript/dovahscript_host.h"
+#include "editor/core.h"
 
 // for DirectXTex and COM setup:
 #include "helpers/windows.h"
+
+#include "editor/subsystems/crash_dumper/register_new_thread.h"
 
 namespace {
    // see also: the same constexpr value in asset.cpp
@@ -50,6 +52,7 @@ namespace {
 
 #pragma region DovahKitAssetManager::Worker
 void DovahKitAssetManager::Worker::_handler() {
+   dovahkit::subsystems::crash_dumper::register_new_thread();
    {
       //
       // Set up COM on this thread so that it can use DirectXTex.

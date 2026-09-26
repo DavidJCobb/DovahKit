@@ -7,6 +7,7 @@
 #include "../../use_info/entry_flag_to_mask.h"
 #include "../../utils/world_position_to_grid_coordinates.h"
 #include "../../load_order_interfaces/form_load.h"
+#include "../../worker_thread_termination_handler.h"
 
 #include "../../forms/Cell.h"
 
@@ -68,6 +69,7 @@ namespace dovah::tes_file_reading {
    }
 
    void load_order_persistent_ref_reparenter::worker::_execute() {
+      worker_thread_termination_handler::update_this_thread();
       auto&       list  = this->owner.refs;
       const auto& cells = this->owner.cells_for_current_world;
       for (size_t i = this->range.start; i < this->range.end; ++i) {
@@ -125,6 +127,7 @@ namespace dovah::tes_file_reading {
    }
 
    void load_order_persistent_ref_reparenter::bidi_worker::_execute() {
+      worker_thread_termination_handler::update_this_thread();
       constexpr bool use_sign_masking = false;
       constexpr auto sign_bit_mask    = std::bit_cast<int32_t, uint32_t>(uint32_t(1 << 31));
       const uint32_t x_mask = this->x_pos ? 0 : sign_bit_mask;

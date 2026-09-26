@@ -1,8 +1,10 @@
 #include "./threaded_builder.h"
 #include "dovah/form_stub.h"
+#include "editor/subsystems/crash_dumper/register_new_thread.h"
 
 namespace dovahkit::subsystems::form_info_cache {
    void threaded_builder::_execute() {
+      dovahkit::subsystems::crash_dumper::register_new_thread();
       auto& list = this->queue;
       //
       this->progress.maximum = 0;

@@ -2,6 +2,8 @@
 #include "../loaded_texture.h"
 #include "../surface_renderer.h"
 
+#include "editor/subsystems/crash_dumper/register_new_thread.h"
+
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "editor/subsystems/assets.h"
 
@@ -83,6 +85,7 @@ namespace vulkanDK::asset_loading {
    }
 
    void worker_thread_for_textures::run() {
+      dovahkit::subsystems::crash_dumper::register_new_thread();
       auto& list  = this->owner.scene.entities_of_type<loaded_texture>();
       auto& queue = this->owner.loading.textures.batches[this->index];
       for (auto index : queue) {

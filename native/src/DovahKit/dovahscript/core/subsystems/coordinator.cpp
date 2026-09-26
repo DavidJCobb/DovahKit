@@ -35,6 +35,8 @@
 
 #include "../../constants/debugging.h"
 
+#include "editor/subsystems/crash_dumper/register_new_thread.h"
+
 namespace {
    static constexpr bool debug_script_start_stop = dovahscript::force_enable_debug_logging || false
       #ifdef _DEBUG
@@ -612,7 +614,10 @@ namespace dovahscript::core::subsystems {
       //this->_teardown_lua_vm();
       this->_setup_lua_state();
       //
-      this->worker_thread = std::thread([this]() { this->_script_thread_loop(); });
+      this->worker_thread = std::thread([this]() {
+         dovahkit::subsystems::crash_dumper::register_new_thread();
+         this->_script_thread_loop();
+      });
    }
    bool coordinator::eval_script(const QString& code) {
       if (code.isEmpty())

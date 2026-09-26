@@ -502,6 +502,7 @@
     <ClCompile Include="dovah\utils\magic_effect_list_item_cost_calculator.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
     <ClCompile Include="dovah\utils\text_replacers\effect_item_handler.cpp" />
+    <ClCompile Include="dovah\worker_thread_termination_handler.cpp" />
     <ClCompile Include="editor\helpers\backend_error_to_string.cpp" />
     <ClCompile Include="editor\helpers\condition_mime_data.cpp" />
     <ClCompile Include="editor\helpers\condition_to_string\alias.cpp" />
@@ -557,6 +558,8 @@
     <ClCompile Include="editor\subsystems\audio\utils\is_valid_wav_riff.cpp" />
     <ClCompile Include="editor\subsystems\audio\utils\is_valid_xwma_riff.cpp" />
     <ClCompile Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.cpp" />
+    <ClCompile Include="editor\subsystems\crash_dumper\core.cpp" />
+    <ClCompile Include="editor\subsystems\crash_dumper\register_new_thread.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\collision_layer.cpp" />
@@ -1317,6 +1320,10 @@
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
     <ClCompile Include="ui\main_window\object_window\filter_info.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\access_violation.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\integer_divide_by_zero.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception_on_thread.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.cpp" />
@@ -2485,6 +2492,7 @@
     <ClInclude Include="dovah\utils\text_replacers\effect_item_handler.h" />
     <ClInclude Include="dovah\utils\update_large_ref_index.h" />
     <ClInclude Include="dovah\utils\update_location_content.h" />
+    <ClInclude Include="dovah\worker_thread_termination_handler.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\condition_mime_data.h" />
     <ClInclude Include="editor\helpers\condition_to_string\alias.h" />
@@ -2529,6 +2537,8 @@
     <ClInclude Include="editor\subsystems\audio\utils\is_valid_xwma_riff.h" />
     <ClInclude Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.h" />
     <ClInclude Include="editor\subsystems\audio\utils\parse_riff.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\core.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\register_new_thread.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\collision_layer.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data_class_by_form_type.h" />
@@ -2548,6 +2558,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestObjectivesModel.h" />
     <QtMoc Include="qt\DKWinTaskbarButton.h" />
     <QtMoc Include="qt\DKWinTaskbarProgress.h" />
+    <ClInclude Include="helpers\win32\WINAPI.define.h" />
     <ClInclude Include="nif\blocks\BSBound.h" />
     <ClInclude Include="qt\DKWinTaskbarButtonPrivate.h" />
     <ClInclude Include="qt\utils\bulk_string_substitution.h" />
@@ -2564,6 +2575,10 @@
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceCollisionLayerPickerModel.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseVoicesModel.h" />
     <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\access_violation.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\integer_divide_by_zero.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception_on_thread.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\full_load_every_form.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\oops_all_itms.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.h" />
@@ -4586,6 +4601,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\voicetypes valid for a topic info.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="editor\subsystems\crash_dumper\_docs\README.md">
       <SubType>
       </SubType>
     </None>

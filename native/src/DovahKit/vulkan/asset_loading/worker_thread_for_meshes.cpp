@@ -2,6 +2,8 @@
 #include "../rendered_nif.h"
 #include "../surface_renderer.h"
 
+#include "editor/subsystems/crash_dumper/register_new_thread.h"
+
 #include "helpers/string/strieq_ascii.h"
 #include "helpers/dynamic_fast_cast.h"
 #include "nif/blocks/BSEffectShaderProperty.h"
@@ -441,6 +443,7 @@ namespace vulkanDK::asset_loading {
       }
    }
    void worker_thread_for_meshes::run() {
+      dovahkit::subsystems::crash_dumper::register_new_thread();
       auto& list = this->owner.loading.meshes.batches[this->index];
       for (auto& item : list) {
          if (item.nif->is_cancel_requested()) {

@@ -2,11 +2,18 @@
 #include "dovah/files/file_load_order.h"
 #include "dovah/exceptions/file_load_failed.h"
 #include "dovah/exceptions/invalid_load_order.h"
+#include "editor/subsystems/crash_dumper/register_new_thread.h"
 
 namespace DovahKitEditorInternals {
    load_task::load_task(DovahKitCore& ed) : editor(ed) {
    }
    void load_task::exec() {
+      // NOTE: We may be running on the main thread rather than a worker thread. 
+      // That's fine for now, since the only purpose of this call is to go and 
+      // run `set_terminate` on every thread (to work around MSVC's non-standard 
+      // `std::terminate` implementation).
+      dovahkit::subsystems::crash_dumper::register_new_thread();
+
       benchmark.begin();
       try {
          editor.load_order->load_queued_files();

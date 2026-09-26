@@ -22,6 +22,10 @@
    #include "filter_object_selection_by_scriptname.h"
    #include "ui_form_list_pane_extra_col.h"
    #include "idles_datastore.h"
+   #include "./crash_tests/access_violation.h"
+   #include "./crash_tests/integer_divide_by_zero.h"
+   #include "./crash_tests/uncaught_exception.h"
+   #include "./crash_tests/uncaught_exception_on_thread.h"
    #include "./form_types/imagespace_modifier_keyframe_interp.h"
    #include "./form_types/region_bifurcated_data_test.h"
    #include "./mega_tests/full_load_every_form.h"
@@ -61,6 +65,12 @@
 
 namespace DovahKitDebug {
    #if _DEBUG
+      using crash_tests = cobb::class_list<
+         features::crash_tests::access_violation,
+         features::crash_tests::integer_divide_by_zero,
+         features::crash_tests::uncaught_exception,
+         features::crash_tests::uncaught_exception_on_thread
+      >;
       using form_type_tests = cobb::class_list<
          features::form_types::imagespace_modifier_keyframe_interp,
          features::form_types::region_bifurcated_data_test
@@ -172,6 +182,7 @@ namespace DovahKitDebug {
          _add_menu<model_tests>(p, menu, QString("UI models"));
          _add_menu<mega_tests>(p, menu, QString("Mega-Tests"));
          all_features::for_each_with_args<_add_functor>(menu, p);
+         _add_menu<crash_tests>(p, menu, QString("Crash the program on purpose"));
       #endif
          
       menu->setEnabled(show_menu);
