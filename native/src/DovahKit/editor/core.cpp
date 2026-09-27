@@ -276,8 +276,17 @@ namespace {
          case dovah::exceptions::file_load_failed::error_code::save_or_load_already_in_progress:
             return QObject::tr("A save or load operation is already in progress.", "dovah::exceptions::file_load_failed");
       }
-      if (ex.details.file_load_error) {
-         return editor_helpers::backend_error_to_string(*ex.details.file_load_error);
+      if (const auto* err = ex.details.file_load_error.get()) {
+         auto message = editor_helpers::backend_error_to_string(*err);
+         if (!err->filename.empty()) {
+            message = QObject::tr("There was a problem with file %1: %2.")
+               .arg(QString::fromStdString(err->filename))
+               .arg(message);
+         } else {
+            message = QObject::tr("There was a problem with an unknown file: %1.")
+               .arg(message);
+         }
+         return message;
       }
       return QObject::tr("Unknown error.", "dovah::exceptions::file_load_failed");
    }

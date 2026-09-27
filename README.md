@@ -4,6 +4,8 @@ A work-in-progress tool for editing Skyrim ESM/ESP files. The name is a pun on "
 
 This tool was built using Visual Studio 2026. It dynamically links Qt.
 
+You can download DovahKit for your own use [here](https://www.nexusmods.com/skyrimspecialedition/mods/192694).
+
 ## Build environment
 
 This program was built using Microsoft Visual Studio Community 2026 with the [Qt Visual Studio Tools](https://marketplace.visualstudio.com/items?itemName=TheQtCompany.QtVisualStudioTools2022) plug-in and Qt Designer. The [version of Qt used](https://doc.qt.io/qtvstools/qtvstools-managing-projects.html#managing-qt-versions) was 6.11.1, 64-bit, for MSVC 2022 x64.
