@@ -94,6 +94,8 @@ namespace dovah::load_order_processes {
          if (verify_all_ids_in_light_range || hardcoded_range_handling != hardcoded_range_handling::ignore) {
             for (auto& pair : active_load_order.active_file_forms.forms) {
                auto id = pair.second->formID;
+               if (!_old_active_file_prefix.contains_form_id(id)) // don't check overrides or injections; only new non-injected forms
+                  continue;
                if (verify_all_ids_in_light_range) {
                   if (id & 0x00FFF000)
                      throw exception(error_code::forms_out_of_esl_form_id_range);
@@ -240,7 +242,7 @@ namespace dovah::load_order_processes {
             if (!stub)
                continue;
             auto  id   = stub->formID;
-            if (this->_old_active_file_prefix.contains_form_id(id))
+            if (this->_old_active_file_prefix.contains_form_id(id)) // don't touch overrides or injections; only new non-injected forms
                stubs.push_back(stub);
          }
          //
