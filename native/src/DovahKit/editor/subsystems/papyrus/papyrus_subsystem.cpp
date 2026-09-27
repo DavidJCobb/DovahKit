@@ -270,7 +270,7 @@ namespace dovahkit::subsystems::papyrus {
       parser.desired_classname = filename_sans_ext;
       try {
          parser.read_file((const char*)src_data, src_size);
-      } catch (const dovah::compiled_papyrus_script::read_exception&) {
+      } catch (const dovah::pex::exceptions::base_read_exception&) {
          return nullptr;
       }
       if (parser.results.name.empty())
@@ -319,7 +319,7 @@ namespace dovahkit::subsystems::papyrus {
       parser.desired_classname = _normalize_scriptname(dst_script.name);
       try {
          parser.read_file((const char*)src_data, src_size);
-      } catch (const dovah::compiled_papyrus_script::read_exception&) {
+      } catch (const dovah::pex::exceptions::base_read_exception&) {
          return nullptr;
       }
       if (parser.results.name.empty())
