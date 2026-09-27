@@ -56,7 +56,7 @@ namespace dovah::loaded_forms::components {
          void clone_from(const model& original) noexcept;
          void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          
-         constexpr bool has_precached_info() const noexcept { return !this->precached_info.texture_hashes.empty() || !this->precached_info.addon_node_ids.empty(); }
+         constexpr bool has_precached_info() const noexcept { return !this->precached_info.empty(); }
    };
    
    class model_ts : public model {

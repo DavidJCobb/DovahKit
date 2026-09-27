@@ -4,6 +4,7 @@
 namespace ui::types {
    void nif_for_form::initializeFrom(const dovah::loaded_forms::components::model& src) {
       this->model_path             = src.model_path;
+      this->precached_nif_info     = src.precached_info;
       this->supports_texture_swaps = src.supports_texture_swaps();
       if (src.supports_texture_swaps()) {
          const auto& ts = *src.as_model_ts();

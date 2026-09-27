@@ -31,6 +31,16 @@ namespace dovah::loaded_forms {
       std::vector<file_id>  texture_hashes;
       std::vector<uint32_t> addon_node_ids;
       std::vector<file_id>  material_hashes;
+
+      constexpr bool empty() const noexcept {
+         if (!this->texture_hashes.empty())
+            return false;
+         if (!this->addon_node_ids.empty())
+            return false;
+         if (!this->material_hashes.empty())
+            return false;
+         return true;
+      }
    };
 }
 

@@ -185,6 +185,9 @@ namespace dovah::loaded_forms::components {
       switch (subrecord.signature()) {
          case 'MODS':
          case 'MO2S':
+         case 'MO3S':
+         case 'MO4S':
+         case 'MO5S':
          case 'DMDS': // for texture swaps
             {
                uint32_t count;
