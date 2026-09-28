@@ -987,6 +987,22 @@ bool DovahKitCore::get_game_path(std::filesystem::path& out, dovah::game game) c
    return !out.empty();
 }
 bool DovahKitCore::get_game_plugins(std::vector<QString>& out, dovah::game game) const noexcept {
+   //
+   // Post-launch, this function should be renamed to something like "get canonical plug-in 
+   // ordering." The Load dialog searches the Data directory on its own to find all of the 
+   // plug-ins to show to the user, and then it uses the list returned by this function here 
+   // to sort those files that it's found.
+   // 
+   // The list returned from here is of every possible official plug-in, followed by all of 
+   // the non-official plug-ins listed in `plugins.txt`. We don't care whether any of these 
+   // files actually exist in the Data directory.
+   // 
+   // I haven't renamed this function (or renamed or adjusted the arguments of the static 
+   // function `list_all_official_plugins`, which it calls) right now because the fixes I'm 
+   // making tonight aren't worth having to recompile the entire program from scratch (given 
+   // how widely-included the DovahKitCore header is).
+   //
+
    out.clear();
    //
    auto env  = QProcessEnvironment::systemEnvironment();
@@ -1003,15 +1019,17 @@ bool DovahKitCore::get_game_plugins(std::vector<QString>& out, dovah::game game)
    }
    auto file = QFile(path);
    //
-   auto official = list_all_official_plugins(game, true);
+   auto official = list_all_official_plugins(game, false);
    for (auto& s : official)
       out.push_back(s);
    //
-   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+   if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
       while (!file.atEnd()) {
          auto line = file.readLine();
          if (line[0] == '#')
             continue;
+         if (line[0] == '*')
+            line = line.slice(1);
          line = line.trimmed();
          //
          bool found = false;
@@ -1031,6 +1049,10 @@ bool DovahKitCore::get_game_plugins(std::vector<QString>& out, dovah::game game)
 }
 
 /*static*/ QList<QString> DovahKitCore::list_all_official_plugins(dovah::game game, bool mandatory_only) noexcept {
+   //
+   // See comments in `DovahKitCore::get_game_plugins` above. This function is only used 
+   // there, and the `mandatory_only` argument may as well not exist for that use case.
+   //
    QList<QString> out;
    out.push_back("Skyrim.esm"); // game forces this to be 00, and it is not present in plugins.txt
    out.push_back("Update.esm"); // game forces this to be 01, and it is not present in plugins.txt
@@ -1039,10 +1061,21 @@ bool DovahKitCore::get_game_plugins(std::vector<QString>& out, dovah::game game)
    out.push_back("Dawnguard.esm");
    out.push_back("HearthFires.esm");
    out.push_back("Dragonborn.esm");
-   //
-   // TODO: Creation Club files? We probably shouldn't hardcode those, but rather should have a list 
-   // file of them somewhere, so that DovahKit doesn't need to be rebuilt whenever Bethesda adds new 
-   // content to the shop.
-   //
+   if (mandatory_only)
+      return out;
+   {
+      std::filesystem::path ccc_path;
+      if (DovahKitCore::get().get_game_path(ccc_path, game)) {
+         ccc_path /= "Skyrim.ccc";
+
+         auto file = QFile(ccc_path);
+         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            while (!file.atEnd()) {
+               auto line = file.readLine().trimmed();
+               out.push_back(line);
+            }
+         }
+      }
+   }
    return out;
 }

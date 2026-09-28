@@ -145,37 +145,69 @@ void LoadOrderFileListModel::insert(const dovah::tes_file_reading::file_header_r
    this->endInsertRows();
 }
 void LoadOrderFileListModel::sortByPluginsTxt() {
-   std::vector<QString> files;
-   DovahKitCore::get().get_game_plugins(files, this->current_game);
-   if (files.empty())
+   //
+   // The `canonically_ordered_filenames` list is a list of all possible official plug-ins, 
+   // followed by non-official plug-ins listed in their `plugins.txt`. We don't verify that 
+   // any of these plug-ins are actually in the Data directory, because we really only use 
+   // this list to enforce a "canonical" ordering on those files that we've already found 
+   // in the Data directory.
+   // 
+   // Probably I should rename the member function on `get_game_plugins`, but I don't want 
+   // to have to recompile the entire program just for this. Something for the post-launch 
+   // refactor, then.
+   //
+   std::vector<QString> canonically_ordered_filenames;
+   DovahKitCore::get().get_game_plugins(canonically_ordered_filenames, this->current_game);
+   if (canonically_ordered_filenames.empty())
       return;
-   //
+   
    emit layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
-   //
-   uint8_t i    = 0;
-   uint8_t j    = 0;
-   int     max  = std::min<int>(255, files.size());
-   auto&   list = this->children;
-   auto    size = list.size();
-   for (; i < max; ++i) {
-      auto& name = files[i];
-      for (int k = j; k < size; ++k) {
-         auto* item = list[k];
-         if (item->name() == name) {
-            if (k == i) // item is already in position
-               break;
-            std::swap(list[j], list[k]);
-            ++j;
-            break;
+   
+   {
+      const auto children_count = this->children.size();
+
+      std::vector<std::pair<size_t, int>> indices;
+      indices.resize(children_count);
+      for (size_t i = 0; i < children_count; ++i) {
+         auto& pair = indices[i];
+         pair.first  = i;
+         pair.second = -1;
+         //
+         auto fit = std::find_if(canonically_ordered_filenames.begin(), canonically_ordered_filenames.end(), [this, i](const QString canonical_name) {
+            auto known_name = this->children[i]->name();
+            return known_name.compare(canonical_name, Qt::CaseInsensitive) == 0;
+         });
+         if (fit != canonically_ordered_filenames.end())
+            pair.second = std::distance(canonically_ordered_filenames.begin(), fit);
+      }
+      std::sort(indices.begin(), indices.end(), [](const auto& a, const auto& b) {
+         if (a.second == -1) {
+            if (b.second == -1)
+               return a.first < b.first;
+            return false;
          }
+         if (b.second == -1)
+            return true;
+         return a.second < b.second;
+      });
+
+      size_t first_unknown = children_count;
+
+      decltype(this->children) sorted;
+      sorted.resize(children_count);
+      for (size_t i = 0; i < children_count; ++i) {
+         const auto& pair = indices[i];
+         sorted[i] = this->children[pair.first];
+      }
+      std::swap(this->children, sorted);
+
+      if (first_unknown < children_count) {
+         std::sort(this->children.begin() + first_unknown, this->children.end(), [](const item_type* a, const item_type* b) {
+            return a->modified < b->modified;
+         });
       }
    }
-   if (j < size) {
-      std::sort(list.begin() + j, list.end(), [](const item_type* a, const item_type* b) {
-         return a->modified < b->modified;
-      });
-   }
-   //
+   
    emit layoutChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
 }
 
