@@ -4431,6 +4431,9 @@
     <ClCompile Include="ui\utils\make_readonly_textbox_more_obviously_so.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\normalize_next_record_id.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11043,6 +11046,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\utils\make_readonly_textbox_more_obviously_so.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\normalize_next_record_id.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

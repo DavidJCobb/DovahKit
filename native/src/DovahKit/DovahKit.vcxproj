@@ -488,6 +488,7 @@
     <ClCompile Include="dovah\utils\get_region_worldspace.cpp" />
     <ClCompile Include="dovah\utils\landscapes\unit_tests.cpp" />
     <ClCompile Include="dovah\utils\location_is_or_is_inside_of_location.cpp" />
+    <ClCompile Include="dovah\utils\normalize_next_record_id.cpp" />
     <ClCompile Include="dovah\utils\object_bounds_from_nif.cpp" />
     <ClCompile Include="dovah\utils\refs\light_radius.cpp" />
     <ClCompile Include="dovah\utils\story_event_member_id.cpp" />
@@ -2486,6 +2487,7 @@
     <ClInclude Include="dovah\utils\get_all_relevant_template_actors.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="dovah\utils\get_computed_location.h" />
+    <ClInclude Include="dovah\utils\normalize_next_record_id.h" />
     <ClInclude Include="dovah\utils\object_bounds_from_nif.h" />
     <ClInclude Include="dovah\utils\refs\light_radius.h" />
     <ClInclude Include="dovah\utils\story_event_member_id.h" />

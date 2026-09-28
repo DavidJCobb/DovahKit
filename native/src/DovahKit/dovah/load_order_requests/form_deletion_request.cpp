@@ -14,6 +14,7 @@
 #include "../use_info/entry_flags/dialogue_branch.h"
 #include "../use_info/entry_flags/scene.h"
 #include "../use_info/entry_flags/topic.h"
+#include "../utils/normalize_next_record_id.h"
 
 // For deleting topics that belong solely to a Scene dialogue action:
 #include "../forms/Scene.h"
@@ -295,8 +296,12 @@ namespace dovah {
       }
       this->forms_needing_delete.clear();
       if (auto* file = owner.active_file) {
-         if (file->header.nextFormID > lowestID)
-            file->header.nextFormID = lowestID;
+         auto prefix = owner.file_prefix_for(*file);
+         auto lowest_tail = prefix.strip_prefix(lowestID);
+         auto stored_tail = prefix.strip_prefix(file->header.nextFormID);
+         if (stored_tail > lowest_tail) {
+            file->header.nextFormID = utils::normalize_next_record_id(lowestID, prefix);
+         }
       }
       for (auto* stub : this->forms_needing_flag) {
          this->_prep_for_delete(*stub, true);

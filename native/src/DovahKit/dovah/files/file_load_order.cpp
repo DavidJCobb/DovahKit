@@ -24,6 +24,7 @@
 #include "../utils/form_type_is_cell_child.h"
 #include "../utils/get_ini_defined_bsa_list.h"
 #include "../utils/get_user_language_name.h"
+#include "../utils/normalize_next_record_id.h"
 #include "../localization/localized_string_store.h"
 #include <fstream>
 
@@ -523,8 +524,9 @@ namespace dovah {
       }
       if (this->active_file) {
          auto first_free = this->find_first_free_form_id_in_active_file();
-         if (first_free)
-            this->active_file->header.nextFormID = first_free;
+         if (first_free) {
+            this->active_file->header.nextFormID = utils::normalize_next_record_id(first_free, this->file_prefix_for(*this->active_file));
+         }
       }
       //
       if (this->archives) {
@@ -2140,7 +2142,12 @@ namespace dovah {
       }
       //
       if (this->active_file) {
-         this->active_file->header.nextFormID = this->find_first_free_form_id_in_active_file(request.formID + 1);
+         auto next_id = this->find_first_free_form_id_in_active_file(request.formID + 1);
+         if (next_id) {
+            this->active_file->header.nextFormID = utils::normalize_next_record_id(next_id, this->file_prefix_for(*this->active_file));
+         } else {
+            this->active_file->header.nextFormID = 0; // not sure what the CK would do in this case
+         }
       }
       //
       assert(this->_abandon_form_id_reservation(formID) && "Wait, did we just create a form stub for a form ID that wasn't reserved? That shouldn't have happened!");
