@@ -1,6 +1,7 @@
 #include "paths.iss"
 #include "app-version.iss"
 #include "app-defines.iss"
+#include "helpers/IncludeSrcDirIfExists.iss"
 #ifndef MyAppInstallerFilename
    #define MyAppInstallerFilename MyAppName + "Setup"
    #ifndef OPTION_EXCLUDE_PDB
@@ -51,21 +52,15 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
    #define CppOutputExclusions CppOutputExclusions + ",*.pdb"
 #endif
 Source: "{#CppBuildResultPath}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "{#CppOutputExclusions}"
-
-#define IncludeSrcDirIfExists(Str dir, Int allow_user_modify = 0) \
-   DirExists(dir) ? ( \
-      (Local[0] = "Source: ""{#CppProjectPath}" + dir + "\*""; DestDir: ""{app}\" + dir + "\""; Flags: ignoreversion recursesubdirs createallsubdirs"), \
-      (allow_user_modify ? Local[0] + "; Permissions: users-modify" : Local[0]) \
-   ) : ""
-
 {#IncludeSrcDirIfExists("LICENSES")}
 {#IncludeSrcDirIfExists("help", 1)}
-{#IncludeSrcDirIfExists("userdata", 1)}
-
-#undef IncludeSrcDirIfExists
+{#IncludeSrcDirIfExists("userdata", 1, "\scripts\developer tests,\script-packages\-developer-tests-")}
 
 [UninstallDelete]
 //Type: files; Name: "{app}\ReachVariantTool.ini"
 
 ; Install VC redist
 #include "vc-install.iss"
+
+// Uncomment to debug preprocessor output.
+#expr SaveToFile(AddBackslash(SourcePath) + "__preprocessed.iss")

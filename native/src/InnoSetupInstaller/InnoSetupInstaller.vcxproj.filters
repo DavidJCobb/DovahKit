@@ -14,4 +14,19 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="main.iss" />
+    <CustomBuild Include="main-no-pdb.iss" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app-defines.iss" />
+    <None Include="app-version.iss" />
+    <None Include="InnoSetup.props" />
+    <None Include="paths.iss" />
+    <None Include="README.md" />
+    <None Include="vc-install.iss" />
+    <None Include="vc-version.iss" />
+    <None Include="helpers\IncludeSrcDirIfExists.iss" />
+    <None Include=".gitignore" />
+  </ItemGroup>
 </Project>

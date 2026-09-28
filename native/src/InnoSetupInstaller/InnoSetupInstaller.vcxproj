@@ -146,6 +146,14 @@
   <ItemGroup>
     <None Include="app-defines.iss" />
     <None Include="app-version.iss" />
+    <None Include=".gitignore">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="helpers\IncludeSrcDirIfExists.iss">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="InnoSetup.props" />
     <None Include="paths.iss" />
     <None Include="README.md">
