@@ -7,7 +7,6 @@
 #include <QProcessEnvironment>
 #include <QThread>
 #include "helpers/performance.h"
-#include "helpers/windows_registry.h"
 #include "helpers/qt/strings.h"
 #include "dovah/data/game.h"
 #include "dovah/form_stub.h"
@@ -19,9 +18,10 @@
 #include "dovah/files/papyrus/compiled_script.h"
 #include "dovah/forms/DefaultObjectManager.h"
 #include "dovah/utils/form_type_is_cell_child.h"
-#include "core_internals/load_task.h"
-#include "core_internals/backend_notice_dispatcher.h"
-#include "helpers/make_editor_id_for_duplicate.h"
+#include "./core_internals/load_task.h"
+#include "./core_internals/backend_notice_dispatcher.h"
+#include "./helpers/get_autodetected_game_path.h"
+#include "./helpers/make_editor_id_for_duplicate.h"
 #include "ui/main_window/delete_form_dialog.h"
 #include "widgets/widget-models/DKBSACollectionModel.h"
 #include <QDebug>
@@ -983,26 +983,8 @@ bool DovahKitCore::get_game_path(std::filesystem::path& out, dovah::game game) c
          return true;
       }
    }
-
-   std::wstring value(512, 0);
-   const wchar_t* key;
-   switch (game) {
-      case dovah::game::skyrim_classic:
-         key = L"SOFTWARE\\Bethesda Softworks\\Skyrim\\";
-         break;
-      case dovah::game::skyrim_special:
-         key = L"SOFTWARE\\Bethesda Softworks\\Skyrim Special Edition\\";
-         break;
-      default:
-         return false;
-   }
-   bool success = cobb::windows_registry::get_string_value(cobb::windows_registry::hkey::local_machine, key, L"installed path", value);
-   if (success) {
-      out = value;
-      return true;
-   }
-   out.clear();
-   return false;
+   out = editor_helpers::get_autodetected_game_path(game);
+   return !out.empty();
 }
 bool DovahKitCore::get_game_plugins(std::vector<QString>& out, dovah::game game) const noexcept {
    out.clear();

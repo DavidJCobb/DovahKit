@@ -60,6 +60,7 @@ Source: "{#CppBuildResultPath}\*"; DestDir: "{app}"; Flags: ignoreversion recurs
 
 {#IncludeSrcDirIfExists("LICENSES")}
 {#IncludeSrcDirIfExists("help", 1)}
+{#IncludeSrcDirIfExists("userdata", 1)}
 
 #undef IncludeSrcDirIfExists
 

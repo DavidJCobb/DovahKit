@@ -90,6 +90,105 @@
          </layout>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>Skyrim game paths</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_9">
+          <item row="0" column="0" colspan="3">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>DovahKit will attempt to auto-detect where you've installed Skyrim. If that auto-detection fails, you can enter the games' installation folders here. This should be the path to the game's folder (i.e. the folder that contains TESV.exe or SkyrimSE.exe), &lt;em&gt;not&lt;/em&gt; the path to the Data directory.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="3">
+           <widget class="QGroupBox" name="groupBox_7">
+            <property name="title">
+             <string>Skyrim Classic</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_10">
+             <item row="1" column="2">
+              <widget class="QPushButton" name="gamePathClassicBrowse">
+               <property name="text">
+                <string>Browse...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="gamePathClassic"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QRadioButton" name="gamePathClassicUseManual">
+               <property name="text">
+                <string>Manual:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QRadioButton" name="gamePathClassicUseAuto">
+               <property name="text">
+                <string>Auto-detect:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1" colspan="2">
+              <widget class="QLineEdit" name="gamePathClassicShowAuto">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="3">
+           <widget class="QGroupBox" name="groupBox_8">
+            <property name="title">
+             <string>Skyrim Special</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_11">
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="gamePathSpecial"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="QRadioButton" name="gamePathSpecialUseAuto">
+               <property name="text">
+                <string>Auto-detect:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QRadioButton" name="gamePathSpecialUseManual">
+               <property name="text">
+                <string>Manual:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QPushButton" name="gamePathSpecialBrowse">
+               <property name="text">
+                <string>Browse...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1" colspan="2">
+              <widget class="QLineEdit" name="gamePathSpecialShowAuto">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item row="2" column="0">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
@@ -98,76 +197,10 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>0</height>
           </size>
          </property>
         </spacer>
-       </item>
-       <item row="0" column="0">
-        <widget class="QGroupBox" name="groupBox_6">
-         <property name="title">
-          <string>Skyrim game paths</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_9">
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_16">
-            <property name="text">
-             <string>Skyrim Classic:</string>
-            </property>
-            <property name="buddy">
-             <cstring>gamePathClassic</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="gamePathClassic"/>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_17">
-            <property name="text">
-             <string>Skyrim Special:</string>
-            </property>
-            <property name="buddy">
-             <cstring>gamePathSpecial</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="gamePathSpecial"/>
-          </item>
-          <item row="2" column="2">
-           <widget class="QPushButton" name="gamePathClassicBrowse">
-            <property name="text">
-             <string>Browse...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <widget class="QPushButton" name="gamePathSpecialBrowse">
-            <property name="text">
-             <string>Browse...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="3">
-           <widget class="Line" name="line_2">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0" colspan="3">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>If you leave these options blank, DovahKit will attempt to auto-detect the location of your game install. If DovahKit fails to find your game install, or if you wish to use an alternate path, then enter the path here.</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
        </item>
       </layout>
      </widget>
@@ -774,7 +807,8 @@
        <item>
         <widget class="QLabel" name="label_14">
          <property name="text">
-          <string>DovahKit stores options in the following locations. Please note that some of these files are not designed to be viewed or edited directly.</string>
+          <string>&lt;p&gt;DovahKit stores options in the following locations. Please note that some of these files are not designed to be viewed or edited directly.&lt;/p&gt;
+&lt;p&gt;These paths cannot be changed.&lt;/p&gt;</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -802,7 +836,7 @@
             <x>0</x>
             <y>0</y>
             <width>430</width>
-            <height>528</height>
+            <height>500</height>
            </rect>
           </property>
          </widget>
@@ -855,8 +889,14 @@
  <tabstops>
   <tabstop>navbar</tabstop>
   <tabstop>stackedWidget</tabstop>
+  <tabstop>gamePathClassicUseAuto</tabstop>
+  <tabstop>gamePathClassicShowAuto</tabstop>
+  <tabstop>gamePathClassicUseManual</tabstop>
   <tabstop>gamePathClassic</tabstop>
   <tabstop>gamePathClassicBrowse</tabstop>
+  <tabstop>gamePathSpecialUseAuto</tabstop>
+  <tabstop>gamePathSpecialShowAuto</tabstop>
+  <tabstop>gamePathSpecialUseManual</tabstop>
   <tabstop>gamePathSpecial</tabstop>
   <tabstop>gamePathSpecialBrowse</tabstop>
   <tabstop>iniPref_bApplyRefPersistenceAsNeeded</tabstop>
@@ -886,10 +926,10 @@
   <tabstop>iniPref_bLoadedGridSizeOverrideFromSkyrimINI_false</tabstop>
   <tabstop>iniPref_uLoadedGridSize</tabstop>
   <tabstop>iniPref_bLoadedGridSizeOverrideFromSkyrimINI_true</tabstop>
+  <tabstop>optionsFilePathsScrollbox</tabstop>
   <tabstop>buttonSave</tabstop>
   <tabstop>buttonCancel</tabstop>
   <tabstop>buttonApply</tabstop>
-  <tabstop>optionsFilePathsScrollbox</tabstop>
  </tabstops>
  <resources>
   <include location="../resources/resources.qrc"/>

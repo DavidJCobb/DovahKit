@@ -518,6 +518,7 @@
     <ClCompile Include="editor\helpers\face_fx_phoneme_name.cpp" />
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
+    <ClCompile Include="editor\helpers\get_autodetected_game_path.cpp" />
     <ClCompile Include="editor\helpers\is_form_type_legal_to_create.cpp" />
     <ClCompile Include="editor\helpers\recalc_bounds.cpp" />
     <ClCompile Include="editor\helpers\smart_topic_info_warnings.cpp" />
@@ -1430,6 +1431,7 @@
     <ClCompile Include="ui\utils\handlers\copy_selected_rows_on_copy_key.cpp" />
     <ClCompile Include="ui\utils\handlers\remove_rows_on_del_key.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
+    <ClCompile Include="ui\utils\make_readonly_textbox_more_obviously_so.cpp" />
     <ClCompile Include="ui\utils\painting\paint_arrow.cpp" />
     <ClCompile Include="ui\utils\painting\paint_multiline_text.cpp" />
     <ClCompile Include="ui\utils\painting\paint_single_line_text.cpp" />
@@ -2510,6 +2512,7 @@
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidget.h" />
+    <ClInclude Include="editor\helpers\get_autodetected_game_path.h" />
     <ClInclude Include="editor\helpers\recalc_bounds.h" />
     <ClInclude Include="editor\helpers\smart_topic_info_warnings.h" />
     <ClInclude Include="editor\helpers\update_active_file_seq_file.h" />
@@ -2591,6 +2594,7 @@
     <ClInclude Include="ui\utils\enum_dropdown_configs\magic_school_av_index.h" />
     <ClInclude Include="ui\utils\enum_dropdown_configs\resistance_av_index.h" />
     <QtMoc Include="ui\utils\handlers\copy_selected_rows_on_copy_key.h" />
+    <ClInclude Include="ui\utils\make_readonly_textbox_more_obviously_so.h" />
     <ClInclude Include="ui\utils\replace_view_selected_rows.h" />
     <ClInclude Include="ui\utils\set_textarea_height_in_lines.h" />
     <ClInclude Include="ui\utils\show_parent_scoped_modal.h" />
@@ -4377,6 +4381,7 @@
     <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Text -->
     <Text Include="dovah\_docs\engine code transliterations\collision layer comparisons.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how TESFile maps record IDs to form IDs.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
@@ -4435,20 +4440,12 @@
     <Text Include="vulkan\_docs\scene entities and multi-threaded loading.txt" />
   </ItemGroup>
   <ItemGroup>
+    <!-- None (markdown, INL, etc.) -->
     <None Include="cpp.hint" />
-    <None Include="dovahscript\api_helpers\native_lists\README.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovahscript\api_helpers\subobject_property_helpers\README.md">
-      <SubType>
-      </SubType>
-    </None>
+    <None Include="dovahscript\api_helpers\native_lists\README.md" />
+    <None Include="dovahscript\api_helpers\subobject_property_helpers\README.md" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
-    <None Include="dovahscript\_docs\how to expose form data to Lua.md">
-      <SubType>
-      </SubType>
-    </None>
+    <None Include="dovahscript\_docs\how to expose form data to Lua.md" />
     <None Include="dovah\bs_hash.inl" />
     <None Include="dovah\datastores\camera_paths\node.inl" />
     <None Include="dovah\datastores\camera_paths\node_parent.inl" />
@@ -4460,10 +4457,7 @@
     <None Include="dovah\data\dialogue\topic_subtype.md" />
     <None Include="dovah\data\face_fx\default_facegen_race_phonemes.inl" />
     <None Include="dovah\data\game.inl" />
-    <None Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.md">
-      <SubType>
-      </SubType>
-    </None>
+    <None Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.md" />
     <None Include="dovah\exceptions\_docs\be careful with unique_ptr members.md" />
     <None Include="dovah\files\bsa\bsa_archive.inl" />
     <None Include="dovah\files\bsa\packed_folder_info.inl" />
@@ -4497,10 +4491,7 @@
     <None Include="dovah\forms\IdleAnimation.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
     <None Include="dovah\forms\structs\region\area.inl" />
-    <None Include="dovah\forms\structs\region\_docs\area.md">
-      <SubType>
-      </SubType>
-    </None>
+    <None Include="dovah\forms\structs\region\_docs\area.md" />
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stubs\helpers\README.md" />
     <None Include="dovah\load_order_interfaces\form_load.inl" />
@@ -4510,52 +4501,19 @@
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
     <None Include="dovah\utils\cell_grid_position.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
-    <None Include="dovah\_docs\asset paths.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\collision layers.md">
-      <SubType>
-      </SubType>
-    </None>
+    <None Include="dovah\_docs\asset paths.md" />
+    <None Include="dovah\_docs\collision layers.md" />
     <None Include="dovah\_docs\common form flags.md" />
     <None Include="dovah\_docs\compiled script files.md" />
-    <None Include="dovah\_docs\enchanting.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\extra data - full reference.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\file-reading classes.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\form type common behaviors\class names identified by hashes.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\form types\a\actor base.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\form types\b\body part data.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\form types\d\dialogue branch.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\form types\g\grass.md">
-      <SubType>
-      </SubType>
-    </None>
-    <None Include="dovah\_docs\form types\l\landscape.md">
-      <SubType>
-      </SubType>
-    </None>
+    <None Include="dovah\_docs\enchanting.md" />
+    <None Include="dovah\_docs\extra data - full reference.md" />
+    <None Include="dovah\_docs\file-reading classes.md" />
+    <None Include="dovah\_docs\form type common behaviors\class names identified by hashes.md" />
+    <None Include="dovah\_docs\form types\a\actor base.md" />
+    <None Include="dovah\_docs\form types\b\body part data.md" />
+    <None Include="dovah\_docs\form types\d\dialogue branch.md" />
+    <None Include="dovah\_docs\form types\g\grass.md" />
+    <None Include="dovah\_docs\form types\l\landscape.md" />
     <None Include="dovah\_docs\form types\m\music track.md">
       <SubType>
       </SubType>
@@ -4859,8 +4817,86 @@
       </SubType>
     </None>
     <None Include="ui\_docs\scenes.md" />
-    <None Include="userdata\scripts\simple\count persistent refs.lua" />
-    <None Include="userdata\scripts\simple\dialogue search.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\config.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-refs\main.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-refs\range.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-refs\refr-cell.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-refs\refr-group-island.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-refs\refr-group.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-refs\refr-map.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-refs\window.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-refs\world-and-caching.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\cell-outline-island.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\cell-outline-map-set.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\cell-outline-map.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\config.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\main.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\range.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\texture-cache.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\window.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\scripts\simple\count persistent refs.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\scripts\simple\dialogue search.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="userdata\scripts\simple\worldspace heightmap render.lua">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
     <None Include="vulkan\frame_in_flight.inl" />
     <None Include="vulkan\scene.inl" />
     <None Include="vulkan\scene_entities\base.inl" />
@@ -4877,6 +4913,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <!-- Image -->
     <Image Include="..\..\..\assets\papyrus-added-edited.png" />
     <Image Include="..\..\..\assets\papyrus-added.png" />
     <Image Include="..\..\..\assets\papyrus-inherited-edited.png" />
@@ -4885,8 +4922,13 @@
     <Image Include="shaders\ScreenShot278.bmp" />
     <Image Include="shaders\ScreenShot389.bmp" />
     <Image Include="shaders\Tamriel-Skyrim.esm.png" />
+    <None Include="userdata\script-packages\worldspace-map-refs\pre-rendered\Tamriel-Skyrim.esm.png">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
   </ItemGroup>
   <ItemGroup>
+    <!-- Natvis -->
     <Natvis Include="dovah\bs_hash.natvis" />
     <Natvis Include="dovah\datastores\camera_paths\node.natvis" />
     <Natvis Include="dovah\datastores\idles\action_node.natvis" />
@@ -4973,6 +5015,18 @@
     <Natvis Include="vulkan\scene_entities\base.natvis" />
     <Natvis Include="vulkan\scene_entities\fif_sync_state.natvis" />
     <Natvis Include="vulkan\scene_entity_handle.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="userdata\script-packages\worldspace-map-refs\manifest.xml">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="userdata\script-packages\worldspace-map-terrain\manifest.xml">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

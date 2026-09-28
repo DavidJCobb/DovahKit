@@ -1,10 +1,14 @@
 #include "options_window.h"
+#include <array>
 #include <cassert>
 #include <stdexcept>
 #include <QButtonGroup>
 #include <QFileDialog>
+#include "dovah/data/game.h"
+#include "editor/helpers/get_autodetected_game_path.h"
 #include "editor/subsystems/options/core.h"
 #include "editor/ini/main.h"
+#include "ui/utils/make_readonly_textbox_more_obviously_so.h"
 
 #include "editor/subsystems/worldedit/gizmo_colors/edit_gizmo_color_scheme_manager.h"
 #include "./edit_gizmo_colors/edit_gizmo_color_editor.h"
@@ -24,12 +28,97 @@ namespace worldinput {
    using namespace dovahkit::subsystems::worldinput;
 }
 
+#pragma region game_path_mapping
+   void OptionsWindow::game_path_mapping::init(QWidget* parent, cobb::ini::setting& setting, decltype(widgets)&& widgets) {
+      this->setting = &setting;
+      this->widgets = widgets;
+
+      ui::make_readonly_textbox_more_obviously_so(*this->widgets.paths.automatic);
+      
+      QObject::connect(this->widgets.browse, &QPushButton::clicked, parent, [this, parent]() {
+         QString title;
+         switch (this->game) {
+            case dovah::game::skyrim_classic:
+               title = tr("Select game folder (Skyrim Classic)");
+               break;
+            case dovah::game::skyrim_special:
+               title = tr("Select game folder (Skyrim Special)");
+               break;
+            default:
+               title = tr("Select game folder");
+               break;
+         }
+
+         auto* widget = this->widgets.paths.manual;
+         auto  prior  = widget->text();
+         auto  dir    = QFileDialog::getExistingDirectory(parent, title, prior);
+         if (!dir.isEmpty()) {
+            auto blocker = QSignalBlocker(widget);
+            widget->setText(dir);
+            this->widgets.use_manual->setChecked(true);
+         }
+      });
+      QObject::connect(this->widgets.paths.manual, &QLineEdit::textEdited, parent, [this](QString v) {
+         if (!v.isEmpty()) {
+            this->widgets.use_manual->setChecked(true);
+         }
+      });
+   }
+   void OptionsWindow::game_path_mapping::load() {
+      assert(!!this->setting);
+
+      auto path   = this->setting->get_current_value<std::string>();
+      bool manual = !path.empty();
+      this->widgets.use_automatic->setChecked(!manual);
+      this->widgets.use_manual->setChecked(manual);
+      if (manual) {
+         this->widgets.paths.manual->setText(QString::fromUtf8(QByteArray(path.data(), path.size())));
+      }
+      {
+         auto path = editor_helpers::get_autodetected_game_path(this->game).u8string();
+         this->widgets.paths.automatic->setText(QString::fromUtf8(QByteArray((char*)path.data(), path.size())));
+      }
+   }
+   void OptionsWindow::game_path_mapping::save() {
+      assert(!!this->setting);
+
+      if (this->widgets.use_automatic->isChecked()) {
+         this->setting->set_current_value<std::string>({});
+      } else {
+         auto value_u8 = this->widgets.paths.manual->text().toUtf8();
+         auto value_s  = std::string(value_u8.data(), value_u8.size());
+         this->setting->set_current_value(value_s);
+      }
+   }
+#pragma endregion
+
 OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
    if (OptionsWindow::instance != nullptr) {
       this->close();
       return;
    }
+
+   #pragma region Game paths
+      this->_mappings.game_paths.classic.init(this, dovahkit::ini::main::skyrim::sOverridePathClassic, {
+         .browse = this->ui.gamePathClassicBrowse,
+         .paths  = {
+            .automatic = this->ui.gamePathClassicShowAuto,
+            .manual    = this->ui.gamePathClassic,
+         },
+         .use_automatic = this->ui.gamePathClassicUseAuto,
+         .use_manual    = this->ui.gamePathClassicUseManual,
+      });
+      this->_mappings.game_paths.special.init(this, dovahkit::ini::main::skyrim::sOverridePathSpecial, {
+         .browse = this->ui.gamePathSpecialBrowse,
+         .paths  = {
+            .automatic = this->ui.gamePathSpecialShowAuto,
+            .manual    = this->ui.gamePathSpecial,
+         },
+         .use_automatic = this->ui.gamePathSpecialUseAuto,
+         .use_manual    = this->ui.gamePathSpecialUseManual,
+      });
+   #pragma endregion
 
    #pragma region Set up page switcher
    {
@@ -137,8 +226,6 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
    // their widgets, for basic things like checkboxes, radio buttons, and spinboxes.
    //
    #pragma region Loading and Saving
-      this->_mappings.basic.emplace_back(&dovahkit::ini::main::skyrim::sOverridePathClassic, this->ui.gamePathClassic);
-      this->_mappings.basic.emplace_back(&dovahkit::ini::main::skyrim::sOverridePathSpecial, this->ui.gamePathSpecial);
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::saving::bApplyRefPersistenceAsNeeded, this->ui.iniPref_bApplyRefPersistenceAsNeeded);
       this->_mappings.basic.emplace_back(&dovahkit::ini::main::saving::bClearRefPersistenceWhenAble, this->ui.iniPref_bClearRefPersistenceWhenAble);
    #pragma endregion
@@ -408,31 +495,6 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
       QObject::connect(this->ui.iniPref_bLoadedGridSizeOverrideFromSkyrimINI_false, &QRadioButton::toggled, this, [this](bool checked) {
          this->ui.iniPref_uLoadedGridSize->setEnabled(checked);
       });
-
-      QObject::connect(this->ui.gamePathClassicBrowse, &QPushButton::clicked, this, [this]() {
-         auto* widget = this->ui.gamePathClassic;
-         auto  prior  = widget->text();
-         auto  dir    = QFileDialog::getExistingDirectory(
-            this,
-            tr("Select game folder (Skyrim Classic"),
-            prior
-         );
-         if (!dir.isEmpty()) {
-            widget->setText(dir);
-         }
-      });
-      QObject::connect(this->ui.gamePathSpecialBrowse, &QPushButton::clicked, this, [this]() {
-         auto* widget = this->ui.gamePathSpecial;
-         auto  prior  = widget->text();
-         auto  dir    = QFileDialog::getExistingDirectory(
-            this,
-            tr("Select game folder (Skyrim Special"),
-            prior
-         );
-         if (!dir.isEmpty()) {
-            widget->setText(dir);
-         }
-      });
    #pragma endregion
 
    QObject::connect(this->ui.buttonSave, &QPushButton::clicked, this, [this]() {
@@ -473,6 +535,14 @@ OptionsWindow::OptionsWindow(QWidget* parent) : QDialog(parent) {
                return;
             }
          }
+         if (auto& gpm = this->_mappings.game_paths.classic; &setting == gpm.setting) {
+            gpm.load();
+            return;
+         }
+         if (auto& gpm = this->_mappings.game_paths.special; &setting == gpm.setting) {
+            gpm.load();
+            return;
+         }
       }
    );
 }
@@ -493,6 +563,9 @@ OptionsWindow::~OptionsWindow() {
 }
 
 void OptionsWindow::revertChanges() {
+   this->_mappings.game_paths.classic.load();
+   this->_mappings.game_paths.special.load();
+
    for (auto& item : this->_mappings.basic) {
       auto& setting = *item.setting;
       auto* widget  =  item.widget;
@@ -569,6 +642,9 @@ void OptionsWindow::revertChanges() {
 
 void OptionsWindow::save() {
    const auto blocker = QSignalBlocker(this);
+
+   this->_mappings.game_paths.classic.save();
+   this->_mappings.game_paths.special.save();
 
    for (auto& item : this->_mappings.basic) {
       auto* setting = item.setting;

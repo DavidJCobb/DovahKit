@@ -4425,6 +4425,12 @@
     <ClCompile Include="dovah\worker_thread_termination_handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\get_autodetected_game_path.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\utils\make_readonly_textbox_more_obviously_so.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11033,6 +11039,12 @@
     <ClInclude Include="dovah\worker_thread_termination_handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\helpers\get_autodetected_game_path.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\make_readonly_textbox_more_obviously_so.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12649,8 +12661,6 @@
     <Text Include="dovah\_docs\engine code transliterations\how TESFile maps record IDs to form IDs.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="userdata\scripts\simple\count persistent refs.lua" />
-    <None Include="userdata\scripts\simple\dialogue search.lua" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="shaders\includes\calc_directional_shadow.glsl" />
     <None Include="shaders\includes\calc_directional_light.glsl" />
@@ -13157,6 +13167,31 @@
     <None Include="dovah\_docs\form types\q\quest\remote definitions of alias scripts.md" />
     <None Include="dovah\_docs\file-reading classes.md" />
     <None Include="editor\subsystems\crash_dumper\_docs\README.md" />
+    <None Include="userdata\scripts\simple\dialogue search.lua" />
+    <None Include="userdata\scripts\simple\count persistent refs.lua" />
+    <None Include="userdata\scripts\simple\worldspace heightmap render.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\config.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\main.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\range.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\refr-cell.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\refr-group.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\refr-group-island.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\refr-map.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\window.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\world-and-caching.lua" />
+    <None Include="userdata\script-packages\worldspace-map-refs\manifest.xml" />
+    <None Include="userdata\script-packages\worldspace-map-refs\pre-rendered\Tamriel-Skyrim.esm.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="userdata\script-packages\worldspace-map-terrain\cell-outline-island.lua" />
+    <None Include="userdata\script-packages\worldspace-map-terrain\cell-outline-map.lua" />
+    <None Include="userdata\script-packages\worldspace-map-terrain\cell-outline-map-set.lua" />
+    <None Include="userdata\script-packages\worldspace-map-terrain\config.lua" />
+    <None Include="userdata\script-packages\worldspace-map-terrain\main.lua" />
+    <None Include="userdata\script-packages\worldspace-map-terrain\range.lua" />
+    <None Include="userdata\script-packages\worldspace-map-terrain\texture-cache.lua" />
+    <None Include="userdata\script-packages\worldspace-map-terrain\window.lua" />
+    <None Include="userdata\script-packages\worldspace-map-terrain\manifest.xml" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

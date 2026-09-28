@@ -1,4 +1,5 @@
 #pragma once
+#include <system_error>
 #include <vector>
 #include <QObject>
 #include <QString>
@@ -35,6 +36,10 @@ namespace dovahkit::subsystems::options {
          static void _main_ini_change_callback(cobb::ini::setting&, cobb::ini::value_variant prior, cobb::ini::value_variant after);
 
          std::vector<option_collection*> _collections;
+         bool _last_save_failed = false;
+
+         void _copy_default_files();
+         std::error_code _ensure_storage_folders_exist();
 
       public:
          using singleton_ex::get;

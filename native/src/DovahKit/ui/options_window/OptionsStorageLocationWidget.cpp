@@ -1,9 +1,11 @@
 #include "./OptionsStorageLocationWidget.h"
+#include <array>
 #include <QBoxLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include "ui/utils/make_readonly_textbox_more_obviously_so.h"
 
 // for opening the file/folder
 #include <QApplication> // literally just for the beep function
@@ -90,9 +92,11 @@ OptionsStorageLocationWidget::OptionsStorageLocationWidget(QWidget* parent) : QW
 
    auto* textbox = this->_subwidgets.path = new QLineEdit(strip);
    textbox->setReadOnly(true);
+   ui::make_readonly_textbox_more_obviously_so(*textbox);
    layout_cross->addWidget(textbox);
 
    auto* button_folder = this->_subwidgets.open_folder = new QPushButton(strip);
+   button_folder->setToolTip(tr("Open containing folder"));
    button_folder->setAccessibleName(tr("Open containing folder"));
    {
       QIcon icon;
@@ -102,6 +106,7 @@ OptionsStorageLocationWidget::OptionsStorageLocationWidget(QWidget* parent) : QW
    layout_cross->addWidget(button_folder);
 
    auto* button_file = this->_subwidgets.open_file = new QPushButton(strip);
+   button_file->setToolTip(tr("Open this file"));
    button_file->setAccessibleName(tr("Open this file"));
    {
       QIcon icon;
@@ -216,9 +221,12 @@ void OptionsStorageLocationWidget::_setIsFile(bool v) {
    this->_subwidgets.open_file->setVisible(v);
 
    auto* button_folder = this->_subwidgets.open_folder;
+   QString s;
    if (v) {
-      button_folder->setAccessibleName(tr("Open containing folder"));
+      s = tr("Open containing folder");
    } else {
-      button_folder->setAccessibleName(tr("Open folder"));
+      s = tr("Open folder");
    }
+   button_folder->setAccessibleName(s);
+   button_folder->setToolTip(s);
 }
