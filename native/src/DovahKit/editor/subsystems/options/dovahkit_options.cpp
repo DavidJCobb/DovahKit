@@ -72,9 +72,15 @@ namespace dovahkit::subsystems::options {
             std::error_code ec;
             std::filesystem::create_directories(path.toStdWString(), ec);
          };
-         _create_dirs_and_swallow_errors(get_main_ini_path());
          _create_dirs_and_swallow_errors(get_user_script_path());
          _create_dirs_and_swallow_errors(get_user_script_package_path());
+         {  // FIX mistake in v0.1.2
+            auto path = std::filesystem::path(get_main_ini_path().toStdWString());
+            if (std::filesystem::is_directory(path)) {
+               std::error_code removal_ec;
+               std::filesystem::remove_all(path, removal_ec);
+            }
+         }
          return {};
       }
       return ec;
