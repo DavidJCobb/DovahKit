@@ -1,0 +1,7 @@
+# hide VS databases and other metadata
+/.vs/*
+
+# hide intermediate files and final output
+/_build/*
+/_output/*
+/DirectXTex/Bin/*
