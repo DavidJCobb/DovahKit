@@ -47,6 +47,18 @@ namespace lu {
             return *this;
          }
 
+         constexpr bool operator==(const char(&v)[character_count]) const noexcept {
+            integral_type me = this->value;
+            for (size_t i = 0; i < character_count; ++i) {
+               char c = me & 0xFF;
+               char d = v[character_count - 1 - i];
+               if (c != d)
+                  return false;
+               me >>= 8;
+            }
+            return true;
+         }
+
          constexpr char get_nth_character(size_t n) const noexcept {
             return this->value >> ((character_count - 1 - n) * 8);
          }

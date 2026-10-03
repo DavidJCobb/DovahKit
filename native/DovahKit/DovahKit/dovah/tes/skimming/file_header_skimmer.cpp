@@ -108,7 +108,7 @@ namespace dovah::tes {
          if (fread(&signature.value, sizeof(signature.value), 1, file) != 1) {
             _throw_on_malformed();
          }
-         if (signature == std::byteswap('TES4')) {
+         if (signature == std::byteswap('TES4')) { // signatures have opposite endianness from everything else
             this->results.endianness = std::endian::little;
          } else if (signature == 'TES4') {
             this->results.endianness = std::endian::big;
