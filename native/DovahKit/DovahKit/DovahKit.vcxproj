@@ -116,11 +116,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\tes\file.cpp" />
     <ClCompile Include="dovah\tes\file_load_order.cpp" />
     <ClCompile Include="dovah\tes\file_queue.cpp" />
+    <ClCompile Include="dovah\tes\reading\file_view.cpp" />
+    <ClCompile Include="dovah\tes\reading\record_view.cpp" />
+    <ClCompile Include="dovah\tes\reading\subrecord_view.cpp" />
     <ClCompile Include="dovah\tes\skimming\file_header_skimmer.cpp" />
+    <ClCompile Include="editor\localize\errno_code.cpp" />
+    <ClCompile Include="editor\localize\exceptions\file_load_error.cpp" />
+    <ClCompile Include="editor\localize\exceptions\load_order_error.cpp" />
     <ClCompile Include="lu\ascii\equals_i.cpp" />
     <ClCompile Include="lu\cpuinfo.cpp" />
+    <ClCompile Include="lu\files\mapped_file.cpp" />
+    <ClCompile Include="lu\memory\basic_buffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tests\basic\file_list_to_load_order.cpp" />
   </ItemGroup>
@@ -134,23 +143,50 @@
     <ClInclude Include="dovah\exceptions\load_order_errors\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\facts\game\game_supports_light_plugins.h" />
     <ClInclude Include="dovah\game.h" />
+    <ClInclude Include="dovah\tes\file.h" />
+    <ClInclude Include="dovah\tes\file_app_specific_flags.h" />
+    <ClInclude Include="dovah\tes\file_header.h" />
     <ClInclude Include="dovah\tes\file_header_flags.h" />
     <ClInclude Include="dovah\tes\file_load_order.h" />
     <ClInclude Include="dovah\tes\file_queue.h" />
+    <ClInclude Include="dovah\tes\group_header.h" />
+    <ClInclude Include="dovah\tes\group_type.h" />
+    <ClInclude Include="dovah\tes\reading\file_view.h" />
+    <ClInclude Include="dovah\tes\reading\impl\enforce_endianness.h" />
+    <ClInclude Include="dovah\tes\reading\record_view.h" />
+    <ClInclude Include="dovah\tes\reading\subrecord_view.h" />
+    <ClInclude Include="dovah\tes\record_flags.h" />
+    <ClInclude Include="dovah\tes\record_header.h" />
+    <ClInclude Include="dovah\tes\serialization\can_be_copied.h" />
+    <ClInclude Include="dovah\tes\serialization\serialized_bytecount_of.h" />
     <ClInclude Include="dovah\tes\skimming\file_header_skimmer.h" />
+    <ClInclude Include="editor\localize\errno_code.h" />
+    <ClInclude Include="editor\localize\exceptions\file_load_error.h" />
+    <ClInclude Include="editor\localize\exceptions\load_order_error.h" />
     <ClInclude Include="lu\ascii\equals_i.h" />
     <ClInclude Include="lu\concepts\all_same_as.h" />
+    <ClInclude Include="lu\concepts\instantiation_of\std_array.h" />
+    <ClInclude Include="lu\concepts\integer.h" />
     <ClInclude Include="lu\cpuinfo.h" />
     <ClInclude Include="lu\enums\enum_flags.h" />
     <ClInclude Include="lu\enums\enum_in.h" />
     <ClInclude Include="lu\files\file_pointer_guard.h" />
+    <ClInclude Include="lu\files\mapped_file.h" />
     <ClInclude Include="lu\integral_character_code.h" />
+    <ClInclude Include="lu\memory\basic_buffer.h" />
+    <ClInclude Include="lu\memory\buffer_view.h" />
     <ClInclude Include="lu\singleton.h" />
     <ClInclude Include="lu\type_aliases\uint_of_size.h" />
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl" />
+    <None Include="dovah\_docs\file loading.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="lu\memory\basic_buffer.inl" />
+    <None Include="lu\memory\buffer_view.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
