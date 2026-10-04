@@ -1,7 +1,7 @@
 ﻿
 # Asset paths
 
-Skyrim's handling of asset paths is... highly variable. The game has several functions that transform paths in very different ways, but most of these functions appear to be completely unused.
+Skyrim's handling of asset paths is... highly variable. The game has several functions that transform paths in very different ways, but most of these functions appear to be completely unused. The one that I know is used for most (if not all) paths is [`ScopePathToFolder`](#scopepathtofolder).
 
 ## Known functions
 
@@ -240,12 +240,12 @@ const char* NormalizeAssetPathInPlace(char(&path)[128]) {
 **LE:** address 0x00A3F5C0  
 **SSE:** Address Library ID 69839
 
-Takes a buffer and size to write to, a path, and a desired folder name. If any non-trailing segment in that path is equal to the given folder name, returns a pointer to the start of said segment within the path. Otherwise, copies the folder name into the buffer, followed by the input path.
+Takes a buffer and size to write to, a path, and a desired folder name (with a trailing path separator). If any non-trailing segment in that path is equal to the given folder name, returns a pointer to the start of said segment within the path. Otherwise, copies the folder name into the buffer, followed by the input path.
 
-Logging and breakpoints indicate that this is used not only for paths in form data, but also paths in NIF files. This seems to be *the* primary function for correcting paths to be relative to the correct stem.
+Logging and breakpoints indicate that this is used not only for paths in form data, but also paths in NIF files. This seems to be *the* primary function for correcting paths to be relative to the correct stem. Folder names passed into it are always suffixed with a backslash, not a forward slash.
 
 | Input Path | Input Folder | Output |
-| :- | :- | :- |
+| :- | :- | :- | :- |
 | `"Data\\Sound\\foo"` | `"sound\\"` | `"sound\\foo"` |
 | `"Sound\\foo"` | `"sound\\"` | `"sound\\foo"` |
 | `"foo"` | `"sound\\"` | `"sound\\foo"` |
@@ -253,6 +253,14 @@ Logging and breakpoints indicate that this is used not only for paths in form da
 | `"BLARGH\\Sound\\foo"` | `"sound\\"` | `"sound\\foo"` |
 | `"Data\\Sound\\"` | `"sound\\"` | `"sound\\"` |
 | `"Data\\Sound"` | `"sound\\"` | `"sound\\Data\\Sound"` |
+| `"Data\\soundsound\\foo"` | `"sound\\"` | `"sound\\Data\\soundsound\\foo"` |
+| `"Sound\\"` | `"sound\\"` | `"sound\\"` |
+| `"Sound/"` | `"sound\\"` | `"sound\\sound/"`[^ScopePathToFolder-leading-segment-separator] |
+| `"Data/Sound/"` | `"sound\\"` | `"sound/"`[^ScopePathToFolder-leading-segment-separator] |
+| `"Sound\\"` | `"sound/"` | `"sound/sound\\"`[^ScopePathToFolder-leading-segment-separator] |
+| `"Data/Sound\\"` | `"sound/"` | `"sound\\"`[^ScopePathToFolder-leading-segment-separator] |
+
+[^ScopePathToFolder-leading-segment-separator]: `ScopePathToFolder` edge-case: The first path segment can only match the desired folder name if the segment and the folder name use the same trailing directory separator. For path segments after the first, the function checks for both supported directory separators.
 
 #### Known callers
 
@@ -298,9 +306,15 @@ const char* ScopePathToFolder(
 
    size_t ebx = strlen(folder);
    if (tolower(path[0]) == std::towlower(folder[0])) {
+      //
+      // Handle the case of the first path segment being the folder.
+      //
       if (_strnicmp(path, folder, ebx) == 0)
          existing_scope = path;
    } else {
+      //
+      // Otherwise, look for a match that is preceded by a directory separator.
+      //
       if (path[0]) {
          const char* path_ptr = path; // esi
          char        c        = *path_ptr;

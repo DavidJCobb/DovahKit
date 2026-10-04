@@ -942,6 +942,7 @@
     <ClCompile Include="helpers\qt\strings\to_no_op_html.cpp" />
     <ClCompile Include="helpers\string\backslash_escape.tests.cpp" />
     <ClCompile Include="helpers\string\stricontains_ascii.cpp" />
+    <ClCompile Include="helpers\string\strifind_ascii.cpp" />
     <ClCompile Include="helpers\utf8\append.tests.cpp" />
     <ClCompile Include="helpers\utf8\for_each.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
@@ -2461,6 +2462,7 @@
     <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.define.h" />
     <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.undef.h" />
     <ClInclude Include="dovah\use_info\is_entry_flag_type.h" />
+    <ClInclude Include="dovah\utils\asset_paths\scope_to_folder.h" />
     <ClInclude Include="dovah\utils\auto_door_envelopes_teleport_marker.h" />
     <ClInclude Include="dovah\utils\conditions\classify_boolean_comparison.h" />
     <ClInclude Include="dovah\utils\default_light_emitter_shadow_depth_bias.h" />
@@ -2557,6 +2559,7 @@
     <ClInclude Include="helpers\arrays\construct_from.h" />
     <ClInclude Include="helpers\attributes\forceinline.h" />
     <ClInclude Include="helpers\lua\for_each_in_pairs.h" />
+    <ClInclude Include="helpers\string\strifind_ascii.h" />
     <ClInclude Include="helpers\tuples\all_types_match_functor.h" />
     <ClInclude Include="helpers\tuples\for_each_nttp_value.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabObjectives.h" />
@@ -4501,6 +4504,7 @@
     <None Include="dovah\load_order_requests\README.md" />
     <None Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data.md" />
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
+    <None Include="dovah\utils\asset_paths\scope_to_folder.inl" />
     <None Include="dovah\utils\cell_grid_position.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
     <None Include="dovah\_docs\asset paths.md" />

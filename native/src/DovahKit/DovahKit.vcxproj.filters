@@ -4434,6 +4434,9 @@
     <ClCompile Include="dovah\utils\normalize_next_record_id.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\string\strifind_ascii.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11051,6 +11054,12 @@
     <ClInclude Include="dovah\utils\normalize_next_record_id.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\string\strifind_ascii.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\asset_paths\scope_to_folder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -13198,6 +13207,9 @@
     <None Include="userdata\script-packages\worldspace-map-terrain\texture-cache.lua" />
     <None Include="userdata\script-packages\worldspace-map-terrain\window.lua" />
     <None Include="userdata\script-packages\worldspace-map-terrain\manifest.xml" />
+    <None Include="dovah\utils\asset_paths\scope_to_folder.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

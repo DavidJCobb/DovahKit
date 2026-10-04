@@ -5,6 +5,7 @@
 #include "editor/subsystems/crash_dumper/register_new_thread.h"
 
 #include "dovah/files/bsa/bsa_archived_file.h"
+#include "dovah/utils/asset_paths/scope_to_folder.h"
 #include "editor/subsystems/assets.h"
 
 namespace vulkanDK::asset_loading {
@@ -16,12 +17,16 @@ namespace vulkanDK::asset_loading {
       auto& model = *item.form_data.model;
 
       nif.multi_thread_state.flags |= rendered_nif::loading_flag::loading;
+      if (model.model_path.empty()) {
+         nif.multi_thread_state.flags ^= (rendered_nif::loading_flag::loading | rendered_nif::loading_flag::load_canceled);
+         return;
+      }
 
-      std::filesystem::path path = std::string("meshes") + (model.model_path[0] == '/' || model.model_path[0] == '\\' ? "" : "\\") + model.model_path;
-      //
-      std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(path));
+      std::filesystem::path normalized_path = dovah::utils::asset_paths::scope_to_meshes_folder<std::filesystem::path>(model.model_path);
+      
+      std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(normalized_path));
       if (!file) {
-         qDebug("Failed to open NIF file: <%s>", path.string().c_str());
+         qDebug("Failed to open NIF file: <%s>", normalized_path.string().c_str());
          nif.multi_thread_state.flags ^= (rendered_nif::loading_flag::loading | rendered_nif::loading_flag::load_failure);
          return;
       }
@@ -29,7 +34,7 @@ namespace vulkanDK::asset_loading {
       nif.read((void*)file->data(), file->size());
       auto& error = nif.read_error();
       if (error.code != nifDK::default_notice_code) {
-         qDebug("Failed to parse NIF file: <%s>\n - Error code %08X.", path.string().c_str(), error.code);
+         qDebug("Failed to parse NIF file: <%s>\n - Error code %08X.", normalized_path.string().c_str(), error.code);
          #if _DEBUG
             __debugbreak();
          #endif
