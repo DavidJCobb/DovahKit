@@ -362,9 +362,17 @@ namespace vulkanDK::asset_loading {
    }
 
    void worker_thread_for_meshes::_load_single_nif(const queued_nif_load& item) {
-      assert(item.nif);
+      assert(!!item.nif);
       auto& nif = *item.nif;
-      assert(nif.root_node);
+      if (!nif.root_node) {
+         //
+         // The `reserve_meshes_for_nif` process should already have caught this case, i.e. 
+         // there shouldn't be any `rendered_mesh` slots that we need to free. We can simply 
+         // exit immediately.
+         //
+         nif.multi_thread_state.flags &= ~rendered_nif::loading_flag::generating_meshes;
+         return;
+      }
 
       using namespace nifDK::block_types;
       {
