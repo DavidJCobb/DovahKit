@@ -60,9 +60,15 @@ namespace {
       std::set<std::filesystem::path> seen;
       seen.insert(path);
       while (std::filesystem::is_symlink(path, code)) {
-         path = std::filesystem::read_symlink(path, code);
-         if (!code)
-            break;
+         {
+            auto temp = std::filesystem::read_symlink(path, code);
+            if (code)
+               break;
+            if (temp.is_relative()) {
+               path = ((path.has_filename() ? path.parent_path() : path) / temp).lexically_normal();
+            } else
+               path = temp;
+         }
          if (seen.contains(path)) {
             code = std::make_error_code(std::errc::too_many_symbolic_link_levels);
             break;

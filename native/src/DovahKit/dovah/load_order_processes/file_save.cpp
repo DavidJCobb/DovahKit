@@ -1,4 +1,5 @@
 #include "./file_save.h"
+#include <chrono> // for picking a temporary file name
 #include "../files/file_load_order.h"
 
 #include "../files/tes_file_reading/file_loader.h" // loaded files
@@ -34,20 +35,9 @@ namespace dovah::load_order_processes {
          throw exception(error_code::file_has_too_many_dependencies);
       
       desired_filename = std::filesystem::path(active_load_order.base_path) / desired_filename;
-      std::filesystem::path temporary_filename = desired_filename;
-      {  // opening the file for writing will clear its contents (which is bad for the user and will break our reading/writing), so we want to ALWAYS write to a temporary file first!
-         auto ext = temporary_filename.extension().string();
-         if (_stricmp(ext.data(), ".tes") == 0) {
-            //
-            // This normally should never happen. The editor should never allow you to open a *.TES 
-            // file directly. You can end up working with one e.g. if a save is successful but we are 
-            // unable to replace the file being saved over, but when that happens, we shouldn't be 
-            // updating the file_reader's stored filename, so that should still point to the old name.
-            //
-         } else {
-            temporary_filename.replace_extension(".tes");
-         }
-      }
+      std::filesystem::path temporary_filename = _make_temporary_write_path(desired_filename);
+      if (temporary_filename.empty())
+         throw exception(error_code::no_temporary_filename_available);
       
       _old_active_file_prefix = active_load_order.file_prefix_for(*active_load_order.active_file);
       _was_originally_light   = active_load_order.active_file->is_light();
@@ -193,6 +183,22 @@ namespace dovah::load_order_processes {
          if (active_load_order.on_mass_renumber)
             (active_load_order.on_mass_renumber)();
       }
+   }
+
+   std::filesystem::path file_save::_make_temporary_write_path(const std::filesystem::path& desired) const {
+      constexpr const auto   filename_format = std::wstring_view(L"{0}.{1}-{2}.tes"); // filestem, timestamp, counter
+      constexpr const size_t max_counter     = 100;
+
+      const auto timestamp = std::format(L"{0:%b%d%Y}-{0:%H%M%S}", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+      const auto filestem  = desired.stem().wstring();
+
+      std::filesystem::path temp = desired;
+      for (size_t i = 0; i <= max_counter; ++i) {
+         temp.replace_filename(std::format(filename_format, filestem, timestamp, i));
+         if (!std::filesystem::exists(temp))
+            return temp;
+      }
+      return {};
    }
 
    void file_save::_post_save_sever_uses(writer_type& writer) {

@@ -111,35 +111,72 @@ ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
 namespace {
    QString _stringify_error_code(dovah::exceptions::file_save_failed::error_code code) {
       using error_code = decltype(code);
+      #define STRING(s) ActiveFileSaveDialog::tr(s, "write error");
       switch (code) {
          case error_code::forms_out_of_esl_form_id_range:
-            return QObject::tr("You cannot convert a file to an ESL if any of its forms have IDs above XX000FFF.", "write error");
+            return STRING("You cannot convert a file to an ESL if any of its forms have IDs above XX000FFF.");
          case error_code::file_has_too_many_dependencies:
-            return QObject::tr("A file cannot have more than 254 dependencies.", "write error");
+            return STRING("A file cannot have more than 254 dependencies.");
          case error_code::no_active_file:
-            return QObject::tr("You did not select an active file, and there is no room in this load order for another file.", "write error");
+            return STRING(
+               "You did not select an active file, and there is no room in this load order for another file."
+            );
          case error_code::save_or_load_already_in_progress:
-            return QObject::tr("It is not safe to save right now, because DovahKit is currently performing some other operation (e.g. a load or save).", "write error");
+            return STRING(
+               "It is not safe to save right now, because DovahKit is currently performing some other operation "
+               "(e.g. a load or save)."
+            );
+         case error_code::no_temporary_filename_available:
+            return STRING(
+               "DovahKit tries to write output data to a temporary file, and only overwrite the destination "
+               "file if saving succeeds. However, DovahKit was unable to find a temporary filename that isn't "
+               "already in use by an existing file."
+            );
          case error_code::no_filename_specified:
-            return QObject::tr("The active file is implicit (nameless) and no filename was provided. (Wait, what? How did this happen? We should've made you either provide a name or cancel.)", "write error");
+            return STRING(
+               "The active file is implicit (nameless) and no filename was provided. (Wait, what? How did this "
+               "happen? We should've made you either provide a name or cancel.)"
+            );
          case error_code::save_complete_but_reopen_failed:
-            return QObject::tr("The file was successfully saved, but could not be reopened for editing after the save. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
+            return STRING(
+               "The file was successfully saved, but could not be reopened for editing after the save. Further "
+               "editing is no longer possible; you can keep using DovahKit, but all currently loaded data will "
+               "be unloaded."
+            );
          case error_code::out_of_memory:
-            return QObject::tr("An out-of-memory error occurred at some point during the save process, likely while trying to write a compressed record.", "write error");
+            return STRING(
+               "An out-of-memory error occurred at some point during the save process, likely while trying to "
+               "write a compressed record."
+            );
          case error_code::zlib_memory_error:
-            return QObject::tr("A zlib memory error occurred while trying to save a compressed record.", "write error");
+            return STRING("A zlib memory error occurred while trying to save a compressed record.");
          case error_code::zlib_buffer_error:
-            return QObject::tr("A zlib buffer error occurred while trying to save a compressed record.", "write error");
+            return STRING("A zlib buffer error occurred while trying to save a compressed record.");
          case error_code::unsaved_form_cleanup_failed:
-            return QObject::tr("The file was successfully saved, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
+            return STRING(
+               "The file was successfully saved, but some forms were lost during the conversion. Internal errors "
+               "occurred while trying to remove these forms from memory. Further editing is no longer possible; "
+               "you can keep using DovahKit, but all currently loaded data will be unloaded. "
+            );
          case error_code::post_save_none_stub_cleanup_failed:
-            return QObject::tr("The file was successfully saved, but internal errors occurred while trying to clean up information on dangling form-to-form references. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
+            return STRING(
+               "The file was successfully saved, but internal errors occurred while trying to clean up information "
+               "on dangling form-to-form references. Further editing is no longer possible; you can keep using "
+               "DovahKit, but all currently loaded data will be unloaded."
+            );
          case error_code::unimplemented_form_type:
-            return QObject::tr("One of the edited forms is of a form type that DovahKit doesn't know how to save. (Wait, what? How did this happen?) ", "write error");
+            return STRING(
+               "One of the edited forms is of a form type that DovahKit doesn't know how to save. (Wait, what? How "
+               "did this happen?)"
+            );
          case error_code::desired_file_version_does_not_support_co_opting_the_hardcoded_form_id_range:
-            return QObject::tr("The active file defines forms that fall within the hardcoded form ID range [xx000001, xx0007FF]. The desired save version doesn't support this.", "write error");
+            return STRING(
+               "The active file defines forms that fall within the hardcoded form ID range [xx000001, xx0007FF]. "
+               "The desired save version doesn't support this."
+            );
       }
-      return QObject::tr("An unknown problem occurred while trying to save this file.", "write error");
+      return STRING("An unknown problem occurred while trying to save this file.");
+      #undef STRING
    }
 }
 
@@ -171,7 +208,7 @@ std::filesystem::path ActiveFileSaveDialog::_get_target_filename() {
       QString error;
       switch (code) {
          case cobb::filename_validation_result::missing:
-            error = tr("You can't save a nameless file with just an extension.", "save filename error");
+            error = tr("You can't save a dotfile (a file whose name that starts with a dot).", "save filename error");
             break;
          case cobb::filename_validation_result::is_a_path:
             error = tr("You cannot specify paths.", "save filename error");
@@ -390,7 +427,13 @@ bool ActiveFileSaveDialog::_enforce_cross_game_form_loss_is_deliberate(dovah::ga
       auto choice = QMessageBox::critical(
          this,
          tr("Warning", "save error"),
-         tr("The active file currently contains %1 forms that are not supported in the target game. Not only will these forms not be saved; they will also be deleted from memory if the save operation completes successfully.<br/><br/>Are you sure you still want to convert this file to the selected game?")
+         tr(
+            "The active file currently contains %1 forms that are not supported in the target game. Not only "
+            "will these forms not be saved; they will also be deleted from memory if the save operation "
+            "completes successfully.<br/>"
+            "<br/>"
+            "Are you sure you still want to convert this file to the selected game?"
+         )
             .arg(forms_we_cant_save.size()),
          QMessageBox::YesToAll | QMessageBox::Cancel
       );

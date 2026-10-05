@@ -22,6 +22,11 @@ namespace dovah::exceptions {
 
             file_has_too_many_dependencies,
 
+            // We write changes to a temporary file, and then overwrite the destination 
+            // file with that temporary file. However, we have to be able to actually 
+            // pick a name for that temporary file that nothing else is using.
+            no_temporary_filename_available,
+
             out_of_memory,
             zlib_memory_error,
             zlib_buffer_error,

@@ -35,6 +35,8 @@ namespace dovah::load_order_processes {
          void execute();
 
       protected:
+         std::filesystem::path _make_temporary_write_path(const std::filesystem::path& desired) const;
+
          void _post_save_sever_uses(writer_type& writer);
          void _post_save_form_id_remap(writer_type& writer);
          void _post_save_form_stub_file_info_update(writer_type& writer);
