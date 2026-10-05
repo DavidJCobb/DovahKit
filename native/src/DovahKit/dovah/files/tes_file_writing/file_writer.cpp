@@ -55,6 +55,21 @@ namespace {
             out[n++] = item.form_type;
       return out;
    }();
+
+   static void recursively_follow_symlinks(std::filesystem::path& path, std::error_code& code) {
+      std::set<std::filesystem::path> seen;
+      seen.insert(path);
+      while (std::filesystem::is_symlink(path, code)) {
+         path = std::filesystem::read_symlink(path, code);
+         if (!code)
+            break;
+         if (seen.contains(path)) {
+            code = std::make_error_code(std::errc::too_many_symbolic_link_levels);
+            break;
+         }
+         seen.insert(path);
+      }
+   }
 }
 
 namespace dovah::tes_file_writing {
@@ -907,7 +922,14 @@ namespace dovah::tes_file_writing {
    }
    bool file_writer::post_save_rename(const std::filesystem::path& desired) {
       std::error_code code;
-      std::filesystem::rename(this->path, desired, code);
+      if (std::filesystem::is_symlink(desired, code)) {
+         auto real = desired;
+         recursively_follow_symlinks(real, code);
+         if (!code)
+            std::filesystem::rename(this->path, real, code);
+      } else {
+         std::filesystem::rename(this->path, desired, code);
+      }
       if (!code) {
          this->path = desired;
       }
