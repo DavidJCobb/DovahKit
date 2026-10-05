@@ -27,7 +27,7 @@ namespace dovah {
          bsa_archived_file() {};
          //
          bsa_archived_file(const cobb::generic_buffer& buf) : owned(buf) {};
-         bsa_archived_file(cobb::generic_buffer&& buf) : owned(buf) {};
+         bsa_archived_file(cobb::generic_buffer&& buf) : owned(std::move(buf)) {};
          //
          bsa_archived_file(const void* shared_data, size_t s) {
             this->shared.data = shared_data;
@@ -45,9 +45,9 @@ namespace dovah {
                return this->owned.size();
             return this->shared.size;
          }
-         inline error_code get_error() const noexcept { return this->error; }
-         inline bool has_error() const noexcept { return this->error != error_code::none; }
-         inline bool is_shared() const noexcept { return !this->owned.data(); }
+         constexpr error_code get_error() const noexcept { return this->error; }
+         constexpr bool has_error() const noexcept { return this->error != error_code::none; }
+         constexpr bool is_shared() const noexcept { return !this->owned.data(); }
          
          void read(size_t offset, void* value, size_t size) const noexcept {
             if (!this->data())
@@ -63,5 +63,7 @@ namespace dovah {
          }
          template<> void read(size_t offset, std::string& value) const noexcept = delete;
          template<> void read(size_t offset, std::wstring& value) const noexcept = delete;
+
+         cobb::generic_buffer&& take_owned_data() noexcept;
    };
 }

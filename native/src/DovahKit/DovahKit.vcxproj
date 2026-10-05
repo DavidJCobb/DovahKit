@@ -214,6 +214,7 @@
     <ClCompile Include="dovah\datastores\story_manager.cpp" />
     <ClCompile Include="dovah\datastores\story_manager\branch_node.cpp" />
     <ClCompile Include="dovah\datastores\story_manager\node.cpp" />
+    <ClCompile Include="dovah\files\bsa\bsa_archived_file.cpp" />
     <ClCompile Include="dovah\files\bsa\utils\fold_path.cpp" />
     <ClCompile Include="dovah\files\bsa\utils\fold_path_component.cpp" />
     <ClCompile Include="dovah\files\bsa\utils\path_to_hashes.cpp" />

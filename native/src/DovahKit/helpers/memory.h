@@ -47,5 +47,8 @@ namespace cobb {
          }
          generic_buffer& operator=(const generic_buffer& other) noexcept; // NOTE: no handling possible for out-of-memory; maybe avoid copying particularly huge buffers
          generic_buffer& operator=(generic_buffer&& other) noexcept;
+
+         // Take ownership of the raw pointer inside.
+         std::pair<void*, size_t> take() noexcept;
    };
 }

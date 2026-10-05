@@ -43,23 +43,39 @@ namespace vulkanDK::asset_loading {
          return;
       }
 
+      // TODO: Revise this post-launch. This is a hazard; `dds::texture` owns its buffer, so we 
+      //       are here giving it ownership of a buffer that is already owned (by the returned 
+      //       file). Both of them are fighting over ownership and we have to do too much to 
+      //       manually manage which of them gets to win at any given moment.
+      //
+      //       We should instead have a class that parses a DDS buffer into the information we 
+      //       require without requiring ownership of it; and when we decide that we do need to 
+      //       keep and own the data, we should have a more explicit hand-off at exactly that 
+      //       moment.
+      //
       dds::texture tex;
       tex.data = file->data();
       tex.size = file->size();
-      //
+
       if (!tex.read()) {
          qDebug("[vulkanDK::surface_renderer::add_dds_texture] Failed to read DDS header: %s", qUtf8Printable(entity.path));
+         tex.data = nullptr; // ensure we don't double-free (from `tex` and implicitly from `file`)
+         tex.size = 0;
          _fail_texture_load(this->owner, entity);
          return;
       }
       if (!tex.pixel_data() || !tex.pixel_data_size()) {
          qDebug("[vulkanDK::surface_renderer::add_dds_texture] No DDS data available: %s", qUtf8Printable(entity.path));
+         tex.data = nullptr; // ensure we don't double-free (from `tex` and implicitly from `file`)
+         tex.size = 0;
          _fail_texture_load(this->owner, entity);
          return;
       }
       const auto vulkan_metadata = image_metadata::from_dds_header(tex.metadata, tex.pixel_data_size());
       if (vulkan_metadata.format == VkFormat::VK_FORMAT_UNDEFINED) {
          qDebug("[vulkanDK::surface_renderer::add_dds_texture] DDS texture format did not map to Vulkan: %s", qUtf8Printable(entity.path));
+         tex.data = nullptr; // ensure we don't double-free (from `tex` and implicitly from `file`)
+         tex.size = 0;
          _fail_texture_load(this->owner, entity);
          return;
       }
@@ -69,14 +85,28 @@ namespace vulkanDK::asset_loading {
       //
       // Queue transfer to the GPU:
       // 
-      // Right now, `tex` is borrowing a buffer directly from the BSA-archived file, and that 
-      // buffer's gonna get deleted when we're done with the BSA data. We can't simply "steal" 
-      // it from the BSA-archived file object, because it may actually be shared with the BSA 
-      // itself (i.e. if the file is uncompressed). We have to instead just copy the buffer.
+      // Right now, `tex` is borrowing a buffer directly from the BSA-archived file. If that 
+      // buffer is shared, then we have to copy it; otherwise, we can simply steal it.
       //
-      auto* copy = malloc(tex.size);
-      memcpy(copy, tex.data, tex.size);
-      tex.data = copy;
+      if (file->is_shared()) {
+         auto* copy = malloc(tex.size);
+         if (!copy) {
+            qDebug("[vulkanDK::surface_renderer::add_dds_texture] DDS texture too large to create an owned copy: %s", qUtf8Printable(entity.path));
+            tex.data = nullptr; // ensure we don't double-free (from `tex` and implicitly from `file`)
+            tex.size = 0;
+            _fail_texture_load(this->owner, entity);
+            return;
+         }
+         memcpy(copy, tex.data, tex.size);
+         tex.data = copy;
+      } else {
+         //
+         // This function call detaches the buffer from `file`. Ordinarily we'd store the 
+         // pointer and size that it returns, but as it happens, we've already stored those 
+         // values in `tex` further above.
+         //
+         file->take_owned_data().take();
+      }
       //
       entity.lifetime.life_state = scene_entities::life_state::active_pending_upload;
       entity.lifetime.sync_state.set_all_out_of_date();

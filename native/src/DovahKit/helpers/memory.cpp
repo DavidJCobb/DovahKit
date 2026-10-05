@@ -60,4 +60,12 @@ namespace cobb {
       other._capacity = 0;
       return *this;
    }
+
+   std::pair<void*, size_t> generic_buffer::take() noexcept {
+      std::pair<void*, size_t> out = { this->_data, this->_size };
+      this->_data     = nullptr;
+      this->_size     = 0;
+      this->_capacity = 0;
+      return out;
+   }
 }
