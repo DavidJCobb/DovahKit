@@ -58,7 +58,7 @@
      <item>
       <spacer>
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -115,7 +115,7 @@
         <item row="1" column="1">
          <widget class="QSpinBox" name="havokFriction">
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
           <property name="maximum">
            <number>100</number>
@@ -128,7 +128,7 @@
            <string>Restitution:</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
           <property name="buddy">
            <cstring>havokRestitution</cstring>
@@ -141,7 +141,7 @@
            <string>Friction:</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
           <property name="buddy">
            <cstring>havokFriction</cstring>
@@ -161,7 +161,7 @@
         <item row="1" column="3">
          <widget class="QSpinBox" name="havokRestitution">
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
           <property name="maximum">
            <number>200</number>
@@ -189,7 +189,7 @@
        <item>
         <widget class="QSpinBox" name="specularExponent">
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
          <property name="maximum">
           <number>100</number>
@@ -231,9 +231,6 @@
          <property name="showMoveButtons">
           <bool>false</bool>
          </property>
-         <property name="showRemoveButton">
-          <bool>false</bool>
-         </property>
         </widget>
        </item>
       </layout>
@@ -244,6 +241,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
    <class>DKFormListPane</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormListPane.h</header>
@@ -252,11 +254,6 @@
    <class>DKTextureAssetPane</class>
    <extends>QWidget</extends>
    <header>widgets/DKTextureAssetPane.h</header>
-  </customwidget>
-  <customwidget>
-   <class>DKFormPicker</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKFormPicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

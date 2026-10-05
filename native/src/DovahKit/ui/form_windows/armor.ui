@@ -50,7 +50,7 @@
          <item>
           <widget class="QDoubleSpinBox" name="weight">
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -88,10 +88,10 @@
        <item row="0" column="1">
         <widget class="QLineEdit" name="editorID"/>
        </item>
-       <item row="2" column="1" alignment="Qt::AlignLeft">
+       <item row="2" column="1" alignment="Qt::AlignmentFlag::AlignLeft">
         <widget class="QSpinBox" name="value">
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -156,10 +156,10 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="1" alignment="Qt::AlignLeft">
+       <item row="6" column="1" alignment="Qt::AlignmentFlag::AlignLeft">
         <widget class="QSpinBox" name="rating">
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
          <property name="maximum">
           <number>20000</number>
@@ -523,9 +523,6 @@
           <property name="showMoveButtons">
            <bool>false</bool>
           </property>
-          <property name="showRemoveButton">
-           <bool>false</bool>
-          </property>
          </widget>
         </item>
        </layout>
@@ -573,7 +570,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -600,7 +597,7 @@
      <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>

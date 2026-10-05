@@ -3,10 +3,12 @@
 #include <QFontMetrics>
 #include <QHeaderView>
 #include <QKeyEvent>
+#include <QMetaMethod>
 #include "DKHeaderView.h"
 #if !defined(QT_PLUGIN)
    #include "../editor/open_window_for_form.h"
    #include "./widget-data/DKCustomFormFilter.h"
+   #include "./DKFormPickerDialog.h"
 #endif
 
 namespace {
@@ -46,6 +48,9 @@ class DKFormListPaneModel : public QAbstractItemModel {
 DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
    auto* view = this->subwidgets.view = new QTableView(this);
    auto* wrap = this->subwidgets.buttons.wrapper = new QWidget(this);
+   this->subwidgets.buttons.add       = new QPushButton(wrap);
+   this->subwidgets.buttons.add->setText(tr("Add..."));
+   this->subwidgets.buttons.add->setVisible(false); // make it visible if we limit the allowed form types
    this->subwidgets.buttons.move_down = new QPushButton(wrap);
    this->subwidgets.buttons.move_up   = new QPushButton(wrap);
    this->subwidgets.buttons.remove    = new QPushButton(wrap);
@@ -57,6 +62,7 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       layout->addWidget(view, 1);
       layout->addWidget(wrap, 0);
       nested->addStretch(1);
+      nested->addWidget(this->subwidgets.buttons.add);
       nested->addWidget(this->subwidgets.buttons.move_up);
       nested->addWidget(this->subwidgets.buttons.move_down);
       nested->addWidget(this->subwidgets.buttons.remove);
@@ -131,6 +137,18 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
    }
    //
    #if !defined(QT_PLUGIN)
+      QObject::connect(this->subwidgets.buttons.add, &QPushButton::clicked, this, [this]() {
+         if (this->state.read_only)
+            return;
+         DKFormPickerDialog dialog{ this };
+         dialog.setCustomFilter(this->customFilter());
+         dialog.setAllowMultiSelect(true);
+         dialog.setAllowedFormTypes(this->_model()->allowedFormTypes());
+         const auto result = dialog.exec();
+         if (result == QDialog::DialogCode::Accepted) {
+            this->_model()->addStubs(dialog.selectedFormStubs());
+         }
+      });
       QObject::connect(this->subwidgets.buttons.move_up,   &QPushButton::clicked, this, [this]() { this->_moveSelected(-1); });
       QObject::connect(this->subwidgets.buttons.move_down, &QPushButton::clicked, this, [this]() { this->_moveSelected(1); });
       QObject::connect(this->subwidgets.buttons.remove,    &QPushButton::clicked, this, [this]() { this->_removeSelected(); });
@@ -139,25 +157,44 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       {
          auto* sel_model = this->subwidgets.view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& sel) {
+            bool should_signal_rows  = this->isSignalConnected(QMetaMethod::fromSignal(&DKFormListPane::selectedRowsChanged));
+            bool should_signal_forms = this->isSignalConnected(QMetaMethod::fromSignal(&DKFormListPane::selectedFormsChanged));
+            if (!should_signal_rows && !should_signal_forms)
+               return;
+
             if (sel.isEmpty()) {
-               emit selectedRowsChanged({});
-               emit selectedFormsChanged({});
+               if (should_signal_rows)
+                  emit selectedRowsChanged({});
+               if (should_signal_forms)
+                  emit selectedFormsChanged({});
                return;
             }
 
-            std::vector<dovah::form_stub*> forms;
             std::vector<size_t> rows;
-
+            std::vector<dovah::form_stub*> forms;
+            {
+               size_t size = 0;
+               for (auto& sel_item : sel)
+                  size += sel_item.bottom() - sel_item.top() + 1;
+               if (should_signal_rows)
+                  rows.reserve(size);
+               if (should_signal_forms)
+                  forms.reserve(size);
+            }
             for (auto& sel_item : sel) {
                int first = sel_item.top();
                int last  = sel_item.bottom();
                for (int i = first; i <= last; ++i) {
-                  forms.push_back(this->_model()->getNthStub(i));
-                  rows.push_back(i);
+                  if (should_signal_rows)
+                     rows.push_back(i);
+                  if (should_signal_forms)
+                     forms.push_back(this->_model()->getNthStub(i));
                }
             }
-            emit selectedRowsChanged(rows);
-            emit selectedFormsChanged(forms);
+            if (should_signal_rows)
+               emit selectedRowsChanged(rows);
+            if (should_signal_forms)
+               emit selectedFormsChanged(forms);
          });
       }
    #endif
@@ -184,7 +221,7 @@ DKFormListPaneModel* DKFormListPane::_model() const noexcept {
       auto* sm = this->subwidgets.view->selectionModel();
       if (!sm)
          return;
-      this->_model()->removeStubs(sm->selectedRows());
+      this->_model()->removeStubs(sm->selection());
    }
 #endif
 void DKFormListPane::_updateButtonVisibility() {
@@ -192,6 +229,12 @@ void DKFormListPane::_updateButtonVisibility() {
       this->subwidgets.buttons.wrapper->setVisible(false);
       return;
    }
+
+   #if !defined(QT_PLUGIN)
+      // Only show the "Add..." button if we limit the form types involved
+      this->subwidgets.buttons.add->setVisible(this->_model()->allowedFormTypes().size() > 0);
+   #endif
+
    auto* prev   = this->subwidgets.buttons.move_up;
    auto* next   = this->subwidgets.buttons.move_down;
    auto* remove = this->subwidgets.buttons.remove;
@@ -302,6 +345,7 @@ void DKFormListPane::setReadOnly(bool v) {
 #if !defined(QT_PLUGIN)
    void DKFormListPane::setAllowedFormTypes(QVector<dovah::form_type> list) {
       this->_model()->setAllowedFormTypes(list);
+      this->subwidgets.buttons.add->setVisible(list.size() > 0);
    }
 #endif
 void DKFormListPane::setShowFormTypes(bool v) {

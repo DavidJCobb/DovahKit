@@ -141,6 +141,7 @@ class DKFormListPane : public QWidget {
       struct {
          struct {
             QWidget*     wrapper   = nullptr;
+            QPushButton* add       = nullptr;
             QPushButton* move_up   = nullptr;
             QPushButton* move_down = nullptr;
             QPushButton* remove    = nullptr;

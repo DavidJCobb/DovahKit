@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogLocation</class>
  <widget class="QDialog" name="FormDialogLocation">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>663</width>
+    <height>538</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Location</string>
   </property>
@@ -93,10 +101,10 @@
      <item row="2" column="1">
       <widget class="DKFormPicker" name="parent"/>
      </item>
-     <item row="4" column="1" alignment="Qt::AlignLeft">
+     <item row="4" column="1" alignment="Qt::AlignmentFlag::AlignLeft">
       <widget class="QDoubleSpinBox" name="markerRadius">
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -162,6 +170,9 @@
          <property name="whatsThis">
           <string>These are the references inside this location that have a Location Ref Type set.</string>
          </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
          <property name="showFormTypes">
           <bool>false</bool>
          </property>
@@ -184,6 +195,9 @@
         <widget class="DKFormListPane" name="cells">
          <property name="whatsThis">
           <string>These are the cells that have been tagged with this location.</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
          <property name="showFormTypes">
           <bool>false</bool>
@@ -208,6 +222,9 @@
          <property name="whatsThis">
           <string>These are the actors that have been tagged with this location.</string>
          </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
          <property name="showFormTypes">
           <bool>false</bool>
          </property>
@@ -228,7 +245,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -255,7 +272,7 @@
      <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
