@@ -927,14 +927,48 @@ namespace dovah::tes_file_writing {
       this->stream.close();
    }
    bool file_writer::post_save_rename(const std::filesystem::path& desired) {
+      auto overwrite_dst = desired;
+
       std::error_code code;
       if (std::filesystem::is_symlink(desired, code)) {
-         auto real = desired;
-         recursively_follow_symlinks(real, code);
-         if (!code)
-            std::filesystem::rename(this->path, real, code);
-      } else {
-         std::filesystem::rename(this->path, desired, code);
+         recursively_follow_symlinks(overwrite_dst, code);
+      }
+      if (!code) {
+         if (std::filesystem::hard_link_count(overwrite_dst, code) > 1) {
+            //
+            // The file has been hardlinked. We want to overwrite the content of the file, 
+            // rather than clobbering the individual hardlink with a new file, so we have 
+            // to do this:
+            //
+            FILE* src_file = _wfopen(this->path.c_str(),    L"rb");
+            FILE* dst_file = _wfopen(overwrite_dst.c_str(), L"wb");
+            if (src_file && dst_file) {
+               uint8_t buffer[128];
+               while (true) {
+                  size_t count = fread(buffer, sizeof(uint8_t), std::extent<decltype(buffer)>::value, src_file);
+                  if (count == 0) {
+                     if (ferror(src_file)) {
+                        code = std::make_error_code(std::errc::io_error);
+                     }
+                     break;
+                  }
+                  if (fwrite(buffer, sizeof(uint8_t), count, dst_file) != count) {
+                     code = std::make_error_code(std::errc::io_error);
+                     break;
+                  }
+               }
+               fclose(src_file);
+               fclose(dst_file);
+               if (!code) {
+                  std::filesystem::remove(this->path);
+               }
+            } else {
+               // failed to open either or both files
+               code = std::make_error_code(std::errc::io_error);
+            }
+         } else {
+            std::filesystem::rename(this->path, overwrite_dst, code);
+         }
       }
       if (!code) {
          this->path = desired;

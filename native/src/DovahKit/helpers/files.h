@@ -30,17 +30,22 @@ namespace cobb {
          mapped_file() noexcept {}
          mapped_file(wchar_t const* path) noexcept { this->open(path); }
          ~mapped_file();
-         //
+
+         mapped_file(const mapped_file&) = delete;
+         mapped_file& operator=(const mapped_file&) = delete;
+         mapped_file(mapped_file&&) noexcept;
+         mapped_file& operator=(mapped_file&&) noexcept;
+         
          constexpr const void* data() const noexcept { return this->_view; }
          constexpr uint64_t size() const noexcept { return this->_size; }
          const void* data_at(std::ptrdiff_t offset) const noexcept { return (const uint8_t*)this->_view + offset; }
-         //
+         
          void open(wchar_t const* path) noexcept;
          void open(FILE* handle) noexcept;
-         //
-         inline operator bool() const noexcept { return !(this->_error) && this->_view != nullptr; }
-         inline uint32_t get_error() const noexcept { return this->_error; }
-         //
+         
+         constexpr operator bool() const noexcept { return !(this->_error) && this->_view != nullptr; }
+         constexpr uint32_t get_error() const noexcept { return this->_error; }
+        
          uint32_t read_from(uint32_t pos, void* buffer, uint32_t size) const noexcept {
             std::uintptr_t addr = (std::uintptr_t)this->_view + pos;
             std::memcpy(buffer, (void*)addr, size);
@@ -59,7 +64,7 @@ namespace cobb {
             std::memcpy(&field, (void*)addr, sizeof(field));
             return sizeof(field);
          }
-         //
+         
          constexpr bool is_in_bounds(uint32_t offset, uint32_t bytes) const noexcept {
             return ((uint64_t)offset + bytes) < this->_size;
          }

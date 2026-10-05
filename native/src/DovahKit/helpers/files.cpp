@@ -28,6 +28,29 @@ namespace cobb {
          this->_view = nullptr;
       }
    }
+
+   mapped_file::mapped_file(mapped_file&& other) noexcept {
+      this->_view  = other._view;
+      this->_size  = other._size;
+      this->_error = other._error;
+      other._view  = nullptr;
+      other._size  = 0;
+      other._error = {};
+   }
+   mapped_file& mapped_file::operator=(mapped_file&& other) noexcept {
+      if (this->_view) {
+         UnmapViewOfFile(this->_view);
+         this->_view = nullptr;
+      }
+      this->_view  = other._view;
+      this->_size  = other._size;
+      this->_error = other._error;
+      other._view  = nullptr;
+      other._size  = 0;
+      other._error = {};
+      return *this;
+   }
+
    void mapped_file::open(wchar_t const* path) noexcept {
       if (this->_view) {
          UnmapViewOfFile(this->_view);
