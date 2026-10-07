@@ -5,9 +5,9 @@
 #include "editor/subsystems/crash_dumper/core.h"
 
 int main(int argc, char* argv[]) {
+   QApplication a(argc, argv);
    dovahkit::subsystems::crash_dumper::core::get_or_create();
 
-   QApplication a(argc, argv);
    a.setWindowIcon(QIcon(":/DovahKit.ico"));
    
    MainWindow w;

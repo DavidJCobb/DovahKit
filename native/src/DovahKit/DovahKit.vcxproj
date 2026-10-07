@@ -562,6 +562,12 @@
     <ClCompile Include="editor\subsystems\audio\utils\is_valid_xwma_riff.cpp" />
     <ClCompile Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.cpp" />
     <ClCompile Include="editor\subsystems\crash_dumper\core.cpp" />
+    <ClCompile Include="editor\subsystems\crash_dumper\crash_info.cpp" />
+    <ClCompile Include="editor\subsystems\crash_dumper\crash_types\cpp_exception.cpp" />
+    <ClCompile Include="editor\subsystems\crash_dumper\crash_types\structured_exception.cpp" />
+    <ClCompile Include="editor\subsystems\crash_dumper\ipc.cpp" />
+    <ClCompile Include="editor\subsystems\crash_dumper\main_process_state.cpp" />
+    <ClCompile Include="editor\subsystems\crash_dumper\monitor_process_state.cpp" />
     <ClCompile Include="editor\subsystems\crash_dumper\register_new_thread.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
@@ -946,6 +952,8 @@
     <ClCompile Include="helpers\string\strifind_ascii.cpp" />
     <ClCompile Include="helpers\utf8\append.tests.cpp" />
     <ClCompile Include="helpers\utf8\for_each.cpp" />
+    <ClCompile Include="helpers\win32\get_parent_process_id.cpp" />
+    <ClCompile Include="helpers\win32\suspend_all_other_threads.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
     <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\find_key_of.cpp" />
@@ -1326,6 +1334,7 @@
     <ClCompile Include="ui\main_window\render_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\access_violation.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\integer_divide_by_zero.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\multiple_failing_threads.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception_on_thread.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.cpp" />
@@ -2546,6 +2555,14 @@
     <ClInclude Include="editor\subsystems\audio\utils\load_asset_as_sound_definition.h" />
     <ClInclude Include="editor\subsystems\audio\utils\parse_riff.h" />
     <ClInclude Include="editor\subsystems\crash_dumper\core.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_info.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_types\cpp_exception.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_types\cpp_generic_terminate.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_types\cpp_generic_throw.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_types\structured_exception.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\ipc.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\main_process_state.h" />
+    <ClInclude Include="editor\subsystems\crash_dumper\monitor_process_state.h" />
     <ClInclude Include="editor\subsystems\crash_dumper\register_new_thread.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\collision_layer.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\enchantment.h" />
@@ -2567,6 +2584,9 @@
     <QtMoc Include="ui\form_windows\quest\QuestObjectivesModel.h" />
     <QtMoc Include="qt\DKWinTaskbarButton.h" />
     <QtMoc Include="qt\DKWinTaskbarProgress.h" />
+    <ClInclude Include="helpers\variants\index_of_type.h" />
+    <ClInclude Include="helpers\win32\get_parent_process_id.h" />
+    <ClInclude Include="helpers\win32\suspend_all_other_threads.h" />
     <ClInclude Include="helpers\win32\WINAPI.define.h" />
     <ClInclude Include="nif\blocks\BSBound.h" />
     <ClInclude Include="qt\DKWinTaskbarButtonPrivate.h" />
@@ -2586,6 +2606,7 @@
     <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\access_violation.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\integer_divide_by_zero.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\multiple_failing_threads.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception_on_thread.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\full_load_every_form.h" />
@@ -4569,6 +4590,7 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="editor\subsystems\crash_dumper\crash_info.inl" />
     <None Include="editor\subsystems\crash_dumper\_docs\README.md">
       <SubType>
       </SubType>

@@ -10,6 +10,18 @@
 
 #include "../../dovahkit_version_macros.h"
 
+#define USE_OUT_OF_PROCESS_IMPL 1 // for testing; eventually it'll replace all the code below
+#if USE_OUT_OF_PROCESS_IMPL
+   #include <QCoreApplication>
+   #include "helpers/win32/get_parent_process_id.h"
+   #include "./main_process_state.h"
+   #include "./monitor_process_state.h"
+
+   // `main_process_state.h` undefs WINAPI, which we need defined in this file at least until we delete 
+   // the in-process crash-handling impl
+   #include "helpers/win32/WINAPI.define.h"
+#endif
+
 #define STR(x) L###x
 #define XSTR(x) STR(x)
 
@@ -27,29 +39,64 @@ namespace {
 
 namespace dovahkit::subsystems::crash_dumper {
    core::core() {
-      this->exception_filter_mutex = CreateMutex(NULL, FALSE, NULL);
-      if (this->exception_filter_mutex == NULL) {
-         qDebug("[Crash Dumper] Unable to create mutex. We will not set an unhandled exception filter; no minidumps can be produced.");
-         return;
-      }
+      #if USE_OUT_OF_PROCESS_IMPL
+         {
+            auto args = QCoreApplication::arguments();
+            bool is_child_process = false;
+            for (auto arg : args) {
+               if (arg == "--crash-handler") {
+                  is_child_process = true;
+                  break;
+               }
+            }
+            if (is_child_process) {
+               monitor_process_state::get_or_create();
+               //
+               // above won't return until either we finish handling a crash, we fail to 
+               // handle a crash, or there is no crash
+               //
+               ExitProcess(0);
+            } else {
+               main_process_state::get_or_create();
 
-      this->sentinel = std::thread(&_sentinel_thread_handler);
-      SetUnhandledExceptionFilter(&_unhandled_exception_filter);
+               const auto handler = main_process_state::get_terminate_handler({});
+               std::set_terminate(handler);
+               dovah::worker_thread_termination_handler::get().set_handler(handler);
+            }
+         }
+      #else
+         this->exception_filter_mutex = CreateMutex(NULL, FALSE, NULL);
+         if (this->exception_filter_mutex == NULL) {
+            qDebug("[Crash Dumper] Unable to create mutex. We will not set an unhandled exception filter; no minidumps can be produced.");
+            return;
+         }
 
-      std::set_terminate(&_terminate_handler);
-      dovah::worker_thread_termination_handler::get().set_handler(&_terminate_handler);
+         this->sentinel = std::thread(&_sentinel_thread_handler);
+         SetUnhandledExceptionFilter(&_unhandled_exception_filter);
+
+         std::set_terminate(&_terminate_handler);
+         dovah::worker_thread_termination_handler::get().set_handler(&_terminate_handler);
+      #endif
    }
    core::~core() {
-      CloseHandle(this->exception_filter_mutex);
-      this->exception_filter_mutex = NULL;
+      #if USE_OUT_OF_PROCESS_IMPL
+      #else
+         CloseHandle(this->exception_filter_mutex);
+         this->exception_filter_mutex = NULL;
 
-      // Let the sentinel thread terminate.
-      this->_dispatch_exception_information(nullptr);
-      this->sentinel.join();
+         // Let the sentinel thread terminate.
+         this->_dispatch_exception_information(nullptr);
+         this->sentinel.join();
+      #endif
    }
 
    void core::register_new_thread() {
-      std::set_terminate(&_terminate_handler);
+      #if USE_OUT_OF_PROCESS_IMPL
+         auto handler = main_process_state::get_terminate_handler({});
+         std::set_terminate(handler);
+      #else
+         std::set_terminate(&_terminate_handler);
+      #endif
    }
 
    static BOOL _minidump_callback(

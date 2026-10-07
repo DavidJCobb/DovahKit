@@ -24,6 +24,7 @@
    #include "idles_datastore.h"
    #include "./crash_tests/access_violation.h"
    #include "./crash_tests/integer_divide_by_zero.h"
+   #include "./crash_tests/multiple_failing_threads.h"
    #include "./crash_tests/uncaught_exception.h"
    #include "./crash_tests/uncaught_exception_on_thread.h"
    #include "./form_types/imagespace_modifier_keyframe_interp.h"
@@ -69,7 +70,8 @@ namespace DovahKitDebug {
          features::crash_tests::access_violation,
          features::crash_tests::integer_divide_by_zero,
          features::crash_tests::uncaught_exception,
-         features::crash_tests::uncaught_exception_on_thread
+         features::crash_tests::uncaught_exception_on_thread,
+         features::crash_tests::multiple_failing_threads
       >;
       using form_type_tests = cobb::class_list<
          features::form_types::imagespace_modifier_keyframe_interp,

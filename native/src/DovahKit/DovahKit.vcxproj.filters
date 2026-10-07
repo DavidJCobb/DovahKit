@@ -4440,6 +4440,33 @@
     <ClCompile Include="dovah\files\bsa\bsa_archived_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\win32\get_parent_process_id.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\crash_dumper\main_process_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\crash_dumper\monitor_process_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\crash_dumper\ipc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\crash_dumper\crash_types\cpp_exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\crash_dumper\crash_types\structured_exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\crash_dumper\crash_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\win32\suspend_all_other_threads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\multiple_failing_threads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11063,6 +11090,42 @@
     <ClInclude Include="dovah\utils\asset_paths\scope_to_folder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\win32\get_parent_process_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\crash_dumper\main_process_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\variants\index_of_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\crash_dumper\monitor_process_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_types\cpp_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\crash_dumper\ipc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_types\cpp_generic_terminate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_types\cpp_generic_throw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_types\structured_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\crash_dumper\crash_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\win32\suspend_all_other_threads.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\multiple_failing_threads.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -13211,6 +13274,9 @@
     <None Include="userdata\script-packages\worldspace-map-terrain\window.lua" />
     <None Include="userdata\script-packages\worldspace-map-terrain\manifest.xml" />
     <None Include="dovah\utils\asset_paths\scope_to_folder.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\crash_dumper\crash_info.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
