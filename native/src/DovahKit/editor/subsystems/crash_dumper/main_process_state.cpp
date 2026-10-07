@@ -107,6 +107,15 @@ namespace dovahkit::subsystems::crash_dumper {
       if (!self.child_process) {
          std::abort();
       }
+
+      //
+      // Some implementations (e.g. MSVC) will allocate exceptions on the stack when 
+      // thrown, and transfer them to the heap (incurring a heap allocation) if you 
+      // call this function. It is thus important that we call this function *before* 
+      // we suspend all other threads. If we suspend other threads first, and one of 
+      // those threads was in the middle of an allocation or free, then that thread 
+      // will have the heap locked, and so we'll deadlock.
+      //
       auto e_ptr = std::current_exception();
 
       cobb::win32::suspend_all_other_threads();
