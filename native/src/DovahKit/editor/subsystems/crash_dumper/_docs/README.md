@@ -7,6 +7,12 @@ The `core` singleton outsources its work to one of two other singletons, dependi
 
 ## Notes
 
+### Debugging
+
+If the debugger is attached to DovahKit at the time a crash occurs, the debugger will intercept the crash before DovahKit itself can intercept that crash. This is generally good, except that it's a problem if you're specifically testing DovahKit's ability to intercept crashes. To run the "crash test" testcases, you'll want to detach the debugger before triggering the crash.
+
+The [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool) is an official Visual Studio add-on that can allow you to debug child processes spawned by a program you're debugging. This can be used to debug the monitor process (use the "Processes" debug window to view all processes; detach from the parent process so you can trigger our crash handling code; stay attached to the child process).
+
 ### `std::terminate`
 
 The `std::set_terminate` function has non-standards-conforming behavior in MSVC. There is supposed to be just one global `std::terminate_handler`, but under MSVC, each thread has its own terminate handler; there is no way to set a global handler. Microsoft has been aware of this issue [since 2019 at the latest](https://developercommunity.visualstudio.com/t/c-stdset-terminate-does-not-syncronize-and-effect/507132). They've expressed a reluctance to fix it due to backwards-compatibility issues, they've made no apparent attempt to offer a non-standard API that implements the standard behavior, and they've offered no workarounds.
