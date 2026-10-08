@@ -13279,6 +13279,9 @@
     <None Include="editor\subsystems\crash_dumper\crash_info.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="editor\subsystems\crash_dumper\_docs\how to save a minidump.md" />
+    <None Include="editor\subsystems\crash_dumper\_docs\how to intercept a crash.md" />
+    <None Include="editor\subsystems\crash_dumper\_docs\interprocess communication.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

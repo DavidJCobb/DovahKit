@@ -1,21 +1,11 @@
 ﻿
 # Crash dumper
 
-This subsystem catches crashes, creates minidumps, and handles notifying the user about the problem. It relies on both `std::set_terminate` (for uncaught C++ exceptions) and `SetUnhandledExceptionFilter` (for hardware/OS exceptions) to intercept crashes.
+This subsystem [catches crashes](./how%20to%20intercept%20a%20crash.md), notifies the user, and [saves minidumps](./how%20to%20save%20a%20minidump.md) that can be sent to me to let me inspect the program state in a debugger.
 
-We have to assume that heap allocation is no longer safe when these handlers run, and this influences how we go about doing some things.
+The `core` singleton outsources its work to one of two other singletons, depending on whether we're in the parent process or the child process: `main_process_state` or `monitor_process_state`.
 
-## Kinds of errors
-
-### C++ exceptions
-
-Because the exception's text (`std::exception::what`) may be owned by the exception object, we have to either copy it out of the exception, or display it immediately. It's simpler to just display it immediately.
-
-### Other exceptions
-
-We don't know what thread the exception is being thrown from, nor whether the stack is in a usable state (as opposed to being close to overflow, having a mangled stack pointer, etc.). For that reason, we spawn up a "sentinel" thread at program startup (since each thread has its own stack); our unhandled exception filter will try to pass the exception information off to the sentinel thread so that it can handle everything for us.
-
-## Other issues
+## Notes
 
 ### `std::terminate`
 

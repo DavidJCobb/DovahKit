@@ -4591,6 +4591,18 @@
       </SubType>
     </None>
     <None Include="editor\subsystems\crash_dumper\crash_info.inl" />
+    <None Include="editor\subsystems\crash_dumper\_docs\how to intercept a crash.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="editor\subsystems\crash_dumper\_docs\how to save a minidump.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="editor\subsystems\crash_dumper\_docs\interprocess communication.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="editor\subsystems\crash_dumper\_docs\README.md">
       <SubType>
       </SubType>
