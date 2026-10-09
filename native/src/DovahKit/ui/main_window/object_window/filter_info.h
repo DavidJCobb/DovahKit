@@ -9,11 +9,6 @@ namespace dovah {
 }
 
 namespace ui::object_window {
-   enum class filter_type {
-      model_path,
-      quest_prefix,
-   };
-
    struct filter_info {
       QVector<dovah::form_type> form_types;
       struct {

@@ -2604,6 +2604,7 @@
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceCollisionLayerPickerModel.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseVoicesModel.h" />
     <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h" />
+    <ClInclude Include="ui\main_window\object_window\file_source_requirement.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\access_violation.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\integer_divide_by_zero.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\multiple_failing_threads.h" />

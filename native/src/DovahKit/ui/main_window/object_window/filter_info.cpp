@@ -1,4 +1,5 @@
 #include "./filter_info.h"
+#include "dovah/files/file_load_order.h"
 #include "dovah/form_stub.h"
 #include "editor/subsystems/form_info_cache/cacheable_traits/model_path.h"
 #include "editor/subsystems/form_info_cache/core.h"

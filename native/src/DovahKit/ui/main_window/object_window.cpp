@@ -212,6 +212,37 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    // completely breaks layout unless and until the tree structure changes after 
    // loading content. no clue why. Qt does not give me the means to debug this.
    this->ui.tree->expandAll();
+
+   #pragma region Filtering
+      this->ui.filterMoreOptions->setVisible(false);
+
+      QObject::connect(this->ui.filterShowMore, &QAbstractButton::toggled, this, [this](bool checked) {
+         this->ui.filterMoreOptions->setVisible(checked);
+      });
+
+      {
+         auto f = [this]() {
+            using enum ui::object_window::file_source_requirement;
+
+            auto v = any_files;
+            if (this->ui.filterActiveFileOnly->isChecked()) {
+               v = active_file_definitions;
+               if (this->ui.filterActiveInclOverrides->isChecked())
+                  v = active_file_records;
+            }
+            this->ui.table->setFileSourceRequirement(v);
+         };
+         for (auto* widget : std::array{
+            this->ui.filterActiveFileOnly,
+            this->ui.filterActiveInclOverrides,
+         }) {
+            QObject::connect(widget, &QCheckBox::toggled, this, f);
+         }
+      }
+      QObject::connect(this->ui.filterDeletedOnly, &QCheckBox::toggled, this, [this](bool checked) {
+         this->ui.table->setOnlyShowDeleted(checked);
+      });
+   #pragma endregion
 }
 
 dovah::form_stub* ObjectWindow::_get_selected_form() {

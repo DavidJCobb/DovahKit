@@ -490,13 +490,39 @@ void FormTableModelProxy::setSourceModel(QAbstractItemModel* source_model) {
 }
 
 void FormTableModelProxy::setFilterInfo(const ui::object_window::filter_info& fi) {
-   #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
-      this->beginFilterChange();
-   #endif
    auto& prior = this->form_filter_info;
    if (prior == fi)
       return;
+   #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+      this->beginFilterChange();
+   #endif
    prior = fi;
+   #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+      this->endFilterChange(QSortFilterProxyModel::Direction::Rows);
+   #else
+      this->invalidateFilter();
+   #endif
+}
+void FormTableModelProxy::setFileSourceRequirement(ui::object_window::file_source_requirement v) {
+   if (this->file_source_requirement == v)
+      return;
+   #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+      this->beginFilterChange();
+   #endif
+   this->file_source_requirement = v;
+   #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+      this->endFilterChange(QSortFilterProxyModel::Direction::Rows);
+   #else
+      this->invalidateFilter();
+   #endif
+}
+void FormTableModelProxy::setOnlyShowDeleted(bool v) {
+   if (this->only_show_deleted == v)
+      return;
+   #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+      this->beginFilterChange();
+   #endif
+   this->only_show_deleted = v;
    #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
       this->endFilterChange(QSortFilterProxyModel::Direction::Rows);
    #else
@@ -505,6 +531,39 @@ void FormTableModelProxy::setFilterInfo(const ui::object_window::filter_info& fi
 }
 
 bool FormTableModelProxy::filterAcceptsStub(const dovah::form_stub* stub) const noexcept {
+   if (this->only_show_deleted) {
+      if (!stub->is_deleted())
+         return false;
+   }
+
+   switch (this->file_source_requirement) {
+      using enum ui::object_window::file_source_requirement;
+      case any_files:
+         break;
+      case active_file_definitions:
+         if (stub->source_file_count() > 1) // exists in multiple files = not defined in active file
+            return false;
+         if (stub->get_file_at_index(0) != stub->get_owning_load_order().get_active_file())
+            return false;
+         break;
+      case active_file_records:
+         {
+            auto* active_file = stub->get_owning_load_order().get_active_file();
+            if (!active_file)
+               return false;
+            //
+            // The active file has to be the last file in the load order; therefore, if the 
+            // stub is defined or edited in the active file, the active file must be either 
+            // its first source file (if defined there) or its last (if overridden there).
+            //
+            auto* original_file = stub->get_file_at_index(0);
+            auto* winning_file  = stub->get_file_at_index(-1);
+            if (original_file != active_file && winning_file != active_file)
+               return false;
+         }
+         break;
+   }
+
    return this->form_filter_info.form_matches_filters(*stub);
 }
 bool FormTableModelProxy::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const {
@@ -619,5 +678,19 @@ void FormTable::setSource(ObjectWindowTree* tree) {
    this->unwrappedModel()->setBaseFormTypes(tree->allPrimaryFormTypes());
    QObject::connect(tree->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormTable::recheckFormTypes);
    this->recheckFormTypes();
+}
+
+ui::object_window::file_source_requirement FormTable::fileSourceRequirement() const noexcept {
+   return this->proxyModel()->fileSourceRequirement();
+}
+void FormTable::setFileSourceRequirement(ui::object_window::file_source_requirement v) {
+   this->proxyModel()->setFileSourceRequirement(v);
+}
+
+bool FormTable::onlyShowDeleted() const noexcept {
+   return this->proxyModel()->onlyShowDeleted();
+}
+void FormTable::setOnlyShowDeleted(bool v) {
+   this->proxyModel()->setOnlyShowDeleted(v);
 }
 #pragma endregion

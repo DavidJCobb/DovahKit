@@ -7,6 +7,7 @@
 #include <QTimer>
 #include "dovah/bare_form_id_t.h"
 #include "./object_window_treeview.h"
+#include "./file_source_requirement.h"
 #include "./filter_info.h"
 
 namespace dovah {
@@ -102,11 +103,25 @@ class FormTableModelProxy : public QSortFilterProxyModel {
 
       virtual void setSourceModel(QAbstractItemModel* sourceModel) override;
 
-      constexpr const ui::object_window::filter_info& filterInfo() const noexcept { return this->form_filter_info; }
+      constexpr const ui::object_window::filter_info& filterInfo() const noexcept {
+         return this->form_filter_info;
+      }
       void setFilterInfo(const ui::object_window::filter_info&);
 
+      constexpr ui::object_window::file_source_requirement fileSourceRequirement() const noexcept {
+         return this->file_source_requirement;
+      }
+      void setFileSourceRequirement(ui::object_window::file_source_requirement);
+
+      constexpr bool onlyShowDeleted() const noexcept {
+         return this->only_show_deleted;
+      }
+      void setOnlyShowDeleted(bool);
+
    protected:
-      ui::object_window::filter_info form_filter_info;
+      ui::object_window::file_source_requirement file_source_requirement = ui::object_window::file_source_requirement::any_files;
+      ui::object_window::filter_info             form_filter_info;
+      bool only_show_deleted = false;
 
       bool filterAcceptsStub(const dovah::form_stub* stub) const noexcept;
       virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
@@ -119,7 +134,7 @@ class FormTable : public QTableView {
       using model_type      = FormTableModel;
       using proxy_type      = FormTableModelProxy;
       using model_item_type = model_type::item_type;
-      //
+      
       inline model_type* unwrappedModel() const noexcept {
          auto wrapper = (QSortFilterProxyModel*)this->model();
          return wrapper ? (model_type*)wrapper->sourceModel() : nullptr;
@@ -127,21 +142,27 @@ class FormTable : public QTableView {
       inline proxy_type* proxyModel() const noexcept {
          return (proxy_type*) this->model();
       }
-      //
+      
       void setFilter(QLineEdit*);
       void setSource(ObjectWindowTree*);
-      //
+
+      ui::object_window::file_source_requirement fileSourceRequirement() const noexcept;
+      void setFileSourceRequirement(ui::object_window::file_source_requirement);
+
+      bool onlyShowDeleted() const noexcept;
+      void setOnlyShowDeleted(bool);
+      
    public slots:
       void recheckFormTypes();
       void rebuildModel();
       void refilterModel(const QString&);
       void clear();
-      //
+      
       void filterChanged();
       void filterFinished();
-      //
+      
       void select(dovah::form_stub*);
-      //
+      
    protected:
       ObjectWindowTree* _source  = nullptr;
       QLineEdit* _filter         = nullptr;
