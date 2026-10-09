@@ -48,8 +48,14 @@ namespace dovahkit::subsystems::crash_dumper {
    }
 
    bool crash_info::read(HANDLE stream) {
-      if (!ipc::read_value(stream, this->source.process))
+      if (!ipc::read_value(stream, this->source.process)) {
+         //
+         // This read may fail under normal circumstances. For an ordinary program exit, this read 
+         // will fail because the main process will exit (closing the pipe) without ever having 
+         // sent anything to us.
+         //
          return false;
+      }
       if (!ipc::read_value(stream, this->source.thread_id))
          return false;
 
