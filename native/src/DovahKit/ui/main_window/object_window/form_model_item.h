@@ -12,7 +12,7 @@ namespace ui::object_window {
          using form_id_type = dovah::bare_form_id_t;
 
       public:
-         dovah::form_stub* stub       = nullptr;
+         dovah::form_stub& stub;
          QString           editor_id;
          form_id_type      form_id    = 0;
          uint32_t          user_count = 0;
