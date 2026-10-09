@@ -4467,6 +4467,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\multiple_failing_threads.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\object_window\form_model_item.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11127,6 +11130,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\object_window\file_source_requirement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\object_window\form_model_item.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,16 +2,11 @@
 #include <QHeaderView>
 #include <QLineEdit>
 #include <QMimeData>
-#include "../../../editor/core.h"
-#include "../../../editor/helpers/form_identifiers_to_string.h"
-#include "../../../editor/helpers/form_stub_drag_drop.h"
-#include "../../../dovah/form_stub.h"
-#include "../../../dovah/files/common.h"
-
-#include "dovah/data/story_manager.h"
-#include "editor/helpers/story_event_name.h"
+#include "dovah/form_stub.h"
+#include "editor/core.h"
+#include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/helpers/form_stub_drag_drop.h"
 #include "editor/subsystems/form_info_cache/core.h"
-#include "editor/subsystems/story_manager/core.h"
 
 //
 // KNOWN DEFECTS:
@@ -19,6 +14,10 @@
 //  - QSortFilterProxyModel has internal mappings that it needs to build; this causes a 
 //    lag spike when the user changes the Object Window's filter for the first time after 
 //    files are loaded
+// 
+//  - QSortFilterProxyModel can also experience significant lag if a number of previously 
+//    filtered-out forms cease to be filtered out. Looking at a flame graph indicates that 
+//    this is due to the overhead of sorting absolutely all of those forms all at once.
 //
 
 namespace {
@@ -50,55 +49,6 @@ namespace {
    //
 }
 
-FormTableModelItem::FormTableModelItem(dovah::form_stub* stub) {
-   this->stub = stub;
-   this->update();
-}
-void FormTableModelItem::update() {
-   auto stub = this->stub;
-   this->editorID = QString::fromUtf8(stub->get_editor_id());
-   if (stub->form_type == dovah::form_type::story_event_node) {
-      //
-      // It's common for these forms to have no editor ID, and in fact the CK doesn't 
-      // even let you give them one. Instead, the Object Window should identify them 
-      // by their event typename.
-      //
-      auto& sm     = dovahkit::subsystems::story_manager::core::get_or_create();
-      auto  et_opt = sm.event_type_for(*stub);
-      if (et_opt.has_value()) {
-         auto et   = et_opt.value();
-         auto name = editor_helpers::story_event_name(et);
-         if (!name.isEmpty()) {
-            this->editorID = name;
-         }
-      }
-   }
-   this->formID    = stub->formID;
-   this->userCount = stub->inbound.size();
-   
-   this->is_active = false;
-   if (!stub->test_record_flags(dovah::tes_file_record_header::flag::partial)) {
-      if (stub->is_edited())
-         this->is_active = true;
-      else {
-         this->is_active = stub->get_owning_load_order().is_defined_or_overridden_in_active_file(*stub);
-      }
-   }
-
-   this->is_injected = stub->is_injected();
-   this->is_none     = stub->is_none_stub();
-}
-bool FormTableModelItem::updateUserCount() {
-   if (auto* stub = this->stub) {
-      auto updated = stub->inbound.size();
-      if (this->userCount == updated)
-         return false;
-      this->userCount = updated;
-      return true;
-   }
-   return false;
-}
-
 #pragma region FormTableModel
 FormTableModel::FormTableModel(QObject* parent) : QAbstractTableModel(parent) {
    // Ensure that the FIC exists, and hooks `formModified`, before we do. That way, when we hook 
@@ -117,7 +67,12 @@ FormTableModel::FormTableModel(QObject* parent) : QAbstractTableModel(parent) {
 void FormTableModel::formCreated(dovah::form_stub* stub) {
    if (!this->form_types.contains(stub->form_type))
       return;
-   this->insertItem(stub, false);
+   auto* item  = new item_type(stub);
+   auto& list  = this->children;
+   auto  first = list.size();
+   this->beginInsertRows({}, first, first);
+   list.push_back(item);
+   this->endInsertRows();
 }
 void FormTableModel::formModificationImminent(const dovah::form_stub* user) {
    //
@@ -159,7 +114,7 @@ void FormTableModel::formModified(const dovah::form_stub* stub) {
          // Update any other forms that need their use counts used because (stub) was 
          // changed to use them.
          //
-         if (item->updateUserCount()) {
+         if (item->update_user_count()) {
             auto root  = QModelIndex();
             auto start = this->index(i, 0, root);
             auto end   = this->index(i, this->columnCount(root) - 1, root);
@@ -275,12 +230,12 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
                      .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
                }
                return tr("%1%2")
-                  .arg(item->editorID)
+                  .arg(item->editor_id)
                   .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
             case 1:
-               return editor_helpers::form_id_to_string(item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
+               return editor_helpers::form_id_to_string(item->form_id) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
             case 2:
-               return item->userCount;
+               return item->user_count;
          }
          break;
       case Qt::DecorationRole:
@@ -303,9 +258,9 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
          break;
       case RawDataRole:
          switch (column) {
-            case 0: return item->editorID;
-            case 1: return item->formID;
-            case 2: return item->userCount;
+            case 0: return item->editor_id;
+            case 1: return item->form_id;
+            case 2: return item->user_count;
          }
          break;
       case FilterableTextRole: // used for filtering
@@ -313,8 +268,8 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
             case 0:
                if (none)
                   return QVariant();
-               return item->editorID;
-            case 1: return editor_helpers::form_id_to_string(item->formID);
+               return item->editor_id;
+            case 1: return editor_helpers::form_id_to_string(item->form_id);
             case 2: return QVariant(); // don't allow filtering by the use count
          }
          break;
@@ -384,7 +339,7 @@ void FormTableModel::doUseInfoUpdate() {
       auto* item = list[i];
       auto* stub = item->stub;
       if (this->forms_pending_use_info_update.contains(stub)) {
-         if (item->updateUserCount()) {
+         if (item->update_user_count()) {
             auto index = this->index(i, 0, parent_index);
             emit dataChanged(index, index);
          }
@@ -392,37 +347,24 @@ void FormTableModel::doUseInfoUpdate() {
    }
    this->forms_pending_use_info_update.clear();
 }
-void FormTableModel::insertItem(dovah::form_stub* stub, bool queued) {
-   auto* item = new item_type(stub);
-   if (queued) {
-      this->pending_additions.push_back(item);
-   } else {
-      auto& list  = this->children;
-      auto  first = list.size();
-      this->beginInsertRows(QModelIndex(), first, first);
-      list.push_back(item);
-      this->endInsertRows();
-   }
-}
 
 void FormTableModel::clear() {
    this->beginResetModel();
    for (auto* item : this->children)
       delete item;
    this->children.clear();
-   this->pending_additions.clear();
    this->forms_pending_use_info_update.clear();
    this->endResetModel();
 }
 void FormTableModel::rebuild() {
    this->clear();
-   //
+
    if (this->form_types.empty())
       return;
    auto& editor = DovahKitCore::get();
    if (!editor.has_data())
       return;
-   //
+
    {
       bool any = false;
       for(auto ft : this->form_types)
@@ -433,30 +375,32 @@ void FormTableModel::rebuild() {
       if (!any)
          return;
    }
+
+   std::vector<item_type*> pending_additions;
    for (auto ft : this->form_types) {
       if (ft == dovah::form_type::none)
-         editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) {
-            if (stub->is_none_stub())
-               this->insertItem(stub, true);
+         editor.for_each_form_of_type(ft, [&pending_additions](dovah::form_stub* stub) {
+            if (stub->is_none_stub()) {
+               pending_additions.push_back(new item_type(stub));
+            }
             return false;
          });
       else
-         editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) {
-            this->insertItem(stub, true);
+         editor.for_each_form_of_type(ft, [&pending_additions](dovah::form_stub* stub) {
+            pending_additions.push_back(new item_type(stub));
             return false;
          });
    }
    //
-   auto count = this->pending_additions.size();
+   auto count = pending_additions.size();
    if (!count)
       return;
    auto first = this->children.size();
    auto last  = first + count - 1;
    //
-   this->beginInsertRows(QModelIndex(), first, last);
-   for (auto* item : this->pending_additions)
+   this->beginInsertRows({}, first, last);
+   for (auto* item : pending_additions)
       this->children.push_back(item);
-   this->pending_additions.clear();
    this->endInsertRows();
 }
 void FormTableModel::setBaseFormTypes(const form_type_set& types) {

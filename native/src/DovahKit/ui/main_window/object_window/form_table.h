@@ -9,42 +9,15 @@
 #include "./object_window_treeview.h"
 #include "./file_source_requirement.h"
 #include "./filter_info.h"
-
+#include "./form_model_item.h"
 namespace dovah {
    class form_stub;
 }
 
-namespace ui::object_window {
-   struct filter_info;
-}
-
-class FormTableModel;
-class FormTableModelItem {
-   friend FormTableModel;
-   public:
-      using form_id_t = dovah::bare_form_id_t;
-      //
-      dovah::form_stub* stub = nullptr;
-      QString   editorID;
-      form_id_t formID    = 0;
-      uint32_t  userCount = 0;
-      //
-      bool is_active   = false;
-      bool is_injected = false;
-      bool is_none     = false;
-      //
-      FormTableModelItem() {}
-      FormTableModelItem(dovah::form_stub*);
-      //
-      inline const QString& name() const noexcept { return this->editorID; }
-      void update();
-      bool updateUserCount(); // returns true if any changes were made
-};
-
 class FormTableModel final : public QAbstractTableModel {
    Q_OBJECT
    public:
-      using item_type = FormTableModelItem;
+      using item_type = ui::object_window::form_model_item;
       using form_stub = dovah::form_stub;
       using form_type_set = QVector<dovah::form_type>;
       //
@@ -54,11 +27,9 @@ class FormTableModel final : public QAbstractTableModel {
    protected:
       form_type_set       form_types; // list of all form types that the Object Window should be capable of displaying under any circumstance
       QVector<item_type*> children;
-      QVector<item_type*> pending_additions;
       QVector<form_stub*> forms_pending_use_info_update;
       //
       void doUseInfoUpdate();
-      void insertItem(form_stub*, bool queued);
       //
    protected slots:
       void formCreated(form_stub*);

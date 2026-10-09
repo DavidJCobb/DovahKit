@@ -1331,6 +1331,7 @@
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
     <ClCompile Include="ui\main_window\object_window\filter_info.cpp" />
+    <ClCompile Include="ui\main_window\object_window\form_model_item.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\access_violation.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\crash_tests\integer_divide_by_zero.cpp" />
@@ -2605,6 +2606,7 @@
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseVoicesModel.h" />
     <ClInclude Include="ui\form_windows\weapon\WeaponEnchantmentFormFilter.h" />
     <ClInclude Include="ui\main_window\object_window\file_source_requirement.h" />
+    <ClInclude Include="ui\main_window\object_window\form_model_item.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\access_violation.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\integer_divide_by_zero.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\multiple_failing_threads.h" />
