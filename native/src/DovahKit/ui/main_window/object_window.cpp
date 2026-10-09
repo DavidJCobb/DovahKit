@@ -9,7 +9,6 @@
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
 #include "editor/helpers/is_form_type_legal_to_create.h"
-#include "editor/helpers/make_editor_id_for_duplicate.h"
 #include "editor/helpers/recalc_bounds.h"
 #include "editor/localize/form_creation_error_code.h"
 #include "./object_window/form_model_item.h"
@@ -258,7 +257,7 @@ dovah::form_stub* ObjectWindow::_get_selected_form() {
    const auto* data = FormTable::model_type::data_for_qmi(source_qmi);
    if (!data)
       return nullptr;
-   return data->stub;
+   return &data->stub;
 }
 
 void ObjectWindow::_create_form_in_current_category() {
