@@ -1,110 +1,28 @@
 #pragma once
-#include <cstdint>
-#include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
 #include <QString>
 #include <QTableView>
 #include <QTimer>
-#include "dovah/bare_form_id_t.h"
-#include "./object_window_treeview.h"
 #include "./file_source_requirement.h"
-#include "./filter_info.h"
-#include "./form_model_item.h"
 namespace dovah {
    class form_stub;
 }
-
-class FormTableModel final : public QAbstractTableModel {
-   Q_OBJECT
-   public:
-      using item_type = ui::object_window::form_model_item;
-      using form_stub = dovah::form_stub;
-      using form_type_set = QVector<dovah::form_type>;
-      //
-      static constexpr const Qt::ItemDataRole RawDataRole        = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole);
-      static constexpr const Qt::ItemDataRole FilterableTextRole = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole + 1);
-      //
-   protected:
-      form_type_set       form_types; // list of all form types that the Object Window should be capable of displaying under any circumstance
-      QVector<item_type*> children;
-      QVector<form_stub*> forms_pending_use_info_update;
-      //
-      void doUseInfoUpdate();
-      //
-   protected slots:
-      void formCreated(form_stub*);
-      void formModified(const form_stub*);
-      void formModificationImminent(const form_stub*);
-      void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
-      void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
-
-      void _emit_data_changed_on(const dovah::form_stub&);
-      
-   public slots:
-      void clear();
-      //
-   public:
-      FormTableModel(QObject* parent = nullptr);
-      ~FormTableModel() {
-         this->clear();
-      }
-      //
-      QModelIndex index(dovah::form_stub*) const;
-      QModelIndex index(int row, int column, const QModelIndex& parent) const override;
-      QModelIndex parent(const QModelIndex& index) const;
-      int rowCount(const QModelIndex& parent) const override;
-      int columnCount(const QModelIndex& item) const override;
-      Qt::ItemFlags flags(const QModelIndex& index) const override;
-      QVariant data(const QModelIndex& index, int role) const override;
-      //
-      QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-      QMimeData* mimeData(const QModelIndexList& indexes) const;
-      virtual QStringList mimeTypes() const override;
-      //
-      void rebuild();
-      void setBaseFormTypes(const form_type_set&);
-      //
-      const item_type* dataAtRow(int) const noexcept;
-};
-
-class FormTableModelProxy : public QSortFilterProxyModel {
-   Q_OBJECT
-   public:
-      FormTableModelProxy(QObject* parent = nullptr);
-
-      virtual void setSourceModel(QAbstractItemModel* sourceModel) override;
-
-      constexpr const ui::object_window::filter_info& filterInfo() const noexcept {
-         return this->form_filter_info;
-      }
-      void setFilterInfo(const ui::object_window::filter_info&);
-
-      constexpr ui::object_window::file_source_requirement fileSourceRequirement() const noexcept {
-         return this->file_source_requirement;
-      }
-      void setFileSourceRequirement(ui::object_window::file_source_requirement);
-
-      constexpr bool onlyShowDeleted() const noexcept {
-         return this->only_show_deleted;
-      }
-      void setOnlyShowDeleted(bool);
-
-   protected:
-      ui::object_window::file_source_requirement file_source_requirement = ui::object_window::file_source_requirement::any_files;
-      ui::object_window::filter_info             form_filter_info;
-      bool only_show_deleted = false;
-
-      bool filterAcceptsStub(const dovah::form_stub* stub) const noexcept;
-      virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
-};
+namespace ui::object_window {
+   class form_model_item;
+   class form_table_proxy_model;
+   class form_table_source_model;
+}
+class ObjectWindowTree;
 
 class FormTable : public QTableView {
-   Q_OBJECT
+   Q_OBJECT;
+   public:
+      using model_type      = ui::object_window::form_table_source_model;
+      using proxy_type      = ui::object_window::form_table_proxy_model;
+      using model_item_type = ui::object_window::form_model_item;
+
    public:
       FormTable(QWidget* parent);
-      using model_type      = FormTableModel;
-      using proxy_type      = FormTableModelProxy;
-      using model_item_type = model_type::item_type;
       
       inline model_type* unwrappedModel() const noexcept {
          auto wrapper = (QSortFilterProxyModel*)this->model();

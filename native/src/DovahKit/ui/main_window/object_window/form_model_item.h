@@ -25,7 +25,6 @@ namespace ui::object_window {
          form_model_item() {}
          form_model_item(dovah::form_stub*);
 
-         constexpr const QString& name() const noexcept { return this->editorID; }
          void update();
          bool update_user_count(); // returns true if any changes were made
    };

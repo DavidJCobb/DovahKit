@@ -4470,6 +4470,12 @@
     <ClCompile Include="ui\main_window\object_window\form_model_item.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\object_window\form_table_source_model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\object_window\form_table_proxy_model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -12679,6 +12685,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\utils\handlers\copy_selected_rows_on_copy_key.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\object_window\form_table_source_model.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\object_window\form_table_proxy_model.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

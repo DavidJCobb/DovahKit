@@ -12,6 +12,7 @@
 #include "editor/helpers/make_editor_id_for_duplicate.h"
 #include "editor/helpers/recalc_bounds.h"
 #include "editor/localize/form_creation_error_code.h"
+#include "./object_window/form_model_item.h"
 #include "./form_use_info.h"
 
 namespace {
@@ -250,7 +251,7 @@ dovah::form_stub* ObjectWindow::_get_selected_form() {
    auto  select = this->ui.table->selectionModel()->selection().indexes();
    if (!select.size())
       return nullptr;
-   auto  real   = proxy->mapToSource(select[0]); // the (index) we received is specific to the proxy; we need an index relative to the underlying model
+   auto  real = proxy->mapToSource(select[0]); // the (index) we received is specific to the proxy; we need an index relative to the underlying model
    if (!real.isValid())
       return nullptr;
    using item_type = FormTable::model_item_type;
