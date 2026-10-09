@@ -20,7 +20,7 @@ namespace ui::object_window {
    
       bool operator==(const filter_info& other) const noexcept;
 
-      static QString normalize_pathlike_string(const QString& filter) noexcept;
+      static QString normalize_pathlike_string(const QString& filter);
 
       bool form_matches_filters(const dovah::form_stub&) const noexcept;
    };

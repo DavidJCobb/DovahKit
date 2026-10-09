@@ -46,7 +46,7 @@ namespace ui::object_window {
       return true;
    }
 
-   /*static*/ QString filter_info::normalize_pathlike_string(const QString& filter) noexcept {
+   /*static*/ QString filter_info::normalize_pathlike_string(const QString& filter) {
       auto size = filter.size();
       
       QString out;

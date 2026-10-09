@@ -153,9 +153,9 @@ namespace ui::object_window {
          /*virtual*/ QModelIndex form_table_source_model::index(int row, int column, const QModelIndex& parent) const /*override*/ {
             if (!this->hasIndex(row, column, parent))
                return {};
-            item_type* childItem = this->children.value(row);
-            if (childItem)
-               return this->createIndex(row, column, childItem);
+            item_type* item = this->children.value(row);
+            if (item)
+               return this->createIndex(row, column, item);
             return {};
          }
          /*virtual*/ QModelIndex form_table_source_model::parent(const QModelIndex& index) const /*override*/ {
@@ -167,7 +167,7 @@ namespace ui::object_window {
             return this->children.size();
          }
          /*virtual*/ int form_table_source_model::columnCount(const QModelIndex& item) const /*override*/ {
-            return 3;
+            return ColumnCount;
          }
       #pragma endregion
       #pragma region Item data
@@ -179,7 +179,7 @@ namespace ui::object_window {
          /*virtual*/ QVariant form_table_source_model::data(const QModelIndex& index, int role) const /*override*/ {
             if (!index.isValid())
                return {};
-            auto item = (item_type*)index.internalPointer();
+            auto item = data_for_qmi(index);
             if (!item->stub)
                return {};
             auto column  = index.column();
@@ -189,7 +189,7 @@ namespace ui::object_window {
             switch (role) {
                case Qt::DisplayRole:
                   switch (column) {
-                     case 0:
+                     case Column::EditorID:
                         if (none) {
                            return tr("<non-existent form>%1", "object window listing for none stubs")
                               .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
@@ -197,45 +197,47 @@ namespace ui::object_window {
                         return tr("%1%2")
                            .arg(item->editor_id)
                            .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
-                     case 1:
+                     case Column::FormID:
                         return editor_helpers::form_id_to_string(item->form_id) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
-                     case 2:
+                        case Column::UserCount:
                         return item->user_count;
                   }
                   break;
                case Qt::DecorationRole:
-                  if (column == 0) {
+                  if (column == Column::EditorID) {
                      //
                      // TODO: icons per form type
                      //
                   }
                   break;
                case Qt::FontRole:
-                  if (column == 0 && none) { // show none-stubs in italics
+                  if (column == Column::EditorID && none) { // show none-stubs in italics
                      QFont font;
                      font.setItalic(true);
                      return font;
                   }
                   break;
                case Qt::ForegroundRole:
-                  if (column == 1 && item->is_injected) // show injected forms' IDs in color
+                  if (column == Column::FormID && item->is_injected) // show injected forms' IDs in color
                      return QColor::fromRgb(0x309000);
                   break;
                case RawDataRole:
                   switch (column) {
-                     case 0: return item->editor_id;
-                     case 1: return item->form_id;
-                     case 2: return item->user_count;
+                     case Column::EditorID:  return item->editor_id;
+                     case Column::FormID:    return item->form_id;
+                     case Column::UserCount: return item->user_count;
                   }
                   break;
                case FilterableTextRole: // used for filtering
                   switch (column) {
-                     case 0:
+                     case Column::EditorID:
                         if (none)
                            return {};
                         return item->editor_id;
-                     case 1: return editor_helpers::form_id_to_string(item->form_id);
-                     case 2: return {}; // don't allow filtering by the use count
+                     case Column::FormID:
+                        return editor_helpers::form_id_to_string(item->form_id);
+                     case Column::UserCount:
+                        return {}; // don't allow filtering by the use count
                   }
                   break;
             }
@@ -248,9 +250,9 @@ namespace ui::object_window {
          switch (role) {
             case Qt::DisplayRole:
                switch (section) {
-                  case 0: return tr("Editor ID", "object window form table");
-                  case 1: return tr("Form ID",   "object window form table");
-                  case 2: return tr("Users",     "object window form table");
+                  case Column::EditorID:  return tr("Editor ID", "column header");
+                  case Column::FormID:    return tr("Form ID",   "column header");
+                  case Column::UserCount: return tr("Users",     "column header");
                }
                break;
          }

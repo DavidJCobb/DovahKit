@@ -16,6 +16,18 @@ namespace ui::object_window {
          using item_type     = form_model_item;
          using form_stub     = dovah::form_stub;
          using form_type_set = QVector<dovah::form_type>;
+
+         struct Column {
+            Column() = delete;
+            enum {
+               EditorID,
+               FormID,
+               UserCount,
+
+               _COUNT
+            };
+         };
+         static constexpr const size_t ColumnCount = Column::_COUNT;
          
          static constexpr const Qt::ItemDataRole RawDataRole        = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole);
          static constexpr const Qt::ItemDataRole FilterableTextRole = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole + 1);
@@ -43,6 +55,10 @@ namespace ui::object_window {
          form_table_source_model(QObject* parent = nullptr);
          ~form_table_source_model() {
             this->clear();
+         }
+
+         static const item_type* data_for_qmi(const QModelIndex& qmi) noexcept {
+            return (item_type*) qmi.internalPointer();
          }
 
          QModelIndex index(dovah::form_stub*) const;

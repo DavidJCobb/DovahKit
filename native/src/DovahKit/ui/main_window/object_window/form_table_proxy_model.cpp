@@ -4,49 +4,16 @@
 #include "./form_model_item.h"
 #include "./form_table_source_model.h"
 
-//
-// KNOWN DEFECTS:
-//
-//  - QSortFilterProxyModel has internal mappings that it needs to build; this causes a 
-//    lag spike when the user changes the Object Window's filter for the first time after 
-//    files are loaded
-// 
-//  - QSortFilterProxyModel can also experience significant lag if a number of previously 
-//    filtered-out forms cease to be filtered out. Looking at a flame graph indicates that 
-//    this is due to the overhead of sorting absolutely all of those forms all at once.
-//
-// I think the only solution to the lag we're seeing in Debug would be to build a custom 
-// sort/filter proxy model with cheaper mappings. QSortFilterProxyModel is designed to 
-// support recursive filtering if you enable it (it's disabled by default, and we obviously 
-// don't use it here), and as a result, its design incurs overhead for that:
-// 
-//  - The proxy stores its mappings as a vector of source-to-proxy row indices, a vector of 
-//    the reverse, and another pair of vectors for column indices. However, the proxy is 
-//    capable of storing multiple mappings keyed to different parent QModelIndexes, and it 
-//    has to find the appropriate index before it can update any mapping.
-// 
-//  - Added branching at every filter step, for features we don't use, e.g. checking whether 
-//    recursive filtering is enabled for each individual row.
-// 
-//  - Filter code per-column, even though we don't filter the columns.
-// 
-//  - We can only filter rows based on the contents of one column, or every column. What we 
-//    really want is to filter just specific columns (currently indices 0 and 1).
-// 
-// Additionally, everything is done via virtual member functions, rather than via functions 
-// that can be inlined. This includes the per-row checks. Hard to measure the overhead that 
-// that adds without something to compare it to, though.
-// 
-// Ideally we'd make a model that stores only mappings for the root node's top-level children, 
-// with compile-time options rather than run-time ones.
-//
+namespace {
+   constexpr const Qt::CaseSensitivity case_sensitivity_for_sorting = Qt::CaseInsensitive;
+}
 
 namespace ui::object_window {
    form_table_proxy_model::form_table_proxy_model(QObject* parent) : QSortFilterProxyModel(parent) {
       this->setFilterCaseSensitivity(Qt::CaseInsensitive);
       this->setFilterRole(ui::object_window::form_table_source_model::FilterableTextRole);
       this->setFilterKeyColumn(-1);
-      this->setSortCaseSensitivity(Qt::CaseInsensitive);
+      this->setSortCaseSensitivity(case_sensitivity_for_sorting);
       this->setSortRole(Qt::UserRole);
 
       this->setRecursiveFilteringEnabled(false);
@@ -144,5 +111,27 @@ namespace ui::object_window {
          }
       }
       return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+   }
+   /*virtual*/ bool form_table_proxy_model::lessThan(const QModelIndex& source_left, const QModelIndex& source_right) const /*override*/ {
+      //
+      // This is all *basically* what QSortFilterProxyModel already does on its own, but we're 
+      // accessing the model data more directly, so there's a little less indirection. Sorting 
+      // is the heaviest part of the proxy model per my perf tests, so every little bit helps.
+      //
+      const auto* src_item_l = form_table_source_model::data_for_qmi(source_left);
+      const auto* src_item_r = form_table_source_model::data_for_qmi(source_right);
+      if (!src_item_l)
+         return true;
+      if (!src_item_r)
+         return false;
+      switch (source_left.column()) {
+         case form_table_source_model::Column::EditorID:
+            return src_item_l->editor_id.compare(src_item_r->editor_id, case_sensitivity_for_sorting) < 0;
+         case form_table_source_model::Column::FormID:
+            return src_item_l->form_id < src_item_r->form_id;
+         case form_table_source_model::Column::UserCount:
+            return src_item_l->user_count < src_item_r->user_count;
+      }
+      return false;
    }
 }
