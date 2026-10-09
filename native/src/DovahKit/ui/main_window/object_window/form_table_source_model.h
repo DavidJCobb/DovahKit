@@ -37,16 +37,12 @@ namespace ui::object_window {
          QVector<item_type*> children;
          QVector<form_stub*> forms_pending_use_info_update;
          
-         void doUseInfoUpdate();
-         
       protected slots:
          void formCreated(form_stub*);
          void formModified(const form_stub*);
          void formModificationImminent(const form_stub*);
          void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
          void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
-
-         void _emit_data_changed_on(const dovah::form_stub&);
       
       public slots:
          void clear();

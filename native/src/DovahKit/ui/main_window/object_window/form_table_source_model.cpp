@@ -43,49 +43,83 @@ namespace ui::object_window {
       auto& list = this->forms_pending_use_info_update;
       for (auto& pair : user->outbound) {
          auto stub = pair.second.other;
-         if (!stub)
+         if (!stub || stub == user)
             continue;
          if (!list.contains(stub))
             list.push_back(stub);
       }
    }
    void form_table_source_model::formModified(const dovah::form_stub* stub) {
-      QVector<dovah::form_stub*> used;
+      QVector<dovah::form_stub*> now_used_list;
       for (auto& pair : stub->outbound) {
          auto* other = pair.second.other;
-         if (other)
-            used.push_back(other);
+         if (other && other != stub)
+            now_used_list.push_back(other);
       }
+      auto& was_used_list = this->forms_pending_use_info_update;
+
+      const QModelIndex parent_index;
+
       //
-      auto  parent_index = QModelIndex();
-      auto& list = this->children;
-      auto  size = list.size();
+      // We want to do three things:
+      // 
+      //  - Update all information for the form that was modified.
+      // 
+      //  - Update our User Counts for all stubs that are now used by the modified 
+      //    form.
+      // 
+      //  - Update our User Counts for all stubs that were used by the modified form 
+      //    prior to us receiving `formModified` (i.e. when we responded to the "form 
+      //    modification imminent" signal).
+      // 
+      // So we'll track all three goals so we can early-out.
+      //
+      bool target_stub_handled   = false;
+      struct {
+         size_t now_used = 0;
+         size_t was_used = 0;
+      } num_handled;
+      if (!this->form_types.contains(stub->form_type)) {
+         target_stub_handled = true; // `stub` will not be in the model
+      }
+
+      const auto& list = this->children;
+      const auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
          auto* item = list[i];
          if (item->stub == stub) {
             item->update();
-            auto root  = QModelIndex();
-            auto start = this->index(i, 0, root);
-            auto end   = this->index(i, this->columnCount(root) - 1, root);
-            emit dataChanged(start, end);
-            break;
-         } else if (used.contains(item->stub)) {
-            //
-            // Update any other forms that need their use counts used because (stub) was 
-            // changed to use them.
-            //
-            if (item->update_user_count()) {
-               auto root  = QModelIndex();
-               auto start = this->index(i, 0, root);
-               auto end   = this->index(i, this->columnCount(root) - 1, root);
+            {
+               auto start = this->index(i, 0,               parent_index);
+               auto end   = this->index(i, ColumnCount - 1, parent_index);
                emit dataChanged(start, end);
             }
+            target_stub_handled = true;
+         } else {
+            bool now_used = now_used_list.contains(item->stub);
+            bool was_used = was_used_list.contains(item->stub);
+            if (now_used || was_used) {
+               if (item->update_user_count()) {
+                  auto qmi = this->index(i, Column::UserCount, parent_index);
+                  emit dataChanged(qmi, qmi);
+               }
+               if (now_used)
+                  ++num_handled.now_used;
+               if (was_used)
+                  ++num_handled.was_used;
+            } else {
+               continue;
+            }
+         }
+         if (
+            target_stub_handled &&
+            num_handled.now_used == now_used_list.size() &&
+            num_handled.was_used == was_used_list.size()
+         ) {
+            break;
          }
       }
-      //
-      this->doUseInfoUpdate();
-
-      this->_emit_data_changed_on(*stub);
+      was_used_list.clear();
    }
    void form_table_source_model::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
       auto& list = this->children;
@@ -117,25 +151,6 @@ namespace ui::object_window {
             auto end   = this->index(i, this->columnCount(root), root);
             emit dataChanged(start, end);
             return;
-         }
-      }
-   }
-
-   void form_table_source_model::_emit_data_changed_on(const dovah::form_stub& stub) {
-      //
-      // We could be filtering forms by some characteristic that just changed 
-      // for this form. Poke the proxy model to re-check it.
-      //
-      auto&  list = this->children;
-      size_t size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         auto& item = list[i];
-         if (item->stub == &stub) {
-            auto root  = QModelIndex{};
-            auto start = this->index(i, 0, root);
-            auto end   = this->index(i, this->columnCount(root) - 1, root);
-            emit dataChanged(start, end);
-            break;
          }
       }
    }
@@ -300,23 +315,6 @@ namespace ui::object_window {
          }
       #pragma endregion
    #pragma endregion
-
-   void form_table_source_model::doUseInfoUpdate() {
-      QModelIndex parent_index;
-      auto& list = this->children;
-      auto  size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         auto* item = list[i];
-         auto* stub = item->stub;
-         if (this->forms_pending_use_info_update.contains(stub)) {
-            if (item->update_user_count()) {
-               auto index = this->index(i, 0, parent_index);
-               emit dataChanged(index, index);
-            }
-         }
-      }
-      this->forms_pending_use_info_update.clear();
-   }
 
    void form_table_source_model::clear() {
       this->beginResetModel();
