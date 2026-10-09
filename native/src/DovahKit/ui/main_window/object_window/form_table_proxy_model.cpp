@@ -106,7 +106,7 @@ namespace ui::object_window {
       auto* model = (ui::object_window::form_table_source_model*)this->sourceModel();
       if (!this->form_filter_info.empty()) {
          if (auto* item = model->dataAtRow(source_row)) {
-            if (!this->filterAcceptsStub(item->stub))
+            if (!this->filterAcceptsStub(&item->stub))
                return false;
          }
       }

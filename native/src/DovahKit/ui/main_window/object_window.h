@@ -31,6 +31,7 @@ class ObjectWindow : public QWidget {
                QAction* separator     = nullptr;
                QAction* recalc_bounds = nullptr;
             } actions;
+            QMenu create_form_of_type;
          } form_table;
          struct {
             QMenu menu;
@@ -47,6 +48,7 @@ class ObjectWindow : public QWidget {
       dovah::form_stub* _get_selected_form();
 
       void _create_form_in_current_category();
+      void _create_form_of_type(dovah::form_type);
       void _selected_form_edit();
       void _selected_form_duplicate();
       void _selected_form_show_users();
@@ -55,4 +57,6 @@ class ObjectWindow : public QWidget {
       void _selected_form_delete();
 
       void _set_selected_category_contents_expanded(bool expanded, bool recurse);
+
+      void _on_selected_category_changed();
 };

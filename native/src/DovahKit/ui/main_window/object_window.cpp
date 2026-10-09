@@ -8,6 +8,7 @@
 #include "dovah/utils/form_type_is_object_with_bounds.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
+#include "editor/helpers/form_type_name_to_string.h"
 #include "editor/helpers/is_form_type_legal_to_create.h"
 #include "editor/helpers/recalc_bounds.h"
 #include "editor/localize/form_creation_error_code.h"
@@ -103,6 +104,12 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       auto* widget  = this->ui.table;
       {
          actions.create_form   = menu.addAction(tr("New form...",       "object window form actions"), this, &ObjectWindow::_create_form_in_current_category);
+         {
+            auto* action = menu.addMenu(&context.create_form_of_type);
+            action->setText(tr("New form of type..."));
+            action->setEnabled(false);
+            action->setVisible(false);
+         }
          actions.duplicate     = menu.addAction(tr("Duplicate",         "object window form actions"), this, &ObjectWindow::_selected_form_duplicate);
          actions.edit          = menu.addAction(tr("Edit",              "object window form actions"), this, &ObjectWindow::_selected_form_edit);
          actions.show_use_info = menu.addAction(tr("Use info",          "object window form actions"), this, &ObjectWindow::_selected_form_show_users);
@@ -111,8 +118,27 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
          actions.separator = menu.addSeparator();
          actions.recalc_bounds = menu.addAction(tr("Recalc bounds", "object window form actions"), this, &ObjectWindow::_selected_form_recalc_bounds);
       }
+
+      QObject::connect(this->ui.tree->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ObjectWindow::_on_selected_category_changed);
+      this->_on_selected_category_changed(); // initial
+      //
+      QObject::connect(&context.create_form_of_type, &QMenu::triggered, this, [this](QAction* action) {
+         auto data = action->property("form type");
+         if (data.isNull())
+            return;
+
+         auto ft = (dovah::form_type)data.toInt();
+         if (ft == dovah::form_type::none)
+            return;
+
+         this->_create_form_of_type(ft);
+      });
+
       widget->setContextMenuPolicy(Qt::CustomContextMenu);
       QObject::connect(widget, &QWidget::customContextMenuRequested, this, [this, widget, &context](const QPoint& pos) {
+         if (!DovahKitCore::get().has_data())
+            return;
+
          auto& actions = context.actions;
          auto& menu    = context.menu;
          
@@ -121,8 +147,17 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
          
          bool form_exists  = (stub != nullptr);
          bool is_alterable = form_exists && !stub->is_none_stub();
-         
-         actions.create_form->setEnabled(form_types.size() == 1 && form_types[0] != dovah::form_type::none);
+         bool single_type  = form_types.size() == 1;
+
+         actions.create_form->setEnabled(single_type && form_types[0] != dovah::form_type::none);
+         actions.create_form->setVisible(single_type);
+         {
+            auto& submenu = context.create_form_of_type;
+            auto* sm_act  = submenu.menuAction();
+            bool  allow   = form_types.size() > 1;
+            sm_act->setEnabled(allow);
+            sm_act->setVisible(allow);
+         }
          actions.duplicate->setEnabled(is_alterable);
          actions.duplicate->setVisible(is_alterable);
          actions.edit->setVisible(is_alterable);
@@ -131,7 +166,8 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
          actions.renumber->setEnabled(is_alterable && DovahKitCore::get().is_form_defined_in_active_file(stub));
          actions.recalc_bounds->setVisible(is_alterable && dovah::form_type_is_object_with_bounds(stub->form_type));
          actions.delete_form->setVisible(is_alterable);
-         if (form_types.size() == 1) {
+
+         if (single_type) {
             auto type = form_types[0];
             if (!editor_helpers::is_form_type_legal_to_create(type)) {
                actions.create_form->setEnabled(false);
@@ -267,11 +303,16 @@ void ObjectWindow::_create_form_in_current_category() {
    auto form_types = this->ui.tree->filterInfo().form_types;
    if (form_types.size() != 1)
       return;
-   //
+   this->_create_form_of_type(form_types.front());
+}
+void ObjectWindow::_create_form_of_type(dovah::form_type ft) {
+   using exception  = dovah::exceptions::form_creation_failed;
+   using error_code = exception::error_code;
+
    dovah::form_stub* created_form = nullptr;
    try {
       auto& editor  = DovahKitCore::get();
-      auto  request = editor.request_form_creation(form_types.back());
+      auto  request = editor.request_form_creation(ft);
       {
          bool    ok = false;
          QString editor_id = QInputDialog::getText(this, tr("Set editor ID"), tr("Editor ID:"), QLineEdit::Normal, "", &ok);
@@ -303,6 +344,7 @@ void ObjectWindow::_create_form_in_current_category() {
       }
       this->ui.table->select(created_form);
    }
+
 }
 void ObjectWindow::_selected_form_edit() {
    if (auto* stub = _get_selected_form())
@@ -407,4 +449,35 @@ void ObjectWindow::_set_selected_category_contents_expanded(bool expand, bool re
       }
    };
    _collapse_descendants(qmi);
+}
+
+void ObjectWindow::_on_selected_category_changed() {
+   auto& cf_submenu = this->context_menus.form_table.create_form_of_type;
+   cf_submenu.clear();
+
+   //
+   // When the form table is filtered to multiple form types, the context menu 
+   // item to create a new form should be a submenu, with one action per form 
+   // type.
+   //
+
+   auto form_types = this->ui.tree->filterInfo().form_types;
+   if (form_types.size() == 0)
+      return;
+
+   std::vector<QAction*> submenu_actions;
+   submenu_actions.reserve(form_types.size());
+   for (const auto ft : form_types) {
+      if (ft == dovah::form_type::none) // just in case we rearrange the treeview. "none" = none-stubs ("Missing"), in this context
+         continue;
+      auto* action = new QAction(&cf_submenu);
+      action->setText(editor_helpers::form_type_name_to_string(ft));
+      action->setProperty("form type", (int)ft);
+      submenu_actions.push_back(action);
+   }
+   std::sort(submenu_actions.begin(), submenu_actions.end(), [](QAction* a, QAction* b) {
+      return a->text().compare(b->text(), Qt::CaseInsensitive) < 0;
+   });
+   for(auto* p : submenu_actions)
+      cf_submenu.addAction(p);
 }
