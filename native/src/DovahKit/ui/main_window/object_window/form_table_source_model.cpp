@@ -23,6 +23,9 @@ namespace ui::object_window {
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent,     this, &form_table_source_model::formDeletionImminent);
       QObject::connect(&editor, &DovahKitCore::formRenumbered,           this, &form_table_source_model::formRenumbered);
    }
+   form_table_source_model::~form_table_source_model() {
+      this->_clear(true);
+   }
 
    void form_table_source_model::formCreated(dovah::form_stub* stub) {
       if (!this->form_types.contains(stub->form_type))
@@ -316,13 +319,19 @@ namespace ui::object_window {
       #pragma endregion
    #pragma endregion
 
-   void form_table_source_model::clear() {
-      this->beginResetModel();
+   void form_table_source_model::_clear(bool silent) {
+      if (!silent)
+         this->beginResetModel();
       for (auto* item : this->children)
          delete item;
       this->children.clear();
       this->forms_pending_use_info_update.clear();
-      this->endResetModel();
+      if (!silent)
+         this->endResetModel();
+   }
+
+   void form_table_source_model::clear() {
+      this->_clear(false);
    }
    void form_table_source_model::rebuild() {
       this->clear();

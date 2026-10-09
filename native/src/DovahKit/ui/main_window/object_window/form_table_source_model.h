@@ -43,15 +43,15 @@ namespace ui::object_window {
          void formModificationImminent(const form_stub*);
          void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
          void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
+
+         void _clear(bool silent);
       
       public slots:
          void clear();
          
       public:
          form_table_source_model(QObject* parent = nullptr);
-         ~form_table_source_model() {
-            this->clear();
-         }
+         ~form_table_source_model();
 
          static const item_type* data_for_qmi(const QModelIndex& qmi) noexcept {
             return (item_type*) qmi.internalPointer();
