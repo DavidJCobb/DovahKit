@@ -1,5 +1,6 @@
 #include "./form_table_source_model.h"
 #include "./form_model_item.h"
+#include <cassert>
 #include <QColor>
 #include <QFont>
 #include <QMimeData>
@@ -28,9 +29,10 @@ namespace ui::object_window {
    }
 
    void form_table_source_model::formCreated(dovah::form_stub* stub) {
+      assert(!!stub);
       if (!this->form_types.contains(stub->form_type))
          return;
-      auto* item  = new item_type(stub);
+      auto* item  = new item_type(*stub);
       auto& list  = this->children;
       auto  first = list.size();
       this->beginInsertRows({}, first, first);
@@ -38,6 +40,7 @@ namespace ui::object_window {
       this->endInsertRows();
    }
    void form_table_source_model::formModificationImminent(const dovah::form_stub* user) {
+      assert(!!user);
       //
       // The (user) form is about to be changed, and those changes may result in it no longer 
       // using some other form. We need to take note of all of the forms that it currently 
@@ -53,6 +56,7 @@ namespace ui::object_window {
       }
    }
    void form_table_source_model::formModified(const dovah::form_stub* stub) {
+      assert(!!stub);
       QVector<dovah::form_stub*> now_used_list;
       for (auto& pair : stub->outbound) {
          auto* other = pair.second.other;
@@ -125,6 +129,7 @@ namespace ui::object_window {
       was_used_list.clear();
    }
    void form_table_source_model::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
+      assert(!!stub);
       auto& list = this->children;
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
@@ -143,6 +148,7 @@ namespace ui::object_window {
       }
    }
    void form_table_source_model::formRenumbered(const dovah::form_stub* stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
+      assert(!!stub);
       auto& list = this->children;
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
@@ -357,14 +363,16 @@ namespace ui::object_window {
       for (auto ft : this->form_types) {
          if (ft == dovah::form_type::none)
             editor.for_each_form_of_type(ft, [&pending_additions](dovah::form_stub* stub) {
+               assert(!!stub);
                if (stub->is_none_stub()) {
-                  pending_additions.push_back(new item_type(stub));
+                  pending_additions.push_back(new item_type(*stub));
                }
                return false;
             });
          else
             editor.for_each_form_of_type(ft, [&pending_additions](dovah::form_stub* stub) {
-               pending_additions.push_back(new item_type(stub));
+               assert(!!stub);
+               pending_additions.push_back(new item_type(*stub));
                return false;
             });
       }

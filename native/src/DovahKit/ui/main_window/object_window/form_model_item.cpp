@@ -5,8 +5,8 @@
 #include "editor/subsystems/story_manager/core.h"
 
 namespace ui::object_window {
-   form_model_item::form_model_item(dovah::form_stub* stub) {
-      this->stub = stub;
+   form_model_item::form_model_item(dovah::form_stub& stub) {
+      this->stub = &stub;
       this->update();
    }
 

@@ -22,8 +22,7 @@ namespace ui::object_window {
          bool is_none     = false;
 
       public:
-         form_model_item() {}
-         form_model_item(dovah::form_stub*);
+         form_model_item(dovah::form_stub&);
 
          void update();
          bool update_user_count(); // returns true if any changes were made
