@@ -452,14 +452,20 @@ void ObjectWindow::_set_selected_category_contents_expanded(bool expand, bool re
 }
 
 void ObjectWindow::_on_selected_category_changed() {
-   auto& cf_submenu = this->context_menus.form_table.create_form_of_type;
-   cf_submenu.clear();
+   // UX. It's awkward to have the scroll position remain unchanged when the 
+   // contents of the tableview have changed significantly; if you had scrolled 
+   // to the bottom before un-filtering a large number of forms, you might be 
+   // scrolled to some random position in the middle now; et cetera.
+   this->ui.table->scrollToTop();
 
    //
    // When the form table is filtered to multiple form types, the context menu 
    // item to create a new form should be a submenu, with one action per form 
    // type.
    //
+
+   auto& cf_submenu = this->context_menus.form_table.create_form_of_type;
+   cf_submenu.clear();
 
    auto form_types = this->ui.tree->filterInfo().form_types;
    if (form_types.size() == 0)
