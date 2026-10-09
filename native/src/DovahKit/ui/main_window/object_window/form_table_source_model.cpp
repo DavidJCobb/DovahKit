@@ -136,11 +136,11 @@ namespace ui::object_window {
          auto* item = list[i];
          if (&item->stub == stub) {
             if (is_just_flagged) {
-               auto index = this->index(i, 0, QModelIndex());
+               auto index = this->index(i, 0, {});
                emit dataChanged(index, index); // force a redraw, which will show the "deleted" flag
                break;
             }
-            this->beginRemoveRows(QModelIndex(), i, i);
+            this->beginRemoveRows({}, i, i);
             list.remove(i);
             this->endRemoveRows();
             break;
@@ -155,9 +155,9 @@ namespace ui::object_window {
          auto* item = list[i];
          if (&item->stub == stub) {
             item->update();
-            auto root  = QModelIndex();
-            auto start = this->index(i, 0, root);
-            auto end   = this->index(i, this->columnCount(root), root);
+            QModelIndex root;
+            auto start = this->index(i, 0,               root);
+            auto end   = this->index(i, ColumnCount - 1, root);
             emit dataChanged(start, end);
             return;
          }
@@ -165,8 +165,8 @@ namespace ui::object_window {
    }
 
    QModelIndex form_table_source_model::index(dovah::form_stub* stub) const {
-      int size = this->children.size();
-      for (int i = 0; i < size; ++i)
+      const size_t size = this->children.size();
+      for (size_t i = 0; i < size; ++i)
          if (&this->children[i]->stub == stub)
             return this->index(i, 0, {});
       return {};
@@ -175,7 +175,9 @@ namespace ui::object_window {
    #pragma region QAbstractItemModel overrides
       #pragma region Hierarchy
          /*virtual*/ QModelIndex form_table_source_model::index(int row, int column, const QModelIndex& parent) const /*override*/ {
-            if (!this->hasIndex(row, column, parent))
+            if (row < 0 || column < 0 || column >= ColumnCount || row >= this->children.size())
+               return {};
+            if (parent.isValid())
                return {};
             item_type* item = this->children.value(row);
             if (item)
@@ -203,11 +205,11 @@ namespace ui::object_window {
          /*virtual*/ QVariant form_table_source_model::data(const QModelIndex& index, int role) const /*override*/ {
             if (!index.isValid())
                return {};
-            auto item    = data_for_qmi(index);
-            auto column  = index.column();
-            bool edited  = item->is_active;
-            bool deleted = item->stub.is_deleted();
-            bool none    = item->is_none;
+            const auto* item    = data_for_qmi(index);
+            const auto  column  = index.column();
+            const bool  edited  = item->is_active;
+            const bool  deleted = item->stub.is_deleted();
+            const bool  none    = item->is_none;
             switch (role) {
                case Qt::DisplayRole:
                   switch (column) {
@@ -221,7 +223,7 @@ namespace ui::object_window {
                            .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
                      case Column::FormID:
                         return editor_helpers::form_id_to_string(item->form_id) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
-                        case Column::UserCount:
+                     case Column::UserCount:
                         return item->user_count;
                   }
                   break;
