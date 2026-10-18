@@ -26,17 +26,18 @@ namespace cobb::win32 {
             HANDLE thread_handle = NULL;
             while (true) {
                NTSTATUS result = _NtGetNextThread(
-                  this_process,          // process whose threads we want to access
-                  thread_handle,         // previous handle (think of Lua `next`)
-                  THREAD_SUSPEND_RESUME, // permissions we want to be able to take; threads that we can't get these perms for are skipped
-                  0,                     // desired attributes of handle to create
-                  0,                     // reserved; keep at zero
-                  &thread_handle         // out
+                  this_process,  // process whose threads we want to access
+                  thread_handle, // previous handle (think of Lua `next`)
+                  THREAD_SUSPEND_RESUME | THREAD_QUERY_LIMITED_INFORMATION, // permissions we want to be able to take; threads that we can't get these perms for are skipped
+                  0,             // desired attributes of handle to create
+                  0,             // reserved; keep at zero
+                  &thread_handle // out
                );
                if (thread_handle == NULL || thread_handle == INVALID_HANDLE_VALUE)
                   break;
 
-               if (GetThreadId(thread_handle) != this_thread_id) {
+               const auto thread_id = GetThreadId(thread_handle);
+               if (thread_id != 0 && thread_id != this_thread_id) {
                   SuspendThread(thread_handle);
                }
                CloseHandle(thread_handle);
