@@ -3,6 +3,7 @@
 #include "../data/hardcoded_form_ids.h"
 
 #include "../notices/form_load_warnings/by_form_type/worldspace/is_own_parent.h"
+#include "../files/tes_file_reading/file_loader.h"
 #include "../files/tes_file_writing/config.h"
 #include "../utils/update_large_ref_index.h"
 
@@ -10,11 +11,16 @@ namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_type::worldspace;
    }
+
+   constexpr const bool update_cell_offset_data = false;
 }
 
 namespace dovah::loaded_forms {
    void Worldspace::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
+
+      const bool is_master = intfc.current_file->is_master();
+
       if (intfc.is_partial_record) { // TESWorldSpace::LoadPartial only loads NAM0 and NAM9
          while (auto& subrecord = record.next_subrecord()) {
             if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
@@ -26,12 +32,20 @@ namespace dovah::loaded_forms {
                      this->bounds.min.x = temporary;
                   if (subrecord.read(temporary) && temporary > this->bounds.min.y)
                      this->bounds.min.y = temporary;
+                  if (is_master) {
+                     auto& item = this->cell_offset_data.offsets_by_file[intfc.current_file];
+                     item.bounds.min = this->bounds.min;
+                  }
                   break;
                case 'NAM9':
                   if (subrecord.read(temporary) && temporary > this->bounds.max.x)
                      this->bounds.max.x = temporary;
                   if (subrecord.read(temporary) && temporary > this->bounds.max.y)
                      this->bounds.max.y = temporary;
+                  if (is_master) {
+                     auto& item = this->cell_offset_data.offsets_by_file[intfc.current_file];
+                     item.bounds.max = this->bounds.max;
+                  }
                   break;
             }
          }
@@ -51,6 +65,10 @@ namespace dovah::loaded_forms {
                         this->bounds.min.x = temporary;
                      if (subrecord.read(temporary) && temporary < this->bounds.min.y)
                         this->bounds.min.y = temporary;
+                     if (is_master) {
+                        auto& item = this->cell_offset_data.offsets_by_file[intfc.current_file];
+                        item.bounds.min = this->bounds.min;
+                     }
                   }
                   break;
                case 'NAM9':
@@ -60,6 +78,10 @@ namespace dovah::loaded_forms {
                         this->bounds.max.x = temporary;
                      if (subrecord.read(temporary) && temporary > this->bounds.max.y)
                         this->bounds.max.y = temporary;
+                     if (is_master) {
+                        auto& item = this->cell_offset_data.offsets_by_file[intfc.current_file];
+                        item.bounds.max = this->bounds.max;
+                     }
                   }
                   break;
                case 'RNAM':
@@ -188,6 +210,10 @@ namespace dovah::loaded_forms {
                      this->bounds.min.x = temporary;
                   if (subrecord.read(temporary) && temporary < this->bounds.min.y)
                      this->bounds.min.y = temporary;
+                  if (is_master) {
+                     auto& item = this->cell_offset_data.offsets_by_file[intfc.current_file];
+                     item.bounds.min = this->bounds.min;
+                  }
                }
                break;
             case 'NAM9':
@@ -197,6 +223,10 @@ namespace dovah::loaded_forms {
                      this->bounds.max.x = temporary;
                   if (subrecord.read(temporary) && temporary > this->bounds.max.y)
                      this->bounds.max.y = temporary;
+                  if (is_master) {
+                     auto& item = this->cell_offset_data.offsets_by_file[intfc.current_file];
+                     item.bounds.max = this->bounds.max;
+                  }
                }
                break;
             case 'ZNAM':
@@ -219,8 +249,10 @@ namespace dovah::loaded_forms {
                subrecord.read(this->water_environment_map);
                break;
             case 'OFST':
+               this->cell_offset_data.load(subrecord, intfc);
                //
-               // TODO: Loader code.
+               // TODO: Do we want to validate these offsets, and warn if they're invalid?
+               //       Not optimistic about the perf hit it might incur...
                //
                break;
             case 'VMAD':
@@ -340,8 +372,8 @@ namespace dovah::loaded_forms {
       copy->water_noise_texture = this->water_noise_texture;
       copy->hd_lod_diffuse_texture = this->hd_lod_diffuse_texture;
       copy->hd_lod_normal_texture = this->hd_lod_normal_texture;
-      copy->offset_data = this->offset_data;
       copy->script_data.clone_from(this->script_data, *copy);
+      copy->cell_offset_data = this->cell_offset_data;
    }
    void Worldspace::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (record.flags() & tes_file_record_header::flag::partial) { // TESWorldSpace::LoadPartial only loads NAM0 and NAM9
@@ -460,13 +492,7 @@ namespace dovah::loaded_forms {
       DATA.close();
       {
          auto& bounds = this->bounds;
-         if (
-            this->stub.has_multiple_source_files() ||
-            bounds.min.x != std::numeric_limits<float>::max() ||
-            bounds.min.y != std::numeric_limits<float>::max() ||
-            bounds.max.x != std::numeric_limits<float>::min() ||
-            bounds.max.y != std::numeric_limits<float>::min()
-         ) {
+         if (this->stub.has_multiple_source_files() || this->bounds.valid()) {
             auto& NAM0 = record.open_next_subrecord('NAM0');
             NAM0.write(this->bounds.min.x);
             NAM0.write(this->bounds.min.y);
@@ -504,10 +530,45 @@ namespace dovah::loaded_forms {
          subrecord.write(this->water_environment_map);
          subrecord.close();
       }
-      if (this->offset_data.present) {
-         //
-         // And make a point of NOT saving OFST.
-         //
+      {  // OFST
+         const auto* active_file = this->stub.get_owning_load_order().get_active_file();
+         assert(!!active_file);
+         structs::world_cell_offset_data::offset_collection* data = nullptr;
+         if constexpr (update_cell_offset_data) {
+            data = &this->cell_offset_data.offsets_by_file[active_file];
+         } else {
+            auto& map = this->cell_offset_data.offsets_by_file;
+            auto  it  = map.find(active_file);
+            if (it != map.end())
+               data = &it->second;
+         }
+         if (data) {
+            data->bounds = this->bounds;
+            data->relative_offsets.clear();
+            if constexpr (update_cell_offset_data) {
+               if (data->bounds.valid() && active_file->is_master()) {
+                  data->relative_offsets.resize(
+                     (((int32_t)data->bounds.max.x >> 0xC) - ((int32_t)data->bounds.min.x >> 0xC)) *
+                     (((int32_t)data->bounds.max.y >> 0xC) - ((int32_t)data->bounds.min.y >> 0xC))
+                  );
+                  //
+                  // TODO: The data would have to be filled in by the save process. That is: 
+                  //       we'd have to save an appropriate number of zeroes, communicate the 
+                  //       offset of those zeroes plus the grid size to the writer, and then 
+                  //       have the writer backfill those zeroes as it saves each individual 
+                  //       cell within that grid area.
+                  //
+               }
+            }
+            if (data->relative_offsets.empty()) {
+               data = nullptr;
+               this->cell_offset_data.offsets_by_file.erase(active_file);
+            } else {
+               auto& subrecord = record.open_next_subrecord('OFST');
+               subrecord.write(data->relative_offsets.data(), data->relative_offsets.size() * sizeof(uint32_t));
+               subrecord.close();
+            }
+         }
       }
       //
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
@@ -563,7 +624,7 @@ namespace dovah::loaded_forms {
       this->hd_lod_diffuse_texture.clear();
       this->hd_lod_normal_texture.clear();
       this->water_environment_map.clear();
-      this->offset_data.clear();
+      this->cell_offset_data = {};
       //
       this->script_data.clear(*this);
    }

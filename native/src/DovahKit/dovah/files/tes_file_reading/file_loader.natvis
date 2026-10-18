@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::tes_file_reading::file_loader">
+      <Intrinsic Name="_raw_path" Expression="path._Text.c_str()" />
+      <Intrinsic Name="_max" Expression="a &gt; b ? a : b">
+         <Parameter Name="a" Type="const wchar_t*" />
+         <Parameter Name="b" Type="const wchar_t*" />
+      </Intrinsic>
+      <Intrinsic Name="_fallback" Expression="a ? a : b">
+         <Parameter Name="a" Type="const wchar_t*" />
+         <Parameter Name="b" Type="const wchar_t*" />
+      </Intrinsic>
+      <Intrinsic Name="_advance" ReturnType="const wchar_t*" Expression="a ? a + 1 : nullptr">
+         <Parameter Name="a" Type="const wchar_t*" />
+      </Intrinsic>
+      <Intrinsic Name="_search" ReturnType="const wchar_t*" Expression="
+         _advance(
+            _max(wcsstr(from, L&quot;/&quot;), wcsstr(from, L&quot;\\&quot;))
+         )
+      ">
+         <Parameter Name="from" Type="const wchar_t*" />
+      </Intrinsic>
+      <Intrinsic Name="_findnext" Expression="_fallback(_search(v), v)" ReturnType="const wchar_t*">
+         <Parameter Name="v" Type="const wchar_t*" />
+      </Intrinsic>
+      <Intrinsic Name="_findnextfive" Expression="
+         _findnext(_findnext(_findnext(_findnext(_findnext(v)))))
+      ">
+         <Parameter Name="v" Type="const wchar_t*" />
+      </Intrinsic>
+      <Intrinsic Name="filename" Expression="
+         _findnextfive(
+            _findnextfive(
+               _findnextfive(
+                  (const wchar_t*)path._Text.c_str()
+               )
+            )
+         )
+      " />
+      
+      <DisplayString>{filename(),na}</DisplayString>
+   </Type>
+</AutoVisualizer>

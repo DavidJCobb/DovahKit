@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::loaded_forms::structs::world_cell_offset_data::offset_collection">
+      <Intrinsic Name="wu_to_g" Expression="(int32_t)coord &gt;&gt; 0xC">
+         <Parameter Name="coord" Type="float" />
+      </Intrinsic>
+
+      <Intrinsic Name="grid_min_x" Expression="wu_to_g(bounds.min.x)" />
+      <Intrinsic Name="grid_max_x" Expression="wu_to_g(bounds.max.x)" />
+      <Intrinsic Name="grid_min_y" Expression="wu_to_g(bounds.min.y)" />
+      <Intrinsic Name="grid_max_y" Expression="wu_to_g(bounds.max.y)" />
+      <Intrinsic Name="grid_size_x" Expression="grid_max_x() - grid_min_x() + 1" />
+      <Intrinsic Name="grid_size_y" Expression="grid_max_y() - grid_min_y() + 1" />
+      
+      <Expand>
+         <Synthetic Name="[relative offsets]">
+            <DisplayString>{relative_offsets}</DisplayString>
+            <Expand>
+               <Item Name="[flat]">relative_offsets</Item>
+               <Synthetic Name="[grid, defined]">
+                  <Expand>
+                     <CustomListItems>
+                        <Variable Name="i" InitialValue="0" />
+                        <Variable Name="x" InitialValue="0" />
+                        <Variable Name="y" InitialValue="0" />
+                        <Loop>
+                           <Break Condition="i == relative_offsets.size()" />
+                           <Exec>x = i % grid_size_x()</Exec>
+                           <Exec>y = i / grid_size_x()</Exec>
+                           <If Condition="relative_offsets._Mypair._Myval2._Myfirst[i] != 0">
+                              <Item Name="[{i,d}]: ({x + grid_min_x(),d}, {y + grid_min_y(),d})">relative_offsets._Mypair._Myval2._Myfirst[i]</Item>
+                           </If>
+                           <Exec>++i</Exec>
+                        </Loop>
+                     </CustomListItems>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[grid, all]">
+                  <Expand>
+                     <CustomListItems>
+                        <Variable Name="i" InitialValue="0" />
+                        <Variable Name="x" InitialValue="0" />
+                        <Variable Name="y" InitialValue="0" />
+                        <Size>relative_offsets.size()</Size>
+                        <Loop>
+                           <Break Condition="i == relative_offsets.size()" />
+                           <Exec>x = i % grid_size_x()</Exec>
+                           <Exec>y = i / grid_size_x()</Exec>
+                           <Item Name="[{i,d}]: ({x + grid_min_x(),d}, {y + grid_min_y(),d})">relative_offsets._Mypair._Myval2._Myfirst[i]</Item>
+                           <Exec>++i</Exec>
+                        </Loop>
+                     </CustomListItems>
+                  </Expand>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+         <Item Name="[bounds]">bounds</Item>
+         <Synthetic Name="[grid bounds]">
+            <DisplayString>({grid_min_x(),d}, {grid_min_y(),d}) to ({grid_max_x(),d}, {grid_max_y(),d})</DisplayString>
+            <Expand>
+               <Synthetic Name="[min]">
+                  <DisplayString>({grid_min_x(),d}, {grid_min_y(),d})</DisplayString>
+               </Synthetic>
+               <Synthetic Name="[max]">
+                  <DisplayString>({grid_max_x(),d}, {grid_max_y(),d})</DisplayString>
+               </Synthetic>
+               <Item Name="[x-size]">grid_size_x(),d</Item>
+               <Item Name="[y-size]">grid_size_y(),d</Item>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+   <Type Name="std::pair&lt;dovah::tes_file_reading::file_loader const * const,dovah::loaded_forms::structs::world_cell_offset_data::offset_collection&gt;">
+      <DisplayString>data for {first-&gt;filename(),na}</DisplayString>
+      <Expand>
+         <Item Name="[file]">first,view(filename)na</Item>
+         <ExpandedItem>second</ExpandedItem>
+      </Expand>
+   </Type>
+</AutoVisualizer>

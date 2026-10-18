@@ -442,6 +442,7 @@
     <ClCompile Include="dovah\forms\structs\typed_package_info\use_weapon.cpp" />
     <ClCompile Include="dovah\forms\structs\weather_wind_speed.cpp" />
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
+    <ClCompile Include="dovah\forms\structs\world_cell_offset_data.cpp" />
     <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp" />
     <ClCompile Include="dovah\forms\TalkingActivator.cpp" />
     <ClCompile Include="dovah\forms\Tree.cpp" />
@@ -2172,6 +2173,8 @@
     <ClInclude Include="dovah\forms\structs\weather_wind_speed.h" />
     <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
+    <ClInclude Include="dovah\forms\structs\world_bounds.h" />
+    <ClInclude Include="dovah\forms\structs\world_cell_offset_data.h" />
     <ClInclude Include="dovah\forms\structs\world_max_height_data.h" />
     <ClInclude Include="dovah\forms\TalkingActivator.h" />
     <ClInclude Include="dovah\forms\Tree.h" />
@@ -5015,6 +5018,7 @@
     <Natvis Include="dovah\forms\structs\perk_effect.natvis" />
     <Natvis Include="dovah\forms\structs\perk_entry_point_data.natvis" />
     <Natvis Include="dovah\forms\structs\typed_package_info\custom.natvis" />
+    <Natvis Include="dovah\forms\structs\world_cell_offset_data.natvis" />
     <Natvis Include="dovah\form_reference_t.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="dovah\utils\classed_stat_points.natvis" />

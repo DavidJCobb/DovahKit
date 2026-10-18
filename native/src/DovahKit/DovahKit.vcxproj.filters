@@ -4476,6 +4476,9 @@
     <ClCompile Include="ui\main_window\object_window\form_table_proxy_model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\structs\world_cell_offset_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11141,6 +11144,12 @@
     <ClInclude Include="ui\main_window\object_window\form_model_item.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\structs\world_cell_offset_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\world_bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -13417,5 +13426,6 @@
     <Natvis Include="editor\subsystems\form_info_cache\cache_containers\data_cache.natvis" />
     <Natvis Include="editor\subsystems\audio\impl\xwma_file_info.natvis" />
     <Natvis Include="dovah\files\bsa\packed_file_info.natvis" />
+    <Natvis Include="dovah\forms\structs\world_cell_offset_data.natvis" />
   </ItemGroup>
 </Project>
