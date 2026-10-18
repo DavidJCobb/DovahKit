@@ -65,9 +65,20 @@ namespace dovah::loaded_forms::structs {
       data->bounds = bounds;
       data->relative_offsets.clear();
       {
+         bool bounds_valid = data->bounds.valid();
+         if (bounds_valid) {
+            min_gx = (int32_t)data->bounds.min.x >> 0xC;
+            min_gy = (int32_t)data->bounds.min.y >> 0xC;
+            grid_w = ((int32_t)data->bounds.max.x >> 0xC) - min_gx;
+            grid_h = ((int32_t)data->bounds.max.y >> 0xC) - min_gy;
+            if (grid_w >= 1000 || grid_h >= 1000) { // CK-imposed maximums
+               bounds_valid = false;
+            }
+         }
+
          if (
             // The OFST grid is not meaningful if there are no associated bounds.
-            data->bounds.valid()
+            bounds_valid
             // The game doesn't load the OFST grid's bounds if the file is not a master.
          && saving_as_master
             // We have to write placeholders into the WRLD record, and then as we go and 
@@ -81,10 +92,6 @@ namespace dovah::loaded_forms::structs {
             // be written into this file:
          && _worldspace_has_cells_to_save(*intfc.target_stub)
          ) {
-            min_gx = (int32_t)data->bounds.min.x >> 0xC;
-            min_gy = (int32_t)data->bounds.min.y >> 0xC;
-            grid_w = ((int32_t)data->bounds.max.x >> 0xC) - min_gx;
-            grid_h = ((int32_t)data->bounds.max.y >> 0xC) - min_gy;
 
             data->relative_offsets.resize(grid_w * grid_h, 0);
             //
