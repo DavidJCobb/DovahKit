@@ -19,6 +19,7 @@ extern "C" {
    #include "../../../zlib/zlib.h" // interproject ref
 }
 #include "../../exceptions/file_save_failed.h"
+#include "./worldspace_cell_offset_state.h"
 
 namespace {
    // If this is set to `true`, then when we save a non-edited form, we flag its record 
@@ -97,6 +98,10 @@ namespace dovah::tes_file_writing {
    }
    file_writer::~file_writer() {
       this->stream.close();
+      if (auto*& p = this->_worldspace_state.ofst_state) {
+         delete p;
+         p = nullptr;
+      }
    }
 
    record& file_writer::_open_next_record(uint32_t signature, bare_form_id_t formID) {
@@ -277,7 +282,10 @@ namespace dovah::tes_file_writing {
                record.header.flags |= tes_file_record_header::flag::partial; // if the stub is not in the active file, thne we must be saving it because one of its new child forms is, so set the "partial" flag
          }
       }
-      //
+      if (stub->form_type == form_type::worldspace) {
+         this->_worldspace_state.record_offset = this->get_stream_position();
+      }
+      
       auto intfc = load_order_interfaces::form_save(this->owner, *this);
       intfc.previous_child = previous_child;
       intfc.target_stub    = stub;
@@ -305,6 +313,9 @@ namespace dovah::tes_file_writing {
          //
          if (stub->form_type == form_type::cell) {
             this->compress_state.containing_cell_is_compressed = record.header.body_is_compressed();
+         } else if (stub->form_type == form_type::worldspace) {
+            this->_worldspace_state.record_offset = write_info.offset;
+            assert(!record.header.body_is_compressed() || !intfc.worldspace_cell_offset_state && "Cannot write OFST into a compressed WRLD! We can't rewind into already-compressed data to write the per-cell offsets!");
          }
          //
          write_info.record_flags = record.header.flags;
@@ -322,7 +333,21 @@ namespace dovah::tes_file_writing {
                this->_write_child_forms_for_cell(stub);
                break;
             case form_type::worldspace:
+               {
+                  if (auto* p = this->_worldspace_state.ofst_state)
+                     delete p;
+                  this->_worldspace_state.ofst_state = intfc.worldspace_cell_offset_state;
+                  intfc.worldspace_cell_offset_state = nullptr;
+               }
                this->_write_child_forms_for_worldspace(stub);
+               {
+                  auto& state = this->_worldspace_state;
+                  state.record_offset = 0;
+                  if (state.ofst_state) {
+                     delete state.ofst_state;
+                     state.ofst_state = nullptr;
+                  }
+               }
                break;
             case form_type::topic:
                this->_write_child_forms_for_topic(stub);
@@ -600,13 +625,47 @@ namespace dovah::tes_file_writing {
          this->open_group(tes_file_group_type::world_children, stub->formID, tes_file_group_header::uninitialized_unknown);
          group_opened = true;
       };
-      //
+      
       auto* persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(*stub);
       if (persistent_cell && form_stub_helpers::needs_to_be_saved(*persistent_cell)) {
          (open_group_if_needed)();
          this->_write_form(persistent_cell);
       }
-      //
+
+      uint32_t wrld_ofst_array_position = 0; // position within uncompressed WRLD record
+      if (this->_worldspace_state.ofst_state) {
+         wrld_ofst_array_position  = this->_worldspace_state.record_offset;
+         wrld_ofst_array_position += 0x18; // serialized size of record header
+         if (wrld_ofst_array_position) {
+            const auto& state = *this->_worldspace_state.ofst_state;
+            wrld_ofst_array_position += state.offset_within_record;
+            wrld_ofst_array_position += 6; // serialized size of a subrecord header ('OFST', 0x1234)
+            if (state.subrecord_body_size() > 0xFFFF) {
+               wrld_ofst_array_position += 10; // serialized size of a subrecord extension ('XXXX', 0x0000, 0x12345678)
+            }
+         }
+      }
+      auto update_ofst_array = [this, wrld_ofst_array_position](form_stub& cell, uint32_t cell_record_offset) {
+         if (!wrld_ofst_array_position)
+            return;
+         if (!cell.addenda)
+            return;
+         const auto& grid_pos_opt = cell.addenda->grid_position;
+         if (!grid_pos_opt.has_value())
+            return;
+         const auto& grid_pos = grid_pos_opt.value();
+         auto i = this->_worldspace_state.ofst_state->grid_coord_to_index(grid_pos.x, grid_pos.y);
+         if (i == (size_t)-1)
+            return;
+
+         uint32_t relative_offset = cell_record_offset - this->_worldspace_state.record_offset;
+
+         auto prior = this->get_stream_position();
+         this->set_stream_position(wrld_ofst_array_position + (i * sizeof(uint32_t)));
+         this->_write(relative_offset);
+         this->set_stream_position(prior);
+      };
+      
       std::map<uint32_t, _cell_block> blocks;
       form_stub_helpers::for_each_child_form(*stub, [&blocks, &open_group_if_needed, persistent_cell](form_stub& child) {
          if (child.form_type != form_type::cell)
@@ -627,14 +686,16 @@ namespace dovah::tes_file_writing {
          for (auto& pair : list) {
             auto& group_s = this->open_group(tes_file_group_type::exterior_cell_sub_block, pair.first, tes_file_group_header::uninitialized_unknown);
             for (auto* cell : pair.second.cells) {
+               uint32_t cell_record_offset = this->get_stream_position();
                this->_write_form(cell);
                assert(&group_s == &this->get_current_group() && "An exterior CELL record opened one or more child GRUPs for its REFRs, but forgot to close the GRUP(s) after writing all of the REFRs.");
+               update_ofst_array(*cell, cell_record_offset);
             }
             this->close_current_group();
          }
          this->close_current_group();
       }
-      //
+      
       if (group_opened)
          this->close_current_group();
    }
@@ -930,45 +991,61 @@ namespace dovah::tes_file_writing {
       auto overwrite_dst = desired;
 
       std::error_code code;
-      if (std::filesystem::is_symlink(desired, code)) {
-         recursively_follow_symlinks(overwrite_dst, code);
-      }
-      if (!code) {
-         if (std::filesystem::hard_link_count(overwrite_dst, code) > 1) {
-            //
-            // The file has been hardlinked. We want to overwrite the content of the file, 
-            // rather than clobbering the individual hardlink with a new file, so we have 
-            // to do this:
-            //
-            FILE* src_file = _wfopen(this->path.c_str(),    L"rb");
-            FILE* dst_file = _wfopen(overwrite_dst.c_str(), L"wb");
-            if (src_file && dst_file) {
-               uint8_t buffer[128];
-               while (true) {
-                  size_t count = fread(buffer, sizeof(uint8_t), std::extent<decltype(buffer)>::value, src_file);
-                  if (count == 0) {
-                     if (ferror(src_file)) {
-                        code = std::make_error_code(std::errc::io_error);
+      if (std::filesystem::exists(desired, code)) {
+         //
+         // Need to check file existence first because `is_symlink` works via `symlink_status`, 
+         // which matches POSIX `lstat`, which errors on missing files/directories. You might 
+         // expect `is_symlink` to detect that specific case and return `false` (because a path 
+         // to nothing is not, in fact, a path to a symlink), but instead it just vomits up the 
+         // error unchanged.
+         // 
+         // For all I know, `hard_link_count` might also fail on a path to nothing, instead of 
+         // producing the more sensible result of returning 0, so I may as well gate both of 
+         // the checks behind `exists` anyway.
+         //
+         if (std::filesystem::is_symlink(desired, code)) {
+            recursively_follow_symlinks(overwrite_dst, code);
+         }
+         if (!code) {
+            if (std::filesystem::hard_link_count(overwrite_dst, code) > 1) {
+               //
+               // The file has been hardlinked. We want to overwrite the content of the file, 
+               // rather than clobbering the individual hardlink with a new file, so we have 
+               // to do this:
+               //
+               FILE* src_file = _wfopen(this->path.c_str(),    L"rb");
+               FILE* dst_file = _wfopen(overwrite_dst.c_str(), L"wb");
+               if (src_file && dst_file) {
+                  uint8_t buffer[128];
+                  while (true) {
+                     size_t count = fread(buffer, sizeof(uint8_t), std::extent<decltype(buffer)>::value, src_file);
+                     if (count == 0) {
+                        if (ferror(src_file)) {
+                           code = std::make_error_code(std::errc::io_error);
+                        }
+                        break;
                      }
-                     break;
+                     if (fwrite(buffer, sizeof(uint8_t), count, dst_file) != count) {
+                        code = std::make_error_code(std::errc::io_error);
+                        break;
+                     }
                   }
-                  if (fwrite(buffer, sizeof(uint8_t), count, dst_file) != count) {
-                     code = std::make_error_code(std::errc::io_error);
-                     break;
+                  fclose(src_file);
+                  fclose(dst_file);
+                  if (!code) {
+                     std::filesystem::remove(this->path);
                   }
-               }
-               fclose(src_file);
-               fclose(dst_file);
-               if (!code) {
-                  std::filesystem::remove(this->path);
+               } else {
+                  // failed to open either or both files
+                  code = std::make_error_code(std::errc::io_error);
                }
             } else {
-               // failed to open either or both files
-               code = std::make_error_code(std::errc::io_error);
+               std::filesystem::rename(this->path, overwrite_dst, code);
             }
-         } else {
-            std::filesystem::rename(this->path, overwrite_dst, code);
          }
+      } else {
+         if (!code)
+            std::filesystem::rename(this->path, overwrite_dst, code);
       }
       if (!code) {
          this->path = desired;

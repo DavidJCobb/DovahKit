@@ -25,5 +25,6 @@ namespace dovah::loaded_forms::structs {
 
       public:
          void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
+         void save(tes_record_writer&, load_order_interfaces::form_save&, const world_bounds&);
    };
 }

@@ -128,6 +128,8 @@ namespace dovah {
             //
             constexpr uint32_t signature() const noexcept { return this->header.signature; }
             //
+            constexpr uint32_t header_pos() const noexcept { return this->get_containing_record().pos; }
+            constexpr uint32_t offset() const noexcept { return this->pos; }
             inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
             //
             #pragma region writing

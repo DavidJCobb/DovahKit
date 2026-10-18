@@ -1,5 +1,6 @@
 #include "./form_save.h"
 #include "../files/tes_file_writing/file_writer.h"
+#include "../files/tes_file_writing/worldspace_cell_offset_state.h"
 #include "../files/file_load_order.h"
 
 #include "../exceptions/file_save_failed.h"
@@ -19,5 +20,12 @@ namespace dovah::load_order_interfaces {
       auto ex = exceptions::file_save_failed(exceptions::file_save_failed::error_code::form_save_failed);
       ex.details.form_save_error.reset((notices::base_form_save_error*)error.clone());
       throw ex;
+   }
+
+   form_save::~form_save() {
+      if (auto* p = this->worldspace_cell_offset_state) {
+         this->worldspace_cell_offset_state = nullptr;
+         delete p;
+      }
    }
 }

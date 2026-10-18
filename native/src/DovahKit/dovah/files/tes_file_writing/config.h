@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <optional>
-#include "../common.h"
 #include "../../data/game.h"
 
 namespace dovah::tes_file_writing {

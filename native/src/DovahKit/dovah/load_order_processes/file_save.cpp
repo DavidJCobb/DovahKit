@@ -112,6 +112,20 @@ namespace dovah::load_order_processes {
       writer_type writer(active_load_order, *active_load_order.active_file, this->write_config);
       writer.config.use_file_version = desired_file_version;
       writer.path = temporary_filename;
+      {
+         //
+         // HACK: If the file extension implies certain flags, set them on the writer's copy of the 
+         // config object, so forms being saved can properly check whether they're being saved into 
+         // a master-flagged file. (WRLD/OFST needs to know this.)
+         //
+         auto ext = desired_filename.extension().string();
+         if (_stricmp(ext.c_str(), ".esm")) {
+            writer.config.file_flags |= tes_file_flag::master;
+         } else if (_stricmp(ext.c_str(), ".esl")) {
+            writer.config.file_flags |= tes_file_flag::master;
+            writer.config.file_flags |= tes_file_flag::light;
+         }
+      }
       writer.open();
       try {
          writer.write();

@@ -11,8 +11,6 @@ namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_type::worldspace;
    }
-
-   constexpr const bool update_cell_offset_data = false;
 }
 
 namespace dovah::loaded_forms {
@@ -83,6 +81,13 @@ namespace dovah::loaded_forms {
                         item.bounds.max = this->bounds.max;
                      }
                   }
+                  break;
+               case 'OFST':
+                  this->cell_offset_data.load(subrecord, intfc);
+                  //
+                  // TODO: Do we want to validate these offsets, and warn if they're invalid?
+                  //       Not optimistic about the perf hit it might incur...
+                  //
                   break;
                case 'RNAM':
                   this->large_ref_indices.dependencies.load(subrecord, intfc);
@@ -530,46 +535,7 @@ namespace dovah::loaded_forms {
          subrecord.write(this->water_environment_map);
          subrecord.close();
       }
-      {  // OFST
-         const auto* active_file = this->stub.get_owning_load_order().get_active_file();
-         assert(!!active_file);
-         structs::world_cell_offset_data::offset_collection* data = nullptr;
-         if constexpr (update_cell_offset_data) {
-            data = &this->cell_offset_data.offsets_by_file[active_file];
-         } else {
-            auto& map = this->cell_offset_data.offsets_by_file;
-            auto  it  = map.find(active_file);
-            if (it != map.end())
-               data = &it->second;
-         }
-         if (data) {
-            data->bounds = this->bounds;
-            data->relative_offsets.clear();
-            if constexpr (update_cell_offset_data) {
-               if (data->bounds.valid() && active_file->is_master()) {
-                  data->relative_offsets.resize(
-                     (((int32_t)data->bounds.max.x >> 0xC) - ((int32_t)data->bounds.min.x >> 0xC)) *
-                     (((int32_t)data->bounds.max.y >> 0xC) - ((int32_t)data->bounds.min.y >> 0xC))
-                  );
-                  //
-                  // TODO: The data would have to be filled in by the save process. That is: 
-                  //       we'd have to save an appropriate number of zeroes, communicate the 
-                  //       offset of those zeroes plus the grid size to the writer, and then 
-                  //       have the writer backfill those zeroes as it saves each individual 
-                  //       cell within that grid area.
-                  //
-               }
-            }
-            if (data->relative_offsets.empty()) {
-               data = nullptr;
-               this->cell_offset_data.offsets_by_file.erase(active_file);
-            } else {
-               auto& subrecord = record.open_next_subrecord('OFST');
-               subrecord.write(data->relative_offsets.data(), data->relative_offsets.size() * sizeof(uint32_t));
-               subrecord.close();
-            }
-         }
-      }
+      this->cell_offset_data.save(record, intfc, this->bounds);
       //
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
    }

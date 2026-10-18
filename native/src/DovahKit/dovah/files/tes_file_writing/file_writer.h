@@ -20,6 +20,9 @@ namespace dovah {
    namespace tes_file_reading {
       class file_loader;
    }
+   namespace tes_file_writing {
+      struct worldspace_cell_offset_state;
+   }
    class file_load_order;
 }
 
@@ -39,9 +42,9 @@ namespace dovah {
                //
                // This data should be transplanted into a form_stub after the full file write is complete.
                //
-               form_stub* stub         = nullptr;
-               uint32_t   record_flags = 0; // preserved for the case of a form being added to the active file because a child record needed saving
-               uint32_t   offset       = 0;
+               form_stub*    stub         = nullptr;
+               uint32_t      record_flags = 0; // preserved for the case of a form being added to the active file because a child record needed saving
+               file_offset_t offset       = 0;
             };
             
          protected:
@@ -58,6 +61,10 @@ namespace dovah {
                bool containing_cell_is_compressed = false;
             } compress_state;
             form_stub* _current_target = nullptr;
+            struct {
+               uint32_t                      record_offset = 0;
+               worldspace_cell_offset_state* ofst_state    = nullptr;
+            } _worldspace_state;
             
             record& _open_next_record(uint32_t signature, bare_form_id_t);
             bool _should_compress_current_record(form_stub* stub = nullptr) const noexcept;

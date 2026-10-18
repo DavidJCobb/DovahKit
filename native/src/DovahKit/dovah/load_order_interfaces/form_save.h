@@ -8,6 +8,7 @@ namespace dovah {
    }
    namespace tes_file_writing {
       class  file_writer;
+      struct worldspace_cell_offset_state;
       struct write_config;
    }
    class file_load_order;
@@ -23,6 +24,7 @@ namespace dovah::load_order_interfaces {
       public:
          file_load_order& owner;
          form_stub* target_stub = nullptr;
+         tes_file_writing::worldspace_cell_offset_state* worldspace_cell_offset_state = nullptr;
 
          // This needs to be an optional pointer, because we need to be able to 
          // distinguish between "don't serialize INFO/PNAM" and "serialize null 
@@ -36,5 +38,6 @@ namespace dovah::load_order_interfaces {
             
       protected:
          form_save(file_load_order& o, tes_file_writing::file_writer& w) : owner(o), writer(w) {}
+         ~form_save();
    };
 }

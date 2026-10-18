@@ -4479,6 +4479,9 @@
     <ClCompile Include="dovah\forms\structs\world_cell_offset_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\mega_tests\mass_itm_cells_in_world.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11150,6 +11153,12 @@
     <ClInclude Include="dovah\forms\structs\world_bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_writing\worldspace_cell_offset_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\mass_itm_cells_in_world.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -13427,5 +13436,6 @@
     <Natvis Include="editor\subsystems\audio\impl\xwma_file_info.natvis" />
     <Natvis Include="dovah\files\bsa\packed_file_info.natvis" />
     <Natvis Include="dovah\forms\structs\world_cell_offset_data.natvis" />
+    <Natvis Include="dovah\files\tes_file_reading\file_loader.natvis" />
   </ItemGroup>
 </Project>

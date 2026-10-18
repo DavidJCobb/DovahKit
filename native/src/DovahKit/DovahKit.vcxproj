@@ -1349,6 +1349,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\idles_datastore.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\mega_tests\full_load_every_form.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\mega_tests\mass_itm_cells_in_world.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\mega_tests\oops_all_itms.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
@@ -1912,6 +1913,7 @@
     <ClInclude Include="dovah\files\fuz\file_info.h" />
     <ClInclude Include="dovah\files\pex\parsers\function_collector.h" />
     <ClInclude Include="dovah\files\pex\parsers\util\file_string_table.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\worldspace_cell_offset_state.h" />
     <ClInclude Include="dovah\forms\AcousticSpace.h" />
     <ClInclude Include="dovah\forms\ActorAction.h" />
     <ClInclude Include="dovah\forms\ActorValueInfo.h" />
@@ -2620,6 +2622,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\crash_tests\uncaught_exception_on_thread.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\full_load_every_form.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\mass_itm_cells_in_world.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\mega_tests\oops_all_itms.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\bulk_string_substitution.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
@@ -4995,6 +4998,7 @@
     <Natvis Include="dovah\files\pex\value.natvis" />
     <Natvis Include="dovah\files\pex\variable_declaration.natvis" />
     <Natvis Include="dovah\files\tes_file_reading\elements.natvis" />
+    <Natvis Include="dovah\files\tes_file_reading\file_loader.natvis" />
     <Natvis Include="dovah\forms\components\conditions.natvis" />
     <Natvis Include="dovah\forms\components\conditions\parameter.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_comparison.natvis" />
