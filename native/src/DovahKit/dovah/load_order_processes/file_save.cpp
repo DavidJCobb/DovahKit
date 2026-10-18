@@ -119,9 +119,9 @@ namespace dovah::load_order_processes {
          // a master-flagged file. (WRLD/OFST needs to know this.)
          //
          auto ext = desired_filename.extension().string();
-         if (_stricmp(ext.c_str(), ".esm")) {
+         if (_stricmp(ext.c_str(), ".esm") == 0) {
             writer.config.file_flags |= tes_file_flag::master;
-         } else if (_stricmp(ext.c_str(), ".esl")) {
+         } else if (_stricmp(ext.c_str(), ".esl") == 0) {
             writer.config.file_flags |= tes_file_flag::master;
             writer.config.file_flags |= tes_file_flag::light;
          }
