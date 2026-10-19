@@ -1,3 +1,5 @@
-All rights reserved until the rewrite is done. See README.md.
+This branch is licensed separately from the repo's main branch.
+
+This branch is all rights reserved until the rewrite is done. See README.md.
 
 If README.md says this branch is currently open-source, then I forgot to update this file; let me know.
