@@ -38,3 +38,7 @@ namespace lu::utils {
    template<integral_wrapper_type T>
    using integral_wrapper_underlying_type = impl::integral_wrapped_type<T>;
 }
+
+template<lu::utils::integral_wrapper_type T>
+struct std::hash<T> : public std::hash<lu::utils::integral_wrapper_underlying_type<T>> {
+};

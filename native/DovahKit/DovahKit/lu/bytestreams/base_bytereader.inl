@@ -59,6 +59,8 @@ namespace lu::bytestreams {
    LU_FORCE_INLINE constexpr void base_bytereader::_byteswap(T& dst) {
       if constexpr (std::is_enum_v<T>) {
          dst = (T)std::byteswap((std::underlying_type_t<T>)dst);
+      } else if constexpr (lu::utils::integral_wrapper_type<T>) {
+         dst.set_from_integral(std::byteswap(dst.as_integral()));
       } else {
          bits::byteswap_in_place(dst);
       }
@@ -301,10 +303,11 @@ namespace lu::bytestreams {
    #pragma endregion
 
    bool base_bytereader::read_bytes(this auto& self, void* dst, size_t dst_size) {
-      if (!this->is_in_bounds(dst_size))
+      if (!self.is_in_bounds(dst_size))
          return false;
-      std::memcpy(dst, self.data_at(self._position), dst_size);
+      std::memcpy(dst, self._view.data_at(self._position), dst_size);
       self._position += dst_size;
+      return true;
    }
 
    constexpr void base_bytereader::skip_bytes(size_t s) {
@@ -333,7 +336,7 @@ namespace lu::bytestreams {
    #pragma endregion
 
    void base_bytereader::unchecked_read_bytes(this auto& self, void* dst, size_t dst_size) {
-      std::memcpy(dst, self.data_at(self._position), dst_size);
+      std::memcpy(dst, self._view.data_at(self._position), dst_size);
       self._position += dst_size;
    }
 }

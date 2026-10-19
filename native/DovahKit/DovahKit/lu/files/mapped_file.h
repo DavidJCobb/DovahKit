@@ -4,7 +4,6 @@
 #endif
 #include <cstddef> // std::uintptr_t
 #include <cstdio> // FILE*
-#include <cstring> // std::memcpy
 #include <filesystem>
 #include <system_error> // std::error_code
 
@@ -22,6 +21,14 @@ namespace lu::files {
          mapped_file() noexcept {}
          mapped_file(const std::filesystem::path& path) { this->open(path); }
          ~mapped_file();
+
+         #pragma region Copy/move
+            mapped_file(const mapped_file&) = delete;
+            mapped_file& operator=(const mapped_file&) = delete;
+
+            mapped_file(mapped_file&&) noexcept;
+            mapped_file& operator=(mapped_file&&) noexcept;
+         #pragma endregion
          
          constexpr const void* data() const noexcept { return this->_view; }
          constexpr const void* data_at(std::ptrdiff_t offset) const noexcept {
@@ -29,7 +36,7 @@ namespace lu::files {
          }
          constexpr size_type size() const noexcept { return this->_size; }
 
-         constexpr operator bool() const noexcept { this->_view != nullptr; }
+         constexpr operator bool() const noexcept { return this->_view != nullptr; }
          
          void open(FILE*);
          void open(FILE*, std::error_code&) noexcept;

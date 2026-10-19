@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="lu::integral_character_code&lt;*&gt;">
+      <Intrinsic Name="get_character_count" Expression="$T1" />
+      <Intrinsic Name="get_nth_character" Expression="(char)(wrapped_integral &gt;&gt; ((get_character_count() - 1 - n) * 8))">
+         <Parameter Name="n" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_ascii_printable_char" Expression="c &gt;= 0x20 &amp;&amp; c &lt;= 0x7E">
+         <Parameter Name="c" Type="char" />
+      </Intrinsic>
+      <Intrinsic Name="_nth_character_is_ascii_printable_or_absent" Expression="(n &gt;= get_character_count()) || _ascii_printable_char(get_nth_character(n))">
+         <Parameter Name="n" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_ascii_printable" Expression="
+         _nth_character_is_ascii_printable_or_absent(0) &amp;&amp;
+         _nth_character_is_ascii_printable_or_absent(1) &amp;&amp;
+         _nth_character_is_ascii_printable_or_absent(2) &amp;&amp;
+         _nth_character_is_ascii_printable_or_absent(3) &amp;&amp;
+         _nth_character_is_ascii_printable_or_absent(4) &amp;&amp;
+         _nth_character_is_ascii_printable_or_absent(5) &amp;&amp;
+         _nth_character_is_ascii_printable_or_absent(6) &amp;&amp;
+         _nth_character_is_ascii_printable_or_absent(7) &amp;&amp;
+         _nth_character_is_ascii_printable_or_absent(8)
+      " />
+
+      <Intrinsic Name="_ch" Expression="(const char*)&amp;wrapped_integral + ((std::endian::native == std::endian::little) ? (get_character_count() - n - 1) : n)">
+         <Parameter Name="n" Type="size_t" />
+      </Intrinsic>
+
+      <DisplayString Condition="_ascii_printable() &amp;&amp; get_character_count() == 1">{_ch(0),[1]sb}</DisplayString>
+      <DisplayString Condition="_ascii_printable() &amp;&amp; get_character_count() == 2">{_ch(0),[1]sb}{_ch(1),[1]sb}</DisplayString>
+      <DisplayString Condition="_ascii_printable() &amp;&amp; get_character_count() == 4">{_ch(0),[1]sb}{_ch(1),[1]sb}{_ch(2),[1]sb}{_ch(3),[1]sb}</DisplayString>
+      <DisplayString Condition="_ascii_printable() &amp;&amp; get_character_count() == 8">{_ch(0),[1]sb}{_ch(1),[1]sb}{_ch(2),[1]sb}{_ch(3),[1]sb}{_ch(4),[1]sb}{_ch(5),[1]sb}{_ch(6),[1]sb}{_ch(7),[1]sb}</DisplayString>
+      <DisplayString Condition="_ascii_printable()">{(const char*)&amp;wrapped_integral,[get_character_count()]sb}</DisplayString>
+      <DisplayString>{wrapped_integral,Xb}</DisplayString>
+   </Type>
+</AutoVisualizer>

@@ -74,6 +74,9 @@
     <ClCompile Include="lu\bit\byteswap_in_place.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tests\basic\count_all_records.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -181,13 +184,7 @@
     <ClInclude Include="lu\memory\basic_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\tes\serialization\serialized_bytecount_of.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\tes\reading\subrecord_view.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\tes\serialization\can_be_copied.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lu\concepts\instantiation_of\std_array.h">
@@ -379,6 +376,15 @@
     <ClInclude Include="dovah\tes\reading\exceptions\truncated_subrecord.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tests\basic\count_all_records.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\concepts\supports_std_tuple_element.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\concepts\supports_std_tuple_size.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -401,5 +407,6 @@
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />
     <Natvis Include="lu\enums\enum_in.natvis" />
+    <Natvis Include="lu\integral_character_code.natvis" />
   </ItemGroup>
 </Project>

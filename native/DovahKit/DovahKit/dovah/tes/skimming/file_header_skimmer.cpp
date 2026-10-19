@@ -41,7 +41,7 @@ namespace {
             if (this->_signature) {
                this->skip();
             }
-            if (ftell(this->file) >= this->record_end)
+            if ((uint32_t)ftell(this->file) >= this->record_end)
                return false;
             auto f = this->file;
             _read(f, this->_signature);
@@ -105,7 +105,7 @@ namespace dovah::tes {
 
       {
          lu::four_cc signature;
-         if (fread(&signature.value, sizeof(signature.value), 1, file) != 1) {
+         if (fread(&signature.wrapped_integral, sizeof(signature.wrapped_integral), 1, file) != 1) {
             _throw_on_malformed();
          }
          if (signature == std::byteswap('TES4')) { // signatures have opposite endianness from everything else
@@ -129,8 +129,8 @@ namespace dovah::tes {
             }
          }
       };
-      auto _skip = [file](size_t bytes) {
-         fseek(file, bytes, SEEK_CUR);
+      auto _skip = [file](uint32_t bytes) {
+         fseek(file, (long)bytes, SEEK_CUR);
       };
 
       uint32_t record_size = 0;

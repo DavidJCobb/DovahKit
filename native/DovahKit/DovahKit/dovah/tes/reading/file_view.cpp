@@ -3,6 +3,7 @@
 #include "dovah/form_type_info.h"
 #include "dovah/utils/files/tes/signature_is_suspicious.h"
 #include "../file.h"
+#include "./exceptions/groups_too_deeply_nested.h"
 #include "./exceptions/record_decompression_failed.h"
 #include "./exceptions/record_has_invalid_signature.h"
 
@@ -49,6 +50,8 @@ namespace dovah::tes {
    }
 
    void file_view::_open_group_here() {
+      const size_t position_of_new_group = this->_reader.position() - sizeof(lu::four_cc);
+
       int32_t parent = -1;
       for (uint32_t i = 0; i < this->groups.size(); i++) {
          auto& group = this->groups[i];
@@ -56,9 +59,16 @@ namespace dovah::tes {
             break;
          parent = i;
       }
-      assert(parent + 1 < this->groups.size());
+      if (parent + 1 >= this->groups.size()) {
+         std::vector<size_t> group_offsets;
+         group_offsets.reserve(this->groups.size() + 1);
+         for (auto& group : this->groups)
+            group_offsets.push_back(group.position);
+         group_offsets.push_back(position_of_new_group);
+         throw groups_too_deeply_nested(*this->_target_file, std::move(group_offsets));
+      }
       auto& group = this->groups[parent + 1];
-      group.position  = this->_reader.position() - sizeof(lu::four_cc);
+      group.position  = position_of_new_group;
       group.signature = 'GRUP';
       this->_reader.read(
          group.size,
@@ -72,7 +82,7 @@ namespace dovah::tes {
 
    bool file_view::_open_record_here(lu::four_cc signature) {
       auto& record = this->subviews.record;
-      record.file_offsets.head = this->_reader.position() - sizeof(lu::four_cc);
+      record.file_offsets.head = (record_view::size_type)(this->_reader.position() - sizeof(lu::four_cc));
       if (auto* group = this->get_current_group())
          if (record.file_offsets.head >= group->end)
             return false;
@@ -87,7 +97,7 @@ namespace dovah::tes {
          record.header.version,
          record.header.version_control_2
       );
-      record.file_offsets.body = this->_reader.position();
+      record.file_offsets.body = (record_view::size_type)this->_reader.position();
       record.file_offsets.end  = record.file_offsets.body + record.header.size;
       if (!this->_reader.is_in_bounds()) {
          record.set_buffer({});
@@ -211,7 +221,7 @@ namespace dovah::tes {
       for (; i < this->groups.size(); ++i)
          if (!this->groups[i].signature)
             return &this->groups[i - 1];
-      return &this->groups[i];
+      return &this->groups[i - 1];
    }
    file_view::chunk_type file_view::next_record_or_group() {
       if (!this->_target_file)
@@ -229,11 +239,6 @@ namespace dovah::tes {
             subrecord._body_pos  = 0;
             subrecord.set_buffer({});
          }
-      } else {
-         auto* group = this->get_current_group();
-         if (group) {
-            this->_reader.unchecked_seek(group->end);
-         }
       }
       //
       // Make sure we properly handle passing the end of a group, and account for 
@@ -245,23 +250,23 @@ namespace dovah::tes {
          for (; i < this->groups.size(); ++i) {
             auto& group = this->groups[i];
             //
-            // Shenanigans with `goto`: we know (but the compiler doesn't) that the 
-            // group list represents nested groups: if we've reached or exceeded the 
-            // end-position of an outer group, then we must necessarily also have 
+            // Shenanigans with control flow: we know (but the compiler won't) that 
+            // the group list represents nested groups: if we've reached or exceeded 
+            // the end-position of an outer group, then we must necessarily also have 
             // reached or exceeded the end-position of an inner group (unless the 
             // file is malformed). Thus we only need to compare positions until we 
             // find a group we've reached or passed the end of, and then we can just 
             // blindly close all opened groups thereafter.
             //
             if (!group.signature)
-               goto done;
-            if (position >= group.end)
                break;
+            if (position >= group.end) {
+               do {
+                  this->groups[i] = {};
+               } while ((++i < this->groups.size()) && this->groups[i].signature);
+               break;
+            }
          }
-         do {
-            this->groups[i] = {};
-         } while ((++i < this->groups.size()) && this->groups[i].signature);
-      done:
       }
       if (!this->_reader.is_in_bounds()) // bounds-check the earlier seek operation
          return chunk_type::none;

@@ -63,7 +63,7 @@ namespace dovah::tes {
          void move_to_masters(const file_name_type& name);
          
          constexpr uint16_t size() const noexcept {
-            return this->masters.size() + this->plugins.size();
+            return (uint16_t)(this->masters.size() + this->plugins.size());
          }
          
          void add(const file_name_type& name, bool is_master_of_master = false);

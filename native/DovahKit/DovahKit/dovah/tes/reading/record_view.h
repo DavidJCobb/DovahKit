@@ -4,8 +4,6 @@
 #include "lu/memory/basic_buffer.h"
 #include "../bytereader.h"
 #include "../record_header.h"
-#include "../serialization/can_be_copied.h"
-#include "../serialization/serialized_bytecount_of.h"
 #include "./impl/enforce_endianness.h"
 namespace dovah {
    namespace tes {
@@ -18,7 +16,7 @@ namespace dovah {
 
 namespace dovah::tes {
    class record_view;
-   class record_view : bytereader {
+   class record_view : public bytereader {
       friend file_view;
       public:
          using size_type = decltype(record_header::size);

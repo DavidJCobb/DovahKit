@@ -4,6 +4,8 @@
 #include <QMessageBox>
 #include "dovah/tes/file_load_order.h"
 #include "dovah/tes/file_queue.h"
+#include "dovah/exceptions/file_load_error.h"
+#include "dovah/exceptions/load_order_error.h"
 #pragma region Errors to strings
    #include "editor/localize/exceptions/file_load_error.h"
    #include "editor/localize/exceptions/load_order_error.h"

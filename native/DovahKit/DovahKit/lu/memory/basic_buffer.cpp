@@ -31,12 +31,14 @@ namespace lu::memory {
       basic_buffer::basic_buffer(basic_buffer&& other) noexcept {
          this->_data = other._data;
          this->_size = other._size;
-         other = {};
+         other._data = nullptr;
+         other._size = 0;
       }
       basic_buffer& basic_buffer::operator=(basic_buffer&& other) noexcept {
          this->_data = other._data;
          this->_size = other._size;
-         other = {};
+         other._data = nullptr;
+         other._size = 0;
          return *this;
       }
    #pragma endregion

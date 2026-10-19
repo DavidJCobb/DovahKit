@@ -1,13 +1,29 @@
 #include "./mapped_file.h"
 #include <cstdint>
+#include <windows.h> // CloseHandle, CreateFile(A|W), GetLastError
 #include <io.h> // _get_osfhandle
 #include <memoryapi.h> // MapViewOfFile, UnmapViewOfFile
-#include <windows.h> // CloseHandle, CreateFile(A|W), GetLastError
 
 namespace lu::files {
    mapped_file::~mapped_file() {
       this->_close();
    }
+   
+   #pragma region Copy/move
+      mapped_file::mapped_file(mapped_file&& other) noexcept {
+         this->_view = other._view;
+         this->_size = other._size;
+         other._view = nullptr;
+         other._size = 0;
+      }
+      mapped_file& mapped_file::operator=(mapped_file&& other) noexcept {
+         this->_view = other._view;
+         this->_size = other._size;
+         other._view = nullptr;
+         other._size = 0;
+         return *this;
+      }
+   #pragma endregion
 
    void mapped_file::open(FILE* file) {
       std::error_code ec;
@@ -60,13 +76,12 @@ namespace lu::files {
          return;
       }
       this->_view = MapViewOfFile(mapped_file, FILE_MAP_READ, 0, 0, 0);
+      CloseHandle(mapped_file);
       if (this->_view == nullptr) {
          ec = std::error_code(GetLastError(), std::system_category());
-         CloseHandle(mapped_file);
-         return;
+      } else {
+         ec = {};
       }
-      CloseHandle(mapped_file);
-      ec = {};
    }
    void mapped_file::_close() noexcept {
       if (this->_view) {

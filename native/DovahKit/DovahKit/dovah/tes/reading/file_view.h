@@ -32,7 +32,7 @@ namespace dovah::tes {
          bool _open_record_here(lu::four_cc signature); // call after reading the non-GRUP signature
 
       public:
-         std::array<opened_group, 5> groups;
+         std::array<opened_group, 7> groups;
          struct {
             record_view    record;
             subrecord_view subrecord;

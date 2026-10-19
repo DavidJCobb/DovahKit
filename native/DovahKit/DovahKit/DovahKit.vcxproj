@@ -134,6 +134,7 @@
     <ClCompile Include="lu\files\mapped_file.cpp" />
     <ClCompile Include="lu\memory\basic_buffer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tests\basic\count_all_records.cpp" />
     <ClCompile Include="tests\basic\file_list_to_load_order.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +161,7 @@
     <ClInclude Include="dovah\tes\group_type.h" />
     <ClInclude Include="dovah\tes\reading\exceptions\extended_subrecord_marker_at_eof.h" />
     <ClInclude Include="dovah\tes\reading\exceptions\extended_subrecord_marker_is_invalid.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\groups_too_deeply_nested.h" />
     <ClInclude Include="dovah\tes\reading\exceptions\record_decompression_failed.h" />
     <ClInclude Include="dovah\tes\reading\exceptions\base_file_read_exception.h" />
     <ClInclude Include="dovah\tes\reading\exceptions\record_has_invalid_signature.h" />
@@ -172,8 +174,6 @@
     <ClInclude Include="dovah\tes\reading\subrecord_view.h" />
     <ClInclude Include="dovah\tes\record_flags.h" />
     <ClInclude Include="dovah\tes\record_header.h" />
-    <ClInclude Include="dovah\tes\serialization\can_be_copied.h" />
-    <ClInclude Include="dovah\tes\serialization\serialized_bytecount_of.h" />
     <ClInclude Include="dovah\tes\skimming\file_header_skimmer.h" />
     <ClInclude Include="dovah\types\bare_form_id.h" />
     <ClInclude Include="dovah\utils\files\tes\signature_is_suspicious.h" />
@@ -200,6 +200,8 @@
     <ClInclude Include="lu\concepts\all_same_as.h" />
     <ClInclude Include="lu\concepts\instantiation_of\std_array.h" />
     <ClInclude Include="lu\concepts\integer.h" />
+    <ClInclude Include="lu\concepts\supports_std_tuple_element.h" />
+    <ClInclude Include="lu\concepts\supports_std_tuple_size.h" />
     <ClInclude Include="lu\cpuinfo.h" />
     <ClInclude Include="lu\enums\enum_flags.h" />
     <ClInclude Include="lu\enums\enum_in.h" />
@@ -237,6 +239,7 @@
     <ClInclude Include="lu\utils\index_sequence_to_bool_run.h" />
     <ClInclude Include="lu\utils\integral_wrapper.h" />
     <ClInclude Include="lu\utils\type_pack_to_bool_run_by_predicate.h" />
+    <ClInclude Include="tests\basic\count_all_records.h" />
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
   </ItemGroup>
   <ItemGroup>
@@ -253,6 +256,12 @@
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />
     <Natvis Include="lu\enums\enum_in.natvis" />
+    <Natvis Include="lu\integral_character_code.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\zlib\zlib.vcxproj">
+      <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

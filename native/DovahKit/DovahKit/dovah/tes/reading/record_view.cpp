@@ -65,10 +65,10 @@ namespace dovah::tes {
             this->position() - 12,
             subrecord._signature,
             subrecord_size,
-            this->size() - this->position()
+            this->size() - (size_type)this->position()
          );
       }
-      subrecord._body_pos = this->position();
+      subrecord._body_pos = (subrecord_view::size_type)this->position();
       subrecord.set_buffer({ this->data_at_position(), subrecord_size });
       return subrecord;
    }

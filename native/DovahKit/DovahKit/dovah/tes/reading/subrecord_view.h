@@ -37,7 +37,7 @@ namespace dovah::tes {
          constexpr const void* data() const noexcept { return this->_view.data(); }
          constexpr const void* data_at(size_type s) const noexcept { return this->_view.data_at(s); }
          constexpr auto      signature() const noexcept { return this->_signature; }
-         constexpr size_type size() const noexcept { return this->_view.size(); }
+         constexpr size_type size() const noexcept { return (size_type)this->_view.size(); }
 
          constexpr size_type body_pos_in_record() const noexcept { return this->_body_pos; }
          constexpr size_type end_pos_in_record() const noexcept { return this->_body_pos + this->size(); }

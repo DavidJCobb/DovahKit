@@ -62,7 +62,7 @@ namespace lu {
             return this->wrapped_integral >> ((character_count - 1 - n) * 8);
          }
          
-         constexpr operator integral_type() const noexcept { return this->value; }
+         constexpr operator integral_type() const noexcept { return this->wrapped_integral; }
    };
 
    using two_cc   = integral_character_code<2>;
