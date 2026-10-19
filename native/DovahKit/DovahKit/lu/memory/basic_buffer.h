@@ -10,6 +10,14 @@ namespace lu::memory {
          constexpr basic_buffer() {}
          ~basic_buffer();
 
+         #pragma region Copy/move
+            basic_buffer(const basic_buffer&);
+            basic_buffer& operator=(const basic_buffer&);
+
+            basic_buffer(basic_buffer&&) noexcept;
+            basic_buffer& operator=(basic_buffer&&) noexcept;
+         #pragma endregion
+
          constexpr const void* data() const noexcept;
          constexpr void* data() noexcept;
          constexpr bool empty() const noexcept;

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="lu::enum_in&lt;*&gt;">
+      <DisplayString>{(value_type)_value,e}</DisplayString>
+      <Expand HideRawView="true" />
+   </Type>
+</AutoVisualizer>

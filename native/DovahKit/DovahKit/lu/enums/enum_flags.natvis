@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="lu::enum_flags&lt;*&gt;">
+      <DisplayString>{{ mask={_value} }}</DisplayString>
+      <Expand>
+         <Item Name="[mask]">_value</Item>
+         <Synthetic Name="[flags]">
+            <Expand>
+               <CustomListItems>
+                  <Variable Name="i" InitialValue="0"/>
+                  <Variable Name="v" InitialValue="false"/>
+                  <Loop Condition="i &lt; $T2">
+                     <Exec>v = (_value &gt;&gt; i) &amp; 1</Exec>
+                     <Item Name="[{(value_type)i,e}]">v</Item>
+                     <Exec>++i</Exec>
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

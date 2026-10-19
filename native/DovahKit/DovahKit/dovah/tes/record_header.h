@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "lu/bytestreams/customization/serialized_bytecount.h"
 #include "lu/integral_character_code.h"
 #include "./record_flags.h"
 
@@ -28,4 +29,11 @@ namespace dovah::tes {
          constexpr bool body_is_compressed() const noexcept { return this->flags.has(record_flag::compressed); }
    };
    static_assert(sizeof(record_header) == 0x18);
+}
+
+namespace lu::bytestreams {
+   template<typename Stream>
+   struct serialized_bytecount<Stream, dovah::tes::record_header> {
+      static constexpr const size_t value =  0x18;
+   };
 }

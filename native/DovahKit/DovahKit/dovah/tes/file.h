@@ -11,13 +11,19 @@ namespace dovah::tes {
          std::filesystem::path   _path;
          lu::files::mapped_file  _file;
          file_header             _header;
-         enum game               _game = game::skyrim_special;
+         game                    _game = game::skyrim_special;
          file_app_specific_flags _app_flags;
 
+      protected:
+         void _update_endianness_from_header();
+
       public:
-         constexpr const file_header& header() const noexcept {
-            return this->_header;
-         }
+         file(enum game g) : _game(g) {}
+
+         constexpr file_app_specific_flags app_flags() const noexcept { return this->_app_flags; }
+         constexpr enum game game() const noexcept { return this->_game; }
+         constexpr const file_header& header() const noexcept { return this->_header; }
+
          constexpr const void* data() const noexcept {
             return this->_file.data();
          }
@@ -30,7 +36,11 @@ namespace dovah::tes {
 
          void open(const std::filesystem::path&); // can throw.
          void close(); // intended for use during the save process, with the file then being reopened by the caller upon a successful save
-         void reopen(); // reopen the mapped file, without actually loading its contents; intended for use during the save process. can throw.
-         void reopen(const std::filesystem::path&); // reopen with an alternate path (e.g. if we couldn't save to the desired filename). can throw.
+
+         // These functions reopen the mapped file without actually loading its contents or re-parsing anything from the header. 
+         // They're intended for use during the save process. They can throw.
+         void reopen();
+         void reopen(const std::filesystem::path&); // reopen with an alternate path (e.g. if we couldn't save to the desired filename)
+         void reopen(const std::filesystem::path&, enum game); // reopen with alternate path and name (e.g. for cross-game conversions)
    };
 }

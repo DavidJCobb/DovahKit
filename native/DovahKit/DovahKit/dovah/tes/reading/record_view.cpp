@@ -1,68 +1,85 @@
 #include "./record_view.h"
 #include "./file_view.h"
 #include "../file.h"
+#include "./exceptions/extended_subrecord_marker_at_eof.h"
+#include "./exceptions/extended_subrecord_marker_is_invalid.h"
+#include "./exceptions/truncated_subrecord.h"
 
 namespace dovah::tes {
-   bool record_view::_needs_endianness_swap() const noexcept {
-      return this->owner.target_file->header().needs_endianness_swap;
-   }
-
-   const subrecord_view& record_view::get_current_subrecord() const noexcept {
-      return this->owner.subviews.subrecord;
-   }
-   subrecord_view& record_view::get_current_subrecord() noexcept {
-      return this->owner.subviews.subrecord;
-   }
    subrecord_view& record_view::next_subrecord() {
       auto& subrecord = this->owner.subviews.subrecord;
       if (subrecord) {
          auto pos = this->owner.subviews.subrecord.end_pos_in_record();
          if (pos >= this->size()) {
             subrecord._signature = 0;
-            subrecord._size = 0;
-            subrecord._body_pos = this->size();
+            subrecord._body_pos  = this->size();
+            subrecord.set_buffer({});
             return subrecord;
          }
-         this->offset = pos;
+         this->unchecked_seek(pos);
       }
       if (!this->is_in_bounds(6))
          return subrecord;
-      uint16_t size;
-      this->unchecked_read(subrecord._signature);
-      this->unchecked_read(size);
-      subrecord._size = size;
-      if (subrecord._signature == 'XXXX') {
-         //
-         // An 'XXXX' subrecord is used as a prefix for a subrecord whose size is 
-         // larger than what can be represented with the usual two-byte length.
-         //
-         bool marker_is_valid = size == 4;
-         if (this->options.log_file_syntax_errors) {
-            if (!marker_is_valid) {
-               this->_subrecord.body_start = this->_record.offset - sizeof(size); // since `_throw_file_read_error` will want this info
 
-               auto error = std::make_unique<dovah::notices::file_load_errors::extended_subrecord_marker_is_invalid>();
-               _throw_file_read_error(*this, error);
+      uint32_t subrecord_size = 0;
+      {
+         uint16_t narrow_size = 0;
+         this->unchecked_read(
+            subrecord._signature,
+            narrow_size
+         );
+         if (subrecord._signature != 'XXXX') {
+            subrecord_size = narrow_size;
+         } else {
+            //
+            // An 'XXXX' subrecord is used as a prefix for a subrecord whose size is 
+            // larger than what can be represented with the usual two-byte length.
+            //
+            if (!this->owner.options.assume_file_is_valid) {
+               if (narrow_size != sizeof(subrecord_size)) {
+                  throw extended_subrecord_marker_is_invalid(
+                     *this->owner.get_target_file(),
+                     this->file_offsets.head,
+                     this->position() - 6
+                  );
+               }
             }
+            if (!this->is_in_bounds(sizeof(subrecord_size) + sizeof(subrecord._signature) + sizeof(narrow_size))) {
+               throw extended_subrecord_marker_at_eof(
+                  *this->owner.get_target_file(),
+                  this->file_offsets.head,
+                  this->position() - 6
+               );
+            }
+            this->unchecked_read(
+               subrecord_size,
+               subrecord._signature
+            );
+            this->skip_bytes(sizeof(narrow_size));
          }
-         static_assert(sizeof(subrecord._size) == 4, "XXXX subrecords store a four-byte subrecord length. Alter the struct definition accordingly.");
-         if (!this->is_in_bounds(sizeof(subrecord._size) + sizeof(subrecord._signature) + sizeof(size))) {
-            _throw_file_read_error(*this, error);
-         }
-         this->unchecked_read(subrecord._size);
-         this->unchecked_read(subrecord._signature);
-         this->skip_bytes(2);
       }
-      subrecord._body_pos  = this->offset;
+      if (!this->is_in_bounds(subrecord_size)) {
+         throw truncated_subrecord(
+            *this->owner.get_target_file(),
+            this->file_offsets.head,
+            this->position() - 12,
+            subrecord._signature,
+            subrecord_size,
+            this->size() - this->position()
+         );
+      }
+      subrecord._body_pos = this->position();
+      subrecord.set_buffer({ this->data_at_position(), subrecord_size });
       return subrecord;
    }
    lu::four_cc record_view::peek_next_subrecord_signature() {
       auto pos = this->owner.subviews.subrecord.end_pos_in_record();
-      if (pos < this->end) {
+      if (pos + 4 < this->header.size) {
+         auto prior = this->position();
+         this->unchecked_seek(pos);
          lu::four_cc v;
-         v.value = *(lu::four_cc::integral_type*)this->data_at(pos);
-         if (!_needs_endianness_swap()) // negate; signatures use the opposite endianness of everything else
-            v.value = std::byteswap(v.value);
+         this->unchecked_read(v);
+         this->unchecked_seek(prior);
          return v;
       }
       return 0;

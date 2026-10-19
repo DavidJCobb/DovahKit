@@ -1,11 +1,45 @@
 #include "./basic_buffer.h"
-#include <cstdlib>
-#include <stdexcept>
+#include <cstdlib> // free, malloc
+#include <cstring> // memcpy
+#include <stdexcept> // std::bad_alloc
 
 namespace lu::memory {
    basic_buffer::~basic_buffer() {
       this->clear();
    }
+
+   #pragma region Copy/move
+      basic_buffer::basic_buffer(const basic_buffer& other) {
+         const size_t size = other._size;
+         if (size) {
+            this->resize(size);
+            #pragma warning(suppress: 6387, justification: "`this->_data` can't be null here; if `resize` fails, it throws")
+            memcpy(this->_data, other._data, size);
+         }
+      }
+      basic_buffer& basic_buffer::operator=(const basic_buffer& other) {
+         const size_t size = other._size;
+         if (!size) {
+            this->clear();
+         } else {
+            this->resize(size);
+            memcpy(this->_data, other._data, size);
+         }
+         return *this;
+      }
+
+      basic_buffer::basic_buffer(basic_buffer&& other) noexcept {
+         this->_data = other._data;
+         this->_size = other._size;
+         other = {};
+      }
+      basic_buffer& basic_buffer::operator=(basic_buffer&& other) noexcept {
+         this->_data = other._data;
+         this->_size = other._size;
+         other = {};
+         return *this;
+      }
+   #pragma endregion
 
    void basic_buffer::clear() {
       if (this->_data) {

@@ -11,6 +11,6 @@ namespace dovah::tes {
 
    void subrecord_view::read_all_to_string(std::string& dst) {
       dst.assign((const char*)this->data(), this->size());
-      this->get_containing_record().skip_bytes(this->size() - this->current_offset());
+      this->seek(this->size());
    }
 }

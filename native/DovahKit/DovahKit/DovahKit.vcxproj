@@ -75,6 +75,7 @@
       <ObjectFileName>$(IntDir)$(RelativeDir)</ObjectFileName>
       <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
       <AdditionalOptions>/w14996 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -85,6 +86,7 @@
       <ObjectFileName>$(IntDir)$(RelativeDir)</ObjectFileName>
       <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
       <AdditionalOptions>/w14996 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -127,6 +129,7 @@
     <ClCompile Include="editor\localize\exceptions\file_load_error.cpp" />
     <ClCompile Include="editor\localize\exceptions\load_order_error.cpp" />
     <ClCompile Include="lu\ascii\equals_i.cpp" />
+    <ClCompile Include="lu\bit\byteswap_in_place.cpp" />
     <ClCompile Include="lu\cpuinfo.cpp" />
     <ClCompile Include="lu\files\mapped_file.cpp" />
     <ClCompile Include="lu\memory\basic_buffer.cpp" />
@@ -141,8 +144,12 @@
     <ClInclude Include="dovah\exceptions\load_order_errors\cyclical_dependency_between_files.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\desired_active_file_is_a_dependency.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\load_order_would_have_too_many_files.h" />
+    <ClInclude Include="dovah\facts\form_type_group_sequence_list.h" />
     <ClInclude Include="dovah\facts\game\game_supports_light_plugins.h" />
+    <ClInclude Include="dovah\form_type.h" />
+    <ClInclude Include="dovah\form_type_info.h" />
     <ClInclude Include="dovah\game.h" />
+    <ClInclude Include="dovah\tes\bytereader.h" />
     <ClInclude Include="dovah\tes\file.h" />
     <ClInclude Include="dovah\tes\file_app_specific_flags.h" />
     <ClInclude Include="dovah\tes\file_header.h" />
@@ -151,6 +158,14 @@
     <ClInclude Include="dovah\tes\file_queue.h" />
     <ClInclude Include="dovah\tes\group_header.h" />
     <ClInclude Include="dovah\tes\group_type.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\extended_subrecord_marker_at_eof.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\extended_subrecord_marker_is_invalid.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\record_decompression_failed.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\base_file_read_exception.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\record_has_invalid_signature.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\structural_error_involving_record.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\structural_error_involving_subrecord.h" />
+    <ClInclude Include="dovah\tes\reading\exceptions\truncated_subrecord.h" />
     <ClInclude Include="dovah\tes\reading\file_view.h" />
     <ClInclude Include="dovah\tes\reading\impl\enforce_endianness.h" />
     <ClInclude Include="dovah\tes\reading\record_view.h" />
@@ -160,10 +175,28 @@
     <ClInclude Include="dovah\tes\serialization\can_be_copied.h" />
     <ClInclude Include="dovah\tes\serialization\serialized_bytecount_of.h" />
     <ClInclude Include="dovah\tes\skimming\file_header_skimmer.h" />
+    <ClInclude Include="dovah\types\bare_form_id.h" />
+    <ClInclude Include="dovah\utils\files\tes\signature_is_suspicious.h" />
     <ClInclude Include="editor\localize\errno_code.h" />
     <ClInclude Include="editor\localize\exceptions\file_load_error.h" />
     <ClInclude Include="editor\localize\exceptions\load_order_error.h" />
     <ClInclude Include="lu\ascii\equals_i.h" />
+    <ClInclude Include="lu\bit\all_ones.h" />
+    <ClInclude Include="lu\bit\byteswap_in_place.h" />
+    <ClInclude Include="lu\bit\edit_bit.h" />
+    <ClInclude Include="lu\bit\replace_bits_at_index.h" />
+    <ClInclude Include="lu\bit\replace_most_significant_bits.h" />
+    <ClInclude Include="lu\bytestreams\apply_modifiers.h" />
+    <ClInclude Include="lu\bytestreams\base_bytereader.h" />
+    <ClInclude Include="lu\bytestreams\concepts\can_read_struct.h" />
+    <ClInclude Include="lu\bytestreams\concepts\checked_reads_can_be_implemented_using_unchecked_reads.h" />
+    <ClInclude Include="lu\bytestreams\concepts\serializable_scalar.h" />
+    <ClInclude Include="lu\bytestreams\concepts\unchecked_read_is_noexcept.h" />
+    <ClInclude Include="lu\bytestreams\customization\serialized_bytecount.h" />
+    <ClInclude Include="lu\bytestreams\customization\type_has_opposite_endianness.h" />
+    <ClInclude Include="lu\bytestreams\impl\modifier_wrapper.h" />
+    <ClInclude Include="lu\bytestreams\strip_modifiers.h" />
+    <ClInclude Include="lu\bytestreams\unwrap_modifiers.h" />
     <ClInclude Include="lu\concepts\all_same_as.h" />
     <ClInclude Include="lu\concepts\instantiation_of\std_array.h" />
     <ClInclude Include="lu\concepts\integer.h" />
@@ -172,21 +205,54 @@
     <ClInclude Include="lu\enums\enum_in.h" />
     <ClInclude Include="lu\files\file_pointer_guard.h" />
     <ClInclude Include="lu\files\mapped_file.h" />
+    <ClInclude Include="lu\foreach_lambda_result.h" />
     <ClInclude Include="lu\integral_character_code.h" />
+    <ClInclude Include="lu\macros\FORCE_INLINE.define.h" />
+    <ClInclude Include="lu\macros\FORCE_INLINE.undef.h" />
+    <ClInclude Include="lu\macros\NO_UNIQUE_ADDRESS.define.h" />
+    <ClInclude Include="lu\macros\NO_UNIQUE_ADDRESS.undef.h" />
+    <ClInclude Include="lu\macros\RESTRICT.define.h" />
+    <ClInclude Include="lu\macros\RESTRICT.undef.h" />
     <ClInclude Include="lu\memory\basic_buffer.h" />
     <ClInclude Include="lu\memory\buffer_view.h" />
     <ClInclude Include="lu\singleton.h" />
+    <ClInclude Include="lu\tuples\contains_type.h" />
+    <ClInclude Include="lu\tuples\prepend_types.h" />
+    <ClInclude Include="lu\tuples\unpack_types_into_template.h" />
+    <ClInclude Include="lu\type_aliases\enum_type_to_underlying.h" />
+    <ClInclude Include="lu\type_aliases\transfer_variadics.h" />
+    <ClInclude Include="lu\type_aliases\tuple_like_to_tuple_type.h" />
     <ClInclude Include="lu\type_aliases\uint_of_size.h" />
+    <ClInclude Include="lu\type_traits\is_std_array.h" />
+    <ClInclude Include="lu\type_traits\is_std_pair.h" />
+    <ClInclude Include="lu\type_traits\is_std_tuple.h" />
+    <ClInclude Include="lu\type_traits\is_std_vector.h" />
+    <ClInclude Include="lu\type_traits\set_const.h" />
+    <ClInclude Include="lu\type_traits\templated_call_operator.h" />
+    <ClInclude Include="lu\utils\boolean_type_trait_to_lambda.h" />
+    <ClInclude Include="lu\utils\bool_sequences\clear_all_from.h" />
+    <ClInclude Include="lu\utils\bool_sequences\intersection.h" />
+    <ClInclude Include="lu\utils\bool_sequences\sequence_has_one_true_run.h" />
+    <ClInclude Include="lu\utils\bool_sequences\true_run_extents_of.h" />
+    <ClInclude Include="lu\utils\index_sequence_to_bool_run.h" />
+    <ClInclude Include="lu\utils\integral_wrapper.h" />
+    <ClInclude Include="lu\utils\type_pack_to_bool_run_by_predicate.h" />
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl" />
+    <None Include="dovah\tes\reading\record_view.inl" />
     <None Include="dovah\_docs\file loading.md">
       <SubType>
       </SubType>
     </None>
+    <None Include="lu\bytestreams\base_bytereader.inl" />
     <None Include="lu\memory\basic_buffer.inl" />
     <None Include="lu\memory\buffer_view.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="lu\enums\enum_flags.natvis" />
+    <Natvis Include="lu\enums\enum_in.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

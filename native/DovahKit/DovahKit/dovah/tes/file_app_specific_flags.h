@@ -7,6 +7,7 @@ namespace dovah::tes {
       is_none_stub_dummy,
       file_extension_forces_light,
       file_extension_forces_master,
+      is_opposite_endianness,
    };
 
    using file_app_specific_flags = lu::enum_flags<file_app_specific_flag, 16>;

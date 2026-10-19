@@ -3,22 +3,32 @@
 #include <type_traits>
 #include "../concepts/all_same_as.h"
 #include "../type_aliases/uint_of_size.h"
+#include "../utils/integral_wrapper.h"
 
 namespace lu {
+   namespace impl::enum_flags {
+      template<size_t Bits>
+      using mask_type = uint_of_size<(Bits / 8 + (Bits % 8 ? 1 : 0))>;
+   }
+
    //
    // Create a bitmask type, from an enum whose members are bit indices 
    // beginning with 0 for the least-significant bit.
    //
-   template<typename Enum, size_t Bits> requires (std::is_enum_v<Enum> && Bits <= 64)
-   class enum_flags {
+   template<typename Enum, size_t Bits>
+      requires (std::is_enum_v<Enum> && Bits <= 64)
+   class enum_flags : protected utils::integral_wrapper<enum_flags<Enum, Bits>, impl::enum_flags::mask_type<Bits>> {
       public:
          static constexpr const size_t bitcount = Bits;
+         using mask_type  = impl::enum_flags::mask_type<bitcount>;
          using value_type = Enum;
-         using mask_type  = uint_of_size<(bitcount / 8 + (bitcount % 8 ? 1 : 0))>;
+      private:
+         using _my_base = utils::integral_wrapper<enum_flags, mask_type>;
+      public:
+         using _my_base::as_integral;
+         using _my_base::set_from_integral;
 
       protected:
-         mask_type _value = 0;
-
          static constexpr mask_type _to_mask(value_type v) {
             return (mask_type)1 << (mask_type)v;
          }
@@ -33,8 +43,8 @@ namespace lu {
 
             template<typename... E> requires (sizeof...(E) > 0 && concepts::all_same_as<value_type, E...>)
             constexpr enum_flags(E... values) {
-               this->_value = 0;
-               this->_value |= (_to_mask(values) | ...);
+               this->wrapped_integral = 0;
+               this->wrapped_integral |= (_to_mask(values) | ...);
             }
          #pragma endregion
 
@@ -42,63 +52,63 @@ namespace lu {
          static constexpr enum_flags from() {
             constexpr mask_type mask = (_to_mask(Values) | ...);
             enum_flags out;
-            out._value = mask;
+            out.wrapped_integral = mask;
             return out;
          }
 
          static constexpr enum_flags from_mask(mask_type mask) {
             enum_flags out;
-            out._value = mask;
+            out.wrapped_integral = mask;
             return out;
          }
 
          explicit constexpr operator mask_type() const noexcept {
-            return this->_value;
+            return this->wrapped_integral;
          }
 
          constexpr void clear() {
-            this->_value = 0;
+            this->wrapped_integral = 0;
          }
          constexpr void set(value_type v) {
-            this->_value |= _to_mask(v);
+            this->wrapped_integral |= _to_mask(v);
          }
          constexpr void unset(value_type v) {
-            this->_value &= ~_to_mask(v);
+            this->wrapped_integral &= ~_to_mask(v);
          }
          constexpr void filter_to(value_type v) {
-            this->_value &= _to_mask(v);
+            this->wrapped_integral &= _to_mask(v);
          }
 
          template<value_type... Values> requires (sizeof...(Values) > 0 && (_is_representable(Values) && ...))
          constexpr void set_each_of() {
             constexpr mask_type mask = (_to_mask(Values) | ...);
-            this->_value |= mask;
+            this->wrapped_integral |= mask;
          }
 
          template<value_type... Values> requires (sizeof...(Values) > 0 && (_is_representable(Values) && ...))
          constexpr void unset_each_of() {
             constexpr mask_type mask = (_to_mask(Values) | ...);
-            this->_value &= ~mask;
+            this->wrapped_integral &= ~mask;
          }
 
          template<value_type... Values> requires (sizeof...(Values) > 0 && (_is_representable(Values) && ...))
          constexpr void filter_to_each_of() {
             constexpr mask_type mask = (_to_mask(Values) | ...);
-            this->_value &= mask;
+            this->wrapped_integral &= mask;
          }
 
          constexpr bool has(value_type v) const noexcept {
-            return this->_value & _to_mask(v);
+            return this->wrapped_integral & _to_mask(v);
          }
          template<value_type... Values> requires (sizeof...(Values) > 0 && (_is_representable(Values) && ...))
          constexpr bool has_any_of() const noexcept {
             constexpr mask_type mask = (_to_mask(Values) | ...);
-            return !!(this->_value & mask);
+            return !!(this->wrapped_integral & mask);
          }
          template<value_type... Values> requires (sizeof...(Values) > 0 && (_is_representable(Values) && ...))
          constexpr bool has_all_of() const noexcept {
             constexpr mask_type mask = (_to_mask(Values) | ...);
-            return (this->_value & mask) == mask;
+            return (this->wrapped_integral & mask) == mask;
          }
 
          #pragma region Operator overloads
