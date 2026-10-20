@@ -4,6 +4,9 @@
 #include "dovah/game.h"
 #include "./file_app_specific_flags.h"
 #include "./file_header.h"
+namespace dovah {
+   class active_load_order;
+}
 
 namespace dovah::tes {
    class file {
@@ -13,6 +16,7 @@ namespace dovah::tes {
          file_header             _header;
          game                    _game = game::skyrim_special;
          file_app_specific_flags _app_flags;
+         active_load_order*      _active_load_order = nullptr;
 
       protected:
          void _update_endianness_from_header();
@@ -23,6 +27,11 @@ namespace dovah::tes {
          constexpr file_app_specific_flags app_flags() const noexcept { return this->_app_flags; }
          constexpr enum game game() const noexcept { return this->_game; }
          constexpr const file_header& header() const noexcept { return this->_header; }
+         constexpr const std::filesystem::path& path() const noexcept { return this->_path; }
+
+         constexpr active_load_order* get_active_load_order() const noexcept {
+            return this->_active_load_order;
+         }
 
          constexpr const void* data() const noexcept {
             return this->_file.data();

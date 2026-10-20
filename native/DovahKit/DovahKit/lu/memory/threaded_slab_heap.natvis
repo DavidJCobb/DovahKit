@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="lu::memory::threaded_slab_heap&lt;*,*&gt;::State">
+      <Expand>
+         <Item Name="[subheaps]">subheaps</Item>
+         <Synthetic Name="[unowned blocks]">
+            <Expand>
+               <CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+                  <Variable Name="i"     InitialValue="0" />
+                  <Variable Name="slab" InitialValue="(slab_type*)nullptr" />
+                  
+                  <Exec>slab = this-&gt;unowned_slabs</Exec>
+                  <If Condition="slab != nullptr">
+                     <Item Name="[{i,d}]">slab</Item>
+                     <Exec>++i</Exec>
+                     <Loop>
+                        <Exec>slab = slab-&gt;info.next</Exec>
+                        <If Condition="slab != nullptr">
+                           <Item Name="[{i,d}]">slab</Item>
+                           <Exec>++i</Exec>
+                        </If>
+                        <Break Condition="slab == nullptr" />
+                     </Loop>
+                  </If>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+   
+   <Type Name="lu::memory::threaded_slab_heap&lt;*,*&gt;::subheap">
+      <Expand>
+         <Item Optional="true" Name="[thread ID]">thread_id</Item>
+         <LinkedListItems>
+            <HeadPointer>first</HeadPointer>
+            <NextPointer>info.next</NextPointer>
+            <ValueNode>this</ValueNode>
+         </LinkedListItems>
+      </Expand>
+   </Type>
+   
+   <Type Name="lu::memory::threaded_slab_heap&lt;*,*&gt;::slab_type">
+      <DisplayString>{{ count={$T2 - info.remaining,d}, remaining={info.remaining,d} }}</DisplayString>
+      <Expand>
+         <Item Name="info">info</Item>
+         <Synthetic Name="[count]">
+            <DisplayString>{$T2 - info.remaining,d} / {$T2,d} ({info.remaining,d} remaining)</DisplayString>
+         </Synthetic>
+         <Item Name="[next alloc index]">info.start_from</Item>
+         <Synthetic Name="[buffer]">
+            <Expand>
+               <Item Name="[start]">(void*)&amp;buffer</Item>
+               <Item Name="[end]">(void*)((size_t)&amp;buffer + sizeof(buffer))</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[items]">
+            <Expand>
+               <CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+                  <Variable Name="i"         InitialValue="0" />
+                  <Variable Name="max_count" InitialValue="$T2" />
+                  <Variable Name="stride"    InitialValue="sizeof(buffer) / $T2" />
+                  
+                  <Variable Name="bitset_ci"  InitialValue="0" />
+                  <Variable Name="bitset_bit" InitialValue="0" />
+
+                  <Loop>
+                     <Exec>bitset_ci  = i / 32</Exec>
+                     <Exec>bitset_bit = this-&gt;info.presence.data[bitset_ci]</Exec>
+                     <If Condition="bitset_bit == 0">
+                        <Exec>i += 32</Exec>
+                     </If>
+                     <If Condition="bitset_bit != 0">
+                        <Exec>bitset_bit &amp;= 1 &lt;&lt; (i % 32)</Exec>
+                        <If Condition="bitset_bit != 0">
+                           <Item Name="{i}">($T1*)&amp;buffer[stride * i]</Item>
+                        </If>
+                        <Exec>++i</Exec>
+                     </If>
+                     <Break Condition="i &gt;= max_count" />
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+         <Item Name="[next slab]" Condition="info.next != nullptr">info.next</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>
