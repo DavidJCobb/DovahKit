@@ -1,5 +1,5 @@
 #include "./file_header_skimmer.h"
-#include "lu/files/file_pointer_guard.h"
+#include <fstream>
 #include "lu/integral_character_code.h"
 #include "../../exceptions/file_load_errors/filesystem_error.h"
 #include "../../exceptions/file_load_errors/malformed_file_header.h"
@@ -7,14 +7,14 @@
 namespace {
    struct _subrecord {
       protected:
-         FILE*    file;
+         std::ifstream& stream;
          uint32_t _signature = 0;
-         uint16_t size      = 0;
-         uint32_t pos; // subrecord position within the file
+         uint32_t body_start = 0;
+         uint16_t size       = 0;
          uint32_t record_end = 0; // position of containing record's end, relative to start of file
 
       public:
-         _subrecord(FILE* f, uint32_t re) : file(f), record_end(re) {}
+         _subrecord(std::ifstream& s, uint32_t re) : stream(s), record_end(re) {}
 
          constexpr const uint32_t signature() const noexcept {
             return this->_signature;
@@ -22,16 +22,17 @@ namespace {
 
       protected:
          template<typename T>
-         bool _read(FILE* file, T& field) noexcept {
-            if (fread(&field, sizeof(T), 1, file) != 1)
+         bool _read(T& field) noexcept {
+            this->stream.read((char*)&field, sizeof(field));
+            if (this->stream.gcount() < sizeof(field))
                return false;
             return true;
          }
-         void _skip(FILE* file, uint32_t byteCount) noexcept {
-            fseek(file, byteCount, SEEK_CUR);
+         void _skip(uint32_t byteCount) noexcept {
+            this->stream.seekg(byteCount, std::ios_base::cur);
          }
-         bool _check(FILE* file) noexcept {
-            if (feof(file) || ferror(file))
+         bool _check() const noexcept {
+            if (this->stream.eof() || this->stream.fail())
                return false;
             return true;
          }
@@ -41,73 +42,72 @@ namespace {
             if (this->_signature) {
                this->skip();
             }
-            if ((uint32_t)ftell(this->file) >= this->record_end)
+            if ((uint32_t)this->file_pos() >= this->record_end)
                return false;
-            auto f = this->file;
-            _read(f, this->_signature);
+            this->_read(this->_signature);
             this->_signature = _byteswap_ulong(this->_signature);
-            _read(f, this->size);
-            this->pos = ftell(f);
-            return this->_signature && _check(f);
+            this->_read(this->size);
+            this->body_start = (uint32_t)this->file_pos();
+            return this->_signature && _check();
          }
          void skip() noexcept {
             this->_signature = 0;
-            auto f   = this->file;
-            auto pos = ftell(f);
-            uint32_t offset = pos - this->pos;
+            uint32_t offset = (uint32_t)(this->file_pos() - this->body_start);
             if (offset >= this->size)
                return;
-            _skip(f, this->size - offset);
+            _skip(this->size - offset);
          }
          bool to_string(std::string& field) const noexcept {
             field.clear();
-            auto length = this->size;
-            field.resize(length);
-            auto target = const_cast<char*>(field.data());
-            if (field[length - 1] == '\0') // C++ std::strings + direct reading + null terminators = horrible, horrible mess
-               field.resize(length - 1);
-            if (fread(target, length, 1, this->file) != 1)
+            const size_t size = this->size;
+            if (!size)
+               return true;
+            field.resize(size);
+            this->stream.read((char*)field.data(), field.size());
+            if (this->stream.gcount() != field.size())
                return false;
+            if (field.back() == '\0')
+               field.resize(size - 1);
             return true;
          }
 
+         inline size_t file_pos() const noexcept {
+            return this->stream.tellg();
+         }
+
          template<typename T>
-         bool read(T& out) const noexcept {
-            uint32_t offset = ftell(this->file) - this->pos;
-            if (this->size - offset < sizeof(T))
+         bool read(T& out) noexcept {
+            uint32_t consumed = (uint32_t)(this->file_pos() - this->body_start);
+            if (this->size - consumed < sizeof(T))
                return false;
-            if (fread(&out, sizeof(T), 1, this->file) != 1)
-               return false;
-            return true;
+            return this->_read(out);
          }
          void skip_bytes(uint32_t count) noexcept {
-            uint32_t offset = ftell(this->file) - this->pos;
-            if (this->size - offset < count)
+            uint32_t consumed = (uint32_t)(this->file_pos() - this->body_start);
+            if (this->size - consumed < count)
                return;
-            fseek(this->file, count, SEEK_CUR);
+            this->_skip(count);
          }
    };
 }
 
 namespace dovah::tes {
    void file_header_skimmer::skim(const std::filesystem::path& file_path) {
-      FILE*   file;
-      errno_t err = fopen_s(&file, file_path.string().c_str(), "rb");
-      if (!file) {
-         throw exceptions::file_load_errors::filesystem_error(file_path, err);
+      std::ifstream stream(file_path, std::ios_base::binary);
+      if (!stream) {
+         throw exceptions::file_load_errors::filesystem_error(file_path, errno);
       }
 
-      lu::files::file_pointer_guard guard(file); // calls fclose for us
-
-      auto _throw_on_malformed = [&file_path, file]() {
-         throw exceptions::file_load_errors::malformed_file_header(file_path, ftell(file));
+      auto _throw_on_malformed = [&file_path, &stream]() {
+         throw exceptions::file_load_errors::malformed_file_header(file_path, stream.tellg());
       };
 
       {
          lu::four_cc signature;
-         if (fread(&signature.wrapped_integral, sizeof(signature.wrapped_integral), 1, file) != 1) {
+         const auto fuckfuckfuck = sizeof(signature);
+         stream.read((char*)&signature, sizeof(signature));
+         if (stream.gcount() != 4)
             _throw_on_malformed();
-         }
          if (signature == std::byteswap('TES4')) { // signatures have opposite endianness from everything else
             this->results.endianness = std::endian::little;
          } else if (signature == 'TES4') {
@@ -117,9 +117,11 @@ namespace dovah::tes {
          }
       }
 
-      auto _read = [this, file, &_throw_on_malformed](auto& dst) {
+      auto _read = [this, &stream, &_throw_on_malformed](auto& dst) {
          using value_type = std::decay_t<decltype(dst)>;
-         if (fread(&dst, sizeof(dst), 1, file) != 1)
+
+         stream.read((char*)&dst, sizeof(dst));
+         if (stream.gcount() != sizeof(dst))
             _throw_on_malformed();
          if (this->results.endianness != std::endian::native) {
             if constexpr (lu::enum_flags_type<value_type>) {
@@ -129,8 +131,8 @@ namespace dovah::tes {
             }
          }
       };
-      auto _skip = [file](uint32_t bytes) {
-         fseek(file, (long)bytes, SEEK_CUR);
+      auto _skip = [&stream](uint32_t bytes) {
+         stream.seekg(bytes, std::ios_base::cur);
       };
 
       uint32_t record_size = 0;
@@ -154,7 +156,7 @@ namespace dovah::tes {
       }
 
       uint32_t   last_subrecord = 0;
-      _subrecord subrecord(file, ftell(file) + record_size);
+      _subrecord subrecord(stream, (uint32_t)stream.tellg() + record_size);
       while (subrecord.open()) {
          switch (subrecord.signature()) {
             case 'HEDR':

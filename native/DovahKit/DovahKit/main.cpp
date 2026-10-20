@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
    lu::cpuinfo::get_or_create();
 
    QApplication app(argc, argv);
-   //QTimer::singleShot(0, &dovahkit::tests::file_list_to_load_order);
-   QTimer::singleShot(0, &dovahkit::tests::count_all_records);
+   QTimer::singleShot(0, &dovahkit::tests::file_list_to_load_order);
+   //QTimer::singleShot(0, &dovahkit::tests::count_all_records);
    return app.exec();
 }
