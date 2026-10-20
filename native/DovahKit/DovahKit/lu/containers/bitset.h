@@ -9,6 +9,10 @@
 namespace lu {
    template<size_t Bitcount>
    class bitset {
+      public:
+         static constexpr const size_t index_of_none = (size_t)-1;
+         static constexpr const size_t npos          = index_of_none; // STL-style alternate name
+
       private:
          using chunk_type = uint32_t;
          static_assert(std::is_unsigned_v<chunk_type>);
@@ -147,16 +151,16 @@ namespace lu {
          // Finds the first zero bit in the set. This function performs significantly better 
          // than looping from 0 to `count` and testing each bit by hand, as you would have to 
          // do when using `std::bitset`.
-         constexpr int32_t find_first_clear() const;
+         constexpr size_t find_first_clear() const;
 
          // Finds the first zero bit in the set. This function performs significantly better 
          // than looping from `index` to `count` and testing each bit by hand, as you would 
          // have to do when using `std::bitset`.
-         constexpr int32_t find_first_clear_from(uint32_t index) const;
+         constexpr size_t find_first_clear_from(uint32_t index) const;
 
-         constexpr int32_t find_first_set() const;
+         constexpr size_t find_first_set() const;
 
-         constexpr int32_t find_first_set_from(uint32_t index) const;
+         constexpr size_t find_first_set_from(uint32_t index) const;
          
          #pragma region Span operations
             // Extract a span of bits from the bitset, wherein the size of the span is 

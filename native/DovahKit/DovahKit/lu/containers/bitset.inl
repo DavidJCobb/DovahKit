@@ -123,7 +123,7 @@ namespace lu {
    }
 
    TEMPLATE_PARAMS
-   constexpr int32_t CLASS_NAME::find_first_clear() const {
+   constexpr size_t CLASS_NAME::find_first_clear() const {
       for (size_t i = 0; i < undershoot_cc; i++) {
          auto chunk = this->data[i];
          if (chunk != all_bits_set) {
@@ -142,15 +142,15 @@ namespace lu {
             constexpr auto _offset = (chunk_count - 1) * bits_per_chunk;
             auto j = std::countr_one(chunk);
             if (j >= bits_in_partial)
-               return -1;
+               return index_of_none;
             return _offset + j;
          }
       }
-      return -1;
+      return index_of_none;
    }
 
    TEMPLATE_PARAMS
-   constexpr int32_t CLASS_NAME::find_first_clear_from(uint32_t index) const {
+   constexpr size_t CLASS_NAME::find_first_clear_from(uint32_t index) const {
       size_t  ci = index / bits_per_chunk; // chunks to skip
       uint8_t bi = index % bits_per_chunk; // bits   to skip
       {
@@ -180,26 +180,26 @@ namespace lu {
             constexpr auto _offset = (chunk_count - 1) * bits_per_chunk;
             auto j = std::countr_one(chunk);
             if (j >= bits_in_partial)
-               return -1;
+               return index_of_none;
             return _offset + j;
          }
       }
-      return -1;
+      return index_of_none;
    }
    
    TEMPLATE_PARAMS
-   constexpr int32_t CLASS_NAME::find_first_set() const {
+   constexpr size_t CLASS_NAME::find_first_set() const {
       for (size_t i = 0; i < chunk_count; i++) {
          auto chunk = this->data[i];
          if (chunk != 0) {
             return (i * bits_per_chunk) + std::countr_zero(chunk);
          }
       }
-      return -1;
+      return index_of_none;
    }
 
    TEMPLATE_PARAMS
-   constexpr int32_t CLASS_NAME::find_first_set_from(uint32_t index) const {
+   constexpr size_t CLASS_NAME::find_first_set_from(uint32_t index) const {
       size_t  ci = index / bits_per_chunk; // chunks to skip
       uint8_t bi = index % bits_per_chunk; // bits   to skip
       {
@@ -215,7 +215,7 @@ namespace lu {
             return (i * bits_per_chunk) + std::countr_zero(chunk);
          }
       }
-      return -1;
+      return index_of_none;
    }
          
    #pragma region Span operations

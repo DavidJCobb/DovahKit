@@ -29,11 +29,11 @@ namespace lu::memory {
          if (!this->has_free_slots())
             return nullptr;
          auto i = this->info.presence.find_first_clear_from(this->info.start_from);
-         if (i < 0)
+         if (i == decltype(slab_info::presence)::index_of_none)
             return nullptr;
          std::intptr_t start = (std::intptr_t) &this->buffer;
          std::intptr_t addr  = start + (stride * i);
-         this->info.on_allocate(i);
+         this->info.on_allocate((element_index_type)i);
          return (void*)addr;
       }
 
@@ -44,7 +44,7 @@ namespace lu::memory {
          std::intptr_t b_end   = b_start + sizeof(this->buffer);
          if (m_addr >= b_start && m_addr < b_end) {
             m_addr -= b_start;
-            element_index_type index = m_addr / stride;
+            element_index_type index = (element_index_type)(m_addr / stride);
             assert(m_addr % stride == 0            && "Cannot free; element is not aligned.");
             assert(this->info.presence.test(index) && "You're freeing something that was already free!");
             this->info.on_free(index);

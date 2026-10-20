@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="lu::bitset&lt;*&gt;">
+      <Intrinsic Name="_bitcount" Expression="$T1" />
+      <DisplayString>{{ size={_bitcount()} }}</DisplayString>
+      <Expand>
+         <Item Name="[size]">_bitcount()</Item>
+         <Item Name="[bits per chunk]">bits_per_chunk</Item>
+         <Item Name="[chunks]">_data,[chunk_count]x</Item>
+         <CustomListItems>
+            <Variable Name="i" InitialValue="(size_t)0"/>
+            <Loop Condition="i &lt; _bitcount()">
+               <Item Name="[{i}]">(data[i / bits_per_chunk] &amp; ((chunk_type)1 &lt;&lt; (i % bits_per_chunk))) != 0</Item>
+               <Exec>++i</Exec>
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

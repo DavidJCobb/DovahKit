@@ -41,7 +41,7 @@ namespace lu::files {
          fpos_t _end;
          fgetpos(file, &_end);
          size = _end;
-         fseek(file, _pos, SEEK_SET);
+         fsetpos(file, &_pos);
       }
       this->_size = size;
       this->_open_from_native_handle((HANDLE)_get_osfhandle(_fileno(file)), ec);
