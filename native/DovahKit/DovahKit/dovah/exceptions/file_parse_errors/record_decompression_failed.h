@@ -1,8 +1,8 @@
 #pragma once
-#include "./base_file_read_exception.h"
+#include "./base_record_error.h"
 
-namespace dovah::tes {
-   class record_decompression_failed : public base_file_read_exception {
+namespace dovah::exceptions::file_parse_errors {
+   class record_decompression_failed : public base_record_error {
       public:
          enum class failure_type {
             claimed_size_is_too_huge_to_even_try,
@@ -15,17 +15,16 @@ namespace dovah::tes {
 
       public:
          record_decompression_failed(
-            const file&  file,
-            size_t       offset,
+            const tes::file& file,
+            size_t record_offset,
+            const tes::record_header& record_header,
             failure_type ft
          ) :
-            base_file_read_exception(file),
-            record_header_offset(offset),
+            base_record_error(file, record_offset, record_header),
             failure(ft)
          {}
 
       public:
-         size_t       record_header_offset;
          failure_type failure;
    };
 }

@@ -1,9 +1,15 @@
 #include "./record_view.h"
 #include "./file_view.h"
 #include "../file.h"
-#include "./exceptions/extended_subrecord_marker_at_eof.h"
-#include "./exceptions/extended_subrecord_marker_is_invalid.h"
-#include "./exceptions/truncated_subrecord.h"
+#include "dovah/exceptions/file_parse_errors/extended_subrecord_marker_at_eof.h"
+#include "dovah/exceptions/file_parse_errors/extended_subrecord_marker_is_invalid.h"
+#include "dovah/exceptions/file_parse_errors/truncated_subrecord.h"
+
+namespace {
+   namespace file_parse_errors {
+      using namespace dovah::exceptions::file_parse_errors;
+   }
+}
 
 namespace dovah::tes {
    subrecord_view& record_view::next_subrecord() {
@@ -37,17 +43,19 @@ namespace dovah::tes {
             //
             if (!this->owner.options.assume_file_is_valid) {
                if (narrow_size != sizeof(subrecord_size)) {
-                  throw extended_subrecord_marker_is_invalid(
+                  throw file_parse_errors::extended_subrecord_marker_is_invalid(
                      *this->owner.get_target_file(),
                      this->file_offsets.head,
+                     this->header,
                      this->position() - 6
                   );
                }
             }
             if (!this->is_in_bounds(sizeof(subrecord_size) + sizeof(subrecord._signature) + sizeof(narrow_size))) {
-               throw extended_subrecord_marker_at_eof(
+               throw file_parse_errors::extended_subrecord_marker_at_eof(
                   *this->owner.get_target_file(),
                   this->file_offsets.head,
+                  this->header,
                   this->position() - 6
                );
             }
@@ -59,9 +67,10 @@ namespace dovah::tes {
          }
       }
       if (!this->is_in_bounds(subrecord_size)) {
-         throw truncated_subrecord(
+         throw file_parse_errors::truncated_subrecord(
             *this->owner.get_target_file(),
             this->file_offsets.head,
+            this->header,
             this->position() - 12,
             subrecord._signature,
             subrecord_size,

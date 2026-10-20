@@ -1,15 +1,15 @@
 #pragma once
 #include <vector>
-#include "./base_file_read_exception.h"
+#include "../file_parse_error.h"
 
-namespace dovah::tes {
-   class groups_too_deeply_nested : public base_file_read_exception {
+namespace dovah::exceptions::file_parse_errors {
+   class groups_too_deeply_nested : public file_parse_error {
       public:
          groups_too_deeply_nested(
-            const file& file,
+            const tes::file& file,
             std::vector<size_t>&& group_offsets
          ) :
-            base_file_read_exception(file),
+            file_parse_error(file),
             group_offsets(group_offsets)
          {}
 

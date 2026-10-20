@@ -3,9 +3,15 @@
 #include "dovah/form_type_info.h"
 #include "dovah/utils/files/tes/signature_is_suspicious.h"
 #include "../file.h"
-#include "./exceptions/groups_too_deeply_nested.h"
-#include "./exceptions/record_decompression_failed.h"
-#include "./exceptions/record_has_invalid_signature.h"
+#include "dovah/exceptions/file_parse_errors/groups_too_deeply_nested.h"
+#include "dovah/exceptions/file_parse_errors/record_decompression_failed.h"
+#include "dovah/exceptions/file_parse_errors/record_has_invalid_signature.h"
+
+namespace {
+   namespace file_parse_errors {
+      using namespace dovah::exceptions::file_parse_errors;
+   }
+}
 
 namespace dovah::tes {
    file_view::file_view() : subviews(*this, *this) {
@@ -20,29 +26,29 @@ namespace dovah::tes {
 
       if (!this->options.allow_suspicious_record_signatures) {
          if (utils::files::tes::signature_is_suspicious(signature)) {
-            throw record_has_invalid_signature(
+            throw file_parse_errors::record_has_invalid_signature(
                *this->_target_file,
                record.file_offset_of_header(),
-               signature
+               record.header
             );
          }
       }
       if (!this->options.allow_unknown_record_signatures) {
          auto ft = form_type_info::signature_to_form_type(signature);
          if (ft == form_type::none) {
-            throw record_has_invalid_signature(
+            throw file_parse_errors::record_has_invalid_signature(
                *this->_target_file,
                record.file_offset_of_header(),
-               signature
+               record.header
             );
          }
          if (this->_target_file->game() == game::skyrim_classic) {
             const auto& info = form_type_info::lookup(ft);
             if (info.flags & form_type_info::flag::is_skyrim_special) {
-               throw record_has_invalid_signature(
+               throw file_parse_errors::record_has_invalid_signature(
                   *this->_target_file,
                   record.file_offset_of_header(),
-                  signature
+                  record.header
                );
             }
          }
@@ -65,7 +71,7 @@ namespace dovah::tes {
          for (auto& group : this->groups)
             group_offsets.push_back(group.position);
          group_offsets.push_back(position_of_new_group);
-         throw groups_too_deeply_nested(*this->_target_file, std::move(group_offsets));
+         throw file_parse_errors::groups_too_deeply_nested(*this->_target_file, std::move(group_offsets));
       }
       auto& group = this->groups[parent + 1];
       group.position  = position_of_new_group;
@@ -123,10 +129,11 @@ namespace dovah::tes {
          try {
             this->_decompressed_record.resize(decompressed_size);
          } catch (std::bad_alloc&) {
-            throw record_decompression_failed(
+            throw file_parse_errors::record_decompression_failed(
                *this->_target_file,
                record.file_offsets.head,
-               record_decompression_failed::failure_type::claimed_size_is_too_huge_to_even_try
+               record.header,
+               file_parse_errors::record_decompression_failed::failure_type::claimed_size_is_too_huge_to_even_try
             );
          }
          this->subviews.record.set_buffer({ this->_decompressed_record.data(), this->_decompressed_record.size() });
@@ -140,7 +147,7 @@ namespace dovah::tes {
                assert(result == Z_OK);
                assert(out_size == decompressed_size);
             } else {
-               using error_type = record_decompression_failed::failure_type;
+               using error_type = file_parse_errors::record_decompression_failed::failure_type;
 
                if (result != Z_OK) {
                   auto problem = error_type::zlib_unknown_error;
@@ -155,16 +162,18 @@ namespace dovah::tes {
                         problem = error_type::data_corrupt_or_incomplete;
                         break;
                   }
-                  throw record_decompression_failed(
+                  throw file_parse_errors::record_decompression_failed(
                      *this->_target_file,
                      record.file_offsets.head,
+                     record.header,
                      problem
                   );
                }
                if (out_size != decompressed_size) {
-                  throw record_decompression_failed(
+                  throw file_parse_errors::record_decompression_failed(
                      *this->_target_file,
                      record.file_offsets.head,
+                     record.header,
                      error_type::uncompressed_data_is_not_of_declared_size
                   );
                }
