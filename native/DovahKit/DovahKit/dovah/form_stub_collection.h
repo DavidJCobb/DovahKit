@@ -15,6 +15,10 @@ namespace dovah {
 
 namespace dovah {
    class form_stub_collection {
+      public:
+         form_stub_collection(const form_stub_collection&) = delete;
+         form_stub_collection& operator=(const form_stub_collection&) = delete;
+
       protected:
          struct _form_map {
             mutable std::mutex lock; // used only during multi-threaded file indexing

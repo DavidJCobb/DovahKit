@@ -16,6 +16,10 @@ namespace dovah {
 
 namespace dovah {
    class active_load_order {
+      public:
+         active_load_order(const active_load_order&) = delete;
+         active_load_order& operator=(const active_load_order&) = delete;
+
       protected:
          struct {
             std::vector<tes::file*> list; // owned
