@@ -87,7 +87,6 @@ namespace dovah {
 
          #pragma region Record flag functions
             void edit_record_flags(uint32_t mask, bool clear_or_set) noexcept; // also sets the form as edited
-            void edit_record_flags(tes::record_flag, bool clear_or_set) noexcept; // also sets the form as edited
             constexpr uint32_t get_record_flags() const noexcept;
             constexpr bool test_record_flags(uint32_t mask) const noexcept;
             constexpr bool test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept;

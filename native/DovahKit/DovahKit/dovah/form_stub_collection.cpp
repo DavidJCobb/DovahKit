@@ -1,8 +1,29 @@
 #include "./form_stub_collection.h"
 #include "./form_stub.h"
+#include "./form_type_info.h"
 #include "./_impl/form_stub_collection/create_hardcoded_form_stubs.h"
 
 namespace dovah {
+   form_stub* form_stub_collection::get_canonical_instance_of_singleton_form(form_type ft) const noexcept {
+      if (!(form_type_info::lookup(ft).flags & form_type_info::flag::is_singleton))
+         return nullptr;
+      uint16_t   length  = 0;
+      form_stub* longest = nullptr;
+      auto&      map     = this->forms_by_type[ft].forms;
+      for (auto pair : map) {
+         auto* stub = pair.second;
+         if (!stub)
+            continue;
+         const auto count = stub->source_file_count();
+         if (count > length) {
+            length  = count;
+            longest = stub;
+         }
+      }
+      return longest;
+   }
+   //form_stub* form_stub_collection::get_or_create_canonical_instance_of_singleton_form(form_type); // TODO
+
    void form_stub_collection::_add_hardcoded_form(form_stub& stub) {
       auto& type = this->forms_by_type[stub.form_type];
       std::lock_guard<std::mutex> guard_for_form_type(type.lock);

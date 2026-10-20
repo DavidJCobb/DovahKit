@@ -23,8 +23,8 @@ namespace dovah::tes {
          std::vector<master_entry> masters;
          // TODO: ONAM, a list of overridden records within temporary CELLs, of the following types: ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA
          // TODO: DELE
-         uint32_t subINTV;
-         uint32_t interior_cell_count; // INCC
+         uint32_t subINTV             = 0; // INTV
+         uint32_t interior_cell_count = 0; // INCC
          // TODO: SCRN
 
          // True if the "TES4" signature is in the same endianness as the system. False otherwise. 
