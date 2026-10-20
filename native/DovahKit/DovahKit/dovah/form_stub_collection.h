@@ -14,7 +14,13 @@ namespace dovah {
 }
 
 namespace dovah {
+   class form_stub_collection;
+   namespace impl::_form_stub_collection {
+      extern void create_hardcoded_form_stubs(form_stub_collection&, tes::file& hardcoded_forms_file);
+   }
+
    class form_stub_collection {
+      friend void impl::_form_stub_collection::create_hardcoded_form_stubs(form_stub_collection&, tes::file& hardcoded_forms_file);
       public:
          form_stub_collection(const form_stub_collection&) = delete;
          form_stub_collection& operator=(const form_stub_collection&) = delete;
@@ -97,6 +103,9 @@ namespace dovah {
          form_stub* get_or_create_canonical_instance_of_singleton_form(form_type);
          inline form_stub* get_form_by_id(bare_form_id);
          inline form_stub* get_form_by_id(bare_form_id, form_type);
+
+      protected:
+         void _add_hardcoded_form(form_stub&);
 
       public: // passkeyed
          void _make_hardcoded_forms(lu::passkey<active_load_order>, tes::file& hardcoded_forms_file);

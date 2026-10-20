@@ -152,6 +152,7 @@
     <ClInclude Include="dovah\exceptions\load_order_errors\cyclical_dependency_between_files.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\desired_active_file_is_a_dependency.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\load_order_would_have_too_many_files.h" />
+    <ClInclude Include="dovah\facts\actor_value_info.h" />
     <ClInclude Include="dovah\facts\form_ids\hardcoded.h" />
     <ClInclude Include="dovah\facts\form_ids\max_hardcoded_form_id.h" />
     <ClInclude Include="dovah\facts\form_type_group_sequence_list.h" />
@@ -159,7 +160,9 @@
     <ClInclude Include="dovah\facts\game\hardcoded_form_ids_ignore_record_id_prefix.h" />
     <ClInclude Include="dovah\facts\game\max_file_version.h" />
     <ClInclude Include="dovah\facts\game\min_file_version.h" />
+    <ClInclude Include="dovah\form_data\base_managed_form_data.h" />
     <ClInclude Include="dovah\form_stub.h" />
+    <ClInclude Include="dovah\form_stub_addenda.h" />
     <ClInclude Include="dovah\form_stub_collection.h" />
     <ClInclude Include="dovah\form_type.h" />
     <ClInclude Include="dovah\form_type_info.h" />
@@ -218,6 +221,8 @@
     <ClInclude Include="dovah\utils\form_stubs\can_ever_be_edited.h" />
     <ClInclude Include="dovah\utils\form_stubs\is_defined_in_active_file.h" />
     <ClInclude Include="dovah\utils\form_stubs\is_defined_or_overridden_in_active_file.h" />
+    <ClInclude Include="dovah\_impl\form_stub_collection\create_hardcoded_form_stubs.h" />
+    <ClInclude Include="dovah\_passkeys\add_form_stub_source_file.h" />
     <ClInclude Include="editor\localize\errno_code.h" />
     <ClInclude Include="editor\localize\exceptions\file_load_error.h" />
     <ClInclude Include="editor\localize\exceptions\load_order_error.h" />
@@ -293,6 +298,10 @@
     <None Include="dovah\tes\file_queue.inl" />
     <None Include="dovah\tes\reading\record_view.inl" />
     <None Include="dovah\types\file_prefix.inl" />
+    <None Include="dovah\utils\form_stubs\README.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\file loading.md">
       <SubType>
       </SubType>

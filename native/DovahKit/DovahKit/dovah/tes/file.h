@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include "lu/files/mapped_file.h"
+#include "lu/passkey.h"
 #include "dovah/game.h"
 #include "./file_app_specific_flags.h"
 #include "./file_header.h"
@@ -51,5 +52,8 @@ namespace dovah::tes {
          void reopen();
          void reopen(const std::filesystem::path&); // reopen with an alternate path (e.g. if we couldn't save to the desired filename)
          void reopen(const std::filesystem::path&, enum game); // reopen with alternate path and name (e.g. for cross-game conversions)
+
+      public: // passkeyed
+         static file* _make_hardcoded_dummy_file(lu::passkey<active_load_order>, enum game);
    };
 }

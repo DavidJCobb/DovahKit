@@ -24,6 +24,10 @@ namespace dovah {
          struct {
             std::vector<tes::file*> list; // owned
             tes::file*              active = nullptr; // unowned; also in `list`
+            struct {
+               tes::file* hardcoded  = nullptr;
+               tes::file* none_stubs = nullptr;
+            } dummies;
          } _files;
          form_stub_collection _forms;
          game                 _game = game::skyrim_classic;

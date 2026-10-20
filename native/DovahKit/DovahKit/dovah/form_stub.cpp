@@ -1,6 +1,9 @@
 #include "./form_stub.h"
 #include <cassert>
 #include "lu/bit/edit_bit.h"
+#include "./_passkeys/add_form_stub_source_file.h"
+#include "./form_data/base_managed_form_data.h"
+#include "./form_stub_addenda.h"
 #include "./tes/file.h"
 #include "./tes/record_flags.h"
 #include "./types/file_prefix.h"
@@ -172,4 +175,12 @@ namespace dovah {
          ++this->files.count;
       }
    #pragma endregion
+
+   //
+   // passkeyed
+   //
+      
+   void form_stub::_add_source_file(_passkeys::add_form_stub_source_file, tes::file& f, uint32_t record_offset, uint32_t record_flags) {
+      this->_add_source_file(f, record_offset, record_flags);
+   }
 }

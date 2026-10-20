@@ -47,4 +47,14 @@ namespace dovah::tes {
       this->_path = path;
       this->_file.open(path);
    }
+
+   //
+   // passkeyed:
+   //
+
+   /*static*/ file* file::_make_hardcoded_dummy_file(lu::passkey<active_load_order>, enum game g) {
+      auto* f = new file(g);
+      f->_app_flags.set_each_of<file_app_specific_flag::is_hardcoded_dummy>();
+      return f;
+   }
 }

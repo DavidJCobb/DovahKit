@@ -99,7 +99,7 @@ namespace dovah {
          size_t size = this->_files.list.size();
          for (size_t i = 0; i < size; ++i)
             if (this->_files.list[i] == &f)
-               return i;
+               return (int)i;
          return -1;
       }
       int active_load_order::index_of_prefix(file_prefix prefix) const noexcept {
@@ -113,7 +113,7 @@ namespace dovah {
                auto* file = this->_files.list[i];
                if (file->header().flags.has_all_of<tes::file_header_flag::light>()) {
                   if (++count == target)
-                     return i;
+                     return (int)i;
                }
             }
             return -1;
@@ -124,7 +124,7 @@ namespace dovah {
             auto* file = this->_files.list[i];
             if (!file->header().flags.has_all_of<tes::file_header_flag::light>()) {
                if (++count == target)
-                  return i;
+                  return (int)i;
             }
          }
          return -1;
@@ -139,7 +139,7 @@ namespace dovah {
       const tes::file* active_load_order::get_file_by_index(int i) const noexcept {
          auto size = this->_files.list.size();
          if (i < 0) {
-            i += size;
+            i += (int)size;
             if (i < 0)
                return nullptr;
          } else if (i >= size)
@@ -163,4 +163,9 @@ namespace dovah {
          return this->has_file(filename);
       }
    #pragma endregion
+
+   void active_load_order::_make_hardcoded_forms() {
+      auto* dummy = this->_files.dummies.hardcoded = tes::file::_make_hardcoded_dummy_file({}, this->_game);
+      this->_forms._make_hardcoded_forms({}, *dummy);
+   }
 }

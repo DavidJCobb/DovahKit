@@ -9,8 +9,12 @@
 #include "./types/bare_form_id.h"
 #include "./use_info/entry.h"
 namespace dovah {
+   namespace _passkeys {
+      class add_form_stub_source_file;
+   }
    namespace tes {
       class file;
+      enum class record_flag : uint32_t;
    }
    class active_load_order;
    class base_managed_form_data;
@@ -83,6 +87,7 @@ namespace dovah {
 
          #pragma region Record flag functions
             void edit_record_flags(uint32_t mask, bool clear_or_set) noexcept; // also sets the form as edited
+            void edit_record_flags(tes::record_flag, bool clear_or_set) noexcept; // also sets the form as edited
             constexpr uint32_t get_record_flags() const noexcept;
             constexpr bool test_record_flags(uint32_t mask) const noexcept;
             constexpr bool test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept;
@@ -105,6 +110,9 @@ namespace dovah {
          #pragma region Source file member functions (internal)
             void _add_source_file(tes::file&, uint32_t record_offset, uint32_t record_flags = 0);
          #pragma endregion
+
+      public: // passkeyed
+         void _add_source_file(_passkeys::add_form_stub_source_file, tes::file&, uint32_t record_offset, uint32_t record_flags = 0);
    };
 }
 
