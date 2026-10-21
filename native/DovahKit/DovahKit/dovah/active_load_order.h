@@ -14,6 +14,9 @@ namespace dovah {
    namespace callback_sets {
       struct data_load;
    }
+   namespace localization {
+      class string_file_bundle;
+   }
    namespace tes {
       class file;
       class file_load_order;
@@ -25,6 +28,9 @@ namespace dovah {
 namespace dovah {
    class active_load_order {
       public:
+         active_load_order();
+         ~active_load_order();
+
          active_load_order(const active_load_order&) = delete;
          active_load_order& operator=(const active_load_order&) = delete;
 
@@ -37,6 +43,7 @@ namespace dovah {
                tes::file* hardcoded  = nullptr;
                tes::file* none_stubs = nullptr;
             } dummies;
+            std::vector<localization::string_file_bundle*> string_file_bundles;
          } _files;
          bsa::archive_collection* _bsa_collection = nullptr;
          form_stub_collection     _forms{ *this };

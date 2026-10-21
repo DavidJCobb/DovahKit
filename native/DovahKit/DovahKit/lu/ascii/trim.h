@@ -9,14 +9,23 @@ namespace lu {
 
 namespace lu::ascii {
    namespace impl {
+      template<typename Char>
+      constexpr const auto _whitespace_to_trim = []() {
+         if constexpr (std::is_same_v<Char, char>) {
+            return " \f\n\r\t\v";
+         } else {
+            return L" \f\n\r\t\v";
+         }
+      }();
+
       template<typename T>
       constexpr auto find_first_non_whitespace(const T& subject) {
-         return subject.find_first_not_of(" \f\n\r\t\v");
+         return subject.find_first_not_of(_whitespace_to_trim<typename T::value_type>);
       }
 
       template<typename T>
       constexpr auto find_last_non_whitespace(const T& subject) {
-         return subject.find_last_not_of(" \f\n\r\t\v");
+         return subject.find_last_not_of(_whitespace_to_trim<typename T::value_type>);
       }
 
       template<typename T>

@@ -1,8 +1,7 @@
 #include "./get_ini_defined_bsa_list.h"
 #include "lu/ascii/trim.h"
 #include "lu/windows/read_single_ini_setting.h"
-#include "../../helpers/strings.h"
-#include "../../helpers/windows_ini.h"
+#include <windows.h>
 #include <Shlobj.h>
 
 namespace dovah::utils {
@@ -36,21 +35,19 @@ namespace dovah::utils {
       std::wstring raw = lu::windows::read_single_ini_setting(filepath.c_str(), L"Archive", L"sResourceArchiveList");
       size_t pos;
       while ((pos = raw.find(',')) != std::string::npos) {
-         auto v = raw.substr(0, pos);
-         lu::ascii::trim_in_place(v);
-         out.push_back(v);
+         out.push_back(lu::ascii::trim(raw.substr(0, pos)));
          raw.erase(0, pos + 1);
       }
       if (!raw.empty())
-         out.push_back(cobb::trim(raw));
+         out.push_back(lu::ascii::trim(raw));
       
       raw = lu::windows::read_single_ini_setting(filepath.c_str(), L"Archive", L"sResourceArchiveList2");
       while ((pos = raw.find(',')) != std::string::npos) {
-         out.push_back(cobb::trim(raw.substr(0, pos)));
+         out.push_back(lu::ascii::trim(raw.substr(0, pos)));
          raw.erase(0, pos + 1);
       }
       if (!raw.empty())
-         out.push_back(cobb::trim(raw));
+         out.push_back(lu::ascii::trim(raw));
       
       return out;
    }

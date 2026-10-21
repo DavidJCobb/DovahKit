@@ -8,12 +8,40 @@
 #include "./facts/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 #include "./facts/game_setting_types.h"
 #include "./load_order_interfaces/file_load.h"
+#include "./localization/string_file_bundle.h"
 #include "./tes/file.h"
 #include "./tes/file_load_order.h"
 #include "./types/file_prefix.h"
 #include "./utils/files/tes/normalize_next_record_id.h"
+#include "./utils/get_ini_defined_bsa_list.h"
 
 namespace dovah {
+   active_load_order::active_load_order() {
+   }
+   active_load_order::~active_load_order() {
+      this->_files.active = nullptr;
+      for (auto* file : this->_files.list) {
+         delete file;
+      }
+      this->_files.list.clear();
+      if (auto* p = this->_files.dummies.hardcoded) {
+         this->_files.dummies.hardcoded = nullptr;
+         delete p;
+      }
+      if (auto* p = this->_files.dummies.none_stubs) {
+         this->_files.dummies.none_stubs = nullptr;
+         delete p;
+      }
+      for (auto* bundle : this->_files.string_file_bundles) {
+         delete bundle;
+      }
+      this->_files.string_file_bundles.clear();
+      if (auto* p = this->_bsa_collection) {
+         this->_bsa_collection = nullptr;
+         delete p;
+      }
+   }
+
    bsa::archive_collection* active_load_order::get_or_create_bsa_collection() noexcept {
       auto* c = this->_bsa_collection;
       if (!c)
@@ -171,17 +199,21 @@ namespace dovah {
       }
       //
       // Wait for BSAs to finish loading, and then load localized strings.
+      // TODO: We could multi-thread this.
       //
       if (this->_bsa_collection) {
          this->_bsa_collection->wait_for_load_to_finish();
-         //
-         auto language = utils::get_user_language_name();
-         for (auto* file : this->_files.list) {
-            if (!file || !file->header().flags.has_all_of<tes::file_header_flag::localized_strings>())
-               continue;
-            file->localization_data = new localized_string_store(*this->_bsa_collection, file->path().filename());
-            file->localization_data->set_default_language(language);
-            file->localization_data->open_language_files(language);
+
+         const auto&  tes_list = this->_files.list;
+         auto&        str_list = this->_files.string_file_bundles;
+         const size_t size     = tes_list.size();
+         str_list.reserve(size);
+         for (size_t i = 0; i < size; ++i) {
+            auto* p = new localization::string_file_bundle(tes_list[i]->path().filename().string());
+            str_list.push_back(p);
+         }
+         for (size_t i = 0; i < size; ++i) {
+            str_list[i]->load(*this->_bsa_collection);
          }
       }
       //
