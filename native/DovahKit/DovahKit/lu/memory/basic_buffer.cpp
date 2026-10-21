@@ -35,6 +35,7 @@ namespace lu::memory {
          other._size = 0;
       }
       basic_buffer& basic_buffer::operator=(basic_buffer&& other) noexcept {
+         this->clear();
          this->_data = other._data;
          this->_size = other._size;
          other._data = nullptr;

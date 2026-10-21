@@ -59,7 +59,9 @@ namespace dovah::tes {
          file_load_order(game, std::filesystem::path&& data_directory, const file_queue&);
 
          bool has_master(const file_name_type& filename) const noexcept;
+         bool has_master(const std::string_view filename) const noexcept;
          bool has_plugin(const file_name_type& filename) const noexcept;
+         bool has_plugin(const std::string_view filename) const noexcept;
          void move_to_masters(const file_name_type& name);
          
          constexpr uint16_t size() const noexcept {

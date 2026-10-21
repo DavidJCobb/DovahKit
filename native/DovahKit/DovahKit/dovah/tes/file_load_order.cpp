@@ -34,7 +34,19 @@ namespace dovah::tes {
             return true;
       return false;
    }
+   bool file_load_order::has_master(const std::string_view name) const noexcept {
+      for (auto& info_ptr : this->masters)
+         if (lu::ascii::equals_i(info_ptr->filename, name))
+            return true;
+      return false;
+   }
    bool file_load_order::has_plugin(const std::string& name) const noexcept {
+      for (auto& info_ptr : this->plugins)
+         if (lu::ascii::equals_i(info_ptr->filename, name))
+            return true;
+      return false;
+   }
+   bool file_load_order::has_plugin(const std::string_view name) const noexcept {
       for (auto& info_ptr : this->plugins)
          if (lu::ascii::equals_i(info_ptr->filename, name))
             return true;

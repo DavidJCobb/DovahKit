@@ -5,10 +5,18 @@
 #include <vector>
 #include "lu/passkey.h"
 #include "./form_stub_collection.h"
+#include "./game_setting_collection.h"
 #include "./game.h"
 namespace dovah {
+   namespace bsa {
+      class archive_collection;
+   }
+   namespace callback_sets {
+      struct data_load;
+   }
    namespace tes {
       class file;
+      class file_load_order;
    }
    struct file_prefix;
    class  form_stub;
@@ -21,6 +29,7 @@ namespace dovah {
          active_load_order& operator=(const active_load_order&) = delete;
 
       protected:
+         std::filesystem::path _data_directory;
          struct {
             std::vector<tes::file*> list; // owned
             tes::file*              active = nullptr; // unowned; also in `list`
@@ -29,14 +38,34 @@ namespace dovah {
                tes::file* none_stubs = nullptr;
             } dummies;
          } _files;
-         form_stub_collection _forms;
-         game                 _game = game::skyrim_classic;
+         bsa::archive_collection* _bsa_collection = nullptr;
+         form_stub_collection     _forms{ *this };
+         game_setting_collection  _game_settings;
+         game _game = game::skyrim_classic;
 
       public:
+         bsa::archive_collection* get_or_create_bsa_collection() noexcept;
+         constexpr const bsa::archive_collection* get_bsa_collection() const noexcept { return this->_bsa_collection; };
+         constexpr bsa::archive_collection* get_bsa_collection() noexcept { return this->_bsa_collection; };
+
          constexpr const tes::file* get_active_file() const noexcept { return this->_files.active; }
          constexpr tes::file* get_active_file() noexcept { return this->_files.active; }
          constexpr game get_current_game() const noexcept { return this->_game; }
          constexpr const form_stub_collection& get_form_stub_collection() const noexcept { return this->_forms; }
+
+         constexpr const std::filesystem::path& get_data_directory() const noexcept { return this->_data_directory; }
+         constexpr void set_data_directory(const std::filesystem::path& v) {
+            this->_data_directory = v;
+         }
+         constexpr void set_data_directory(std::filesystem::path&& v) {
+            this->_data_directory = std::move(v);
+         }
+
+         void load(
+            tes::file_load_order&,
+            std::string_view active_file_name, // must also be in the provided FLO
+            const callback_sets::data_load&
+         );
 
          #pragma region Finding files
             file_prefix file_prefix_for(const std::filesystem::path& filename) const noexcept;
@@ -57,10 +86,13 @@ namespace dovah {
             bool has_non_active_file(const std::filesystem::path& filename) const noexcept;
          #pragma endregion
 
+         file_prefix expected_active_file_prefix_post_save(std::optional<bool> pretend_is_or_isnt_light = {}) const noexcept;
+
       public: // passkeyed
          constexpr form_stub_collection& _get_form_stub_collection(lu::passkey<form_stub>) noexcept { return this->_forms; };
 
       protected:
+         void _load_single_file(tes::file&);
          void _make_hardcoded_forms();
    };
 }

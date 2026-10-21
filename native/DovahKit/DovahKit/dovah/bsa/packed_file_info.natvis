@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::bsa::packed_file_info">
+      <DisplayString>{name,sb}</DisplayString>
+      <Expand>
+         <Item Name="[hash]">hash</Item>
+         <Item Name="[name]">name,sb</Item>
+         <Item Name="[corrupt]">corrupt</Item>
+         <Item Name="[size]">size_and_flags &amp; ~0xC0000000</Item>
+         <Item Name="[non-default compression]">(size_and_flags &amp; 0x40000000) != 0</Item>
+         <Item Name="[invalidated]">(size_and_flags &amp; 0x80000000) != 0</Item>
+         <Item Name="[offset]">offset</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

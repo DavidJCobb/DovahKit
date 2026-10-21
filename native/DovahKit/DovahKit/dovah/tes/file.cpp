@@ -2,8 +2,14 @@
 #include "lu/ascii/equals_i.h"
 #include "lu/integral_character_code.h"
 #include "./bytereader.h"
+#include "../active_load_order.h"
 
 namespace dovah::tes {
+   file::file(lu::passkey<active_load_order>, active_load_order& alo) {
+      this->_active_load_order = &alo;
+      this->_game = alo.get_current_game();
+   }
+
    void file::_update_endianness_from_header() {
       bytereader reader;
       reader.set_buffer({ this->_file.data(), this->_file.size() });

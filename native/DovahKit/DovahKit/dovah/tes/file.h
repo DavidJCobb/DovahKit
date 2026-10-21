@@ -23,12 +23,21 @@ namespace dovah::tes {
          void _update_endianness_from_header();
 
       public:
+         file(lu::passkey<active_load_order>, active_load_order&);
          file(enum game g) : _game(g) {}
 
          constexpr file_app_specific_flags app_flags() const noexcept { return this->_app_flags; }
          constexpr enum game game() const noexcept { return this->_game; }
          constexpr const file_header& header() const noexcept { return this->_header; }
+         constexpr file_header& header() noexcept { return this->_header; }
          constexpr const std::filesystem::path& path() const noexcept { return this->_path; }
+
+         constexpr bool is_light() const noexcept {
+            return this->_header.flags.has_all_of<file_header_flag::light>() || this->_app_flags.has_all_of<file_app_specific_flag::file_extension_forces_light>();
+         }
+         constexpr bool is_master() const noexcept {
+            return this->_header.flags.has_all_of<file_header_flag::master>() || this->_app_flags.has_all_of<file_app_specific_flag::file_extension_forces_master>();
+         }
 
          constexpr active_load_order* get_active_load_order() const noexcept {
             return this->_active_load_order;

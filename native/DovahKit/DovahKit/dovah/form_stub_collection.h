@@ -1,6 +1,8 @@
 #pragma once
 #include <mutex>
+#include <optional>
 #include <unordered_map>
+#include <vector>
 #include "lu/foreach_lambda_result.h"
 #include "lu/passkey.h"
 #include "./types/bare_form_id.h"
@@ -10,6 +12,7 @@ namespace dovah {
       class file;
    }
    class active_load_order;
+   class file_prefix;
    class form_stub;
 }
 
@@ -22,6 +25,7 @@ namespace dovah {
    class form_stub_collection {
       friend void impl::_form_stub_collection::create_hardcoded_form_stubs(form_stub_collection&, tes::file& hardcoded_forms_file);
       public:
+         form_stub_collection(active_load_order& owner) : owner(owner) {}
          form_stub_collection(const form_stub_collection&) = delete;
          form_stub_collection& operator=(const form_stub_collection&) = delete;
 
@@ -75,13 +79,21 @@ namespace dovah {
          };
 
       public:
+         active_load_order& owner;
          _form_map      forms;
          _typed_map_set forms_by_type;
          _form_map      active_file_forms; // forms defined OR overridden by the active file
          _typed_map_set active_file_forms_by_type;
+      protected:
+         struct {
+            std::vector<bare_form_id>    list;
+            mutable std::recursive_mutex lock;
+         } _reserved_form_ids;
 
       public:
          inline size_t count_forms_of_type(form_type) const noexcept;
+
+         bare_form_id find_first_free_form_id_in_active_file(bare_form_id search_from = 0) const noexcept;
          
          template<typename Functor>
             requires std::is_invocable_v<Functor, const form_stub&>
@@ -110,6 +122,7 @@ namespace dovah {
       public: // passkeyed
          void _make_hardcoded_forms(lu::passkey<active_load_order>, tes::file& hardcoded_forms_file);
          void _on_stub_flagged_as_edited(lu::passkey<form_stub>, form_stub&);
+         void _reserve(lu::passkey<active_load_order>, size_t expected_total_form_count);
    };
 }
 
