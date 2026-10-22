@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="lu::small_vector&lt;*&gt;">
+      <Intrinsic Name="is_on_heap" Expression="!!(_size_and_flags &amp; ((size_type)1 &lt;&lt; _heap_bit_index))" />
+      <Intrinsic Name="size" Expression="_size_and_flags &amp; ~((size_type)1 &lt;&lt; _heap_bit_index)" />
+      
+      <DisplayString>{{ size={size()} }}</DisplayString>
+      <Expand>
+         <Item Name="[capacity]" Condition="is_on_heap()">(size_type)_allocated.capacity</Item>
+         <Item Name="[capacity]" Condition="!is_on_heap()">(size_type)$T2</Item>
+         <Item Name="[size]">(size_type)size()</Item>
+         <Item Name="[storage]" Condition="is_on_heap()">"heap",nasb</Item>
+         <Item Name="[storage]" Condition="!is_on_heap()">"local",nasb</Item>
+         <ArrayItems Condition="size() &lt;= $T2">
+            <Direction>Forward</Direction>
+            <Rank>1</Rank>
+            <Size>size()</Size>
+            <ValuePointer>_local._Elems,na</ValuePointer>
+         </ArrayItems>
+         <ArrayItems Condition="size() &gt; $T2">
+            <Direction>Forward</Direction>
+            <Rank>1</Rank>
+            <Size>size()</Size>
+            <ValuePointer>_allocated.data,na</ValuePointer>
+         </ArrayItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

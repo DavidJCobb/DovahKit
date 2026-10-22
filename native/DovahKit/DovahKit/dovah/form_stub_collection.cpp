@@ -101,6 +101,9 @@ namespace dovah {
    void form_stub_collection::_make_hardcoded_forms(lu::passkey<active_load_order>, tes::file& hardcoded_forms_file) {
       impl::_form_stub_collection::create_hardcoded_form_stubs(*this, hardcoded_forms_file);
    }
+   void form_stub_collection::_make_none_stubs(lu::passkey<active_load_order>, tes::file& none_stubs_file) {
+      impl::_form_stub_collection::create_none_stubs(*this, none_stubs_file);
+   }
    void form_stub_collection::_on_stub_flagged_as_edited(lu::passkey<form_stub>, form_stub& stub) {
       this->active_file_forms.forms[stub.form_id] = &stub;
       auto& at = this->active_file_forms_by_type[stub.form_type];

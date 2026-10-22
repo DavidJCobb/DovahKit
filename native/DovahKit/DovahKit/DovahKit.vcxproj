@@ -119,8 +119,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dovah\active_load_order.cpp" />
+    <ClCompile Include="dovah\bsa\archive.cpp" />
+    <ClCompile Include="dovah\bsa\archive_collection.cpp" />
+    <ClCompile Include="dovah\bsa\thread_for_parsing.cpp" />
+    <ClCompile Include="dovah\form_data\can_load_form_data_of_type.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_collection.cpp" />
+    <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
+    <ClCompile Include="dovah\load_order_processes\use_info_build\build_hardcoded_uses.cpp" />
+    <ClCompile Include="dovah\load_order_processes\use_info_build\use_info_builder.cpp" />
+    <ClCompile Include="dovah\load_order_processes\use_info_build\use_info_builder_form_specific_data.cpp" />
+    <ClCompile Include="dovah\load_order_processes\use_info_build\worker_thread.cpp" />
+    <ClCompile Include="dovah\localization\string_file_bundle.cpp" />
+    <ClCompile Include="dovah\termination_handler.cpp" />
     <ClCompile Include="dovah\tes\file.cpp" />
     <ClCompile Include="dovah\tes\file_load_order.cpp" />
     <ClCompile Include="dovah\tes\file_queue.cpp" />
@@ -128,9 +139,17 @@
     <ClCompile Include="dovah\tes\reading\record_view.cpp" />
     <ClCompile Include="dovah\tes\reading\subrecord_view.cpp" />
     <ClCompile Include="dovah\tes\skimming\file_header_skimmer.cpp" />
+    <ClCompile Include="dovah\types\asset_file_buffer.cpp" />
+    <ClCompile Include="dovah\utils\files\bsa\fold_path.cpp" />
+    <ClCompile Include="dovah\utils\files\bsa\fold_path_component.cpp" />
+    <ClCompile Include="dovah\utils\files\bsa\path_to_hashes.cpp" />
+    <ClCompile Include="dovah\utils\files\bsa\split_path.cpp" />
+    <ClCompile Include="dovah\utils\files\tes\normalize_next_record_id.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\can_ever_be_edited.cpp" />
+    <ClCompile Include="dovah\utils\form_stubs\can_load_form_data.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\is_defined_in_active_file.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\is_defined_or_overridden_in_active_file.cpp" />
+    <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
     <ClCompile Include="editor\localize\errno_code.cpp" />
     <ClCompile Include="editor\localize\exceptions\file_load_error.cpp" />
     <ClCompile Include="editor\localize\exceptions\load_order_error.cpp" />
@@ -139,12 +158,30 @@
     <ClCompile Include="lu\cpuinfo.cpp" />
     <ClCompile Include="lu\files\mapped_file.cpp" />
     <ClCompile Include="lu\memory\basic_buffer.cpp" />
+    <ClCompile Include="lu\windows\read_single_ini_setting.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tests\basic\count_all_records.cpp" />
     <ClCompile Include="tests\basic\file_list_to_load_order.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\active_load_order.h" />
+    <ClInclude Include="dovah\bsa\archive.h" />
+    <ClInclude Include="dovah\bsa\archive_collection.h" />
+    <ClInclude Include="dovah\bsa\archive_filetype_flags.h" />
+    <ClInclude Include="dovah\bsa\archive_header.h" />
+    <ClInclude Include="dovah\bsa\archive_header_flags.h" />
+    <ClInclude Include="dovah\bsa\archive_version.h" />
+    <ClInclude Include="dovah\bsa\bytereader.h" />
+    <ClInclude Include="dovah\bsa\packed_file_info.h" />
+    <ClInclude Include="dovah\bsa\packed_folder_info.h" />
+    <ClInclude Include="dovah\bsa\path_separators.h" />
+    <ClInclude Include="dovah\bsa\thread_for_parsing.h" />
+    <ClInclude Include="dovah\callback_sets\data_load.h" />
+    <ClInclude Include="dovah\exceptions\bsa_extract_error.h" />
+    <ClInclude Include="dovah\exceptions\bsa_extract_errors\lz4_error.h" />
+    <ClInclude Include="dovah\exceptions\bsa_parse_error.h" />
+    <ClInclude Include="dovah\exceptions\bsa_parse_errors\incorrect_header_sentinel.h" />
+    <ClInclude Include="dovah\exceptions\bsa_parse_errors\unexpected_eof.h" />
     <ClInclude Include="dovah\exceptions\file_load_error.h" />
     <ClInclude Include="dovah\exceptions\file_load_errors\filesystem_error.h" />
     <ClInclude Include="dovah\exceptions\file_load_errors\malformed_file_header.h" />
@@ -155,9 +192,12 @@
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_decompression_failed.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_has_invalid_signature.h" />
     <ClInclude Include="dovah\exceptions\load_order_error.h" />
+    <ClInclude Include="dovah\exceptions\load_order_errors\active_file_is_a_master_and_there_are_plugins.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\cyclical_dependency_between_files.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\desired_active_file_is_a_dependency.h" />
+    <ClInclude Include="dovah\exceptions\load_order_errors\desired_active_file_was_not_in_the_load_order.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\load_order_would_have_too_many_files.h" />
+    <ClInclude Include="dovah\exceptions\load_order_errors\some_files_are_too_new.h" />
     <ClInclude Include="dovah\facts\actor_value_info.h" />
     <ClInclude Include="dovah\facts\form_ids\hardcoded.h" />
     <ClInclude Include="dovah\facts\form_ids\max_hardcoded_form_id.h" />
@@ -166,13 +206,29 @@
     <ClInclude Include="dovah\facts\game\hardcoded_form_ids_ignore_record_id_prefix.h" />
     <ClInclude Include="dovah\facts\game\max_file_version.h" />
     <ClInclude Include="dovah\facts\game\min_file_version.h" />
+    <ClInclude Include="dovah\facts\game_setting_types.h" />
+    <ClInclude Include="dovah\facts\localized_strings\all_language_names.h" />
+    <ClInclude Include="dovah\facts\localized_strings\serialized_strings_are_length_prefixed.h" />
     <ClInclude Include="dovah\form_data\base_managed_form_data.h" />
+    <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
+    <ClInclude Include="dovah\form_data_function_tables\build_outbound_use_info.h" />
     <ClInclude Include="dovah\form_stub.h" />
     <ClInclude Include="dovah\form_stub_addenda.h" />
     <ClInclude Include="dovah\form_stub_collection.h" />
     <ClInclude Include="dovah\form_type.h" />
     <ClInclude Include="dovah\form_type_info.h" />
     <ClInclude Include="dovah\game.h" />
+    <ClInclude Include="dovah\game_setting_collection.h" />
+    <ClInclude Include="dovah\loaded_game_setting.h" />
+    <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
+    <ClInclude Include="dovah\load_order_processes\use_info_build\build_hardcoded_uses.h" />
+    <ClInclude Include="dovah\load_order_processes\use_info_build\use_info_builder.h" />
+    <ClInclude Include="dovah\load_order_processes\use_info_build\use_info_builder_form_specific_data.h" />
+    <ClInclude Include="dovah\load_order_processes\use_info_build\worker_thread.h" />
+    <ClInclude Include="dovah\localization\language.h" />
+    <ClInclude Include="dovah\localization\string_file_bundle.h" />
+    <ClInclude Include="dovah\notices\base_file_load_warning.h" />
+    <ClInclude Include="dovah\termination_handler.h" />
     <ClInclude Include="dovah\tes\bytereader.h" />
     <ClInclude Include="dovah\tes\file.h" />
     <ClInclude Include="dovah\tes\file_app_specific_flags.h" />
@@ -192,8 +248,14 @@
     <ClInclude Include="dovah\tes\record_flags.h" />
     <ClInclude Include="dovah\tes\record_header.h" />
     <ClInclude Include="dovah\tes\skimming\file_header_skimmer.h" />
+    <ClInclude Include="dovah\types\asset_file_buffer.h" />
     <ClInclude Include="dovah\types\bare_form_id.h" />
+    <ClInclude Include="dovah\types\bare_localized_string_id.h" />
+    <ClInclude Include="dovah\types\bs_hash.h" />
     <ClInclude Include="dovah\types\file_prefix.h" />
+    <ClInclude Include="dovah\types\localized_string_type.h" />
+    <ClInclude Include="dovah\types\managed_localized_string_use.h" />
+    <ClInclude Include="dovah\types\unmanaged_localized_string_use.h" />
     <ClInclude Include="dovah\use_info\entry.h" />
     <ClInclude Include="dovah\use_info\entry_flags\activator.h" />
     <ClInclude Include="dovah\use_info\entry_flags\actor_base.h" />
@@ -217,16 +279,30 @@
     <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.define.h" />
     <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.undef.h" />
     <ClInclude Include="dovah\use_info\is_entry_flag_type.h" />
+    <ClInclude Include="dovah\utils\files\bsa\fold_path.h" />
+    <ClInclude Include="dovah\utils\files\bsa\fold_path_component.h" />
+    <ClInclude Include="dovah\utils\files\bsa\path_to_hashes.h" />
+    <ClInclude Include="dovah\utils\files\bsa\split_path.h" />
+    <ClInclude Include="dovah\utils\files\tes\normalize_next_record_id.h" />
     <ClInclude Include="dovah\utils\files\tes\signature_is_suspicious.h" />
     <ClInclude Include="dovah\utils\form_stubs\can_ever_be_edited.h" />
+    <ClInclude Include="dovah\utils\form_stubs\can_load_form_data.h" />
     <ClInclude Include="dovah\utils\form_stubs\is_defined_in_active_file.h" />
     <ClInclude Include="dovah\utils\form_stubs\is_defined_or_overridden_in_active_file.h" />
+    <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
     <ClInclude Include="dovah\_impl\form_stub_collection\create_hardcoded_form_stubs.h" />
+    <ClInclude Include="dovah\_impl\form_stub_collection\create_none_stubs.h" />
     <ClInclude Include="dovah\_passkeys\add_form_stub_source_file.h" />
+    <ClInclude Include="dovah\_passkeys\build_use_info_during_load.h" />
     <ClInclude Include="editor\localize\errno_code.h" />
     <ClInclude Include="editor\localize\exceptions\file_load_error.h" />
     <ClInclude Include="editor\localize\exceptions\load_order_error.h" />
+    <ClInclude Include="lu\allocation_policies\exponential.h" />
+    <ClInclude Include="lu\allocation_policies\incremental.h" />
+    <ClInclude Include="lu\allocation_policies\one_at_a_time.h" />
+    <ClInclude Include="lu\arrays\make_filled.h" />
     <ClInclude Include="lu\ascii\equals_i.h" />
+    <ClInclude Include="lu\ascii\trim.h" />
     <ClInclude Include="lu\bit\all_ones.h" />
     <ClInclude Include="lu\bit\byteswap_in_place.h" />
     <ClInclude Include="lu\bit\edit_bit.h" />
@@ -245,10 +321,14 @@
     <ClInclude Include="lu\bytestreams\unwrap_modifiers.h" />
     <ClInclude Include="lu\concepts\all_same_as.h" />
     <ClInclude Include="lu\concepts\instantiation_of\std_array.h" />
+    <ClInclude Include="lu\concepts\instantiation_of\std_basic_string.h" />
+    <ClInclude Include="lu\concepts\instantiation_of\std_basic_string_view.h" />
     <ClInclude Include="lu\concepts\integer.h" />
+    <ClInclude Include="lu\concepts\lambda_invocable_per_tuple_element_type.h" />
     <ClInclude Include="lu\concepts\supports_std_tuple_element.h" />
     <ClInclude Include="lu\concepts\supports_std_tuple_size.h" />
     <ClInclude Include="lu\containers\bitset.h" />
+    <ClInclude Include="lu\containers\small_vector.h" />
     <ClInclude Include="lu\cpuinfo.h" />
     <ClInclude Include="lu\enums\enum_flags.h" />
     <ClInclude Include="lu\enums\enum_in.h" />
@@ -256,6 +336,7 @@
     <ClInclude Include="lu\files\mapped_file.h" />
     <ClInclude Include="lu\foreach_lambda_result.h" />
     <ClInclude Include="lu\integral_character_code.h" />
+    <ClInclude Include="lu\iterators\pointer_based_iterator.h" />
     <ClInclude Include="lu\macros\FORCE_INLINE.define.h" />
     <ClInclude Include="lu\macros\FORCE_INLINE.undef.h" />
     <ClInclude Include="lu\macros\NO_UNIQUE_ADDRESS.define.h" />
@@ -275,6 +356,8 @@
     <ClInclude Include="lu\type_aliases\transfer_variadics.h" />
     <ClInclude Include="lu\type_aliases\tuple_like_to_tuple_type.h" />
     <ClInclude Include="lu\type_aliases\uint_of_size.h" />
+    <ClInclude Include="lu\type_containers\type_array.h" />
+    <ClInclude Include="lu\type_containers\type_to_value_map.h" />
     <ClInclude Include="lu\type_traits\is_std_array.h" />
     <ClInclude Include="lu\type_traits\is_std_pair.h" />
     <ClInclude Include="lu\type_traits\is_std_tuple.h" />
@@ -289,14 +372,18 @@
     <ClInclude Include="lu\utils\index_sequence_to_bool_run.h" />
     <ClInclude Include="lu\utils\integral_wrapper.h" />
     <ClInclude Include="lu\utils\type_pack_to_bool_run_by_predicate.h" />
+    <ClInclude Include="lu\windows\read_single_ini_setting.h" />
     <ClInclude Include="tests\basic\count_all_records.h" />
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="dovah\bsa\archive.inl" />
+    <None Include="dovah\bsa\packed_folder_info.inl" />
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stub_collection.inl" />
     <None Include="dovah\tes\file_queue.inl" />
     <None Include="dovah\tes\reading\record_view.inl" />
+    <None Include="dovah\types\bs_hash.inl" />
     <None Include="dovah\types\file_prefix.inl" />
     <None Include="dovah\utils\form_stubs\README.md">
       <SubType>
@@ -308,16 +395,25 @@
     </None>
     <None Include="lu\bytestreams\base_bytereader.inl" />
     <None Include="lu\containers\bitset.inl" />
+    <None Include="lu\containers\small_vector.inl" />
     <None Include="lu\memory\basic_buffer.inl" />
     <None Include="lu\memory\buffer_view.inl" />
     <None Include="lu\memory\threaded_slab_heap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="dovah\bsa\packed_file_info.natvis" />
+    <Natvis Include="dovah\bsa\packed_folder_info.natvis" />
+    <Natvis Include="lu\containers\bitset.natvis" />
+    <Natvis Include="lu\containers\small_vector.natvis" />
     <Natvis Include="lu\enums\enum_flags.natvis" />
     <Natvis Include="lu\enums\enum_in.natvis" />
     <Natvis Include="lu\integral_character_code.natvis" />
+    <Natvis Include="lu\memory\threaded_slab_heap.natvis" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\lz4\lz4.vcxproj">
+      <Project>{02c8f0a9-3325-46e7-8857-9fd6d7332bce}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
     </ProjectReference>

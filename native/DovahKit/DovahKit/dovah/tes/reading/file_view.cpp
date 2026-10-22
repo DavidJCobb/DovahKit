@@ -17,6 +17,23 @@ namespace dovah::tes {
    file_view::file_view() : subviews(*this, *this) {
    }
 
+   /*static*/ file_view file_view::open_view_to_group(const file& file, size_t group_header_offset) {
+      file_view out;
+      out.set_target_file(&file);
+      out.set_position(group_header_offset);
+      auto r = out.next_record_or_group();
+      assert(r == chunk_type::group);
+      return out;
+   }
+   /*static*/ file_view file_view::open_view_to_record(const file& file, size_t record_header_offset) {
+      file_view out;
+      out.set_target_file(&file);
+      out.set_position(record_header_offset);
+      auto r = out.next_record_or_group();
+      assert(r == chunk_type::record);
+      return out;
+   }
+
    void file_view::_validate_record_signature() const {
       if (this->options.assume_file_is_valid)
          return;

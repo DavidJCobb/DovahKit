@@ -7,6 +7,8 @@
 #include "./tes/file.h"
 #include "./tes/record_flags.h"
 #include "./types/file_prefix.h"
+#include "./use_info/entry_flag_to_mask.h"
+#include "./use_info/entry_flags/base.h"
 #include "./utils/form_stubs/can_ever_be_edited.h"
 #include "./active_load_order.h"
 
@@ -182,5 +184,73 @@ namespace dovah {
       
    void form_stub::_add_source_file(_passkeys::add_form_stub_source_file, tes::file& f, uint32_t record_offset, uint32_t record_flags) {
       this->_add_source_file(f, record_offset, record_flags);
+   }
+   void form_stub::_add_one_way_outbound_use(_passkeys::build_use_info_during_load, form_stub& to_stub, use_info::entry_flag_underlying_type flags) {
+      //
+      // This function creates a single-direction connection from (this) to (to_stub), with the understanding 
+      // that a later call to (this->send_inbound_refs()) will make all such connections bidirectional. As 
+      // such, this function should only be used at the tail end of the (file_load_order) load process, for 
+      // building use info for all loaded forms.
+      //
+      // If you need to programmatically create a connection from this form to another, after the initial file 
+      // load, then call (replace_outbound_reference) on this form, passing (bare_form_id_t(0)) as the "old" 
+      // form ID that we want to "replace." This is not strictly intuitive, but then, code outside of the 
+      // backend should not be manipulating form stubs and their use info directly, but rather should be 
+      // working with loaded-form classes. If you're thinking in terms of manipulating form stubs rather than 
+      // in terms of manipulating forms, then you're either thinking in the wrong terms, or you need to make 
+      // sure that you fully understand how form stubs are supposed to work.
+      //
+      auto& list  = this->outbound;
+      auto& entry = list[to_stub.form_id];
+      if (!entry.other)
+         entry.other = &to_stub;
+      entry.refcount++;
+      //
+      if (flags)
+         entry.flags |= flags;
+   }
+   void form_stub::_add_one_way_outbound_use(_passkeys::build_use_info_during_load, bare_form_id used_form_id, use_info::entry_flag_underlying_type flags) {
+      //
+      // Please refer to the documentation comments in this function's other overload.
+      //
+      if (used_form_id == 0)
+         return;
+      auto& list  = this->outbound;
+      auto& entry = list[used_form_id];
+      if (!entry.other) {
+         entry.other = this->get_load_order().get_form_stub_collection().get_form_by_id(used_form_id, false);
+      }
+      entry.refcount++;
+      //
+      if (flags) {
+         entry.flags |= flags;
+      }
+   }
+   void form_stub::_set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub& parent) {
+      //
+      // When setting a parent form during the load process (i.e. before the use info build step), 
+      // you should use this function instead of (set_parent_form). This is because at the end of 
+      // the use info build step, all outbound references are made bidirectional. If you use the 
+      // (set_parent_form) function, you'll create bidirectional references, which will be made 
+      // bidirectional "again" i.e. the parent form will believe it has two inbound references 
+      // when in reality it only has one.
+      //
+      auto& list = this->outbound;
+      for (auto it = list.begin(); it != list.end(); ++it) {
+         auto& pair  = *it;
+         auto& entry = pair.second;
+         if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)) {
+            if (entry.other == &parent)
+               return;
+            entry.flags &= ~use_info::entry_flag_to_mask(use_info::entry_flags::base::parent);
+            if (--entry.refcount == 0)
+               list.erase(it);
+            break;
+         }
+      }
+      //
+      // Set the new parent form.
+      //
+      this->_add_one_way_outbound_use({}, parent, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
    }
 }

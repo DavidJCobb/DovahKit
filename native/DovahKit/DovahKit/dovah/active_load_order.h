@@ -55,10 +55,13 @@ namespace dovah {
          constexpr const bsa::archive_collection* get_bsa_collection() const noexcept { return this->_bsa_collection; };
          constexpr bsa::archive_collection* get_bsa_collection() noexcept { return this->_bsa_collection; };
 
+         constexpr const form_stub_collection& get_form_stub_collection() const noexcept { return this->_forms; };
+         constexpr form_stub_collection& get_form_stub_collection() noexcept { return this->_forms; };
+
          constexpr const tes::file* get_active_file() const noexcept { return this->_files.active; }
          constexpr tes::file* get_active_file() noexcept { return this->_files.active; }
+
          constexpr game get_current_game() const noexcept { return this->_game; }
-         constexpr const form_stub_collection& get_form_stub_collection() const noexcept { return this->_forms; }
 
          constexpr const std::filesystem::path& get_data_directory() const noexcept { return this->_data_directory; }
          constexpr void set_data_directory(const std::filesystem::path& v) {
@@ -99,7 +102,8 @@ namespace dovah {
          constexpr form_stub_collection& _get_form_stub_collection(lu::passkey<form_stub>) noexcept { return this->_forms; };
 
       protected:
-         void _load_single_file(tes::file&);
+         void _build_form_stubs_from_file(tes::file&);
+         void _build_use_info();
          void _make_hardcoded_forms();
    };
 }

@@ -15,6 +15,9 @@ namespace dovah::tes {
       public:
          file_view();
 
+         static file_view open_view_to_group(const file&, size_t group_header_offset);
+         static file_view open_view_to_record(const file&, size_t record_header_offset);
+
          enum class chunk_type {
             none,
             group,

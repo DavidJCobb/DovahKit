@@ -63,4 +63,9 @@ namespace dovah::tes {
       f->_app_flags.set_each_of<file_app_specific_flag::is_hardcoded_dummy>();
       return f;
    }
+   /*static*/ file* file::_make_none_stubs_dummy_file(lu::passkey<active_load_order>, enum game g) {
+      auto* f = new file(g);
+      f->_app_flags.set_each_of<file_app_specific_flag::is_none_stub_dummy>();
+      return f;
+   }
 }

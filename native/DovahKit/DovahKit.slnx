@@ -3,5 +3,6 @@
     <Platform Name="x64" />
   </Configurations>
   <Project Path="DovahKit/DovahKit.vcxproj" Id="3dc101ea-fcd2-4928-87f3-3d0f22dba6a6" />
+  <Project Path="lz4/lz4.vcxproj" Id="02c8f0a9-3325-46e7-8857-9fd6d7332bce" />
   <Project Path="zlib/zlib.vcxproj" Id="8415aba1-0327-40b4-b9ef-8c813969224a" />
 </Solution>

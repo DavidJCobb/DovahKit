@@ -19,11 +19,13 @@ namespace dovah {
 namespace dovah {
    class form_stub_collection;
    namespace impl::_form_stub_collection {
-      extern void create_hardcoded_form_stubs(form_stub_collection&, tes::file& hardcoded_forms_file);
+      extern void create_hardcoded_form_stubs(form_stub_collection&, tes::file&);
+      extern void create_none_stubs(form_stub_collection&, tes::file&);
    }
 
    class form_stub_collection {
-      friend void impl::_form_stub_collection::create_hardcoded_form_stubs(form_stub_collection&, tes::file& hardcoded_forms_file);
+      friend void impl::_form_stub_collection::create_hardcoded_form_stubs(form_stub_collection&, tes::file&);
+      friend void impl::_form_stub_collection::create_none_stubs(form_stub_collection&, tes::file&);
       public:
          form_stub_collection(active_load_order& owner) : owner(owner) {}
          form_stub_collection(const form_stub_collection&) = delete;
@@ -91,6 +93,7 @@ namespace dovah {
          } _reserved_form_ids;
 
       public:
+         inline size_t count_all_forms() const noexcept;
          inline size_t count_forms_of_type(form_type) const noexcept;
 
          bare_form_id find_first_free_form_id_in_active_file(bare_form_id search_from = 0) const noexcept;
@@ -113,14 +116,17 @@ namespace dovah {
 
          form_stub* get_canonical_instance_of_singleton_form(form_type) const noexcept;
          form_stub* get_or_create_canonical_instance_of_singleton_form(form_type);
-         inline form_stub* get_form_by_id(bare_form_id);
-         inline form_stub* get_form_by_id(bare_form_id, form_type);
+         inline const form_stub* get_form_by_id(bare_form_id, bool ignore_none_stubs = true) const;
+         inline form_stub* get_form_by_id(bare_form_id, bool ignore_none_stubs = true);
+         inline const form_stub* get_form_by_id(bare_form_id, form_type, bool ignore_none_stubs = true) const;
+         inline form_stub* get_form_by_id(bare_form_id, form_type, bool ignore_none_stubs = true);
 
       protected:
          void _add_hardcoded_form(form_stub&);
 
       public: // passkeyed
          void _make_hardcoded_forms(lu::passkey<active_load_order>, tes::file& hardcoded_forms_file);
+         void _make_none_stubs(lu::passkey<active_load_order>, tes::file& none_stubs_file);
          void _on_stub_flagged_as_edited(lu::passkey<form_stub>, form_stub&);
          void _reserve(lu::passkey<active_load_order>, size_t expected_total_form_count);
    };

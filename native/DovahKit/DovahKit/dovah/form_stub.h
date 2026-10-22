@@ -5,7 +5,7 @@
 #include <string>
 #include "lu/enums/enum_flags.h"
 #include "lu/memory/threaded_slab_allocator.h"
-#include "lu/passkey.h"
+#include "./_passkeys/build_use_info_during_load.h"
 #include "./types/bare_form_id.h"
 #include "./use_info/entry.h"
 namespace dovah {
@@ -112,6 +112,9 @@ namespace dovah {
 
       public: // passkeyed
          void _add_source_file(_passkeys::add_form_stub_source_file, tes::file&, uint32_t record_offset, uint32_t record_flags = 0);
+         void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, form_stub&, use_info::entry_flag_underlying_type flags = 0);
+         void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, bare_form_id, use_info::entry_flag_underlying_type flags = 0);
+         void _set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub& parent);
    };
 }
 

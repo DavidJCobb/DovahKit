@@ -64,5 +64,6 @@ namespace dovah::tes {
 
       public: // passkeyed
          static file* _make_hardcoded_dummy_file(lu::passkey<active_load_order>, enum game);
+         static file* _make_none_stubs_dummy_file(lu::passkey<active_load_order>, enum game);
    };
 }

@@ -1,4 +1,5 @@
 #include "./active_load_order.h"
+#include "lu/arrays/make_filled.h"
 #include "lu/ascii/equals_i.h"
 #include "./bsa/archive_collection.h"
 #include "./exceptions/load_order_errors/active_file_is_a_master_and_there_are_plugins.h"
@@ -8,12 +9,14 @@
 #include "./facts/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 #include "./facts/game_setting_types.h"
 #include "./load_order_interfaces/file_load.h"
+#include "./load_order_processes/use_info_build/worker_thread.h"
 #include "./localization/string_file_bundle.h"
 #include "./tes/file.h"
 #include "./tes/file_load_order.h"
 #include "./types/file_prefix.h"
 #include "./utils/files/tes/normalize_next_record_id.h"
 #include "./utils/get_ini_defined_bsa_list.h"
+#include "./form_stub.h"
 
 namespace dovah {
    active_load_order::active_load_order() {
@@ -151,7 +154,7 @@ namespace dovah {
                }
                try {
                   file->open(this->_data_directory / info_ptr->filename);
-                  this->_load_single_file(*file);
+                  this->_build_form_stubs_from_file(*file);
                } catch (...) {
                   //if (this->archives) // TODO: uncomment when we have BSA working again
                   //   this->archives->abort_archive_load();
@@ -420,7 +423,83 @@ namespace dovah {
       prefix.set_can_co_opt_hardcoded_range(can_co_opt_hardcoded_id_space);
       return prefix;
    }
+   
+   void active_load_order::_build_form_stubs_from_file(tes::file&);
+   void active_load_order::_build_use_info() {
+      auto* dummy = this->_files.dummies.none_stubs = tes::file::_make_none_stubs_dummy_file({}, this->_game);
+      //
+      // We generate Use Info using two passes. First, we divide all forms across multiple 
+      // threads; each thread generates outbound Use Info for the forms. Then, a single 
+      // thread scans the outbound Use Info and uses that to generate inbound Use Info.
+      //
+      // If we want to generate outbound Use Info for a given form, then we only need to 
+      // update that form. However, if we want to generate *inbound* Use Info *from* a 
+      // given form, we must update each form it refers to. As such, we can't multi-thread 
+      // the generation of inbound Use Info unless we put a lock on each individual form.
+      // 
+      // Note that parent form relationships, tracked during load, exist as outbound use 
+      // info.
+      //
+      {
+         auto workers = lu::arrays::make_filled< load_order_processes::use_info_build::worker_thread, 8>(*this);
+         {
+            auto count_per = this->_forms.count_all_forms() / workers.size();
+            for (auto& entry : workers)
+               entry.reserve(count_per + 1);
+         }
+         int which_thread = 0;
+         // Inbound first, since we can multi-thread that
+         this->_forms.for_each_form([&workers, &which_thread](form_stub& stub) {
+            workers[which_thread].add_to_queue(&stub);
+            if (++which_thread >= workers.size())
+               which_thread = 0;
+         });
+         for (auto& thread : workers)
+            thread.start();
+         for (auto& thread : workers)
+            thread.wait_for();
+         {
+            const size_t no_offset = workers.size();
 
+            size_t earliest_offset = no_offset;
+            for (size_t i = 0; i < workers.size(); ++i) {
+               auto& thread = workers[i];
+               if (!thread.exception.captured)
+                  continue;
+
+               if (earliest_offset == no_offset) {
+                  earliest_offset = i;
+               } else {
+                  if (thread.exception.thrown_at_file_offset < workers[earliest_offset].exception.thrown_at_file_offset)
+                     earliest_offset = i;
+               }
+            }
+            if (earliest_offset != no_offset) {
+               auto captured = std::move(workers[earliest_offset].exception.captured);
+               std::rethrow_exception(captured);
+            }
+         }
+      }
+      //
+      // These next steps have to be single-threaded. First, we need to build any 
+      // none-stubs that are needed; then, we need to use outbound use info to 
+      // build inbound use info. None-stubs need to be built first so that the 
+      // references to them are properly made bidirectional.
+      //
+      this->_forms._make_none_stubs({}, *this->_files.dummies.none_stubs);
+      this->_forms.for_each_form([](form_stub& user) {
+         if (user.form_type == form_type::none) // none-type forms (which are usually, but not always, none-stubs) should never use other forms, so we can skip them
+            return;
+         for (auto& [_, use] : user.outbound) {
+            if (auto* used = use.other) {
+               auto& entry = used->inbound[user.form_id];
+               entry.other     = &user;
+               entry.refcount += use.refcount;
+               entry.flags    |= use.flags;
+            }
+         }
+      });
+   }
    void active_load_order::_make_hardcoded_forms() {
       auto* dummy = this->_files.dummies.hardcoded = tes::file::_make_hardcoded_dummy_file({}, this->_game);
       this->_forms._make_hardcoded_forms({}, *dummy);
