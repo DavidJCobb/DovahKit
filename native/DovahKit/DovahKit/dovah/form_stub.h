@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <type_traits>
 #include "lu/enums/enum_flags.h"
 #include "lu/memory/threaded_slab_allocator.h"
 #include "./_passkeys/build_use_info_during_load.h"
@@ -12,8 +13,13 @@ namespace dovah {
    namespace _passkeys {
       class add_form_stub_source_file;
    }
+   namespace load_order_interfaces {
+      class form_load;
+   }
    namespace tes {
       class file;
+      class file_view;
+      class record_view;
       enum class record_flag : uint32_t;
    }
    class active_load_order;
@@ -43,7 +49,7 @@ namespace dovah {
 
          struct file_data {
             tes::file* pointer       = nullptr;
-            uint32_t   record_offset = 0;
+            uint32_t   record_offset = 0; // for a dummy file, this is always 0
             uint32_t   record_flags  = 0;
 
             constexpr operator bool() const noexcept { return this->pointer != nullptr; }
@@ -103,7 +109,14 @@ namespace dovah {
             constexpr int16_t source_file_count() const noexcept;
          #pragma endregion
 
+         template<typename Callable>
+            requires requires(Callable&& callable, tes::record_view& record, load_order_interfaces::form_load& intfc) {
+               { callable(record, intfc) };
+            }
+         void for_each_source_record(Callable&& callable);
+
       protected:
+         tes::file_view _open_record(const tes::file&, uint32_t record_offset) const noexcept;
          void _unload_form();
 
          #pragma region Source file member functions (internal)

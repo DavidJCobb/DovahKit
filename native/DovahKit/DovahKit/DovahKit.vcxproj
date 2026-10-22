@@ -126,6 +126,11 @@
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_collection.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
+    <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
+    <ClCompile Include="dovah\load_order_processes\reparent_persistent_refs\make_parenthood_bidirectional_worker.cpp" />
+    <ClCompile Include="dovah\load_order_processes\reparent_persistent_refs\process.cpp" />
+    <ClCompile Include="dovah\load_order_processes\reparent_persistent_refs\set_parent_cell_worker.cpp" />
+    <ClCompile Include="dovah\load_order_processes\reparent_persistent_refs\world_cell_map.cpp" />
     <ClCompile Include="dovah\load_order_processes\use_info_build\build_hardcoded_uses.cpp" />
     <ClCompile Include="dovah\load_order_processes\use_info_build\use_info_builder.cpp" />
     <ClCompile Include="dovah\load_order_processes\use_info_build\use_info_builder_form_specific_data.cpp" />
@@ -147,6 +152,7 @@
     <ClCompile Include="dovah\utils\files\tes\normalize_next_record_id.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\can_ever_be_edited.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\can_load_form_data.cpp" />
+    <ClCompile Include="dovah\utils\form_stubs\get_parent_form.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\is_defined_in_active_file.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\is_defined_or_overridden_in_active_file.cpp" />
     <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
@@ -177,6 +183,7 @@
     <ClInclude Include="dovah\bsa\path_separators.h" />
     <ClInclude Include="dovah\bsa\thread_for_parsing.h" />
     <ClInclude Include="dovah\callback_sets\data_load.h" />
+    <ClInclude Include="dovah\callback_sets\form_stub_collection_callbacks.h" />
     <ClInclude Include="dovah\exceptions\bsa_extract_error.h" />
     <ClInclude Include="dovah\exceptions\bsa_extract_errors\lz4_error.h" />
     <ClInclude Include="dovah\exceptions\bsa_parse_error.h" />
@@ -199,6 +206,7 @@
     <ClInclude Include="dovah\exceptions\load_order_errors\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\some_files_are_too_new.h" />
     <ClInclude Include="dovah\facts\actor_value_info.h" />
+    <ClInclude Include="dovah\facts\cells\exterior_cell_side_length.h" />
     <ClInclude Include="dovah\facts\form_ids\hardcoded.h" />
     <ClInclude Include="dovah\facts\form_ids\max_hardcoded_form_id.h" />
     <ClInclude Include="dovah\facts\form_type_group_sequence_list.h" />
@@ -221,6 +229,13 @@
     <ClInclude Include="dovah\game_setting_collection.h" />
     <ClInclude Include="dovah\loaded_game_setting.h" />
     <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
+    <ClInclude Include="dovah\load_order_interfaces\form_load.h" />
+    <ClInclude Include="dovah\load_order_processes\reparent_persistent_refs\config\bidi_workers_per_quartet.h" />
+    <ClInclude Include="dovah\load_order_processes\reparent_persistent_refs\make_parenthood_bidirectional_worker.h" />
+    <ClInclude Include="dovah\load_order_processes\reparent_persistent_refs\process.h" />
+    <ClInclude Include="dovah\load_order_processes\reparent_persistent_refs\queued_ref.h" />
+    <ClInclude Include="dovah\load_order_processes\reparent_persistent_refs\set_parent_cell_worker.h" />
+    <ClInclude Include="dovah\load_order_processes\reparent_persistent_refs\world_cell_map.h" />
     <ClInclude Include="dovah\load_order_processes\use_info_build\build_hardcoded_uses.h" />
     <ClInclude Include="dovah\load_order_processes\use_info_build\use_info_builder.h" />
     <ClInclude Include="dovah\load_order_processes\use_info_build\use_info_builder_form_specific_data.h" />
@@ -228,6 +243,11 @@
     <ClInclude Include="dovah\localization\language.h" />
     <ClInclude Include="dovah\localization\string_file_bundle.h" />
     <ClInclude Include="dovah\notices\base_file_load_warning.h" />
+    <ClInclude Include="dovah\notices\base_form_load_warning.h" />
+    <ClInclude Include="dovah\notices\base_warning.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\unrecognized_subrecord.h" />
+    <ClInclude Include="dovah\notices\_boilerplate\base_warning.define.h" />
+    <ClInclude Include="dovah\notices\_boilerplate\base_warning.undef.h" />
     <ClInclude Include="dovah\termination_handler.h" />
     <ClInclude Include="dovah\tes\bytereader.h" />
     <ClInclude Include="dovah\tes\file.h" />
@@ -252,6 +272,8 @@
     <ClInclude Include="dovah\types\bare_form_id.h" />
     <ClInclude Include="dovah\types\bare_localized_string_id.h" />
     <ClInclude Include="dovah\types\bs_hash.h" />
+    <ClInclude Include="dovah\types\cells\grid_dword.h" />
+    <ClInclude Include="dovah\types\cells\grid_position.h" />
     <ClInclude Include="dovah\types\file_prefix.h" />
     <ClInclude Include="dovah\types\localized_string_type.h" />
     <ClInclude Include="dovah\types\managed_localized_string_use.h" />
@@ -287,9 +309,14 @@
     <ClInclude Include="dovah\utils\files\tes\signature_is_suspicious.h" />
     <ClInclude Include="dovah\utils\form_stubs\can_ever_be_edited.h" />
     <ClInclude Include="dovah\utils\form_stubs\can_load_form_data.h" />
+    <ClInclude Include="dovah\utils\form_stubs\get_parent_form.h" />
     <ClInclude Include="dovah\utils\form_stubs\is_defined_in_active_file.h" />
     <ClInclude Include="dovah\utils\form_stubs\is_defined_or_overridden_in_active_file.h" />
+    <ClInclude Include="dovah\utils\form_types\is_ref.h" />
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
+    <ClInclude Include="dovah\utils\worldspaces\world_coordinate_to_grid_coordinate.h" />
+    <ClInclude Include="dovah\utils\worldspaces\world_position_to_grid_position.h" />
+    <ClInclude Include="dovah\_impl\form_stubs\make_one_way_use_bidirectional.h" />
     <ClInclude Include="dovah\_impl\form_stub_collection\create_hardcoded_form_stubs.h" />
     <ClInclude Include="dovah\_impl\form_stub_collection\create_none_stubs.h" />
     <ClInclude Include="dovah\_passkeys\add_form_stub_source_file.h" />
@@ -328,6 +355,9 @@
     <ClInclude Include="lu\concepts\supports_std_tuple_element.h" />
     <ClInclude Include="lu\concepts\supports_std_tuple_size.h" />
     <ClInclude Include="lu\containers\bitset.h" />
+    <ClInclude Include="lu\containers\grids\fixed_grid.h" />
+    <ClInclude Include="lu\containers\grids\resizable_grid.h" />
+    <ClInclude Include="lu\containers\grids\resizable_square_grid.h" />
     <ClInclude Include="lu\containers\small_vector.h" />
     <ClInclude Include="lu\cpuinfo.h" />
     <ClInclude Include="lu\enums\enum_flags.h" />
@@ -393,8 +423,15 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_impl\form_stubs\make_one_way_use_bidirectional.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="lu\bytestreams\base_bytereader.inl" />
     <None Include="lu\containers\bitset.inl" />
+    <None Include="lu\containers\grids\fixed_grid.inl" />
+    <None Include="lu\containers\grids\resizable_grid.inl" />
+    <None Include="lu\containers\grids\resizable_square_grid.inl" />
     <None Include="lu\containers\small_vector.inl" />
     <None Include="lu\memory\basic_buffer.inl" />
     <None Include="lu\memory\buffer_view.inl" />
@@ -404,6 +441,8 @@
     <Natvis Include="dovah\bsa\packed_file_info.natvis" />
     <Natvis Include="dovah\bsa\packed_folder_info.natvis" />
     <Natvis Include="lu\containers\bitset.natvis" />
+    <Natvis Include="lu\containers\grids\fixed_grid.natvis" />
+    <Natvis Include="lu\containers\grids\resizable_grid.natvis" />
     <Natvis Include="lu\containers\small_vector.natvis" />
     <Natvis Include="lu\enums\enum_flags.natvis" />
     <Natvis Include="lu\enums\enum_in.natvis" />

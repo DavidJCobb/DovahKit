@@ -1,5 +1,6 @@
 #pragma once
 #include "./form_stub_collection.h"
+#include "./form_stub.h"
 
 namespace dovah {
    inline size_t form_stub_collection::count_all_forms() const noexcept {

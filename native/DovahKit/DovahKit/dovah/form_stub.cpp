@@ -5,6 +5,7 @@
 #include "./form_data/base_managed_form_data.h"
 #include "./form_stub_addenda.h"
 #include "./tes/file.h"
+#include "./tes/reading/file_view.h"
 #include "./tes/record_flags.h"
 #include "./types/file_prefix.h"
 #include "./use_info/entry_flag_to_mask.h"
@@ -135,6 +136,9 @@ namespace dovah {
    // protected
    //
 
+   tes::file_view form_stub::_open_record(const tes::file& file, uint32_t record_offset) const noexcept {
+      return tes::file_view::open_view_to_record(file, record_offset);
+   }
    void form_stub::_unload_form() {
       if (!this->can_unload_form())
          return;

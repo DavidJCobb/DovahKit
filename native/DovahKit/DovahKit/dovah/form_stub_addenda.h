@@ -1,5 +1,6 @@
 #pragma once
 #include <optional>
+#include "./types/cells/grid_position.h"
 namespace dovah {
    class form_stub;
 }
@@ -9,5 +10,6 @@ namespace dovah {
       public:
          form_stub* persistent_cell     = nullptr; // WRLD persistent cell
          form_stub* canonical_landscape = nullptr; // last loaded LAND for a CELL
+         std::optional<types::cells::grid_position> grid_position; // WRLD/CELL/XCLC
    };
 }

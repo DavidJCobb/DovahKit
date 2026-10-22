@@ -5,6 +5,7 @@
 #include <vector>
 #include "lu/foreach_lambda_result.h"
 #include "lu/passkey.h"
+#include "./callback_sets/form_stub_collection_callbacks.h"
 #include "./types/bare_form_id.h"
 #include "./form_type_info.h"
 namespace dovah {
@@ -26,6 +27,9 @@ namespace dovah {
    class form_stub_collection {
       friend void impl::_form_stub_collection::create_hardcoded_form_stubs(form_stub_collection&, tes::file&);
       friend void impl::_form_stub_collection::create_none_stubs(form_stub_collection&, tes::file&);
+      public:
+         using callback_set = callback_sets::form_stub_collection_callbacks;
+
       public:
          form_stub_collection(active_load_order& owner) : owner(owner) {}
          form_stub_collection(const form_stub_collection&) = delete;
@@ -82,6 +86,7 @@ namespace dovah {
 
       public:
          active_load_order& owner;
+         callback_set   callbacks;
          _form_map      forms;
          _typed_map_set forms_by_type;
          _form_map      active_file_forms; // forms defined OR overridden by the active file

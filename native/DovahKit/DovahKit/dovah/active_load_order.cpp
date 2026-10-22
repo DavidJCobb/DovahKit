@@ -1,6 +1,7 @@
 #include "./active_load_order.h"
 #include "lu/arrays/make_filled.h"
 #include "lu/ascii/equals_i.h"
+#include "./_impl/form_stubs/make_one_way_use_bidirectional.h"
 #include "./bsa/archive_collection.h"
 #include "./exceptions/load_order_errors/active_file_is_a_master_and_there_are_plugins.h"
 #include "./exceptions/load_order_errors/desired_active_file_was_not_in_the_load_order.h"
@@ -9,6 +10,7 @@
 #include "./facts/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 #include "./facts/game_setting_types.h"
 #include "./load_order_interfaces/file_load.h"
+#include "./load_order_processes/reparent_persistent_refs/process.h"
 #include "./load_order_processes/use_info_build/worker_thread.h"
 #include "./localization/string_file_bundle.h"
 #include "./tes/file.h"
@@ -174,7 +176,10 @@ namespace dovah {
          lambda(flo.plugins);
       }
       this->_build_use_info(); // may throw
-      this->_reparent_persistent_references();
+      {
+         load_order_processes::reparent_persistent_refs::process process;
+         process.execute(this->_forms);
+      }
       if (!facts::game_supports_light_plugins(this->_game)) {
          //
          // If the user chooses to save a Skyrim Classic file as a Skyrim Special file, then we will 
@@ -441,7 +446,7 @@ namespace dovah {
       // info.
       //
       {
-         auto workers = lu::arrays::make_filled< load_order_processes::use_info_build::worker_thread, 8>(*this);
+         auto workers = lu::arrays::make_filled<load_order_processes::use_info_build::worker_thread, 8>(*this);
          {
             auto count_per = this->_forms.count_all_forms() / workers.size();
             for (auto& entry : workers)
@@ -490,14 +495,7 @@ namespace dovah {
       this->_forms.for_each_form([](form_stub& user) {
          if (user.form_type == form_type::none) // none-type forms (which are usually, but not always, none-stubs) should never use other forms, so we can skip them
             return;
-         for (auto& [_, use] : user.outbound) {
-            if (auto* used = use.other) {
-               auto& entry = used->inbound[user.form_id];
-               entry.other     = &user;
-               entry.refcount += use.refcount;
-               entry.flags    |= use.flags;
-            }
-         }
+         impl::_form_stubs::make_all_one_way_uses_bidirectional({}, user);
       });
    }
    void active_load_order::_make_hardcoded_forms() {
