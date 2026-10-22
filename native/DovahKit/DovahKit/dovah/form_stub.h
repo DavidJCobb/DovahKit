@@ -91,6 +91,8 @@ namespace dovah {
          bool is_none_stub() const noexcept;
          void set_edited(bool);
 
+         form_stub_addenda& get_or_create_addenda();
+
          #pragma region Record flag functions
             void edit_record_flags(uint32_t mask, bool clear_or_set) noexcept; // also sets the form as edited
             constexpr uint32_t get_record_flags() const noexcept;

@@ -46,7 +46,7 @@ namespace dovah::tes {
                   throw file_parse_errors::extended_subrecord_marker_is_invalid(
                      *this->owner.get_target_file(),
                      this->file_offsets.head,
-                     this->header,
+                     this->_header,
                      this->position() - 6
                   );
                }
@@ -55,7 +55,7 @@ namespace dovah::tes {
                throw file_parse_errors::extended_subrecord_marker_at_eof(
                   *this->owner.get_target_file(),
                   this->file_offsets.head,
-                  this->header,
+                  this->_header,
                   this->position() - 6
                );
             }
@@ -70,7 +70,7 @@ namespace dovah::tes {
          throw file_parse_errors::truncated_subrecord(
             *this->owner.get_target_file(),
             this->file_offsets.head,
-            this->header,
+            this->_header,
             this->position() - 12,
             subrecord._signature,
             subrecord_size,
@@ -83,7 +83,7 @@ namespace dovah::tes {
    }
    lu::four_cc record_view::peek_next_subrecord_signature() {
       auto pos = this->owner.subviews.subrecord.end_pos_in_record();
-      if (pos + 4 < this->header.size) {
+      if (pos + 4 < this->_header.size) {
          auto prior = this->position();
          this->unchecked_seek(pos);
          lu::four_cc v;

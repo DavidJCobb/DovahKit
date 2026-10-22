@@ -26,7 +26,7 @@ namespace dovah::tes {
 
       protected:
          file_view&    owner;
-         record_header header;
+         record_header _header;
          struct {
             size_type head = 0;
             size_type body = 0;
@@ -37,14 +37,15 @@ namespace dovah::tes {
          using bytereader::set_needs_endianness_swap;
 
       public:
-         constexpr operator bool() const noexcept { return this->header.signature != 0; }
-         constexpr bool exists() const noexcept { return this->header.signature != 0; }
+         constexpr operator bool() const noexcept { return this->_header.signature != 0; }
+         constexpr bool exists() const noexcept { return this->_header.signature != 0; }
          
-         constexpr record_flags flags() const noexcept { return this->header.flags; }
-         constexpr uint32_t     formID() const noexcept { return this->header.formID; }
-         constexpr lu::four_cc  signature() const noexcept { return this->header.signature; }
-         constexpr size_type    size() const noexcept { return this->header.size; }
-         constexpr uint16_t     version() const noexcept { return this->header.version; }
+         constexpr record_flags         flags() const noexcept { return this->_header.flags; }
+         constexpr uint32_t             formID() const noexcept { return this->_header.formID; }
+         constexpr const record_header& header() const noexcept { return this->_header; }
+         constexpr lu::four_cc          signature() const noexcept { return this->_header.signature; }
+         constexpr size_type            size() const noexcept { return this->_header.size; }
+         constexpr uint16_t             version() const noexcept { return this->_header.version; }
 
          constexpr const void* data() const noexcept { return this->_view.data(); }
          constexpr const void* data_at(size_type offset) const noexcept { return this->_view.data_at(offset); }

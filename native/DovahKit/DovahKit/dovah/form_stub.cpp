@@ -100,6 +100,13 @@ namespace dovah {
       }
    }
 
+   form_stub_addenda& form_stub::get_or_create_addenda() {
+      if (this->addenda)
+         return *this->addenda;
+      this->addenda = new form_stub_addenda;
+      return *this->addenda;
+   }
+
    #pragma region Record flag functions
       void form_stub::edit_record_flags(uint32_t mask, bool clear_or_set) noexcept {
          constexpr const uint32_t flag_mask_partial = (uint32_t)1 << (uint32_t)tes::record_flag::partial;

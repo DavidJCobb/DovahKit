@@ -46,7 +46,7 @@ namespace dovah::tes {
             throw file_parse_errors::record_has_invalid_signature(
                *this->_target_file,
                record.file_offset_of_header(),
-               record.header
+               record._header
             );
          }
       }
@@ -56,7 +56,7 @@ namespace dovah::tes {
             throw file_parse_errors::record_has_invalid_signature(
                *this->_target_file,
                record.file_offset_of_header(),
-               record.header
+               record._header
             );
          }
          if (this->_target_file->game() == game::skyrim_classic) {
@@ -65,7 +65,7 @@ namespace dovah::tes {
                throw file_parse_errors::record_has_invalid_signature(
                   *this->_target_file,
                   record.file_offset_of_header(),
-                  record.header
+                  record._header
                );
             }
          }
@@ -111,36 +111,36 @@ namespace dovah::tes {
             return false;
       if (!this->_reader.is_in_bounds(lu::bytestreams::serialized_bytecount<decltype(this->_reader), record_header>::value - sizeof(lu::four_cc)))
          return false;
-      record.header.signature = signature;
+      record._header.signature = signature;
       this->_reader.read(
-         record.header.size,
-         record.header.flags,
-         record.header.formID,
-         record.header.version_control,
-         record.header.version,
-         record.header.version_control_2
+         record._header.size,
+         record._header.flags,
+         record._header.formID,
+         record._header.version_control,
+         record._header.version,
+         record._header.version_control_2
       );
       record.file_offsets.body = (record_view::size_type)this->_reader.position();
-      record.file_offsets.end  = record.file_offsets.body + record.header.size;
+      record.file_offsets.end  = record.file_offsets.body + record._header.size;
       if (!this->_reader.is_in_bounds()) {
          record.set_buffer({});
          return false;
       }
       this->_validate_record_signature(); // potentially throws
       {
-         switch (record.header.signature) {
+         switch (record._header.signature) {
             case 'CELL':
             case 'DIAL':
             case 'WRLD':
-               this->_last_potential_group_parent = record.header.formID;
+               this->_last_potential_group_parent = record._header.formID;
                break;
             default:
                this->_last_potential_group_parent = 0;
          }
       }
-      if (record.header.flags.has_all_of<record_flag::compressed>()) {
+      if (record._header.flags.has_all_of<record_flag::compressed>()) {
          uint32_t decompressed_size = 0;
-         uint32_t compressed_size   = record.header.size - sizeof(decompressed_size);
+         uint32_t compressed_size   = record._header.size - sizeof(decompressed_size);
          this->_reader.read(decompressed_size);
          this->_decompressed_record.clear();
          try {
@@ -149,7 +149,7 @@ namespace dovah::tes {
             throw file_parse_errors::record_decompression_failed(
                *this->_target_file,
                record.file_offsets.head,
-               record.header,
+               record._header,
                file_parse_errors::record_decompression_failed::failure_type::claimed_size_is_too_huge_to_even_try
             );
          }
@@ -182,7 +182,7 @@ namespace dovah::tes {
                   throw file_parse_errors::record_decompression_failed(
                      *this->_target_file,
                      record.file_offsets.head,
-                     record.header,
+                     record._header,
                      problem
                   );
                }
@@ -190,7 +190,7 @@ namespace dovah::tes {
                   throw file_parse_errors::record_decompression_failed(
                      *this->_target_file,
                      record.file_offsets.head,
-                     record.header,
+                     record._header,
                      error_type::uncompressed_data_is_not_of_declared_size
                   );
                }
@@ -206,7 +206,7 @@ namespace dovah::tes {
          // The record body is uncompressed. Just have the record-view read directly 
          // out of the mapped file data.
          //
-         this->subviews.record.set_buffer({ this->_reader.data_at_position(), record.header.size});
+         this->subviews.record.set_buffer({ this->_reader.data_at_position(), record._header.size});
       }
       return true;
    }
@@ -227,7 +227,7 @@ namespace dovah::tes {
          this->_reader.set_buffer({});
       }
       record.set_buffer({});
-      record.header       = {};
+      record._header      = {};
       record.file_offsets = {};
       subrecord.set_buffer({});
       subrecord._body_pos  = 0;
@@ -256,7 +256,7 @@ namespace dovah::tes {
       auto& record = this->subviews.record;
       if (record.exists()) {
          this->_reader.unchecked_seek(record.file_offset_of_end());
-         record.header       = {};
+         record._header = {};
          record.file_offsets = {};
 
          auto& subrecord = this->subviews.subrecord;
