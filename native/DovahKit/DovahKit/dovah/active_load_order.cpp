@@ -156,8 +156,8 @@ namespace dovah {
                   file->open(this->_data_directory / info_ptr->filename);
                   this->_build_form_stubs_from_file(*file);
                } catch (...) {
-                  //if (this->archives) // TODO: uncomment when we have BSA working again
-                  //   this->archives->abort_archive_load();
+                  if (this->_bsa_collection)
+                     this->_bsa_collection->abort_load();
                   throw;
                }
                //
