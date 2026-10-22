@@ -1,90 +1,67 @@
 #include "./make_parenthood_bidirectional_worker.h"
-#include <bit>
-#include <cstdint>
 #include "dovah/_impl/form_stubs/make_one_way_use_bidirectional.h"
 #include "dovah/termination_handler.h"
-#include "./config/bidi_workers_per_quartet.h"
 #include "./queued_ref.h"
 
 namespace dovah::load_order_processes::reparent_persistent_refs {
-   make_parenthood_bidirectional_worker::make_parenthood_bidirectional_worker(
-      const std::vector<queued_ref>& all_refs,
-      size_t quartet_index,
-      bool   x_pos,
-      bool   y_pos
-   ) :
-      all_refs(all_refs),
-      quartet_index(quartet_index),
-      x_pos(x_pos),
-      y_pos(y_pos)
+   make_parenthood_bidirectional_worker::make_parenthood_bidirectional_worker(const std::vector<queued_ref>& all_refs) :
+      all_refs(all_refs)
    {}
 
    void make_parenthood_bidirectional_worker::_execute() {
       termination_handler::update_this_thread();
-      constexpr bool use_sign_masking = false;
-      constexpr auto sign_bit_mask    = std::bit_cast<int32_t, uint32_t>(uint32_t(1 << 31));
-      const uint32_t x_mask = this->x_pos ? 0 : sign_bit_mask;
-      const uint32_t y_mask = this->y_pos ? 0 : sign_bit_mask;
-      //
-      const auto& list = this->all_refs;
-      size_t start;
-      size_t end;
-      if constexpr (config::bidi_workers_per_quartet == 1) {
-         start = 0;
-         end   = list.size();
-      } else {
-         const size_t refs_per_quartet = list.size() / config::bidi_workers_per_quartet;
-         start = this->quartet_index * refs_per_quartet;
-         end   = (this->quartet_index == config::bidi_workers_per_quartet - 1) ? list.size() : start + refs_per_quartet;
-      }
-      //
-      for (size_t i = start; i < end; ++i) {
-         auto& item = list[i];
+
+      const auto min_distance_sq = this->ring.min_radius * this->ring.min_radius;
+      const auto max_distance_sq = this->ring.max_radius * this->ring.max_radius;
+
+      const size_t size = this->all_refs.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& item = this->all_refs[i];
          ++this->progress.current;
          if (!item.cell)
             continue;
-         if constexpr (use_sign_masking) {
-            if ((item.grid_position.x & sign_bit_mask) != x_mask)
-               continue;
-            if ((item.grid_position.y & sign_bit_mask) != y_mask)
-               continue;
-         } else {
-            if ((item.grid_position.x >= 0) != this->x_pos)
-               continue;
-            if ((item.grid_position.y >= 0) != this->y_pos)
-               continue;
+
+         uint32_t distance_sq;
+         {
+            auto x = item.grid_position.x - this->ring.center.x;
+            auto y = item.grid_position.y - this->ring.center.y;
+            distance_sq = (x * x) + (y * y);
          }
+         if (distance_sq < min_distance_sq)
+            continue;
+         if (distance_sq > max_distance_sq)
+            continue;
 
-         if (item.cell) {
-            static_assert(false, "TODO: Wait... This isn't thread-safe. except by happenstance.");
-            impl::_form_stubs::make_one_way_use_bidirectional({}, *item.ref, *item.cell);
-
-            //
-            // That isn't thread-safe except by happenstance. When we build the ref list, we go cell-by-cell, so 
-            // USUALLY cells won't end up being handled by the same worker. But if a cell's refs end up split 
-            // across two quartet workers, then we'd run into problems, wouldn't we??
-            //
-
-         }
+         impl::_form_stubs::make_one_way_use_bidirectional({}, *item.ref, *item.cell);
       }
    }
 
+   void make_parenthood_bidirectional_worker::set_ring(const std::pair<int32_t, int32_t>& center, uint32_t min_radius, uint32_t max_radius) {
+      this->ring = {
+         .center     = { center.first, center.second },
+         .min_radius = min_radius,
+         .max_radius = max_radius,
+      };
+   }
    void make_parenthood_bidirectional_worker::start() noexcept {
       assert(!this->is_active());
       this->progress.current = 0;
-      {
-         const auto& list = this->all_refs;
-         this->progress.maximum = list.size();
-         if (this->quartet_index != config::bidi_workers_per_quartet - 1) {
-            const size_t refs_per_quartet = list.size() / config::bidi_workers_per_quartet;
-            this->progress.maximum = (this->quartet_index * refs_per_quartet) + refs_per_quartet;
-         }
-      }
+      this->progress.maximum = this->all_refs.size();
       this->thread = std::thread(&_thread_handler, this);
    }
    void make_parenthood_bidirectional_worker::wait_for() noexcept {
       if (this->is_active())
          this->thread.join();
+   }
+
+   void make_parenthood_bidirectional_worker::run_on_this_thread() {
+      const size_t size = this->all_refs.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& item = this->all_refs[i];
+         if (!item.cell)
+            continue;
+         impl::_form_stubs::make_one_way_use_bidirectional({}, *item.ref, *item.cell);
+      }
    }
                
    float make_parenthood_bidirectional_worker::assess_load_progress() const noexcept {

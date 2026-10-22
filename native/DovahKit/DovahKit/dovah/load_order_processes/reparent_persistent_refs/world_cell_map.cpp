@@ -45,6 +45,8 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             *item = cell;
          else
             this->cells.beyond.push_back(cell);
+
+         this->grid_extents.widen_to_include(gx, gy);
       }
    }
 

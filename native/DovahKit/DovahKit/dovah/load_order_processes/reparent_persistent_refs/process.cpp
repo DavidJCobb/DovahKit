@@ -7,7 +7,6 @@
 #include "dovah/use_info/entry_flag_to_mask.h"
 #include "dovah/use_info/entry_flags/base.h"
 #include "dovah/utils/form_types/is_ref.h"
-#include "./config/bidi_workers_per_quartet.h"
 #include "./queued_ref.h"
 #include "./world_cell_map.h"
 #include "./set_parent_cell_worker.h"
@@ -74,6 +73,12 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             }
             std::swap(src, dst);
          }
+         if (refs.empty()) {
+            //
+            // No persistent refs to process.
+            //
+            return;
+         }
          //
          // So now, the persistent cell is no longer tracking that it's used by the refs, but 
          // the refs still track themselves as using the persistent cell. Let's change that.
@@ -105,20 +110,41 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
          // new uses bidirectional.
          //
          {
-            auto workers = std::array<make_parenthood_bidirectional_worker, 8>{{
-               { refs, 0, false, false },
-               { refs, 1, false, false },
-               { refs, 0, true, false },
-               { refs, 1, true, false },
-               { refs, 0, false, true },
-               { refs, 1, false, true },
-               { refs, 0, true, true },
-               { refs, 1, true, true },
-            }};
-            for (auto& worker : workers)
-               worker.start();
-            for (auto& worker : workers)
-               worker.wait_for();
+            //
+            // So normally, we wouldn't be able to multi-thread updating the used cells, because 
+            // we can't be sure that multiple threads acting on unrelated refs wouldn't end up 
+            // trying to touch the same cell at the same time. However, there's one property that 
+            // we can take advantage of: we know each ref's cell grid coordinates.
+            // 
+            // We can divide the worldspace into rings, and task each worker to a ring.
+            //
+            auto workers = lu::arrays::make_filled<make_parenthood_bidirectional_worker, 8>(refs);
+
+            const size_t max_radius = [&cells]() {
+               auto x_span = cells.grid_extents.x.max - cells.grid_extents.x.min / 2;
+               auto y_span = cells.grid_extents.y.max - cells.grid_extents.y.min / 2;
+               if (x_span > y_span)
+                  return x_span;
+               return y_span;
+            }();
+            const size_t radius_per_worker = max_radius / workers.size();
+
+            if (radius_per_worker <= 1) {
+               auto& worker = workers[0];
+               worker.run_on_this_thread();
+            } else {
+               const auto center       = cells.grid_extents.center();
+               size_t     inner_radius = 0;
+               for (size_t i = 0; i < workers.size(); ++i) {
+                  auto& worker = workers[i];
+                  worker.set_ring(center, inner_radius, inner_radius + radius_per_worker);
+                  inner_radius += radius_per_worker;
+               }
+               for (auto& worker : workers)
+                  worker.start();
+               for (auto& worker : workers)
+                  worker.wait_for();
+            }
          }
          //
          // Done with this worldspace!

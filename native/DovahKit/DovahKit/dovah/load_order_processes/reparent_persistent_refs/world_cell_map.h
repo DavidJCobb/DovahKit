@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "lu/containers/grids/fixed_grid.h"
+#include "./grid_extents.h"
 namespace dovah {
    class form_stub;
 }
@@ -16,6 +17,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             cell_grid grid;
             cell_list beyond;
          } cells;
+         grid_extents grid_extents;
             
          form_stub* cell_for_position(float x, float y) const;
          void set_world(form_stub& world);
