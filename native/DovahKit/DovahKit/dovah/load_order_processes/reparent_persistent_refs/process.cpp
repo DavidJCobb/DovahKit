@@ -84,7 +84,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
          // the refs still track themselves as using the persistent cell. Let's change that.
          //
          {
-            auto workers = lu::arrays::make_filled<set_parent_cell_worker, 4>(cells, refs);
+            auto workers = lu::arrays::make_filled<set_parent_cell_worker, 4>(cells, refs, *p_cell);
             if (refs.size() > workers.size()) {
                size_t per_thread = refs.size() / workers.size();
                size_t start      = 0;
@@ -102,6 +102,28 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
                worker.set_ref_indices_to_process(0, refs.size());
                worker.start();
                worker.wait_for();
+            }
+            //
+            // We need to deal with an edge-case: what if a ref's coordinates would place it 
+            // outside of all defined non-persistent cells? I don't want to create cells on load 
+            // that didn't originally exist, so the most "honest" thing to do would be to just 
+            // keep those refs in the persistent cell: we need to re-establish the uses we just 
+            // severed.
+            //
+            for (const auto& worker : workers) {
+               if (!worker.orphan_ref_count) [[likely]] {
+                  continue;
+               }
+               auto [start, end] = worker.get_ref_indices_to_process();
+               for (size_t i = start; i < end; ++i) {
+                  auto& item = refs[i];
+                  if (item.cell)
+                     continue;
+                  auto& use_for_used = p_cell->inbound[item.ref->form_id];
+                  use_for_used.other  = item.ref;
+                  use_for_used.flags |= use_info::entry_flag_to_mask(use_info::entry_flags::base::parent);
+                  ++use_for_used.refcount;
+               }
             }
          }
          //

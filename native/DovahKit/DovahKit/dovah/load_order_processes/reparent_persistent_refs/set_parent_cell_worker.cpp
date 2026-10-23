@@ -34,6 +34,8 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
                item.ref->_set_parent_form_one_way({}, *cell);
                item.cell          = cell;
                item.grid_position = cell->addenda->grid_position.value();
+            } else {
+               ++this->orphan_ref_count;
             }
          });
          ++this->progress.current;

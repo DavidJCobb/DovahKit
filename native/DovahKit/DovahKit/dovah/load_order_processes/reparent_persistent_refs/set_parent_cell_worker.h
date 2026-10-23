@@ -33,7 +33,13 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             std::vector<queued_ref>&
          );
 
+         size_t orphan_ref_count = 0;
+
          void set_ref_indices_to_process(size_t start, size_t end);
+         constexpr std::pair<size_t, size_t> get_ref_indices_to_process() const noexcept {
+            return { this->range.start, this->range.end };
+         }
+
          void start() noexcept;
          void wait_for() noexcept;
                
