@@ -33,7 +33,6 @@ namespace dovah::tes_file_reading {
       using coord_value_t = int32_t;
 
       static constexpr size_t thread_count = 4;
-      static constexpr size_t bidi_worker_quartet_count = 1;
 
       static constexpr uint8_t max_pre_sort_world_grid = 60; // When prefetching cells, sort all that fall within (+/-) this size into a two-dimensional array for faster lookups.
       class world_cell_map {
@@ -95,7 +94,6 @@ namespace dovah::tes_file_reading {
             //
             protected:
                load_order_persistent_ref_reparenter& owner;
-               const size_t quartet_index = 0;
                const bool x_pos; // which quadrant should this worker handle? (true if positive on this axis)
                const bool y_pos; // which quadrant should this worker handle? (true if positive on this axis)
                std::thread thread;
@@ -110,7 +108,7 @@ namespace dovah::tes_file_reading {
                void _execute();
 
             public:
-               bidi_worker(load_order_persistent_ref_reparenter&, size_t quartet_index, bool xp, bool yp);
+               bidi_worker(load_order_persistent_ref_reparenter&, bool xp, bool yp);
 
                void start() noexcept;
                void wait_for() noexcept;
@@ -121,12 +119,12 @@ namespace dovah::tes_file_reading {
          struct bidi_worker_quartet {
             std::array<bidi_worker, 4> workers;
 
-            bidi_worker_quartet(load_order_persistent_ref_reparenter& owner, size_t index) : workers{{
-               { owner, index, true,  true },
-               { owner, index, true,  false },
-               { owner, index, false, true },
-               { owner, index, false, false },
-            }} {};
+            bidi_worker_quartet(load_order_persistent_ref_reparenter& owner) : workers({
+               bidi_worker{ owner, true,  true },
+               bidi_worker{ owner, true,  false },
+               bidi_worker{ owner, false, true },
+               bidi_worker{ owner, false, false },
+            }) {};
 
             inline void start() noexcept {
                for (auto& w : this->workers)
@@ -153,7 +151,7 @@ namespace dovah::tes_file_reading {
 
          std::mutex lock;
          std::array<worker, thread_count> threads;
-         std::array<bidi_worker_quartet, bidi_worker_quartet_count> bidi_workers;
+         bidi_worker_quartet bidi_workers;
          world_cell_map cells_for_current_world;
          std::vector<ref_entry> refs;
 

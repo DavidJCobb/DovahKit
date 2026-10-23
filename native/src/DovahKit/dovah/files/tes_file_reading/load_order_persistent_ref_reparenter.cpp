@@ -123,7 +123,7 @@ namespace dovah::tes_file_reading {
    #pragma endregion
 
    #pragma region ...::bidi_worker
-   load_order_persistent_ref_reparenter::bidi_worker::bidi_worker(load_order_persistent_ref_reparenter& o, size_t qi, bool xp, bool yp) : owner(o), quartet_index(qi), x_pos(xp), y_pos(yp) {
+   load_order_persistent_ref_reparenter::bidi_worker::bidi_worker(load_order_persistent_ref_reparenter& o, bool xp, bool yp) : owner(o), x_pos(xp), y_pos(yp) {
    }
 
    void load_order_persistent_ref_reparenter::bidi_worker::_execute() {
@@ -133,19 +133,9 @@ namespace dovah::tes_file_reading {
       const uint32_t x_mask = this->x_pos ? 0 : sign_bit_mask;
       const uint32_t y_mask = this->y_pos ? 0 : sign_bit_mask;
       //
-      const auto& list = this->owner.refs;
-      size_t start;
-      size_t end;
-      if constexpr (bidi_worker_quartet_count == 1) {
-         start = 0;
-         end   = list.size();
-      } else {
-         const size_t refs_per_quartet = list.size() / bidi_worker_quartet_count;
-         start = this->quartet_index * refs_per_quartet;
-         end   = (this->quartet_index == bidi_worker_quartet_count - 1) ? list.size() : start + refs_per_quartet;
-      }
-      //
-      for (size_t i = start; i < end; ++i) {
+      const auto&  list = this->owner.refs;
+      const size_t size = list.size();
+      for (size_t i = 0; i < size; ++i) {
          auto& item = list[i];
          ++this->progress.current;
          if (!item.cell)
@@ -185,10 +175,7 @@ namespace dovah::tes_file_reading {
    #pragma region load_order_persistent_ref_reparenter
    load_order_persistent_ref_reparenter::load_order_persistent_ref_reparenter() : 
       threads{ *this, *this, *this, *this },
-      bidi_workers{{
-         { *this, 0 },
-         //{ *this, 1 },
-      }}
+      bidi_workers{ *this }
    {
       this->refs.reserve(count_to_prepare_for);
    }
@@ -286,10 +273,8 @@ namespace dovah::tes_file_reading {
          // 
          // Now, we must make those references bidirectional.
          //
-         for (auto& thread : this->bidi_workers)
-            thread.start();
-         for (auto& thread : this->bidi_workers)
-            thread.wait_for();
+         this->bidi_workers.start();
+         this->bidi_workers.wait_for();
          return false;
       });
       this->cells_for_current_world.clear();
