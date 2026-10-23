@@ -187,7 +187,7 @@ namespace dovah::tes_file_reading {
       threads{ *this, *this, *this, *this },
       bidi_workers{{
          { *this, 0 },
-         { *this, 1 },
+         //{ *this, 1 },
       }}
    {
       this->refs.reserve(count_to_prepare_for);

@@ -33,7 +33,7 @@ namespace dovah::tes_file_reading {
       using coord_value_t = int32_t;
 
       static constexpr size_t thread_count = 4;
-      static constexpr size_t bidi_worker_quartet_count = 2;
+      static constexpr size_t bidi_worker_quartet_count = 1;
 
       static constexpr uint8_t max_pre_sort_world_grid = 60; // When prefetching cells, sort all that fall within (+/-) this size into a two-dimensional array for faster lookups.
       class world_cell_map {
