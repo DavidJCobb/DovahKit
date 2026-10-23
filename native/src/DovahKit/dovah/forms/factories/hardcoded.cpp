@@ -173,8 +173,7 @@ namespace dovah {
          stub->editorID  = "DoorMarker";
          // Flags: 0x800000
          // Model File Name: "MarkerTeleport.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:002]"TravelMarker"
          auto stub = new form_stub();
@@ -183,8 +182,7 @@ namespace dovah {
          stub->editorID  = "TravelMarker";
          // Flags: 0x800000
          // Model File Name: "Marker_Travel.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:003]"NorthMarker"
          auto stub = new form_stub();
@@ -193,8 +191,7 @@ namespace dovah {
          stub->editorID  = "NorthMarker";
          // Flags: 0x800000
          // Model File Name: "Marker_North.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [DOOR:004]"PrisonMarker"
          auto stub = new form_stub();
@@ -203,8 +200,7 @@ namespace dovah {
          stub->editorID  = "PrisonMarker";
          // Flags: 0x800000
          // Model File Name: "Marker_Prison.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:005]"DivineMarker"
          auto stub = new form_stub();
@@ -213,8 +209,7 @@ namespace dovah {
          stub->editorID  = "DivineMarker";
          // Flags: 0x800000
          // Model File Name: "Marker_Divine.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:006]"TempleMarker"
          auto stub = new form_stub();
@@ -223,8 +218,7 @@ namespace dovah {
          stub->editorID  = "TempleMarker";
          // Flags: 0x800000
          // Model File Name: "Marker_Temple.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [NPC_:007]"Player"
          auto stub = new form_stub();
@@ -265,8 +259,7 @@ namespace dovah {
          stub->editorID  = "MapMarker";
          // Flags: 0x800000
          // Model File Name: "Marker_Map.NIF"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:012]"HorseMarker"
          auto stub = new form_stub();
@@ -294,8 +287,7 @@ namespace dovah {
          stub->form_type = form_type_info::signature_to_form_type('ACHR');
          stub->editorID  = "PlayerRef";
          //
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::ObjectReference::form_flag::persistent, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::ObjectReference::form_flag::persistent);
       }
       {  // [STAT:015]"MultiBoundMarker"
          auto stub = new form_stub();
@@ -303,8 +295,7 @@ namespace dovah {
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "MultiBoundMarker";
          // Flags: 0x800000
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:017]"PlaneMarker"
          auto stub = new form_stub();
@@ -312,8 +303,7 @@ namespace dovah {
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "PlaneMarker";
          // Flags: 0x800000
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [WATR:018]"DefaultWater"
          auto stub = new form_stub();
@@ -375,8 +365,7 @@ namespace dovah {
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "RoomMarker";
          // Flags: 0x800000
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:020]"PortalMarker"
          //
@@ -387,8 +376,7 @@ namespace dovah {
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "PortalMarker";
          // Flags: 0x800000
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:021]"CollisionMarker"
          //
@@ -399,8 +387,7 @@ namespace dovah {
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "CollisionMarker";
          // Flags: 0x800000
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [ACTI:022]"DefaultAshPile2"
          auto stub = new form_stub();
@@ -460,8 +447,7 @@ namespace dovah {
          stub->editorID  = "COCMarkerHeading";
          // Flags: 0x800000
          // Model File Name: "MarkerCOCHeading.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:034]"XMarkerHeading"
          auto stub = new form_stub();
@@ -470,8 +456,7 @@ namespace dovah {
          stub->editorID  = "XMarkerHeading";
          // Flags: 0x800000
          // Model File Name: "MarkerXHeading.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [GLOB:035]"GameYear"
          auto stub = new form_stub();
@@ -528,8 +513,7 @@ namespace dovah {
          stub->editorID  = "XMarker";
          // Flags: 0x800000
          // Model File Name: "MarkerX.nif"
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [WRLD:03C]"DefaultWorld"
          auto stub = new form_stub();
@@ -565,8 +549,7 @@ namespace dovah {
          stub->editorID  = "CellWaterCurrentMarker";
          // Flags: 0x800000
          // Model File Name: ""
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [STAT:062]"WaterCurrentMarker"
          auto stub = new form_stub();
@@ -575,8 +558,7 @@ namespace dovah {
          stub->editorID  = "WaterCurrentMarker";
          // Flags: 0x800000
          // Model File Name: ""
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [GLOB:063]"PlayCredits"
          auto stub = new form_stub();
@@ -628,8 +610,7 @@ namespace dovah {
          stub->editorID  = "WaterCurrentZoneMarker";
          // Flags: 0x800000
          // Model File Name: ""
-         lo._accept_hardcoded_form(stub);
-         stub->edit_record_flags(loaded_forms::Static::form_flag::is_marker, true);
+         lo._accept_hardcoded_form(stub, loaded_forms::Static::form_flag::is_marker);
       }
       {  // [EFSH:146]"LifeDetected"
          //

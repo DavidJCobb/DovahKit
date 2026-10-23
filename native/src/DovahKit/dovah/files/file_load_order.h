@@ -216,7 +216,7 @@ namespace dovah {
          #pragma endregion
          //
          void _make_hardcoded_forms();
-         void _accept_hardcoded_form(form_stub*) noexcept;
+         void _accept_hardcoded_form(form_stub*, uint32_t record_flags = 0) noexcept;
          void _build_none_stubs();
          void _reparent_persistent_references();
          void _build_use_info();

@@ -161,12 +161,12 @@ namespace dovah {
       //
       add_hardcoded_forms_to_load_order(*this);
    }
-   void file_load_order::_accept_hardcoded_form(form_stub* stub) noexcept {
+   void file_load_order::_accept_hardcoded_form(form_stub* stub, uint32_t record_flags) noexcept {
       auto& type = this->forms_by_type[stub->form_type];
       std::lock_guard<std::mutex> guard_for_form_type(type.lock);
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
       //
-      stub->_add_file(*this->hardcoded_forms_file, 0);
+      stub->_add_file(*this->hardcoded_forms_file, 0, record_flags);
       stub->flags |= form_stub::flag::is_hardcoded;
       //
       bare_form_id_t formID = stub->formID;
