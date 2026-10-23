@@ -82,17 +82,24 @@ namespace dovah::localization {
          return;
       }
       reader.skip_bytes(4); // size of all string data
+      file.strings_by_id[0] = { 0, 0 }; // by convention, ID 0 is an empty string
       if (facts::localized_strings::serialized_strings_are_length_prefixed(type)) {
          for (uint32_t i = 0; i < count; ++i) {
             bare_localized_string_id id;
             uint32_t                 offset = 0;
-            uint32_t                 length;
-            if (!reader.read(id, offset, length))
+            if (!reader.read(id, offset))
                break;
-            if (offset > file.buffer.size())
+            //
+            // The length is paired with the string data, not the header.
+            //
+            uint32_t length;
+            if (offset + sizeof(length) > file.buffer.size())
                continue;
+            length = *(uint32_t*)file.buffer.data_at(offset);
+            offset += sizeof(length);
             if (offset + length > file.buffer.size()) // truncated string!
                continue;
+            //
             file.strings_by_id[id] = { offset, length };
          }
       } else {
