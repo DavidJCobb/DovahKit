@@ -1,4 +1,5 @@
 #include "./string_file_bundle.h"
+#include <limits>
 #include "lu/bytestreams/base_bytereader.h"
 #include "dovah/bsa/archive_collection.h"
 #include "dovah/facts/localized_strings/serialized_strings_are_length_prefixed.h"
@@ -46,22 +47,26 @@ namespace dovah::localization {
       }
    }
    std::optional<string_file_bundle::const_string_view> string_file_bundle::lookup(localized_string_type type, language lang, bare_localized_string_id id) const noexcept {
-      auto& data    = this->_by_language[(size_t)lang];
-      auto& strings = [&data, type]() -> const id_to_string_map& {
+      auto& data = this->_by_language[(size_t)lang];
+      auto& file = [&data, type]() -> const string_file& {
          switch (type) {
             case localized_string_type::general:
-               return data.general.strings_by_id;
+               return data.general;
             case localized_string_type::description:
-               return data.description.strings_by_id;
+               return data.description;
             case localized_string_type::info:
-               return data.info.strings_by_id;
+               return data.info;
          }
          std::unreachable();
       }();
-      auto it = strings.find(id);
-      if (it == strings.end())
+      auto it = file.strings_by_id.find(id);
+      if (it == file.strings_by_id.end())
          return {};
-      return const_string_view(it->second.data(), it->second.size());
+      const string_info& info = it->second;
+      return const_string_view(
+         (const char*)file.buffer.data_at(info.offset),
+         info.size
+      );
    }
 
    void string_file_bundle::_parse_single_file(localized_string_type type, string_file& file) {
@@ -85,11 +90,10 @@ namespace dovah::localization {
             if (!reader.read(id, offset, length))
                break;
             if (offset > file.buffer.size())
-               break;
+               continue;
             if (offset + length > file.buffer.size()) // truncated string!
-               break;
-            const char* start = (const char*)file.buffer.data_at(offset);
-            file.strings_by_id[id] = { start, length };
+               continue;
+            file.strings_by_id[id] = { offset, length };
          }
       } else {
          for (uint32_t i = 0; i < count; ++i) {
@@ -99,9 +103,12 @@ namespace dovah::localization {
                break;
             if (offset > file.buffer.size())
                break;
-            const char*  start  = (const char*)file.buffer.data_at(offset);
-            const size_t length = strnlen_s(start, file.buffer.size() - offset);
-            file.strings_by_id[id] = { start, length };
+            const char*    start  = (const char*)file.buffer.data_at(offset);
+            const uint32_t length = strnlen_s(
+               start,
+               std::max(file.buffer.size() - offset, (size_t)std::numeric_limits<uint32_t>::max())
+            );
+            file.strings_by_id[id] = { offset, length };
          }
       }
    }

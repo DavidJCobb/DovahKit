@@ -18,7 +18,12 @@ namespace dovah::localization {
          using const_string_view = std::basic_string_view<const char>;
 
       protected:
-         using id_to_string_map = std::map<bare_localized_string_id, std::string_view>;
+         struct string_info {
+            uint32_t offset; // within `string_file::buffer` i.e. the string file
+            uint32_t size;
+         };
+
+         using id_to_string_map = std::map<bare_localized_string_id, string_info>;
 
          struct string_file {
             asset_file_buffer buffer;
