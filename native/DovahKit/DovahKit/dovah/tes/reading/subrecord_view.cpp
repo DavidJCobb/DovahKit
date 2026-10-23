@@ -9,6 +9,10 @@ namespace dovah::tes {
       return this->_owner.subviews.record;
    }
 
+   const file& subrecord_view::get_source_file() const {
+      return *this->_owner.get_target_file();
+   }
+
    void subrecord_view::read_all_to_string(std::string& dst) {
       dst.assign((const char*)this->data(), this->size());
       this->seek(this->size());

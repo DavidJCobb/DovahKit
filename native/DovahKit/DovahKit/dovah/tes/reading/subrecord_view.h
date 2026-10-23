@@ -5,6 +5,7 @@
 #include "lu/concepts/integer.h"
 #include "../bytereader.h"
 namespace dovah::tes {
+   class file;
    class file_view;
    class record_view;
 }
@@ -33,6 +34,9 @@ namespace dovah::tes {
 
          const record_view& get_containing_record() const;
          record_view& get_containing_record();
+
+         // Precondition: the owning `file_view` must have had a target file set.
+         const file& get_source_file() const;
          
          constexpr const void* data() const noexcept { return this->_view.data(); }
          constexpr const void* data_at(size_type s) const noexcept { return this->_view.data_at(s); }
