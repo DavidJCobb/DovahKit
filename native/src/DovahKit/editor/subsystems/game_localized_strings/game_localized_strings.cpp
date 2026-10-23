@@ -105,7 +105,7 @@ namespace dovahkit::subsystems::game_localized_strings {
          }
       }
       if (src_encoding == character_encoding::utf_8) {
-         return QString::fromUtf8(s.c_str());
+         return QString::fromUtf8(s.c_str(), s.size());
       }
       return convert_narrow_to_qt(s.c_str(), src_encoding);
    }

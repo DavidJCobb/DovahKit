@@ -218,7 +218,8 @@ namespace dovah {
             field.value = "<LOAD FAILED>";
             if (auto* base = this->owner.loader) {
                if (auto* store = base->localization_data) {
-                  field.value     = store->lookup(field.type, field.index);
+                  auto view = store->lookup(field.type, field.index);
+                  field.value.assign(view.data(), view.size());
                   field.localized = store->get_default_language_enum();
                }
             }
