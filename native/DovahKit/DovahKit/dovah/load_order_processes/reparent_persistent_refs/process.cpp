@@ -135,10 +135,14 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             } else {
                const auto center       = cells.grid_extents.center();
                size_t     inner_radius = 0;
-               for (size_t i = 0; i < workers.size(); ++i) {
+               for (size_t i = 0; i < workers.size() - 1; ++i) {
                   auto& worker = workers[i];
                   worker.set_ring(center, inner_radius, inner_radius + radius_per_worker);
                   inner_radius += radius_per_worker;
+               }
+               {  // last worker should have unlimited max radius
+                  auto& worker = workers.back();
+                  worker.set_ring(center, inner_radius, 0xFFFFFFFF);
                }
                for (auto& worker : workers)
                   worker.start();
