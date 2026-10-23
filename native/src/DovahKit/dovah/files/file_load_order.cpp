@@ -1734,7 +1734,7 @@ namespace dovah {
             // None-stubs can be destroyed if they come solely from the active file, and if all 
             // of the forms that reference them can be loaded.
             //
-            bool available = false;
+            bool available = true;
             for (auto& pair : stub->inbound) {
                auto& entry = pair.second;
                if (!entry.other)
