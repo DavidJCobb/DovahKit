@@ -16,8 +16,10 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
                int32_t x = 0;
                int32_t y = 0;
             } center;
-            uint32_t min_radius = 0;
-            uint32_t max_radius = 0xFFFFFFFF;
+            struct {
+               uint32_t start = 0;
+               uint32_t end   = 0xFFFFFFFF;
+            } radii;
          } ring;
          struct {
             size_t maximum = 0;
@@ -32,7 +34,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
       public:
          make_parenthood_bidirectional_worker(const std::vector<queued_ref>&);
 
-         void set_ring(const std::pair<int32_t, int32_t>& center, uint32_t min_radius, uint32_t max_radius);
+         void set_ring(const std::pair<int32_t, int32_t>& center, uint32_t start_radius, uint32_t end_radius);
          void start() noexcept;
          void wait_for() noexcept;
 

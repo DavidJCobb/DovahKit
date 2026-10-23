@@ -11,8 +11,8 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
    void make_parenthood_bidirectional_worker::_execute() {
       termination_handler::update_this_thread();
 
-      const auto min_distance_sq = this->ring.min_radius * this->ring.min_radius;
-      const auto max_distance_sq = this->ring.max_radius * this->ring.max_radius;
+      const auto start_distance_sq = this->ring.radii.start * this->ring.radii.start;
+      const auto end_distance_sq   = this->ring.radii.end   * this->ring.radii.end;
 
       const size_t size = this->all_refs.size();
       for (size_t i = 0; i < size; ++i) {
@@ -27,20 +27,19 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             auto y = item.grid_position.y - this->ring.center.y;
             distance_sq = (x * x) + (y * y);
          }
-         if (distance_sq < min_distance_sq)
+         if (distance_sq < start_distance_sq)
             continue;
-         if (distance_sq > max_distance_sq)
+         if (distance_sq >= end_distance_sq)
             continue;
 
          impl::_form_stubs::make_one_way_use_bidirectional({}, *item.ref, *item.cell);
       }
    }
 
-   void make_parenthood_bidirectional_worker::set_ring(const std::pair<int32_t, int32_t>& center, uint32_t min_radius, uint32_t max_radius) {
+   void make_parenthood_bidirectional_worker::set_ring(const std::pair<int32_t, int32_t>& center, uint32_t start_radius, uint32_t end_radius) {
       this->ring = {
-         .center     = { center.first, center.second },
-         .min_radius = min_radius,
-         .max_radius = max_radius,
+         .center = { center.first, center.second },
+         .radii  = { start_radius, end_radius },
       };
    }
    void make_parenthood_bidirectional_worker::start() noexcept {
