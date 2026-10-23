@@ -12,7 +12,7 @@ namespace cobb {
       if (auto& cpu = cobb::cpuinfo::get(); cpu.extension_support.sse_2 && cpu.extension_support.sse_3) {
          auto mb_a = _mm_set1_epi8('A' - 1);
          auto mb_z = _mm_set1_epi8('Z' + 1);
-         //
+         
          auto _to_lower = [&mb_a, &mb_z](__m128i& data) {
             //
             // Goal: for each active byte in (mask_a), OR the byte in (data) by 0x20
@@ -23,7 +23,7 @@ namespace cobb {
             mask_a = _mm_and_si128(_mm_set1_epi8(0x20), mask_a); // per byte: (a >= 'A' && a <= 'Z') ? 0x20 : 0
             data = _mm_or_si128(data, mask_a); // bitwise-OR
          };
-         //
+         
          for (; i + 15 < size; i += 16) {
             auto ma = _mm_loadu_si128((const __m128i*)(a.data() + i));
             auto mb = _mm_loadu_si128((const __m128i*)(b.data() + i));
