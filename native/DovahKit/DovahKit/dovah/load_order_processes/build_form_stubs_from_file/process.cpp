@@ -9,6 +9,7 @@
 #include "dovah/utils/form_stubs/get_parent_form.h"
 #include "dovah/utils/form_stubs/is_interior_cell.h"
 #include "./threads/forms_of_type.h"
+#include "./threads/impl/fail_if_form_fatally_misplaced.h"
 #include "./make_stub_from_record.h" // when indexing worldspaces
 #pragma region Committing stubs
    #include "./check_and_report_override_legality.h"
@@ -33,8 +34,10 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       _threads({
          #define THREADS_OF_TYPE(_typename_) \
             ._typename_ = lu::arrays::make_filled<threads::_typename_, std::tuple_size_v<decltype(thread_collection::_typename_)>>(threads::initialization_params{params, *this})
+         THREADS_OF_TYPE(exterior_cells_and_children),
          THREADS_OF_TYPE(forms_of_type),
          THREADS_OF_TYPE(interior_cells_and_children),
+         THREADS_OF_TYPE(persistent_cell_children),
          THREADS_OF_TYPE(topics_and_infos),
          #undef THREADS_OF_TYPE
       })
@@ -48,11 +51,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          tes::file_view::chunk_type ot;
 
          struct {
+            uint32_t exterior_cells_and_children = 0;
             uint32_t forms_of_type               = 0;
             uint32_t interior_cells_and_children = 0;
+            uint32_t persistent_cell_children    = 0;
             uint32_t topics_and_infos            = 0;
-            uint32_t world_sub_block = 0;
-            uint32_t exterior_cell   = 0;
             uint32_t game_setting    = 0;
          } thread_indices;
          #define ENQUEUE(_thread_typename_, ...) \
@@ -64,10 +67,10 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                   thread_indices._thread_typename_ = 0; \
             }
 
-         bare_form_id last_worldspace_id = 0;
-         bare_form_id last_world_cell_id = 0;
-         int16_t      last_ext_block_x = 0;
-         int16_t      last_ext_block_y = 0;
+         form_stub*   last_worldspace      = nullptr;
+         form_stub*   last_persistent_cell = nullptr;
+         int16_t      last_ext_block_x     = 0;
+         int16_t      last_ext_block_y     = 0;
          while (ot = view.next_record_or_group(), ot != tes::file_view::chunk_type::none) {
             //
             // First, let's define some terms:
@@ -120,24 +123,37 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      //
                      // Parse direct children of the worldspace (i.e. the persistent cell).
                      //
+                     if (!last_worldspace) [[unlikely]] {
+                        static_assert(false, "TODO: Error: world-children GRUP not immediately preceded by any WRLD record");
+                     } else {
+                        auto result = utils::form_ids::record_id_to_form_id(this->_params.source_file, group.label);
+                        if (!result.has_value()) [[unlikely]] {
+                           static_assert(false, "TODO: Error: world-children GRUP specifies invalid parent form ID");
+                        }
+                        if (result.value() != last_worldspace->form_id) [[unlikely]] {
+                           static_assert(false, "TODO: Error: world-children GRUP not immediately preceded by the associated WRLD record");
+                        }
+                     }
                      continue;
                   case tes::group_type::cell_children:
+                     assert(!!last_persistent_cell && "We should be ignoring these GRUPs when they don't appear directly after a worldspace's persistent cell!");
+                     ENQUEUE(persistent_cell_children, { last_persistent_cell, (uint32_t)group.position });
+                     view.skip_current_group();
+                     continue;
                   case tes::group_type::cell_persistent_children:
                   case tes::group_type::cell_temporary_children:
-                     assert(last_world_cell_id != 0 && "We should be ignoring these GRUPs when they don't appear after a worldspace's persistent cell!");
-                     ENQUEUE(exterior_cell, { last_world_cell_id, group.position });
-                     view.skip_current_group();
+                     static_assert(false, "TODO: Unexpected top-level or group");
                      continue;
                   case tes::group_type::exterior_cell_block:
                      last_ext_block_y = group.label & 0xFFFF;
                      last_ext_block_x = group.label >> 0x10;
                      continue;
                   case tes::group_type::exterior_cell_sub_block:
-                     assert(last_worldspace_id && "Exterior Cell Block GRUP must follow a WRLD record.");
+                     assert(last_worldspace && "Exterior Cell Block GRUP must follow a WRLD record.");
                      {
                         int16_t sub_x = group.label >> 0x10;
                         int16_t sub_y = group.label & 0xFFFF;
-                        ENQUEUE(worldspace_sub_block, { last_worldspace_id, last_ext_block_x, last_ext_block_y, sub_x, sub_y, (uint32_t)group.position });
+                        ENQUEUE(exterior_cells_and_children, { last_worldspace, { last_ext_block_x, last_ext_block_y }, { sub_x, sub_y }, (uint32_t)group.position });
                      }
                      view.skip_current_group();
                      continue;
@@ -163,9 +179,10 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      view.skip_current_group();
                      continue;
                   case tes::group_type::forms_of_type:
-                     last_world_cell_id = 0;
-                     last_ext_block_x   = 0;
-                     last_ext_block_y   = 0;
+                     last_worldspace      = nullptr;
+                     last_persistent_cell = nullptr;
+                     last_ext_block_x     = 0;
+                     last_ext_block_y     = 0;
                      break;
                   default:
                      view.skip_current_group();
@@ -203,16 +220,19 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                continue;
             }
             if (ot == tes::file_view::chunk_type::record) {
+               auto& record = view.subviews.record;
                auto* group_ptr = view.get_current_group();
                if (!group_ptr) {
-                  // probably the file header
-                  continue;
+                  if (record.signature() == 'TES4') [[likely]] {
+                     continue;
+                  }
+                  static_assert(false, "TODO: error: (non-file-header) record not in any group");
                }
                auto& group = *group_ptr;
 
-               last_world_cell_id = 0;
-               last_ext_block_x   = 0;
-               last_ext_block_y   = 0;
+               last_persistent_cell = nullptr;
+               last_ext_block_x     = 0;
+               last_ext_block_y     = 0;
                //
                // We should only hit records when we choose not to skip a group's contents. 
                // We use this to load worldspaces and their persistent cells in advance, so 
@@ -223,13 +243,15 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                // (which is viable in that case because every topic has only one child GRUP, 
                // so multi-threading within a single topic isn't useful).
                //
-               auto& record = view.subviews.record;
                form_type formType = form_type_info::signature_to_form_type(record.signature());
                auto* stub = make_stub_from_record(
                   this->_params.source_file,
                   record.file_offset_of_header(),
                   record.header()
                );
+               if (stub->form_type == form_type::worldspace) {
+                  last_worldspace = stub;
+               }
 
                switch (group.type) {
                   case tes::group_type::world_children:
@@ -237,8 +259,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                         //
                         // Loading (probable) persistent cell.
                         //
-                        this->set_stub_parent(stub, last_worldspace_id);
-                        last_world_cell_id = stub->form_id;
+                        this->set_stub_parent(stub, last_worldspace);
+                        last_persistent_cell = stub;
 
                         if (!stub->test_record_flags((uint32_t)1 << (size_t)tes::record_flag::persistent)) {
                            stub->edit_record_flags((uint32_t)1 << (size_t)tes::record_flag::persistent, true); // auto-correct
@@ -268,12 +290,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                   continue;
                }
                extract_high_value_subrecords_for_stub(this->_params.source_file, *stub, record);
-               if (record.signature() == 'WRLD')
-                  last_worldspace_id = stub->form_id;
-               //
+               
                if (&group == &view.groups[0]) { // is this a top-level group?
                   lu::four_cc group_signature = std::byteswap(group.label);
                   if (record.signature() != group_signature) { // misplaced record?
+                     threads::impl::fail_if_form_fatally_misplaced(this->_params, record, *stub); // TODO: Move out of `threads::`
                      form_type group_type = form_type_info::signature_to_form_type(group_signature);
                      
                      notices::file_load_warnings::record_found_in_wrong_top_level_group notice;

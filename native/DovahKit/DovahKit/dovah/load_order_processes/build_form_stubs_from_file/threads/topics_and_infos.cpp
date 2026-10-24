@@ -71,7 +71,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   if (stub->form_type == form_type::topic_info) {
                      stub->_set_parent_form_one_way({}, topic_stub);
                   } else {
-                     impl::fail_if_form_fatally_misplaced(this->_config, record, *stub);
+                     impl::fail_if_form_fatally_misplaced<form_type::topic>(this->_config, record, *stub);
                      if (callbacks.on_warning) {
                         (callbacks.on_warning)(
                            notices::file_parse_warnings::record_found_in_wrong_group(
@@ -91,7 +91,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   // Loaded [what should be] a topic.
                   //
                   if (stub->form_type != form_type::topic) {
-                     impl::fail_if_form_fatally_misplaced(this->_config, record, *stub);
+                     impl::fail_if_form_fatally_misplaced<form_type::none>(this->_config, record, *stub);
                      if (callbacks.on_warning) {
                         (callbacks.on_warning)(
                            notices::file_parse_warnings::record_found_in_wrong_group(

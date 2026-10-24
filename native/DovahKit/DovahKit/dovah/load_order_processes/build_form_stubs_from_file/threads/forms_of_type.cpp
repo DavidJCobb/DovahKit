@@ -54,7 +54,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                auto& record = view.subviews.record;
                auto* stub   = make_stub_from_record(source_file, record.file_offset_of_header(), record.header());
                if (stub->form_type != group_form_type) {
-                  impl::fail_if_form_fatally_misplaced(this->_config, record, *stub);
+                  impl::fail_if_form_fatally_misplaced<form_type::none>(this->_config, record, *stub);
                   if (callbacks.on_warning) {
                      (callbacks.on_warning)(
                         notices::file_parse_warnings::record_found_in_wrong_group(

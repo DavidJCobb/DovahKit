@@ -1,8 +1,10 @@
 #pragma once
 #include <array>
 #include "./process_params.h"
+#include "./threads/exterior_cells_and_children.h"
 #include "./threads/forms_of_type.h"
 #include "./threads/interior_cells_and_children.h"
+#include "./threads/persistent_cell_children.h"
 #include "./threads/topics_and_infos.h"
 namespace dovah {
    namespace load_order_processes::build_form_stubs_from_file::threads {
@@ -56,8 +58,10 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       protected:
          process_params _params;
          struct thread_collection {
+            std::array<threads::exterior_cells_and_children, 6> exterior_cells_and_children;
             std::array<threads::forms_of_type,               4> forms_of_type;
             std::array<threads::interior_cells_and_children, 4> interior_cells_and_children;
+            std::array<threads::persistent_cell_children,    2> persistent_cell_children;
             std::array<threads::topics_and_infos,            1> topics_and_infos;
          } _threads;
    };

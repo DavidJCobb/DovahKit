@@ -6,6 +6,7 @@
 #include "dovah/form_type.h"
 #include "dovah/tes/file.h"
 #include "dovah/tes/reading/file_view.h"
+#include "dovah/utils/form_types/is_cell_child.h"
 #include "../make_stub_from_record.h"
 #include "../process.h"
 #include "./impl/fail_if_form_fatally_misplaced.h"
@@ -111,19 +112,24 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
             if (ot == tes::file_view::chunk_type::record) {
                auto& record = view.subviews.record;
                auto* stub   = make_stub_from_record(source_file, record.file_offset_of_header(), record.header());
+               const bool is_cell_child = utils::form_types::is_cell_child(stub->form_type);
                if (all_children_group.signature) {
                   //
                   // This record should be a cell child form.
                   //
-                  impl::fail_if_form_fatally_misplaced(this->_config, record, *stub);
+                  impl::fail_if_form_fatally_misplaced<form_type::cell>(this->_config, record, *stub);
                   assert(!!cell_stub_for_group);
                   if (callbacks.on_warning) {
                      const tes::file_view::opened_group* misplaced_in = nullptr;
                      if (children_of_type_group.signature) {
-                        const bool is_persistent = record.header().flags.has_all_of<tes::record_flag::persistent>();
-                        const bool in_persistent = children_of_type_group.type == tes::group_type::cell_persistent_children;
-                        if (is_persistent != in_persistent) {
+                        if (!is_cell_child) {
                            misplaced_in = &children_of_type_group;
+                        } else {
+                           const bool is_persistent = record.header().flags.has_all_of<tes::record_flag::persistent>();
+                           const bool in_persistent = children_of_type_group.type == tes::group_type::cell_persistent_children;
+                           if (is_persistent != in_persistent) {
+                              misplaced_in = &children_of_type_group;
+                           }
                         }
                      } else {
                         //
@@ -146,15 +152,19 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                         );
                      }
                   }
-                  stub->_set_parent_form_one_way({}, cell_stub_for_group);
+                  if (is_cell_child) {
+                     stub->_set_parent_form_one_way({}, cell_stub_for_group);
+                  }
                } else {
                   //
                   // This record should be a cell.
                   //
-                  if (stub->form_type != dovah::form_type::cell) {
-                     impl::fail_if_form_fatally_misplaced(this->_config, record, *stub);
+                  if (stub->form_type != form_type::cell) {
+                     impl::fail_if_form_fatally_misplaced<form_type::none>(this->_config, record, *stub);
+                     last_seen_cell_record = nullptr;
+                  } else {
+                     last_seen_cell_record = stub;
                   }
-                  last_seen_cell_record = stub;
                }
                this->_finish_stub(std::move(stub), record);
             }

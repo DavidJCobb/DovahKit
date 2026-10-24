@@ -18,6 +18,11 @@ namespace dovah::notices::file_parse_warnings {
    //    inner, categorized, child groups.
    // 
    //  - A persistent cell child being in the non-persistent group, or vice versa.
+   // 
+   //  - A non-persistent ref was placed in any child group of a persistent cell.
+   // 
+   //  - A non-persistent ref was placed in the child group of a cell that wasn't flagged as 
+   //    persistent, but was placed within the file as a persistent cell would be.
    //
    class record_found_in_wrong_group final : public base_file_parse_warning {
       public:
