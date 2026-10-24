@@ -12,30 +12,37 @@ namespace dovah::tes {
 
 namespace dovah::load_order_processes::build_form_stubs_from_file {
    inline form_stub* make_stub_from_record(const tes::file& source_file, size_t record_offset, const tes::record_header& header) {
+      using invalid_id_exception = exceptions::file_parse_errors::record_has_invalid_record_id;
+
       auto expected_form_id = utils::form_ids::record_id_to_form_id(source_file, header.formID);
       if (!expected_form_id.has_value()) {
-         auto failure = expected_form_id.error();
-         if (failure == utils::form_ids::record_id_to_form_id_error::missing_master) {
-            throw exceptions::file_load_errors::missing_master_detected_at_record_load(
-               source_file.path(),
-               source_file.header().masters[header.formID >> 0x18].master,
-               header.formID
-            );
+         invalid_id_exception::problem_type type;
+
+         switch (expected_form_id.error()) {
+            case utils::form_ids::record_id_to_form_id_error::out_of_bounds:
+               type = invalid_id_exception::problem_type::out_of_bounds;
+               break;
+            case utils::form_ids::record_id_to_form_id_error::missing_master:
+               throw exceptions::file_load_errors::missing_master_detected_at_record_load(
+                  source_file.path(),
+                  source_file.header().masters[header.formID >> 0x18].master,
+                  header.formID
+               );
          }
-         // TODO: preserve the exact failure type
-         throw exceptions::file_parse_errors::record_has_invalid_record_id(
+         throw invalid_id_exception(
             source_file,
             record_offset,
-            header
+            header,
+            type
          );
       }
       auto form_id = expected_form_id.value();
       if (form_id == 0) {
-         // TODO: preserve the exact failure type
-         throw exceptions::file_parse_errors::record_has_invalid_record_id(
+         throw invalid_id_exception(
             source_file,
             record_offset,
-            header
+            header,
+            invalid_id_exception::problem_type::zero_is_not_allowed
          );
       }
 

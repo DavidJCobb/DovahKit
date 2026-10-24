@@ -5,10 +5,13 @@
 #include "dovah/form_stub_collection.h"
 #include "dovah/tes/file.h"
 
+#include "dovah/notices/file_parse_warnings/singleton_form_is_redundantly_defined.h"
+
 namespace dovah::load_order_processes::build_form_stubs_from_file {
    inline void set_file_list_for_newest_singleton_stub(
       form_stub_collection& fsc,
       const callback_sets::data_load& callbacks,
+      const tes::file& source_file,
       form_stub&   newest_stub,
       bare_form_id newest_record_id
    ) {
@@ -40,18 +43,18 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          // Also, let's log a load warning if this singleton form is redundantly defined within the 
          // current file.
          //
-         auto* pf = prior->get_source_file_info();
-         auto* sf = newest_stub.get_source_file_info();
-         if (pf && sf && pf->pointer == sf->pointer) {
-            notices::file_load_warnings::singleton_form_is_redundantly_defined notice;
-            notice.source_file = sf->pointer->path().filename().string();
-            notice.previous_form_id = prior->form_id;
-            notice.record = {
-               .local_id  = newest_record_id,
-               .global_id = newest_stub.form_id,
-               .form_type = newest_stub.form_type,
-            };
-            this->_log_warning(notice);
+         if (callbacks.on_warning) {
+            auto* pf = prior->get_file_at_index(-1);
+            if (pf && pf == &source_file) {
+               (callbacks.on_warning)(
+                  notices::file_parse_warnings::singleton_form_is_redundantly_defined(
+                     source_file.path().filename().string(),
+                     newest_record_id,
+                     newest_stub,
+                     *prior
+                  )
+               );
+            }
          }
       }
       //

@@ -79,7 +79,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      callbacks,
                      source_file,
                      record.file_offset_of_header(),
-                     record.header().formID,
+                     record.header(),
                      stub
                   );
                } catch (...) {
