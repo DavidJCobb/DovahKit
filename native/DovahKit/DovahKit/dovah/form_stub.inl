@@ -100,7 +100,7 @@ namespace dovah {
       }
    #pragma endregion
 
-   template<typename Callable>
+   template<typename Callable, std::same_as<tes::file_view> FileView>
       requires requires(Callable&& callable, tes::record_view& record, load_order_interfaces::form_load& intfc) {
          { callable(record, intfc) };
       }
@@ -125,14 +125,14 @@ namespace dovah {
          const auto& info = this->files.entries[i];
          if (info.record_offset == 0) // dummy file
             continue;
-         intfc.is_winning_record = i == size - 1;
+         intfc.is_winning_record = i == this->files.count - 1;
          intfc.is_partial_record = info.record_flags & ((uint32_t)1 << (size_t)tes::record_flag::partial);
          if (i == 0) {
             intfc.is_partial_record = false;
          } else {
             intfc.last_record_flags = this->files.entries[i - 1].record_flags;
          }
-         auto file_view = _open_record(*info.pointer, info.record_offset);
+         FileView file_view = _open_record(*info.pointer, info.record_offset);
          if constexpr (can_stop_early) {
             auto result = callable(file_view.subviews.record, intfc);
             if (result == lu::foreach_lambda_result::stop)

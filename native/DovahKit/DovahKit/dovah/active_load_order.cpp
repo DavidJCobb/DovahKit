@@ -387,47 +387,6 @@ namespace dovah {
          return this->has_file(filename);
       }
    #pragma endregion
-      
-   file_prefix active_load_order::expected_active_file_prefix_post_save(std::optional<bool> pretend_is_or_isnt_light) const noexcept {
-      if (!this->_files.active)
-         return {};
-
-      bool can_co_opt_hardcoded_id_space = false;
-      if (!facts::hardcoded_form_ids_always_ignore_record_id_prefix(this->_game)) {
-         //
-         // Even in a game where hardcoded form IDs aren't prefix-agnostic, the active file 
-         // can only *use* that ID space if it has at least one master. If the active file 
-         // has no masters, then its own record ID prefix is 0x00, and it still has to avoid 
-         // the range [00000001, 000007FF].
-         //
-         if (this->_files.list.size() > 1) {
-            can_co_opt_hardcoded_id_space = true;
-         }
-      }
-      file_prefix prefix;
-      {
-         uint8_t  heavy = 0xFF;   // start at -1
-         uint16_t light = 0xFFFF; // start at -1
-         for (auto* f : this->_files.list) {
-            bool is_light = facts::game_supports_light_plugins(this->_game) && (f->is_light());
-            bool is_equal = f == this->_files.active;
-            if (is_equal && pretend_is_or_isnt_light.has_value()) {
-               is_light = pretend_is_or_isnt_light.value();
-            }
-            if (is_light) {
-               ++light;
-               prefix = file_prefix::make_light(light);
-            } else {
-               ++heavy;
-               prefix = file_prefix::make_heavy(heavy);
-            }
-            if (is_equal)
-               break;
-         }
-      }
-      prefix.set_can_co_opt_hardcoded_range(can_co_opt_hardcoded_id_space);
-      return prefix;
-   }
    
    void active_load_order::_build_form_stubs_from_file(tes::file&);
    void active_load_order::_build_use_info() {

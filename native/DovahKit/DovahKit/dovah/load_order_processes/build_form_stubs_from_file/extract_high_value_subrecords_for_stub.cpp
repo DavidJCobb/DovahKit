@@ -3,6 +3,7 @@
 #include "dovah/active_load_order.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_addenda.h"
+#include "dovah/form_stub_addendum_types/passkeys/ordered_child_collection.h"
 #include "dovah/form_stub_addendum_types/ordered_child_collection.h"
 #include "dovah/form_type.h"
 #include "dovah/form_type_info.h"
@@ -10,6 +11,7 @@
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/tes/reading/subrecord_view.h"
 #include "dovah/tes/record_flags.h"
+#include "dovah/types/form_id.h"
 #include "dovah/utils/form_stubs/get_parent_form.h"
 #include "dovah/utils/form_stubs/is_exterior_cell.h"
 
@@ -75,9 +77,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      info_is_appended = false;
                      subrecord.seek(pos);
 
-                     form_reference_t formID;
-                     subrecord.read(formID);
-                     previous_sibling_info = formID.get_form_stub();
+                     dovah::form_id form_id;
+                     subrecord.unchecked_read(form_id);
+                     auto* alo_ptr = source_file.get_active_load_order();
+                     assert(!!alo_ptr);
+                     previous_sibling_info = alo_ptr->get_form_stub_collection().get_form_by_id((bare_form_id)form_id);
                   }
                }
                break;

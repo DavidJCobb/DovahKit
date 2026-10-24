@@ -31,7 +31,7 @@ namespace lu::utils {
 
       public:
          #pragma region Arithmetic and binary operators
-            #pragma push_macro(MAKE_ARITH_OPERATOR_OVERLOAD)
+            #pragma push_macro("MAKE_ARITH_OPERATOR_OVERLOAD")
             #define MAKE_ARITH_OPERATOR_OVERLOAD(_op_) \
                template<typename U> \
                   requires (std::is_arithmetic_v<U>) \
@@ -65,11 +65,11 @@ namespace lu::utils {
             MAKE_ARITH_OPERATOR_OVERLOAD(^);
 
             #undef MAKE_ARITH_OPERATOR_OVERLOAD
-            #pragma pop_macro(MAKE_ARITH_OPERATOR_OVERLOAD)
+            #pragma pop_macro("MAKE_ARITH_OPERATOR_OVERLOAD")
          #pragma endregion
 
          #pragma region Comparison operator overloads
-            #pragma push_macro(MAKE_COMPARISON_OPERATOR_OVERLOAD)
+            #pragma push_macro("MAKE_COMPARISON_OPERATOR_OVERLOAD")
             #define MAKE_COMPARISON_OPERATOR_OVERLOAD(_op_) \
                template<typename U> \
                   requires (std::is_arithmetic_v<U>) \
@@ -89,7 +89,7 @@ namespace lu::utils {
             MAKE_COMPARISON_OPERATOR_OVERLOAD(!=);
 
             #undef MAKE_COMPARISON_OPERATOR_OVERLOAD
-            #pragma pop_macro(MAKE_COMPARISON_OPERATOR_OVERLOAD)
+            #pragma pop_macro("MAKE_COMPARISON_OPERATOR_OVERLOAD")
          #pragma endregion
 
          #pragma region Unary operator overloads

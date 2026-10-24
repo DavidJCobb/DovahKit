@@ -48,7 +48,7 @@ namespace dovah::form_stub_addendum_types {
       std::swap(this->active_file, src);
    }
 
-   void ordered_child_collection::_insert_child_on_load(_passkeys::build_use_info_during_load, bool is_active_file, form_stub& child, form_stub* after) {
+   void ordered_child_collection::_insert_child_on_load(passkeys::alter_ordered_children_during_load, bool is_active_file, form_stub& child, form_stub* after) {
       auto _insert = [&child, after](auto& list) {
          {
             auto it = std::find(list.begin(), list.end(), &child);
@@ -77,7 +77,7 @@ namespace dovah::form_stub_addendum_types {
          _insert(this->dependencies);
       _insert(this->active_file);
    }
-   void ordered_child_collection::_insert_child_on_load(_passkeys::build_use_info_during_load, bool is_active_file, form_stub& child) {
+   void ordered_child_collection::_insert_child_on_load(passkeys::alter_ordered_children_during_load, bool is_active_file, form_stub& child) {
       auto _insert = [&child](auto& list) {
          auto it = std::find(list.begin(), list.end(), &child);
          if (it != list.end())
@@ -90,7 +90,7 @@ namespace dovah::form_stub_addendum_types {
          _insert(this->dependencies);
       _insert(this->active_file);
    }
-   void ordered_child_collection::_remove_child_on_load(_passkeys::build_use_info_during_load, bool is_active_file, form_stub& child) {
+   void ordered_child_collection::_remove_child_on_load(passkeys::alter_ordered_children_during_load, bool is_active_file, form_stub& child) {
       // See comment in `_insert_child_on_load`.
       if (!is_active_file)
          std::erase(this->dependencies, &child);

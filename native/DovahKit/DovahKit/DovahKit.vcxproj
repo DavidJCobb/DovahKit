@@ -148,11 +148,13 @@
     <ClCompile Include="dovah\tes\reading\subrecord_view.cpp" />
     <ClCompile Include="dovah\tes\skimming\file_header_skimmer.cpp" />
     <ClCompile Include="dovah\types\asset_file_buffer.cpp" />
+    <ClCompile Include="dovah\types\form_id.cpp" />
     <ClCompile Include="dovah\utils\files\bsa\fold_path.cpp" />
     <ClCompile Include="dovah\utils\files\bsa\fold_path_component.cpp" />
     <ClCompile Include="dovah\utils\files\bsa\path_to_hashes.cpp" />
     <ClCompile Include="dovah\utils\files\bsa\split_path.cpp" />
     <ClCompile Include="dovah\utils\files\tes\normalize_next_record_id.cpp" />
+    <ClCompile Include="dovah\utils\form_ids\record_id_to_form_id.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\can_ever_be_edited.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\can_load_form_data.cpp" />
     <ClCompile Include="dovah\utils\form_stubs\get_parent_form.cpp" />
@@ -287,6 +289,7 @@
     <ClInclude Include="dovah\types\cells\grid_dword.h" />
     <ClInclude Include="dovah\types\cells\grid_position.h" />
     <ClInclude Include="dovah\types\file_prefix.h" />
+    <ClInclude Include="dovah\types\form_id.h" />
     <ClInclude Include="dovah\types\localized_string_type.h" />
     <ClInclude Include="dovah\types\managed_localized_string_use.h" />
     <ClInclude Include="dovah\types\unmanaged_localized_string_use.h" />
@@ -319,6 +322,7 @@
     <ClInclude Include="dovah\utils\files\bsa\split_path.h" />
     <ClInclude Include="dovah\utils\files\tes\normalize_next_record_id.h" />
     <ClInclude Include="dovah\utils\files\tes\signature_is_suspicious.h" />
+    <ClInclude Include="dovah\utils\form_ids\record_id_to_form_id.h" />
     <ClInclude Include="dovah\utils\form_stubs\can_ever_be_edited.h" />
     <ClInclude Include="dovah\utils\form_stubs\can_load_form_data.h" />
     <ClInclude Include="dovah\utils\form_stubs\get_parent_form.h" />
@@ -353,10 +357,15 @@
     <ClInclude Include="lu\bytestreams\concepts\can_read_struct.h" />
     <ClInclude Include="lu\bytestreams\concepts\checked_reads_can_be_implemented_using_unchecked_reads.h" />
     <ClInclude Include="lu\bytestreams\concepts\serializable_scalar.h" />
+    <ClInclude Include="lu\bytestreams\concepts\serializable_struct.h" />
     <ClInclude Include="lu\bytestreams\concepts\unchecked_read_is_noexcept.h" />
     <ClInclude Include="lu\bytestreams\customization\serialized_bytecount.h" />
     <ClInclude Include="lu\bytestreams\customization\type_has_opposite_endianness.h" />
+    <ClInclude Include="lu\bytestreams\impl\innermost_kind_of.h" />
     <ClInclude Include="lu\bytestreams\impl\modifier_wrapper.h" />
+    <ClInclude Include="lu\bytestreams\impl\readable_value_sans_modifiers.h" />
+    <ClInclude Include="lu\bytestreams\impl\unchecked_read_is_noexcept.h" />
+    <ClInclude Include="lu\bytestreams\impl\value_kind.h" />
     <ClInclude Include="lu\bytestreams\strip_modifiers.h" />
     <ClInclude Include="lu\bytestreams\unwrap_modifiers.h" />
     <ClInclude Include="lu\concepts\all_same_as.h" />
@@ -415,6 +424,7 @@
     <ClInclude Include="lu\utils\bool_sequences\true_run_extents_of.h" />
     <ClInclude Include="lu\utils\index_sequence_to_bool_run.h" />
     <ClInclude Include="lu\utils\integral_wrapper.h" />
+    <ClInclude Include="lu\utils\nominal_integer_type.h" />
     <ClInclude Include="lu\utils\type_pack_to_bool_run_by_predicate.h" />
     <ClInclude Include="lu\vectors\move_item_to_index.h" />
     <ClInclude Include="lu\vectors\move_item_within.h" />
@@ -467,6 +477,7 @@
     <Natvis Include="lu\enums\enum_in.natvis" />
     <Natvis Include="lu\integral_character_code.natvis" />
     <Natvis Include="lu\memory\threaded_slab_heap.natvis" />
+    <Natvis Include="lu\utils\nominal_integer_type.natvis" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\lz4\lz4.vcxproj">

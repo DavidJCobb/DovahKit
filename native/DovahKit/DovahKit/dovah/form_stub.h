@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <concepts>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -110,8 +111,14 @@ namespace dovah {
             constexpr int16_t index_of_file(const tes::file&) const noexcept;
             constexpr int16_t source_file_count() const noexcept;
          #pragma endregion
-
-         template<typename Callable>
+            
+         // Run a callable on all source records for this form stub. The caller must #include 
+         // the header for `tes::file_view` for calls to this function to compile.
+         // 
+         // (`FileView` is a template parameter as a cheap hack, to make it so that you only need 
+         // to include the header that defines `tes::file_view` if you're actually calling this 
+         // function.)
+         template<typename Callable, std::same_as<tes::file_view> FileView = tes::file_view>
             requires requires(Callable&& callable, tes::record_view& record, load_order_interfaces::form_load& intfc) {
                { callable(record, intfc) };
             }

@@ -96,8 +96,6 @@ namespace dovah {
             bool has_non_active_file(const std::filesystem::path& filename) const noexcept;
          #pragma endregion
 
-         file_prefix expected_active_file_prefix_post_save(std::optional<bool> pretend_is_or_isnt_light = {}) const noexcept;
-
       public: // passkeyed
          constexpr form_stub_collection& _get_form_stub_collection(lu::passkey<form_stub>) noexcept { return this->_forms; };
 

@@ -12,9 +12,9 @@ namespace dovah {
    namespace tes {
       class file;
    }
-   class active_load_order;
-   class file_prefix;
-   class form_stub;
+   class  active_load_order;
+   struct file_prefix;
+   class  form_stub;
 }
 
 namespace dovah {
