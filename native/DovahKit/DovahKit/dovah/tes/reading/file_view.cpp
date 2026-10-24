@@ -240,6 +240,13 @@ namespace dovah::tes {
       this->_reader.seek(p);
    }
 
+   file_view::opened_group* file_view::parent_of_group(const opened_group& g) {
+      auto* data = this->groups.data();
+      auto  i    = &g - data;
+      if (i)
+         return &data[i];
+      return nullptr;
+   }
    file_view::opened_group* file_view::get_current_group() {
       if (!this->groups[0].signature)
          return nullptr;
@@ -249,6 +256,36 @@ namespace dovah::tes {
             return &this->groups[i - 1];
       return &this->groups[i - 1];
    }
+   void file_view::skip_current_group() {
+      auto* group = this->get_current_group();
+      if (!group)
+         return;
+      auto pos = group->end;
+      this->_reader.seek(pos);
+
+      size_t i = 0;
+      for (; i < this->groups.size(); ++i) {
+         auto& group = this->groups[i];
+         //
+         // Shenanigans with control flow: we know (but the compiler won't) that 
+         // the group list represents nested groups: if we've reached or exceeded 
+         // the end-position of an outer group, then we must necessarily also have 
+         // reached or exceeded the end-position of an inner group (unless the 
+         // file is malformed). Thus we only need to compare positions until we 
+         // find a group we've reached or passed the end of, and then we can just 
+         // blindly close all opened groups thereafter.
+         //
+         if (!group.signature)
+            break;
+         if (pos >= group.end) {
+            do {
+               this->groups[i] = {};
+            } while ((++i < this->groups.size()) && this->groups[i].signature);
+            break;
+         }
+      }
+   }
+
    file_view::chunk_type file_view::next_record_or_group() {
       if (!this->_target_file)
          return chunk_type::none;

@@ -14,6 +14,11 @@ namespace dovah {
 
 namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
    class forms_of_type : public _base<forms_of_type> {
+      protected:
+         using _my_base = _base<forms_of_type>;
+      public:
+         using _my_base::_base;
+
       public:
          struct queued_group {
             lu::four_cc signature = 0;

@@ -56,7 +56,11 @@ namespace dovah::tes {
          constexpr const file* get_target_file() const noexcept { return this->_target_file; }
          void set_target_file(const file*);
          void set_position(size_t); // can throw std::out_of_range
+
+         opened_group* parent_of_group(const opened_group&);
          opened_group* get_current_group();
+         void skip_current_group();
+
          chunk_type next_record_or_group();
    };
 }

@@ -1,12 +1,11 @@
 #include "./forms_of_type.h"
-#include <cassert>
-#include "dovah/active_load_order.h"
+#include "dovah/callback_sets/data_load.h"
 #include "dovah/form_type.h"
 #include "dovah/form_type_info.h"
 #include "dovah/tes/file.h"
 #include "dovah/tes/reading/file_view.h"
-#include "../extract_high_value_subrecords_for_stub.h"
 #include "../make_stub_from_record.h"
+#include "../process.h"
 
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group_in_simple_top_group.h"
 #include "dovah/notices/file_parse_warnings/record_found_in_wrong_top_level_group.h"
@@ -74,21 +73,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      );
                   }
                }
-               try {
-                  alo.get_form_stub_collection()._take_newly_parsed_form_stub(
-                     callbacks,
-                     source_file,
-                     record.file_offset_of_header(),
-                     record.header(),
-                     stub
-                  );
-               } catch (...) {
-                  delete stub;
-                  throw;
-               }
-               if (!stub)
-                  continue;
-               extract_high_value_subrecords_for_stub(source_file, *stub, record);
+               this->_finish_stub(std::move(stub), record);
             }
          }
       }
