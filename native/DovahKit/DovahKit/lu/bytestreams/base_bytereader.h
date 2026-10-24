@@ -2,30 +2,29 @@
 #include <bit>
 #include "../concepts/instantiation_of/std_array.h"
 #include "../memory/buffer_view.h"
-#include "./concepts/can_read_struct.h"
-#include "./concepts/serializable_scalar.h"
-#include "./concepts/unchecked_read_is_noexcept.h"
 #include "./apply_modifiers.h"
+#include "./impl/innermost_kind_of.h"
+#include "./impl/readable_value_sans_modifiers.h"
+#include "./impl/unchecked_read_is_noexcept.h"
 #include "../macros/FORCE_INLINE.define.h"
 
 namespace lu::bytestreams {
    namespace impl {
-      template<typename T>
-      concept serializable_scalar_or_array_thereof = concepts::serializable_scalar<T> || requires {
-         requires lu::concepts::instantiation_of_std_array<T>;
-         requires concepts::serializable_scalar<typename T::value_type>;
-      };
+      template<typename T, typename Stream>
+      concept serializable_struct_or_array_thereof = (innermost_kind_of<T, Stream> == value_kind::serializable_struct);
 
       template<typename T, typename Stream>
-      concept readable_value_sans_modifiers = concepts::can_read_struct<T, Stream> || serializable_scalar_or_array_thereof<T>;
+      concept serializable_scalar_or_array_thereof = (innermost_kind_of<T, Stream> == value_kind::serializable_scalar);
 
-      // Needed for multi-read member functions. Enforces the above two concepts for types `T&` and `U` respectively.
+      // Needed for multi-read member functions.
       template<typename T, typename Stream>
       concept readable_value_reference =
+         // allow `T&`
          requires {
             requires std::is_lvalue_reference_v<T>;
             requires readable_value_sans_modifiers<std::remove_reference_t<T>, Stream>;
          } ||
+         // allow `modifier_wrapper<T>` (i.e. annotated reference wrapper)
          requires {
             requires is_modifier_wrapper<T>;
             requires readable_value_sans_modifiers<typename T::type, Stream>;
@@ -43,25 +42,28 @@ namespace lu::bytestreams {
          #endif
 
       protected:
-         template<typename Self, impl::serializable_scalar_or_array_thereof T>
+         template<typename Self, impl::serializable_scalar_or_array_thereof<Self> T>
          LU_FORCE_INLINE void _copy_bytes(this Self& self, T& dst);
 
-         template<impl::serializable_scalar_or_array_thereof T>
+         template<typename Self, impl::serializable_scalar_or_array_thereof<Self> T>
          LU_FORCE_INLINE static constexpr void _byteswap(T& dst);
 
-         template<typename Self, impl::serializable_scalar_or_array_thereof T, typename ModifiersFrom>
+         // overload: scalars or arrays thereof
+         template<typename Self, impl::serializable_scalar_or_array_thereof<Self> T, typename ModifiersFrom>
          constexpr void _unchecked_read_impl(this Self& self, T& dst);
 
          template<typename Self, typename T>
          LU_FORCE_INLINE constexpr void _invoke_struct_unchecked_read_func(this Self& self, T& dst)
-            noexcept(concepts::unchecked_read_is_noexcept<T, Self>);
+            noexcept(impl::unchecked_read_is_noexcept<T, Self>);
 
-         template<typename Self, concepts::can_read_struct<Self> T, typename ModifiersFrom>
+         // overload: structs or arrays thereof
+         template<typename Self, impl::serializable_struct_or_array_thereof<Self> T, typename ModifiersFrom>
          constexpr void _unchecked_read_impl(this Self& self, T& dst)
-            noexcept(concepts::unchecked_read_is_noexcept<T, Self>);
+            noexcept(impl::unchecked_read_is_noexcept<T, Self>);
 
+         // `read` deals with modifier-wrappers and then dispatches to `_read_impl`
          template<typename Self, typename T, typename ModifiersFrom>
-         [[nodiscard]] constexpr bool _read_impl(this Self& self, T& dst);
+         LU_FORCE_INLINE [[nodiscard]] constexpr bool _read_impl(this Self& self, T& dst);
 
          #pragma region Template machinery for multi-reads
             #pragma region Unchecked multi-reads, by runs

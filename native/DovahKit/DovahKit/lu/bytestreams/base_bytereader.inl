@@ -21,16 +21,16 @@ namespace lu::bytestreams {
       concept this_read_has_opposite_endianness = (type_has_opposite_endianness<Stream, T>::value != impl::has_modifier<ModifiersFrom, opposite_endianness>);
 
       #pragma region Divide multi-read arguments into runs of the same kind (scalar/struct)
-         template<size_t StartFrom, typename... Ts>
+         template<typename Stream, size_t StartFrom, typename... Ts>
          struct run_of_kind_wrapper { // [10/11/2026] needed to prevent IntelliSense/EDG from choking on the lambda-as-NTTP
             static constexpr auto predicate = []<typename T>() -> bool {
-               return serializable_scalar_or_array_thereof<strip_modifiers<std::decay_t<T>>>;
+               return serializable_scalar_or_array_thereof<strip_modifiers<std::decay_t<T>>, Stream>;
             };
             using type = utils::type_pack_to_bool_run_by_predicate<predicate, StartFrom, Ts...>;
          };
          //
-         template<size_t StartFrom, typename... Ts>
-         using run_of_kind = run_of_kind_wrapper<StartFrom, Ts...>::type;
+         template<typename Stream, size_t StartFrom, typename... Ts>
+         using run_of_kind = run_of_kind_wrapper<Stream, StartFrom, Ts...>::type;
       #pragma endregion
 
       #pragma region Divide multi-read arguments into runs of the same static knowledge (size statically known/not)
@@ -47,7 +47,7 @@ namespace lu::bytestreams {
       #pragma endregion
    }
 
-   template<typename Self, impl::serializable_scalar_or_array_thereof T>
+   template<typename Self, impl::serializable_scalar_or_array_thereof<Self> T>
    LU_FORCE_INLINE void base_bytereader::_copy_bytes(this Self& self, T& dst) {
       constexpr const size_t size = serialized_bytecount<Self, T>::value;
 
@@ -55,7 +55,7 @@ namespace lu::bytestreams {
       self._position += size;
    }
 
-   template<impl::serializable_scalar_or_array_thereof T>
+   template<typename Self, impl::serializable_scalar_or_array_thereof<Self> T>
    LU_FORCE_INLINE constexpr void base_bytereader::_byteswap(T& dst) {
       if constexpr (std::is_enum_v<T>) {
          dst = (T)std::byteswap((std::underlying_type_t<T>)dst);
@@ -66,58 +66,68 @@ namespace lu::bytestreams {
       }
    }
 
-   template<typename Self, impl::serializable_scalar_or_array_thereof T, typename ModifiersFrom>
+   // overload: scalars or arrays thereof
+   template<typename Self, impl::serializable_scalar_or_array_thereof<Self> T, typename ModifiersFrom>
    constexpr void base_bytereader::_unchecked_read_impl(this Self& self, T& dst) {
       self._copy_bytes(dst);
 
       constexpr const bool opposite_endianness = impl::this_read_has_opposite_endianness<Self, T, ModifiersFrom>;
       if (self._needs_byteswap != opposite_endianness) {
-         _byteswap(dst);
+         _byteswap<Self>(dst);
       }
    }
 
    template<typename Self, typename T>
    LU_FORCE_INLINE constexpr void base_bytereader::_invoke_struct_unchecked_read_func(this Self& self, T& dst)
-      noexcept(concepts::unchecked_read_is_noexcept<T, Self>)
+      noexcept(impl::unchecked_read_is_noexcept<T, Self>)
    {
-      if constexpr (serialized_bytecount_is_statically_known<Self, T>) {
-         #if _DEBUG
-            const auto pos_prior = self._position;
-         #endif
-         if constexpr (concepts::checked_reads_can_be_implemented_using_unchecked_reads<T, Self>) {
-            dst.unchecked_stream(self);
+      if constexpr (lu::concepts::instantiation_of_std_array<T> && !concepts::serializable_struct<T, Self>) {
+         // read each struct in array (recurse to account for nested arrays)
+         for (auto& item : dst) {
+            self._invoke_struct_unchecked_read_func(item);
+         }
+      } else {
+         // read single struct
+         if constexpr (serialized_bytecount_is_statically_known<Self, T>) {
+            #if _DEBUG
+               const auto pos_prior = self._position;
+            #endif
+            if constexpr (concepts::checked_reads_can_be_implemented_using_unchecked_reads<T, Self>) {
+               dst.unchecked_stream(self);
+            } else {
+               dst.stream(self);
+            }
+            #if _DEBUG
+               assert((self._position == pos_prior + serialized_bytecount<Self, T>::value) &&
+                  "If a struct's serialized size is statically known, the struct's \"stream\" functions must read exactly and always that many bytes." \
+               );
+            #endif
          } else {
             dst.stream(self);
          }
-         #if _DEBUG
-            assert((self._position == pos_prior + serialized_bytecount<Self, T>::value) &&
-               "If a struct's serialized size is statically known, the struct's \"stream\" functions must read exactly and always that many bytes." \
-            );
-         #endif
-      } else {
-         dst.stream(self);
       }
    }
 
-   template<typename Self, concepts::can_read_struct<Self> T, typename ModifiersFrom>
+   // overload: structs or arrays thereof
+   template<typename Self, impl::serializable_struct_or_array_thereof<Self> T, typename ModifiersFrom>
    constexpr void base_bytereader::_unchecked_read_impl(this Self& self, T& dst)
-      noexcept(concepts::unchecked_read_is_noexcept<T, Self>)
+      noexcept(impl::unchecked_read_is_noexcept<T, Self>)
    {
       #if _DEBUG
-         const bool was_in_struct_read = this->_is_in_struct_read;
-         this->_is_in_struct_read = true;
+         const bool was_in_struct_read = self._is_in_struct_read;
+         self._is_in_struct_read = true;
       #endif
       constexpr const bool opposite_endianness = impl::this_read_has_opposite_endianness<Self, T, ModifiersFrom>;
       if constexpr (opposite_endianness) {
          self._needs_byteswap = !self._needs_byteswap;
       }
-      if constexpr (opposite_endianness && !concepts::unchecked_read_is_noexcept<T, Self>) {
+      if constexpr (opposite_endianness && !impl::unchecked_read_is_noexcept<T, Self>) {
          try {
             self._invoke_struct_unchecked_read_func(dst);
          } catch (...) {
             self._needs_byteswap = !self._needs_byteswap;
             #if _DEBUG
-               this->_is_in_struct_read = was_in_struct_read;
+               self._is_in_struct_read = was_in_struct_read;
             #endif
             throw;
          }
@@ -128,12 +138,13 @@ namespace lu::bytestreams {
          self._needs_byteswap = !self._needs_byteswap;
       }
       #if _DEBUG
-         this->_is_in_struct_read = was_in_struct_read;
+         self._is_in_struct_read = was_in_struct_read;
       #endif
    }
-   
+
+   // `read` deals with modifier-wrappers and then dispatches to `_read_impl`
    template<typename Self, typename T, typename ModifiersFrom>
-   constexpr bool base_bytereader::_read_impl(this Self& self, T& dst) {
+   LU_FORCE_INLINE constexpr bool base_bytereader::_read_impl(this Self& self, T& dst) {
       if constexpr (serialized_bytecount_is_statically_known<Self, T>) {
          constexpr size_t size = serialized_bytecount<Self, T>::value;
          if (!self.is_in_bounds(size))
@@ -141,7 +152,20 @@ namespace lu::bytestreams {
          self.template _unchecked_read_impl<Self, T, ModifiersFrom>(dst);
          return true;
       } else {
-         return dst.stream(self);
+         //
+         // All serializable scalars have statically known bytecounts, so this must be a 
+         // serializable struct or array thereof.
+         //
+         if constexpr (lu::concepts::instantiation_of_std_array<T> && !concepts::serializable_struct<T, Self>) {
+            using value_type = T::value_type;
+            // recurse, to account for nested array types
+            for (auto& item : dst)
+               if (!self._read_impl<Self, value_type, ModifiersFrom>(item))
+                  return false;
+            return true;
+         } else {
+            return dst.stream(self);
+         }
       }
    }
 
@@ -149,24 +173,30 @@ namespace lu::bytestreams {
       #pragma region Unchecked multi-reads, by runs
          template<bool... HandleThisArg, typename Self, impl::readable_value_reference<Self>... Ts>
          LU_FORCE_INLINE constexpr void base_bytereader::_unchecked_multi_read_of_run(this Self& self, Ts&&... dst) {
-            using run_of_kind_traits = utils::bool_sequences::true_run_extents_of<std::integer_sequence<bool, HandleThisArg...>>;
-
-            constexpr const bool run_is_of_scalars = (impl::serializable_scalar_or_array_thereof<strip_modifiers<std::decay_t<Ts>>> && ...);
-
-            constexpr const bool any_endianness_opposite = (impl::this_read_has_opposite_endianness<Self, strip_modifiers<std::decay_t<Ts>>, std::decay_t<Ts>> || ...);
-            constexpr const bool all_endianness_same     = ((impl::this_read_has_opposite_endianness<Self, strip_modifiers<std::decay_t<Ts>>, std::decay_t<Ts>> == any_endianness_opposite) && ...);
+            constexpr const bool run_is_of_scalars = (
+               (HandleThisArg ? impl::serializable_scalar_or_array_thereof<strip_modifiers<std::decay_t<Ts>>, Self> : true)
+               && ...
+            );
+            constexpr const bool any_endianness_opposite = (
+               (HandleThisArg ? impl::this_read_has_opposite_endianness<Self, strip_modifiers<std::decay_t<Ts>>, std::decay_t<Ts>> : false)
+               || ...
+            );
+            constexpr const bool all_endianness_same = (
+               (HandleThisArg ? (impl::this_read_has_opposite_endianness<Self, strip_modifiers<std::decay_t<Ts>>, std::decay_t<Ts>> == any_endianness_opposite) : true)
+               && ...
+            );
 
             if constexpr (run_is_of_scalars) {
                ((HandleThisArg ? self._copy_bytes(unwrap_modifiers(dst)), 0 : 0), ...);
                if constexpr (all_endianness_same) {
                   if (self._needs_byteswap == !any_endianness_opposite) {
-                     ((HandleThisArg ? _byteswap(unwrap_modifiers(dst)),0 : 0), ...);
+                     ((HandleThisArg ? _byteswap<Self>(unwrap_modifiers(dst)),0 : 0), ...);
                   }
                } else {
                   if (self._needs_byteswap) {
-                     ((HandleThisArg && !impl::this_read_has_opposite_endianness<Self, strip_modifiers<std::decay_t<Ts>>, std::decay_t<Ts>> ? _byteswap(unwrap_modifiers(dst)),0 : 0), ...);
+                     ((HandleThisArg && !impl::this_read_has_opposite_endianness<Self, strip_modifiers<std::decay_t<Ts>>, std::decay_t<Ts>> ? _byteswap<Self>(unwrap_modifiers(dst)),0 : 0), ...);
                   } else {
-                     ((HandleThisArg && impl::this_read_has_opposite_endianness<Self, strip_modifiers<std::decay_t<Ts>>, std::decay_t<Ts>> ? _byteswap(unwrap_modifiers(dst)),0 : 0), ...);
+                     ((HandleThisArg && impl::this_read_has_opposite_endianness<Self, strip_modifiers<std::decay_t<Ts>>, std::decay_t<Ts>> ? _byteswap<Self>(unwrap_modifiers(dst)),0 : 0), ...);
                   }
                }
             } else {
@@ -176,7 +206,7 @@ namespace lu::bytestreams {
 
          template<size_t StartAt, size_t End, typename Self, impl::readable_value_reference<Self>... Ts>
          LU_FORCE_INLINE constexpr void base_bytereader::_unchecked_multi_read_in_runs(this Self& self, Ts&&... dst) {
-            using run         = utils::bool_sequences::clear_all_from<impl::run_of_kind<StartAt, Ts...>, End>;
+            using run         = utils::bool_sequences::clear_all_from<impl::run_of_kind<Self, StartAt, Ts...>, End>;
             using run_extents = utils::bool_sequences::true_run_extents_of<run>;
 
             // dummy variables for the debugger
@@ -198,10 +228,16 @@ namespace lu::bytestreams {
          LU_FORCE_INLINE constexpr bool base_bytereader::_checked_multi_read_of_run(this Self& self, Ts&&... dst) {
             using run_traits = utils::bool_sequences::true_run_extents_of<std::integer_sequence<bool, HandleThisArg...>>;
 
-            constexpr const bool all_sizes_statically_known = (serialized_bytecount_is_statically_known<Self, strip_modifiers<std::decay_t<Ts>>> && ...);
+            constexpr const bool all_sizes_statically_known = (
+               (!HandleThisArg || serialized_bytecount_is_statically_known<Self, strip_modifiers<std::decay_t<Ts>>>)
+               && ...
+            );
       
             if constexpr (all_sizes_statically_known) {
-               constexpr size_t total_size = (serialized_bytecount<Self, strip_modifiers<std::decay_t<Ts>>>::value + ...);
+               constexpr size_t total_size = (
+                  (HandleThisArg ? serialized_bytecount<Self, strip_modifiers<std::decay_t<Ts>>>::value : 0)
+                  + ...
+               );
                if (!self.is_in_bounds(total_size))
                   return false;
                self._unchecked_multi_read_in_runs<run_traits::start, run_traits::end>(std::forward<Ts>(dst)...);

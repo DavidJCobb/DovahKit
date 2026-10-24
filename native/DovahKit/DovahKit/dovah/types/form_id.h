@@ -16,3 +16,18 @@ namespace dovah {
          void unchecked_stream(tes::subrecord_view&);
    };
 }
+
+namespace lu::bytestreams {
+   //
+   // Since we're declaring `unchecked_stream`, that type now counts as a serializable struct, so its 
+   // serialized size doesn't auto-default to that of the wrapped integral type. We need to explicitly 
+   // customize the serialized size for our type.
+   //
+   template<typename Stream, typename T>
+   struct serialized_bytecount;
+   //
+   template<typename Stream>
+   struct serialized_bytecount<Stream, dovah::form_id> {
+      static constexpr const size_t value = serialized_bytecount<Stream, utils::integral_wrapper_underlying_type<dovah::form_id>>::value;
+   };
+}
