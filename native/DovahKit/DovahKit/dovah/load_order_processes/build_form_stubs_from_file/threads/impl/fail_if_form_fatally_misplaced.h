@@ -10,7 +10,7 @@
 namespace dovah::load_order_processes::build_form_stubs_from_file::threads::impl {
    template<form_type ParentFormType = form_type::none>
    void fail_if_form_fatally_misplaced(
-      initialization_params&  ip,
+      const tes::file&        source_file,
       const tes::record_view& record_view,
       form_stub&              stub
    ) {
@@ -43,7 +43,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads::impl
 
       delete &stub;
       throw exceptions::file_parse_errors::record_fatally_misplaced(
-         ip.source_file,
+         ource_file,
          record_view.file_offset_of_header(),
          record_view.header()
       );

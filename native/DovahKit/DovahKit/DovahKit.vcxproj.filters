@@ -191,9 +191,6 @@
     <ClCompile Include="dovah\types\form_id.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\process.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\topics_and_infos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -210,6 +207,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\game_settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -27,10 +27,10 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads::impl
          using exception_type = exceptions::file_parse_errors::child_form_group_specifies_bad_parent_id;
          using exception_code = exception_type::problem_type;
 
-         bare_form_id topic_record_id = group_header.label;
+         bare_form_id parent_record_id = group_header.label;
          std::optional<exception_code> code;
          {
-            auto result = utils::form_ids::record_id_to_form_id(source_file, topic_record_id);
+            auto result = utils::form_ids::record_id_to_form_id(source_file, parent_record_id);
             if (result.has_value()) {
                bare_form_id form_id = result.value();
                if (form_id == 0) {
@@ -53,8 +53,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads::impl
                   case missing_master:
                      throw exceptions::file_load_errors::missing_master_detected_at_record_load(
                         source_file.path(),
-                        source_file.header().masters[topic_record_id >> 0x18].master,
-                        topic_record_id
+                        source_file.header().masters[parent_record_id >> 0x18].master,
+                        parent_record_id
                      );
                }
             }
@@ -66,7 +66,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads::impl
                group_header,
                code.value(),
                FormType,
-               topic_record_id,
+               parent_record_id,
                parent_stub
             );
          }

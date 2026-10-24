@@ -34,6 +34,24 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
    }
 
    class process {
+      protected:
+         struct thread_collection {
+            public:
+               std::array<threads::exterior_cells_and_children, 6> exterior_cells_and_children;
+               std::array<threads::forms_of_type,               4> forms_of_type;
+               std::array<threads::game_settings,               1> game_settings;
+               std::array<threads::interior_cells_and_children, 4> interior_cells_and_children;
+               std::array<threads::persistent_cell_children,    2> persistent_cell_children;
+               std::array<threads::topics_and_infos,            1> topics_and_infos;
+
+            public:
+               thread_collection(const process_params&, process&);
+
+               void start();
+               void wait();
+               void rethrow_earliest_caught_exception(); // does nothing if no exception was caught by any thread
+         };
+
       public:
          process(const process_params& p);
 
@@ -57,14 +75,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          );
 
       protected:
-         process_params _params;
-         struct thread_collection {
-            std::array<threads::exterior_cells_and_children, 6> exterior_cells_and_children;
-            std::array<threads::forms_of_type,               4> forms_of_type;
-            std::array<threads::game_settings,               1> game_settings;
-            std::array<threads::interior_cells_and_children, 4> interior_cells_and_children;
-            std::array<threads::persistent_cell_children,    2> persistent_cell_children;
-            std::array<threads::topics_and_infos,            1> topics_and_infos;
-         } _threads;
+         process_params    _params;
+         thread_collection _threads;
+         const bool _source_file_is_active;
    };
 }

@@ -38,6 +38,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
             } _progress;
          public:
             std::exception_ptr exception;
+            size_t exception_offset = 0;
 
          protected:
             void _abort();

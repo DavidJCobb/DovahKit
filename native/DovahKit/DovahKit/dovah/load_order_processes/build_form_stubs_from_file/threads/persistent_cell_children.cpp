@@ -87,7 +87,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                //
                // This record should be a cell child form.
                //
-               impl::fail_if_form_fatally_misplaced<form_type::cell>(this->_config, record, *stub);
+               impl::fail_if_form_fatally_misplaced<form_type::cell>(source_file, record, *stub);
                const bool is_misplaced_form_type = !utils::form_types::is_cell_child(stub->form_type);
                if (callbacks.on_warning) {
                   const tes::file_view::opened_group* misplaced_in = nullptr;

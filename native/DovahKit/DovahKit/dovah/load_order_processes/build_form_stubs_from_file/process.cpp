@@ -1,5 +1,6 @@
 #include "./process.h"
 #include <bit>
+#include <tuple> // tuple_size_v
 #include "lu/arrays/make_filled.h"
 #include "dovah/active_load_order.h"
 #include "dovah/form_stub.h"
@@ -25,39 +26,98 @@
    #include "./extract_high_value_subrecords_for_stub.h"
 #pragma endregion
 
+#include "dovah/exceptions/file_parse_errors/child_form_group_follows_wrong_parent.h"
+#include "dovah/exceptions/file_parse_errors/child_form_group_specifies_bad_parent_id.h"
 #include "dovah/exceptions/file_parse_errors/interior_cell_block_group_badly_nested.h"
 #include "dovah/exceptions/file_parse_errors/interior_cell_block_has_no_parent_group.h"
+#include "dovah/notices/file_parse_warnings/record_found_in_wrong_group.h"
+
+#define FOR_EACH_THREAD_TYPE(X) \
+   X(exterior_cells_and_children) \
+   X(forms_of_type) \
+   X(game_settings) \
+   X(interior_cells_and_children) \
+   X(persistent_cell_children) \
+   X(topics_and_infos)
+
+#define FOR_EACH_THREAD_TYPE_WITH_DELIM(X, DELIM) \
+   X(exterior_cells_and_children) DELIM \
+   X(forms_of_type) DELIM \
+   X(game_settings) DELIM \
+   X(interior_cells_and_children) DELIM \
+   X(persistent_cell_children) DELIM \
+   X(topics_and_infos)
 
 namespace dovah::load_order_processes::build_form_stubs_from_file {
+   #pragma region thread_collection
+      process::thread_collection::thread_collection(const process_params& params, process& owner) :
+         #define XCOMMA ,
+         #define X(_typename_, ...) \
+            _typename_(lu::arrays::make_filled<threads::_typename_, std::tuple_size_v<decltype(_typename_)>>(threads::initialization_params{params, owner}))
+         FOR_EACH_THREAD_TYPE_WITH_DELIM(X, XCOMMA)
+         #undef X
+         #undef XCOMMA
+      {
+      }
+      void process::thread_collection::start() {
+         #define X(_typename_, ...) \
+            for (auto& worker : this->_typename_) worker.start();
+         FOR_EACH_THREAD_TYPE(X)
+         #undef X
+      }
+      void process::thread_collection::wait() {
+         #define X(_typename_, ...) \
+            for (auto& worker : this->_typename_) worker.wait_for();
+         FOR_EACH_THREAD_TYPE(X)
+         #undef X
+      }
+      void process::thread_collection::rethrow_earliest_caught_exception() {
+         std::pair<std::exception_ptr, size_t> earliest;
+
+         static_assert(false, "TODO: Workers don't have a means to store their exception offset!");
+         auto _per_list = [&earliest](auto& list) {
+            for (threads::impl::base_implementation& worker : list) {
+               if (!worker.exception)
+                  continue;
+               if (!earliest.first || worker.exception_offset < earliest.second) {
+                  earliest.first  = worker.exception;
+                  earliest.second = worker.exception_offset;
+               }
+            }
+         };
+         #define X(_typename_, ...) _per_list(this->_typename_);
+         FOR_EACH_THREAD_TYPE(X)
+         #undef X
+         
+         if (earliest.first) {
+            std::rethrow_exception(earliest.first);
+         }
+      }
+   #pragma endregion
+
    process::process(const process_params& params) :
       _params(params),
-      _threads({
-         #define THREADS_OF_TYPE(_typename_) \
-            ._typename_ = lu::arrays::make_filled<threads::_typename_, std::tuple_size_v<decltype(thread_collection::_typename_)>>(threads::initialization_params{params, *this})
-         THREADS_OF_TYPE(exterior_cells_and_children),
-         THREADS_OF_TYPE(forms_of_type),
-         THREADS_OF_TYPE(game_settings),
-         THREADS_OF_TYPE(interior_cells_and_children),
-         THREADS_OF_TYPE(persistent_cell_children),
-         THREADS_OF_TYPE(topics_and_infos),
-         #undef THREADS_OF_TYPE
-      })
+      _threads(params, *this),
+      _source_file_is_active(&params.source_file == params.active_load_order.get_active_file())
    {
    }
 
    void process::execute() {
+      const auto& callbacks   = this->_params.callbacks;
+      auto&       source_file = this->_params.source_file;
+
       tes::file_view view;
-      view.set_target_file(&this->_params.source_file);
+      view.set_target_file(&source_file);
       {
          tes::file_view::chunk_type ot;
 
          struct {
-            uint32_t exterior_cells_and_children = 0;
-            uint32_t forms_of_type               = 0;
-            uint32_t game_settings               = 0;
-            uint32_t interior_cells_and_children = 0;
-            uint32_t persistent_cell_children    = 0;
-            uint32_t topics_and_infos            = 0;
+            uint8_t exterior_cells_and_children = 0;
+            uint8_t forms_of_type               = 0;
+            uint8_t game_settings               = 0;
+            uint8_t interior_cells_and_children = 0;
+            uint8_t persistent_cell_children    = 0;
+            uint8_t topics_and_infos            = 0;
          } thread_indices;
          #define ENQUEUE(_thread_typename_, ...) \
             {  \
@@ -127,12 +187,41 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      if (!last_worldspace) [[unlikely]] {
                         static_assert(false, "TODO: Error: world-children GRUP not immediately preceded by any WRLD record");
                      } else {
-                        auto result = utils::form_ids::record_id_to_form_id(this->_params.source_file, group.label);
+                        auto result = utils::form_ids::record_id_to_form_id(source_file, group.label);
                         if (!result.has_value()) [[unlikely]] {
-                           static_assert(false, "TODO: Error: world-children GRUP specifies invalid parent form ID");
+                           using exception_type = exceptions::file_parse_errors::child_form_group_specifies_bad_parent_id;
+                           using exception_code = exception_type::problem_type;
+
+                           exception_code code;
+                           switch (result.error()) {
+                              using enum utils::form_ids::record_id_to_form_id_error;
+                              case out_of_bounds:
+                                 code = exception_code::record_id_is_out_of_bounds;
+                                 break;
+                              case missing_master:
+                                 throw exceptions::file_load_errors::missing_master_detected_at_record_load(
+                                    source_file.path(),
+                                    source_file.header().masters[group.label >> 0x18].master,
+                                    group.label
+                                 );
+                           }
+                           throw exception_type(
+                              source_file,
+                              group.position,
+                              group,
+                              code,
+                              form_type::worldspace,
+                              group.label,
+                              last_worldspace
+                           );
                         }
                         if (result.value() != last_worldspace->form_id) [[unlikely]] {
-                           static_assert(false, "TODO: Error: world-children GRUP not immediately preceded by the associated WRLD record");
+                           throw exceptions::file_parse_errors::child_form_group_follows_wrong_parent(
+                              source_file,
+                              group.position,
+                              group,
+                              last_worldspace
+                           );
                         }
                      }
                      continue;
@@ -143,14 +232,16 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      continue;
                   case tes::group_type::cell_persistent_children:
                   case tes::group_type::cell_temporary_children:
-                     static_assert(false, "TODO: Unexpected top-level or group");
+                     static_assert(false, "TODO: Unexpected top-level or nested group");
                      continue;
                   case tes::group_type::exterior_cell_block:
                      last_ext_block_y = group.label & 0xFFFF;
                      last_ext_block_x = group.label >> 0x10;
                      continue;
                   case tes::group_type::exterior_cell_sub_block:
-                     assert(last_worldspace && "Exterior Cell Block GRUP must follow a WRLD record.");
+                     if (!last_worldspace) {
+                        static_assert(false, "TODO: Misplaced group (must follow a WRLD record).");
+                     }
                      {
                         int16_t sub_x = group.label >> 0x10;
                         int16_t sub_y = group.label & 0xFFFF;
@@ -163,7 +254,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                         auto* parent = view.parent_of_group(group);
                         if (!parent) {
                            throw exceptions::file_parse_errors::interior_cell_block_has_no_parent_group(
-                              this->_params.source_file,
+                              source_file,
                               group.position,
                               group
                            );
@@ -245,11 +336,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                // so multi-threading within a single topic isn't useful).
                //
                form_type formType = form_type_info::signature_to_form_type(record.signature());
-               auto* stub = make_stub_from_record(
-                  this->_params.source_file,
-                  record.file_offset_of_header(),
-                  record.header()
-               );
+               auto* stub = make_stub_from_record(source_file, record.file_offset_of_header(), record.header());
                if (stub->form_type == form_type::worldspace) {
                   last_worldspace = stub;
                }
@@ -260,7 +347,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                         //
                         // Loading (probable) persistent cell.
                         //
-                        this->set_stub_parent(stub, last_worldspace);
+                        stub->_set_parent_form_one_way({}, last_worldspace);
                         last_persistent_cell = stub;
 
                         if (!stub->test_record_flags((uint32_t)1 << (size_t)tes::record_flag::persistent)) {
@@ -274,15 +361,19 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                            this->get_file_loader().get_load_interface(*this).log_warning(notice);
                         }
                      } else {
-                        notices::file_load_warnings::record_found_in_wrong_top_level_group notice;
-                        notice.top_level_group_label = std::byteswap(group.header.label);
-                        notice.record = {
-                           .local_id  = record.formID(),
-                           .global_id = stub->form_id,
-                           .signature = record.signature(),
-                        };
-                        notice.source_file = this->get_file_loader().get_filename();
-                        this->get_file_loader().get_load_interface(*this).log_warning(notice);
+                        if (callbacks.on_warning) {
+                           (callbacks.on_warning)(
+                              notices::file_parse_warnings::record_found_in_wrong_group(
+                                 source_file.path().filename().string(),
+                                 group.position,
+                                 group,
+                                 last_worldspace,
+                                 record.file_offset_of_header(),
+                                 record.header(),
+                                 stub
+                              )
+                           );
+                        }
                      }
                      break;
                }
@@ -295,46 +386,30 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                if (&group == &view.groups[0]) { // is this a top-level group?
                   lu::four_cc group_signature = std::byteswap(group.label);
                   if (record.signature() != group_signature) { // misplaced record?
-                     threads::impl::fail_if_form_fatally_misplaced(this->_params, record, *stub); // TODO: Move out of `threads::`
-                     form_type group_type = form_type_info::signature_to_form_type(group_signature);
-                     
-                     notices::file_load_warnings::record_found_in_wrong_top_level_group notice;
-                     notice.top_level_group_label = group_signature;
-                     notice.record = {
-                        .local_id  = record.formID(),
-                        .global_id = stub->form_id,
-                        .signature = record.signature(),
-                     };
-                     notice.source_file = this->get_file_loader().get_filename();
-                     this->get_file_loader().get_load_interface(*this).log_warning(notice);
+                     threads::impl::fail_if_form_fatally_misplaced(source_file, record, *stub); // TODO: Move out of `threads::`
+                     if (callbacks.on_warning) {
+                        (callbacks.on_warning)(
+                           notices::file_parse_warnings::record_found_in_wrong_group(
+                              source_file.path().filename().string(),
+                              group.position,
+                              group,
+                              nullptr,
+                              record.file_offset_of_header(),
+                              record.header(),
+                              stub
+                           )
+                        );
+                     }
                   }
                }
             }
          }
       }
-      this->_start_threads();
-      this->_wait_for_threads();
-      {
-         const size_t no_offset = this->threads.size();
 
-         size_t earliest_offset = no_offset;
-         for (size_t i = 0; i < this->threads.size(); ++i) {
-            auto* thread = this->threads[i];
-            if (!thread->exception.captured)
-               continue;
+      this->_threads.start();
+      this->_threads.wait();
+      this->_threads.rethrow_earliest_caught_exception();
 
-            if (earliest_offset == no_offset) {
-               earliest_offset = i;
-            } else {
-               if (thread->exception.thrown_at_file_offset < this->threads[earliest_offset]->exception.thrown_at_file_offset)
-                  earliest_offset = i;
-            }
-         }
-         if (earliest_offset != no_offset) {
-            std::rethrow_exception(this->threads[earliest_offset]->exception.captured);
-         }
-      }
-      //
       return !this->aborted;
    }
 
@@ -366,8 +441,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       auto& callbacks   = this->_params.callbacks;
       auto& source_file = this->_params.source_file;
 
-      const bool source_file_is_active = &source_file == alo.get_active_file();
-
       auto& fsc = alo.get_form_stub_collection();
       
       std::lock_guard<std::mutex> guard_for_all_forms(fsc.forms.lock);
@@ -394,7 +467,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          load_order_processes::build_form_stubs_from_file::fold_overriding_stub_into_overridden_stub(
             callbacks,
             source_file,
-            source_file_is_active,
+            this->_source_file_is_active,
             *stub,
             *existing_form,
             record_offset,
@@ -480,7 +553,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       //
       // Place the stub inside of the active file form maps, if appropriate.
       //
-      if (source_file_is_active) {
+      if (this->_source_file_is_active) {
          fsc.active_file_forms.forms[form_id] = stub;
          fsc.active_file_forms_by_type[stub->form_type].forms[form_id] = stub;
       }
