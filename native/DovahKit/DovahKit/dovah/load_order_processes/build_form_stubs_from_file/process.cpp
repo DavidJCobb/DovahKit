@@ -36,6 +36,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             ._typename_ = lu::arrays::make_filled<threads::_typename_, std::tuple_size_v<decltype(thread_collection::_typename_)>>(threads::initialization_params{params, *this})
          THREADS_OF_TYPE(exterior_cells_and_children),
          THREADS_OF_TYPE(forms_of_type),
+         THREADS_OF_TYPE(game_settings),
          THREADS_OF_TYPE(interior_cells_and_children),
          THREADS_OF_TYPE(persistent_cell_children),
          THREADS_OF_TYPE(topics_and_infos),
@@ -53,10 +54,10 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          struct {
             uint32_t exterior_cells_and_children = 0;
             uint32_t forms_of_type               = 0;
+            uint32_t game_settings               = 0;
             uint32_t interior_cells_and_children = 0;
             uint32_t persistent_cell_children    = 0;
             uint32_t topics_and_infos            = 0;
-            uint32_t game_setting    = 0;
          } thread_indices;
          #define ENQUEUE(_thread_typename_, ...) \
             {  \
@@ -206,7 +207,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      break;
                }
                if (is_gmst) {
-                  ENQUEUE(game_setting, (uint32_t)group.position);
+                  ENQUEUE(game_settings, { (uint32_t)group.position });
                } else if (is_dialogue) {
                   ENQUEUE(topics_and_infos, { (uint32_t)group.position });
                } else {

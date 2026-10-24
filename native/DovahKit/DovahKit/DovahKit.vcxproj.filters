@@ -203,6 +203,15 @@
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\_base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\exterior_cells_and_children.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\persistent_cell_children.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\game_settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1067,6 +1076,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_fatally_misplaced.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\exterior_cells_and_children.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\persistent_cell_children.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_types\is_cell_child.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\game_settings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

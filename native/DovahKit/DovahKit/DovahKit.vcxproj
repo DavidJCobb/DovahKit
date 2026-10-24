@@ -130,8 +130,11 @@
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\extract_high_value_subrecords_for_stub.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\process.cpp" />
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\exterior_cells_and_children.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\forms_of_type.cpp" />
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\game_settings.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\interior_cells_and_children.cpp" />
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\persistent_cell_children.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\topics_and_infos.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\_base.cpp" />
     <ClCompile Include="dovah\load_order_processes\reparent_persistent_refs\make_parenthood_bidirectional_worker.cpp" />
@@ -260,10 +263,13 @@
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\process.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\process_params.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\set_file_list_for_newest_singleton_stub.h" />
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\exterior_cells_and_children.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\forms_of_type.h" />
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\game_settings.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\impl\fail_if_form_fatally_misplaced.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\impl\get_parent_stub_for_group.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\interior_cells_and_children.h" />
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\persistent_cell_children.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\topics_and_infos.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\_base.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\update_stub_addenda_on_commit.h" />
@@ -363,6 +369,7 @@
     <ClInclude Include="dovah\utils\form_stubs\is_defined_or_overridden_in_active_file.h" />
     <ClInclude Include="dovah\utils\form_stubs\is_exterior_cell.h" />
     <ClInclude Include="dovah\utils\form_stubs\is_interior_cell.h" />
+    <ClInclude Include="dovah\utils\form_types\is_cell_child.h" />
     <ClInclude Include="dovah\utils\form_types\is_ref.h" />
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
     <ClInclude Include="dovah\utils\worldspaces\world_coordinate_to_grid_coordinate.h" />

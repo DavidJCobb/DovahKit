@@ -27,7 +27,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          this->_progress.current = i;
          auto& desired = this->queue[i];
          view.set_position(desired.pos);
-         assert(view.next_record_or_group() == tes::file_view::chunk_type::group); // TODO: error instead
+         assert(view.next_record_or_group() == tes::file_view::chunk_type::group);
 
          const auto&     group_of_interest = view.groups[0];
          const form_type group_form_type   = form_type_info::signature_to_form_type(desired.signature);
