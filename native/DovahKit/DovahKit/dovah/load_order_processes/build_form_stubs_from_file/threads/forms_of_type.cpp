@@ -1,6 +1,6 @@
 #include "./forms_of_type.h"
 #include <cassert>
-#include "dovah/exceptions/file_parse_errors/unexpected_nested_group_in_simple_top_group.h"
+#include "dovah/active_load_order.h"
 #include "dovah/form_type.h"
 #include "dovah/form_type_info.h"
 #include "dovah/tes/file.h"
@@ -8,15 +8,17 @@
 #include "../extract_high_value_subrecords_for_stub.h"
 #include "../make_stub_from_record.h"
 
+#include "dovah/exceptions/file_parse_errors/unexpected_nested_group_in_simple_top_group.h"
+#include "dovah/notices/file_parse_warnings/record_found_in_wrong_top_level_group.h"
+
 namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
    void forms_of_type::execute_on_thread() {
-      assert(this->active_load_order);
-      assert(this->source_file);
-
-      auto& alo = *this->active_load_order;
+      auto& alo         = this->_config.active_load_order;
+      auto& callbacks   = this->_config.callbacks;
+      auto& source_file = this->_config.source_file;
 
       tes::file_view view;
-      view.set_target_file(this->source_file);
+      view.set_target_file(&source_file);
 
       const size_t size = this->queue.size();
       this->_progress.maximum = (uint32_t)size;
@@ -41,7 +43,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
             }
             if (ot == tes::file_view::chunk_type::group) {
                throw exceptions::file_parse_errors::unexpected_nested_group_in_simple_top_group(
-                  *this->source_file,
+                  source_file,
                   desired.pos,
                   desired.signature,
                   view.groups[1].position,
@@ -57,24 +59,36 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                form_type formType = lastFormType;
                if (formType == dovah::form_type::none) // probably shouldn't happen; invalid signatures should cause errors
                   continue;
-               //
-               auto* stub = make_stub_from_record(*this->source_file, record.file_offset_of_header(), record.header());
+               
+               auto* stub = make_stub_from_record(source_file, record.file_offset_of_header(), record.header());
                if (stub->form_type != group_form_type) {
-                  notices::file_load_warnings::record_found_in_wrong_top_level_group notice;
-                  notice.source_file = this->source_file->path().filename().string();
-                  notice.top_level_group_label = desired.signature;
-                  notice.record = {
-                     .local_id  = record.formID(),
-                     .global_id = stub->form_id,
-                     .signature = record.signature(),
-                  };
-                  //
-                  this->get_file_loader().get_load_interface(*this).log_warning(notice);
+                  if (callbacks.on_warning) {
+                     (callbacks.on_warning)(
+                        notices::file_parse_warnings::record_found_in_wrong_top_level_group(
+                           source_file.path().filename().string(),
+                           group_form_type,
+                           stub->form_type,
+                           record.formID(),
+                           stub->form_id
+                        )
+                     );
+                  }
                }
-               if (!this->commit_stub(stub)) {
+               try {
+                  alo.get_form_stub_collection()._take_newly_parsed_form_stub(
+                     callbacks,
+                     source_file,
+                     record.file_offset_of_header(),
+                     record.header().formID,
+                     stub
+                  );
+               } catch (...) {
+                  delete stub;
+                  throw;
+               }
+               if (!stub)
                   continue;
-               }
-               extract_high_value_subrecords_for_stub(*this->source_file, *stub, record);
+               extract_high_value_subrecords_for_stub(source_file, *stub, record);
             }
          }
       }

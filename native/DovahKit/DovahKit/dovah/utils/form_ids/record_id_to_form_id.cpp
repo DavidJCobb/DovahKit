@@ -4,6 +4,7 @@
 #include "dovah/facts/form_ids/max_hardcoded_form_id.h"
 #include "dovah/facts/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 #include "dovah/tes/file.h"
+#include "dovah/types/file_prefix.h"
 
 namespace dovah::utils::form_ids {
    extern std::expected<bare_form_id, record_id_to_form_id_error> record_id_to_form_id(const tes::file& source_file, bare_form_id record_id) {
@@ -35,7 +36,7 @@ namespace dovah::utils::form_ids {
       }
       auto& name        = source_file.header().masters[prefix].master;
       auto  file_prefix = alo.file_prefix_for(name);
-      if (file_prefix.is_undefined()) {
+      if (file_prefix.is_undefined()) [[unlikely]] {
          return std::unexpected(record_id_to_form_id_error::missing_master);
       }
       return file_prefix.coerce_form_id(record_id);

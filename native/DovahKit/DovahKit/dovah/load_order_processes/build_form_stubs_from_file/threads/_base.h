@@ -2,13 +2,34 @@
 #include <cstdint>
 #include <exception>
 #include <thread>
+#include "dovah/callback_sets/data_load.h"
 #include "dovah/exceptions/file_load_error.h"
 #include "dovah/termination_handler.h"
+namespace dovah {
+   namespace callback_sets {
+      struct data_load;
+   }
+   namespace tes {
+      class file;
+   }
+   class active_load_order;
+}
 
 namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
    template<typename Self>
    class _base {
+      public:
+         struct initialization_params {
+            active_load_order&              active_load_order;
+            const callback_sets::data_load& callbacks;
+            const tes::file&                source_file;
+         };
+
+         _base(initialization_params v) : _config(v) {
+         }
+
       protected:
+         initialization_params _config;
          std::thread _thread;
          struct {
             uint32_t current = 0;

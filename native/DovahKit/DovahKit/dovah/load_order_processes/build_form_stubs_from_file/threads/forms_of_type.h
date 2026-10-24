@@ -3,6 +3,9 @@
 #include "lu/integral_character_code.h"
 #include "./_base.h"
 namespace dovah {
+   namespace callback_sets {
+      struct data_load;
+   }
    namespace tes {
       class file;
    }
@@ -18,8 +21,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          };
 
       public:
-         active_load_order* active_load_order = nullptr;
-         const tes::file*   source_file       = nullptr;
          std::vector<queued_group> queue;
 
       public:

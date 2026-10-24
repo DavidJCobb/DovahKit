@@ -71,6 +71,9 @@ namespace dovah {
             this->_data_directory = std::move(v);
          }
 
+         // May throw `exceptions::load_order_error`
+         // May throw `exceptions::file_load_error`
+         // May throw `exceptions::file_parse_error`
          void load(
             tes::file_load_order&,
             std::string_view active_file_name, // must also be in the provided FLO

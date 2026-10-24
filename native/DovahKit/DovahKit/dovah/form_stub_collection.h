@@ -9,8 +9,12 @@
 #include "./types/bare_form_id.h"
 #include "./form_type_info.h"
 namespace dovah {
+   namespace callback_sets {
+      struct data_load;
+   }
    namespace tes {
-      class file;
+      class  file;
+      struct record_header;
    }
    class  active_load_order;
    struct file_prefix;
@@ -130,6 +134,7 @@ namespace dovah {
          void _add_hardcoded_form(form_stub&);
 
       public: // passkeyed
+         void _take_newly_parsed_form_stub(const callback_sets::data_load&, const tes::file& source_file, size_t record_offset, const tes::record_header&, form_stub*&);
          void _make_hardcoded_forms(lu::passkey<active_load_order>, tes::file& hardcoded_forms_file);
          void _make_none_stubs(lu::passkey<active_load_order>, tes::file& none_stubs_file);
          void _on_stub_flagged_as_edited(lu::passkey<form_stub>, form_stub&);
