@@ -34,6 +34,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          #define THREADS_OF_TYPE(_typename_) \
             ._typename_ = lu::arrays::make_filled<threads::_typename_, std::tuple_size_v<decltype(thread_collection::_typename_)>>(threads::initialization_params{params, *this})
          THREADS_OF_TYPE(forms_of_type),
+         THREADS_OF_TYPE(interior_cells_and_children),
+         THREADS_OF_TYPE(topics_and_infos),
          #undef THREADS_OF_TYPE
       })
    {
@@ -46,9 +48,9 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          tes::file_view::chunk_type ot;
 
          struct {
-            uint32_t forms_of_type   = 0;
-            uint32_t dialogue        = 0;
-            uint32_t interior_cell   = 0;
+            uint32_t forms_of_type               = 0;
+            uint32_t interior_cells_and_children = 0;
+            uint32_t topics_and_infos            = 0;
             uint32_t world_sub_block = 0;
             uint32_t exterior_cell   = 0;
             uint32_t game_setting    = 0;
@@ -135,7 +137,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      {
                         int16_t sub_x = group.label >> 0x10;
                         int16_t sub_y = group.label & 0xFFFF;
-                        ENQUEUE(worldspace_sub_block, { last_worldspace_id, last_ext_block_x, last_ext_block_y, sub_x, sub_y, group.position });
+                        ENQUEUE(worldspace_sub_block, { last_worldspace_id, last_ext_block_x, last_ext_block_y, sub_x, sub_y, (uint32_t)group.position });
                      }
                      view.skip_current_group();
                      continue;
@@ -157,7 +159,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                            );
                         }
                      }
-                     ENQUEUE(interior_cell, { std::byteswap(group.label), group.position });
+                     ENQUEUE(interior_cells_and_children, { std::byteswap(group.label), (uint32_t)group.position });
                      view.skip_current_group();
                      continue;
                   case tes::group_type::forms_of_type:
@@ -187,9 +189,9 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      break;
                }
                if (is_gmst) {
-                  ENQUEUE(game_setting, group.position);
+                  ENQUEUE(game_setting, (uint32_t)group.position);
                } else if (is_dialogue) {
-                  ENQUEUE(dialogue, { std::byteswap(group.label), group.position });
+                  ENQUEUE(topics_and_infos, { (uint32_t)group.position });
                } else {
                   ENQUEUE(forms_of_type, { std::byteswap(group.label), (uint32_t)group.position });
                }

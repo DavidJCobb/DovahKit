@@ -2,8 +2,13 @@
 #include <array>
 #include "./process_params.h"
 #include "./threads/forms_of_type.h"
+#include "./threads/interior_cells_and_children.h"
+#include "./threads/topics_and_infos.h"
 namespace dovah {
    namespace load_order_processes::build_form_stubs_from_file::threads {
+      namespace impl {
+         class base_implementation;
+      }
       template<typename Self>
       class _base;
    }
@@ -19,14 +24,13 @@ namespace dovah {
 namespace dovah::load_order_processes::build_form_stubs_from_file {
    namespace passkeys {
       class accept_stub {
-         template<typename> friend class threads::_base;
+         friend threads::impl::base_implementation;
          private:
             constexpr accept_stub() {}
       };
    }
 
    class process {
-      template<typename> friend class threads::_base;
       public:
          process(const process_params& p);
 
@@ -52,7 +56,9 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       protected:
          process_params _params;
          struct thread_collection {
-            std::array<threads::forms_of_type, 4> forms_of_type;
+            std::array<threads::forms_of_type,               4> forms_of_type;
+            std::array<threads::interior_cells_and_children, 4> interior_cells_and_children;
+            std::array<threads::topics_and_infos,            1> topics_and_infos;
          } _threads;
    };
 }

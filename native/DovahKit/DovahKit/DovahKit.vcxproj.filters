@@ -191,6 +191,18 @@
     <ClCompile Include="dovah\types\form_id.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\process.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\topics_and_infos.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\interior_cells_and_children.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\_base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -548,9 +560,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_has_invalid_signature.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\exceptions\file_parse_errors\unexpected_nested_group_in_simple_top_group.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\exceptions\load_order_errors\active_file_is_a_master_and_there_are_plugins.h">
@@ -965,6 +974,99 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lu\bytestreams\impl\value_kind.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\base_file_parse_warning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_load_errors\missing_master_detected_at_record_load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\record_has_invalid_record_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\check_and_report_override_legality.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\form_override_has_armo_arma_mismatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\form_override_has_type_mismatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\the_game_doesnt_load_new_actor_value_infos.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\form_initial_record_is_partial.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\esl_defined_an_interior_cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\set_file_list_for_newest_singleton_stub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\singleton_form_is_redundantly_defined.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\fold_overriding_stub_into_overridden_stub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\esl_defined_interior_cell_is_overridden.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\partial_info_override_has_different_parent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_stubs\is_interior_cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\update_stub_addenda_on_commit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\process_params.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\base_group_error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\interior_cell_block_has_no_parent_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\interior_cell_block_group_badly_nested.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\topics_and_infos.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\record_misplaced_in_topic_child_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\topic_child_group_specifies_bad_topic_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\unexpected_nested_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\interior_cells_and_children.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\child_form_group_specifies_bad_parent_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\impl\get_parent_stub_for_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\child_form_group_follows_wrong_parent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\record_found_in_wrong_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\impl\fail_if_form_fatally_misplaced.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\record_fatally_misplaced.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
