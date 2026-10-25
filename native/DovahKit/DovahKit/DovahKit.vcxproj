@@ -299,6 +299,11 @@
     <ClInclude Include="dovah\notices\file_parse_warnings\esl_defined_interior_cell_is_overridden.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\form_initial_record_is_partial.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\form_override_has_armo_arma_mismatch.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_has_unrecognized_subrecord.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_is_misordered.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_has_extra_content.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_type_unknown.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_unreadable.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\partial_info_override_has_different_parent.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\record_found_in_wrong_group.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\record_misplaced_in_topic_child_group.h" />

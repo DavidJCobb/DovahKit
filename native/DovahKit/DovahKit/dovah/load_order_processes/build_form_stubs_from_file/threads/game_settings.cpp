@@ -15,6 +15,11 @@
 
 #include "dovah/exceptions/file_parse_errors/record_fatally_misplaced.h"
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
+#include "dovah/notices/file_parse_warnings/game_setting_record_has_unrecognized_subrecord.h"
+#include "dovah/notices/file_parse_warnings/game_setting_record_is_misordered.h"
+#include "dovah/notices/file_parse_warnings/game_setting_value_has_extra_content.h"
+#include "dovah/notices/file_parse_warnings/game_setting_value_type_unknown.h"
+#include "dovah/notices/file_parse_warnings/game_setting_value_unreadable.h"
 
 namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
    void game_settings::execute_on_thread() {
@@ -76,7 +81,9 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
 
       bool found_data        = false;
       bool logged_misordered = false;
+
       loaded_game_setting working;
+      working.last_source_file = &source_file;
 
       record.next_subrecord();
       if (subrecord.signature() == 'EDID') {
@@ -88,34 +95,48 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          found_data = subrecord.signature() == 'DATA';
          if (found_data) {
             logged_misordered = true;
-            //
-            notices::file_load_warnings::game_setting_record_is_misordered notice;
-            notice.setting_name    = working.name;
-            notice.record.local_id = record.formID();
-            this->log_load_warning(notice);
+            if (callbacks.on_warning) {
+               (callbacks.on_warning)(
+                  notices::file_parse_warnings::game_setting_record_is_misordered(
+                     source_file.path().filename().string(),
+                     std::string_view(working.name),
+                     record.formID()
+                  )
+               );
+            }
          }
       }
       while (record.next_subrecord()) {
          if (subrecord.signature() == 'EDID') {
             if (!logged_misordered) {
-               notices::file_load_warnings::game_setting_record_is_misordered notice;
-               notice.setting_name    = working.name;
-               notice.record.local_id = record.formID();
-               this->log_load_warning(notice);
+               logged_misordered = true;
+               if (callbacks.on_warning) {
+                  (callbacks.on_warning)(
+                     notices::file_parse_warnings::game_setting_record_is_misordered(
+                        source_file.path().filename().string(),
+                        std::string_view(working.name),
+                        record.formID()
+                     )
+                  );
+               }
             }
             continue;
          }
          if (subrecord.signature() != 'DATA') {
-            notices::file_load_warnings::game_setting_record_has_unrecognized_subrecord notice;
-            notice.setting_name        = working.name;
-            notice.form_ids.local      = record.formID();
-            notice.subrecord_signature = subrecord.signature();
-            this->log_load_warning(notice);
-            //
+            if (callbacks.on_warning) {
+               (callbacks.on_warning)(
+                  notices::file_parse_warnings::game_setting_record_has_unrecognized_subrecord(
+                     source_file.path().filename().string(),
+                     std::string_view(working.name),
+                     record.formID(),
+                     subrecord.signature()
+                  )
+               );
+            }
             continue;
          }
          found_data = true;
-         //
+         
          bool no_read_error = true;
          bool type_is_known = true;
          switch (working.get_type()) {
@@ -137,49 +158,54 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                break;
             default:
                type_is_known = false;
-               if (!working.name.empty()) {
-                  notices::file_load_warnings::game_setting_value_type_unknown notice;
-                  notice.setting_name = working.name;
-                  notice.record = {
-                     .local_id = record.formID(),
-                  };
-                  //
-                  this->log_load_warning(notice);
+               if (!working.name.empty()) { // if name is empty, we already logged a "misordered" warning
+                  if (callbacks.on_warning) {
+                     (callbacks.on_warning)(
+                        notices::file_parse_warnings::game_setting_value_type_unknown(
+                           source_file.path().filename().string(),
+                           std::string_view(working.name),
+                           record.formID()
+                        )
+                     );
+                  }
                }
                break;
          }
-         if (!no_read_error) {
-            notices::file_load_warnings::game_setting_value_unreadable notice;
-            notice.setting_name = working.name;
-            notice.record = {
-               .local_id = record.formID(),
-            };
-            notice.subrecord_is_present = true;
-            //
-            this->log_load_warning(notice);
-         }
-         if (type_is_known && !subrecord.is_at_end()) {
-            notices::file_load_warnings::game_setting_value_has_extra_content notice;
-            notice.setting_name  = working.name;
-            notice.data_size     = subrecord.size();
-            notice.expected_size = subrecord.offset();
-            notice.record = {
-               .local_id = record.formID(),
-            };
-            //
-            this->log_load_warning(notice);
+         if (callbacks.on_warning) {
+            if (!no_read_error) {
+               (callbacks.on_warning)(
+                  notices::file_parse_warnings::game_setting_value_unreadable(
+                     source_file.path().filename().string(),
+                     std::string_view(working.name),
+                     record.formID(),
+                     true
+                  )
+               );
+            } else if (type_is_known && subrecord.is_in_bounds()) {
+               (callbacks.on_warning)(
+                  notices::file_parse_warnings::game_setting_value_has_extra_content(
+                     source_file.path().filename().string(),
+                     std::string_view(working.name),
+                     record.formID(),
+                     subrecord.position(),
+                     subrecord.size()
+                  )
+               );
+            }
          }
          break;
       }
       if (!found_data) {
-         notices::file_load_warnings::game_setting_value_unreadable notice;
-         notice.setting_name = working.name;
-         notice.record = {
-            .local_id = record.formID(),
-         };
-         notice.subrecord_is_present = false;
-         //
-         this->log_load_warning(notice);
+         if (callbacks.on_warning) {
+            (callbacks.on_warning)(
+               notices::file_parse_warnings::game_setting_value_unreadable(
+                  source_file.path().filename().string(),
+                  std::string_view(working.name),
+                  record.formID(),
+                  false
+               )
+            );
+         }
       }
 
       // Can't quite separate this into the GSC only: the `form_stub_collection` needs to store 

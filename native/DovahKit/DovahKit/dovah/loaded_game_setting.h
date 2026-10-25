@@ -18,8 +18,8 @@ namespace dovah {
          using value_variant = facts::game_setting_types<true>::unpack_types_into<std::variant>;
 
       public:
-         const facts::game_settings::definition* definition  = nullptr;
-         const tes::file*                        source_file = nullptr; // needed for dealing with localized strings
+         const facts::game_settings::definition* definition       = nullptr;
+         const tes::file*                        last_source_file = nullptr;
          std::string   name; // needed separately from the definition so we can track GMSTs with invalid/no names
          bare_form_id  form_id = 0;
          value_variant value; // TODO: make private behind accessors, so you can't set e.g. "fMyCoolFloatSetting" to a bool

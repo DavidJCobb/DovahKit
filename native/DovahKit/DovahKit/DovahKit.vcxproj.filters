@@ -1108,6 +1108,21 @@
     <ClInclude Include="dovah\facts\game_settings\all_definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_is_misordered.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_unreadable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_has_unrecognized_subrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_type_unknown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_has_extra_content.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
