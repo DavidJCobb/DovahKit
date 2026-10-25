@@ -7,10 +7,10 @@
 #include "dovah/tes/file.h"
 #include "dovah/tes/reading/file_view.h"
 #include "dovah/utils/form_types/is_cell_child.h"
+#include "../impl/fail_if_form_fatally_misplaced.h"
+#include "../impl/get_parent_stub_for_group.h"
 #include "../make_stub_from_record.h"
 #include "../process.h"
-#include "./impl/fail_if_form_fatally_misplaced.h"
-#include "./impl/get_parent_stub_for_group.h"
 
 #include "dovah/exceptions/file_parse_errors/child_form_group_follows_wrong_parent.h"
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"

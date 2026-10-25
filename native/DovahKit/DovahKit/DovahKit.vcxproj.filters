@@ -212,6 +212,9 @@
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\impl\file_offset_of_exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1051,9 +1054,6 @@
     <ClInclude Include="dovah\notices\file_parse_warnings\record_misplaced_in_topic_child_group.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\exceptions\file_parse_errors\topic_child_group_specifies_bad_topic_id.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\exceptions\file_parse_errors\unexpected_nested_group.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1063,7 +1063,7 @@
     <ClInclude Include="dovah\exceptions\file_parse_errors\child_form_group_specifies_bad_parent_id.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\impl\get_parent_stub_for_group.h">
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\impl\get_parent_stub_for_group.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\exceptions\file_parse_errors\child_form_group_follows_wrong_parent.h">
@@ -1072,7 +1072,7 @@
     <ClInclude Include="dovah\notices\file_parse_warnings\record_found_in_wrong_group.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\impl\fail_if_form_fatally_misplaced.h">
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\impl\fail_if_form_fatally_misplaced.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_fatally_misplaced.h">
@@ -1088,6 +1088,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\game_settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\impl\file_offset_of_exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,12 +8,8 @@
 #include "./threads/persistent_cell_children.h"
 #include "./threads/topics_and_infos.h"
 namespace dovah {
-   namespace load_order_processes::build_form_stubs_from_file::threads {
-      namespace impl {
-         class base_implementation;
-      }
-      template<typename Self>
-      class _base;
+   namespace load_order_processes::build_form_stubs_from_file {
+      class base_worker_thread;
    }
    namespace tes {
       class  file;
@@ -27,7 +23,7 @@ namespace dovah {
 namespace dovah::load_order_processes::build_form_stubs_from_file {
    namespace passkeys {
       class accept_stub {
-         friend threads::impl::base_implementation;
+         friend base_worker_thread;
          private:
             constexpr accept_stub() {}
       };

@@ -3,11 +3,11 @@
 #include "dovah/form_type.h"
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/utils/form_types/is_cell_child.h"
-#include "../_base.h"
+#include "./_base.h"
 
 #include "dovah/exceptions/file_parse_errors/record_fatally_misplaced.h"
 
-namespace dovah::load_order_processes::build_form_stubs_from_file::threads::impl {
+namespace dovah::load_order_processes::build_form_stubs_from_file::impl {
    template<form_type ParentFormType = form_type::none>
    void fail_if_form_fatally_misplaced(
       const tes::file&        source_file,

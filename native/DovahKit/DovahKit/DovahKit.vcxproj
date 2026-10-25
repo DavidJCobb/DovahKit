@@ -129,6 +129,7 @@
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\extract_high_value_subrecords_for_stub.cpp" />
+    <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\impl\file_offset_of_exception.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\process.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\exterior_cells_and_children.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\threads\forms_of_type.cpp" />
@@ -220,7 +221,6 @@
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_fatally_misplaced.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_has_invalid_record_id.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_has_invalid_signature.h" />
-    <ClInclude Include="dovah\exceptions\file_parse_errors\topic_child_group_specifies_bad_topic_id.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\unexpected_nested_group.h" />
     <ClInclude Include="dovah\exceptions\load_order_error.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\active_file_is_a_master_and_there_are_plugins.h" />
@@ -259,6 +259,7 @@
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\check_and_report_override_legality.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\extract_high_value_subrecords_for_stub.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\fold_overriding_stub_into_overridden_stub.h" />
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\impl\file_offset_of_exception.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\make_stub_from_record.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\process.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\process_params.h" />
@@ -266,8 +267,8 @@
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\exterior_cells_and_children.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\forms_of_type.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\game_settings.h" />
-    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\impl\fail_if_form_fatally_misplaced.h" />
-    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\impl\get_parent_stub_for_group.h" />
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\impl\fail_if_form_fatally_misplaced.h" />
+    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\impl\get_parent_stub_for_group.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\interior_cells_and_children.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\persistent_cell_children.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\threads\topics_and_infos.h" />

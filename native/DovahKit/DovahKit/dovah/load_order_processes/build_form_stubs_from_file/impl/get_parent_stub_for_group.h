@@ -8,7 +8,7 @@
 #include "dovah/tes/group_header.h"
 #include "dovah/types/bare_form_id.h"
 #include "dovah/utils/form_ids/record_id_to_form_id.h"
-#include "../_base.h"
+#include "./process.h"
 namespace dovah {
    enum class form_type : uint8_t;
 }
@@ -16,9 +16,9 @@ namespace dovah {
 #include "dovah/exceptions/file_load_errors/missing_master_detected_at_record_load.h"
 #include "dovah/exceptions/file_parse_errors/child_form_group_specifies_bad_parent_id.h"
 
-namespace dovah::load_order_processes::build_form_stubs_from_file::threads::impl {
+namespace dovah::load_order_processes::build_form_stubs_from_file::impl {
    template<form_type FormType>
-   form_stub& get_parent_stub_for_group(initialization_params& ip, size_t group_offset, const tes::group_header& group_header) {
+   form_stub& get_parent_stub_for_group(process_params& ip, size_t group_offset, const tes::group_header& group_header) {
       auto& alo         = ip.active_load_order;
       auto& source_file = ip.source_file;
 

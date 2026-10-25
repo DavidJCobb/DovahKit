@@ -9,8 +9,9 @@
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/utils/form_stubs/get_parent_form.h"
 #include "dovah/utils/form_stubs/is_interior_cell.h"
+#include "./impl/fail_if_form_fatally_misplaced.h"
+#include "./impl/file_offset_of_exception.h"
 #include "./threads/forms_of_type.h"
-#include "./threads/impl/fail_if_form_fatally_misplaced.h"
 #include "./make_stub_from_record.h" // when indexing worldspaces
 #pragma region Committing stubs
    #include "./check_and_report_override_legality.h"
@@ -74,14 +75,14 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       void process::thread_collection::rethrow_earliest_caught_exception() {
          std::pair<std::exception_ptr, size_t> earliest;
 
-         static_assert(false, "TODO: Workers don't have a means to store their exception offset!");
          auto _per_list = [&earliest](auto& list) {
-            for (threads::impl::base_implementation& worker : list) {
+            for (base_worker_thread& worker : list) {
                if (!worker.exception)
                   continue;
-               if (!earliest.first || worker.exception_offset < earliest.second) {
+               const auto offset = impl::file_offset_of_exception(worker.exception);
+               if (!earliest.first || offset < earliest.second) {
                   earliest.first  = worker.exception;
-                  earliest.second = worker.exception_offset;
+                  earliest.second = offset;
                }
             }
          };
@@ -386,7 +387,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                if (&group == &view.groups[0]) { // is this a top-level group?
                   lu::four_cc group_signature = std::byteswap(group.label);
                   if (record.signature() != group_signature) { // misplaced record?
-                     threads::impl::fail_if_form_fatally_misplaced(source_file, record, *stub); // TODO: Move out of `threads::`
+                     impl::fail_if_form_fatally_misplaced<form_type::none>(source_file, record, *stub);
                      if (callbacks.on_warning) {
                         (callbacks.on_warning)(
                            notices::file_parse_warnings::record_found_in_wrong_group(
