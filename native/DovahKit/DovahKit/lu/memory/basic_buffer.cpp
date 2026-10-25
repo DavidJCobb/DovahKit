@@ -63,11 +63,13 @@ namespace lu::memory {
          this->_data = malloc(size);
          if (!this->_data)
             throw std::bad_alloc();
+         this->_size = size;
          return;
       }
       auto* moved = realloc(this->_data, size);
       if (!moved)
          throw std::bad_alloc();
       this->_data = moved;
+      this->_size = size;
    }
 }

@@ -206,7 +206,7 @@ namespace dovah::tes {
          // The record body is uncompressed. Just have the record-view read directly 
          // out of the mapped file data.
          //
-         this->subviews.record.set_buffer({ this->_reader.data_at_position(), record._header.size});
+         this->subviews.record.set_buffer({ this->_reader.data_at_position(), record._header.size });
       }
       return true;
    }
