@@ -42,7 +42,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          size_t exception_offset = 0;
 
       protected:
-         void _abort();
          void _finish_stub(form_stub*&& stub, tes::record_view& record);
          void _set_stub_parent(form_stub& stub, form_stub* parent);
 
@@ -71,7 +70,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                instance->execute_on_thread();
             } catch (const std::exception& ex) {
                instance->exception = std::current_exception();
-               instance->base_worker_thread::_abort();
             }
          }
 

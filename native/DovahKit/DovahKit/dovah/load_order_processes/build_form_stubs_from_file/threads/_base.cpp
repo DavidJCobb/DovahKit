@@ -4,9 +4,6 @@
 #include "dovah/form_stub.h"
 
 namespace dovah::load_order_processes::build_form_stubs_from_file {
-   void base_worker_thread::_abort() {
-      this->_config.process.abort();
-   }
    void base_worker_thread::_finish_stub(form_stub*&& stub, tes::record_view& record) {
       this->_config.process._done_parsing_stub({}, stub, record);
    }

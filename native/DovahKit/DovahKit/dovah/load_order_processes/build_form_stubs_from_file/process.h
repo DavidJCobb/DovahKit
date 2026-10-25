@@ -57,8 +57,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          // May throw.
          void execute();
 
-         void abort();
-
       public: // passkeyed
          void _done_parsing_stub(
             passkeys::accept_stub,
