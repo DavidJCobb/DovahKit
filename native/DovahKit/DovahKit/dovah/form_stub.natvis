@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   
+   <!-- Helpers for showing use info. -->
+   <Type Name="std::pair&lt;unsigned int const, dovah::use_info::entry&gt;" IncludeView="dkFormInbound">
+      <DisplayString Condition="second.flags &amp; ((size_t)1 &lt;&lt; (uint32_t)dovah::use_info::entry_flags::reference::base_form)">ref using this base</DisplayString>
+      <DisplayString Condition="second.flags &amp; ((size_t)1 &lt;&lt; (uint32_t)dovah::use_info::entry_flags::base::parent)">child form</DisplayString>
+      <DisplayString>general</DisplayString>
+   </Type>
+   <Type Name="std::pair&lt;unsigned int const, dovah::use_info::entry&gt;" IncludeView="dkFormOutbound">
+      <DisplayString Condition="second.flags &amp; ((size_t)1 &lt;&lt; (uint32_t)dovah::use_info::entry_flags::reference::base_form)">base form</DisplayString>
+      <DisplayString Condition="second.flags &amp; ((size_t)1 &lt;&lt; (uint32_t)dovah::use_info::entry_flags::base::parent)">parent form</DisplayString>
+      <DisplayString>general</DisplayString>
+   </Type>
+   <Type Name="std::pair&lt;unsigned int const, dovah::use_info::entry&gt;" IncludeView="dkFormUseStub">
+      <DisplayString>{second.refcount,u}x {second.other,na}</DisplayString>
+      <Expand>
+         <ExpandedItem>second.other</ExpandedItem>
+      </Expand>
+   </Type>
+   <Type Name="std::map&lt;*&gt;" IncludeView="dkFormInbound">
+      <DisplayString>{{ size={_Mypair._Myval2._Myval2._Mysize} }}</DisplayString>
+      <Expand>
+         <TreeItems>
+           <Size>_Mypair._Myval2._Myval2._Mysize</Size>
+           <HeadPointer>_Mypair._Myval2._Myval2._Myhead-&gt;_Parent</HeadPointer>
+           <LeftPointer>_Left</LeftPointer>
+           <RightPointer>_Right</RightPointer>
+           <ValueNode Condition="_Isnil == 0" Name="[{_Myval,view(dkFormInbound)}]">_Myval,view(dkFormUseStub)</ValueNode>
+         </TreeItems>
+      </Expand>
+   </Type>
+   <Type Name="std::map&lt;*&gt;" IncludeView="dkFormOutbound">
+      <DisplayString>{{ size={_Mypair._Myval2._Myval2._Mysize} }}</DisplayString>
+      <Expand>
+         <TreeItems>
+           <Size>_Mypair._Myval2._Myval2._Mysize</Size>
+           <HeadPointer>_Mypair._Myval2._Myval2._Myhead-&gt;_Parent</HeadPointer>
+           <LeftPointer>_Left</LeftPointer>
+           <RightPointer>_Right</RightPointer>
+           <ValueNode Condition="_Isnil == 0" Name="[{_Myval,view(dkFormOutbound)}]">_Myval,view(dkFormUseStub)</ValueNode>
+         </TreeItems>
+      </Expand>
+   </Type>
+   
+   <Type Name="dovah::form_stub">
+      
+      <!-- NOTE: dovah::form_types[(size_t)form_type] is not strictly correct. There is a point late in the list 
+                 of form-type constants where the ordering of the list desynchronizes from the ordering of the 
+                 constants (since some constants map to game engine values rather than to real form types, and 
+                 so there are gaps in the list). In the program, we use constexpr lookups to properly get form 
+                 type info; don't think that's an option here. It's fine; this is just debugging and for 90% of 
+                 form types it'll work. Note also that this isn't the only place in this Natvis file where we 
+                 take this shortcut. -->
+      <Intrinsic Name="_signature_char" Expression="
+         ((const char*)&amp;dovah::form_types[(size_t)form_type].signature + (3 - a)),[1]nasb
+      ">
+         <Parameter Name="a" Type="uint32_t" />
+      </Intrinsic>
+
+      <Intrinsic Name="_has_stub_flag" Expression="flags.wrapped_integral &amp; ((uint32_t)1 &lt;&lt; (uint32_t)flag)">
+         <Parameter Name="flag" Type="form_stub::flag" />
+      </Intrinsic>
+
+      <Intrinsic Name="_form_type_is_ref" Expression="
+         ft == dovah::form_type::actor
+      || ft == dovah::form_type::reference
+      || ft == dovah::form_type::arrow
+      || ft == dovah::form_type::beam
+      || ft == dovah::form_type::cone
+      || ft == dovah::form_type::flame
+      || ft == dovah::form_type::grenade
+      || ft == dovah::form_type::placed_hazard
+      || ft == dovah::form_type::missile
+      ">
+         <Parameter Name="ft" Type="dovah::form_type" />
+      </Intrinsic>
+
+      <Intrinsic Name="_addenda_has_grid_position" Expression="addenda &amp;&amp; addenda-&gt;grid_position._Has_value" />
+      <Intrinsic Name="_addenda_grid_position_x" Expression="addenda ? addenda-&gt;grid_position._Value.x : 0" />
+      <Intrinsic Name="_addenda_grid_position_y" Expression="addenda ? addenda-&gt;grid_position._Value.y : 0" />
+
+      <DisplayString Condition="form_type == dovah::form_type::cell &amp;&amp; _addenda_has_grid_position()">[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{form_id,8Xb}]{editor_id,sb} at ({_addenda_grid_position_x(),d}, {_addenda_grid_position_y(),d})</DisplayString>
+      <DisplayString>[{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{form_id,8Xb}]{editor_id,sb}</DisplayString>
+      <Expand>
+         <Item Name="[form type]">dovah::form_types[(size_t)form_type].name,sb</Item>
+         <Item Name="[form ID]">form_id,x</Item>
+         <Item Name="[editor ID]">editor_id,sb</Item>
+         <Synthetic Name="[flags]">
+            <DisplayString>{(int)flags.wrapped_integral,2X}</DisplayString>
+            <Expand>
+               <Synthetic Name="is_edited">
+                  <DisplayString>{_has_stub_flag(flag::is_edited) != 0}</DisplayString>
+               </Synthetic>
+               <Synthetic Name="is_hardcoded">
+                  <DisplayString>{_has_stub_flag(flag::is_hardcoded) != 0}</DisplayString>
+               </Synthetic>
+               <Synthetic Name="has_multiple_source_files">
+                  <DisplayString>{_has_stub_flag(flag::has_multiple_source_files) != 0}</DisplayString>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[source files]" Condition="_has_stub_flag(flag::has_multiple_source_files)">
+            <DisplayString>{files.entries,d} files</DisplayString>
+            <Expand>
+               <ArrayItems>
+                  <Size>files.count</Size>
+                  <ValuePointer>files.entries</ValuePointer>
+               </ArrayItems>
+            </Expand>
+         </Synthetic>
+         <Item Name="[source file]" Condition="!_has_stub_flag(flag::has_multiple_source_files)">file</Item>
+         <Item Name="[addenda]" Condition="addenda != nullptr">addenda</Item>
+         <Item Name="[loaded form]" Condition="loaded != nullptr">loaded</Item>
+         <Synthetic Name="[use info]">
+            <DisplayString>{outbound._Mypair._Myval2._Myval2._Mysize,d} outbound refs; {inbound._Mypair._Myval2._Myval2._Mysize,d} inbound</DisplayString>
+            <Expand>
+               <Item Name="outbound">outbound,view(dkFormOutbound)</Item>
+               <Item Name="inbound">inbound,view(dkFormInbound)</Item>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+   
+   <Type Name="dovah::loaded_form_ptr&lt;*&gt;">
+      <DisplayString Condition="wrapped">{wrapped,na}</DisplayString>
+      <Expand>
+         <ExpandedItem Condition="wrapped &amp;&amp; wrapped-&gt;form">wrapped-&gt;form</ExpandedItem>
+         <Item Condition="!wrapped || !wrapped-&gt;form" Name="[stub]">wrapped,na</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>
