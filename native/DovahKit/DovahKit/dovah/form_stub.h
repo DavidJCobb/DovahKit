@@ -33,6 +33,10 @@ namespace dovah {
 
 namespace dovah {
    class form_stub {
+      public:
+         static void* operator new(std::size_t sz);
+         static void operator delete(void* ptr, std::size_t sz);
+
       private:
          using use_info_list = std::map<
             bare_form_id,

@@ -14,7 +14,22 @@
 #include "./utils/form_stubs/can_ever_be_edited.h"
 #include "./active_load_order.h"
 
+namespace {
+   using form_stub_heap = lu::memory::threaded_slab_heap<dovah::form_stub, 16000>;
+}
+
 namespace dovah {
+   /*static*/ void* form_stub::operator new(std::size_t sz) {
+      if (sz != sizeof(form_stub))
+         return ::operator new(sz);
+      return form_stub_heap::allocate();
+   }
+   /*static*/ void form_stub::operator delete(void* ptr, std::size_t sz) {
+      if (sz != sizeof(form_stub))
+         return ::operator delete(ptr, sz);
+      return form_stub_heap::free(ptr);
+   }
+
    form_stub::form_stub() {
       this->file = {};
    }
