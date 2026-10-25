@@ -17,7 +17,7 @@ namespace dovah {
       bare_form_id max_id = active_prefix.max_form_id();
       bare_form_id id = search_from ? active_prefix.coerce_form_id(id) : min_id;
       //
-      auto& map = this->active_file_forms.forms;
+      auto& map = this->active_file_forms;
       if (map.size() >= (max_id - min_id)) // no form IDs available
          return 0;
       //
@@ -70,7 +70,7 @@ namespace dovah {
          return nullptr;
       uint16_t   length  = 0;
       form_stub* longest = nullptr;
-      auto&      map     = this->forms_by_type[ft].forms;
+      auto&      map     = this->forms_by_type[ft];
       for (auto pair : map) {
          auto* stub = pair.second;
          if (!stub)
@@ -86,13 +86,12 @@ namespace dovah {
    //form_stub* form_stub_collection::get_or_create_canonical_instance_of_singleton_form(form_type); // TODO
 
    void form_stub_collection::_add_hardcoded_form(form_stub& stub) {
-      auto& type = this->forms_by_type[stub.form_type];
-      std::lock_guard<std::mutex> guard_for_form_type(type.lock);
-      std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
-      
       const bare_form_id formID = stub.form_id;
-      type.forms[formID] = &stub;
-      this->forms.forms[formID] = &stub;
+      auto& type = this->forms_by_type[stub.form_type];
+
+      std::lock_guard<std::mutex> guard(this->forms_lock);
+      type[formID] = &stub;
+      this->forms[formID] = &stub;
    }
 
    //
@@ -106,9 +105,9 @@ namespace dovah {
       impl::_form_stub_collection::create_none_stubs(*this, none_stubs_file);
    }
    void form_stub_collection::_on_stub_flagged_as_edited(lu::passkey<form_stub>, form_stub& stub) {
-      this->active_file_forms.forms[stub.form_id] = &stub;
+      this->active_file_forms[stub.form_id] = &stub;
       auto& at = this->active_file_forms_by_type[stub.form_type];
-      at.forms[stub.form_id] = &stub;
+      at[stub.form_id] = &stub;
       //
       // NOTE: Merely flagging a form stub as edited SHOULD NOT result in the active file being 
       // added to the stub's source file list (if not already present). Currently, our handling 
@@ -117,6 +116,6 @@ namespace dovah {
       //
    }
    void form_stub_collection::_reserve(lu::passkey<active_load_order>, size_t expected_total_form_count) {
-      this->forms.forms.reserve((size_t)(expected_total_form_count * 1.1F) + 0x800);
+      this->forms.reserve((size_t)(expected_total_form_count * 1.1F) + 0x800);
    }
 }

@@ -40,10 +40,7 @@ namespace dovah {
          form_stub_collection& operator=(const form_stub_collection&) = delete;
 
       protected:
-         struct _form_map {
-            mutable std::mutex lock; // used only during multi-threaded file indexing
-            std::unordered_map<bare_form_id, form_stub*> forms;
-         };
+         using _form_map = std::unordered_map<bare_form_id, form_stub*>;
 
          struct _typed_map_set : public std::array<_form_map, form_types.size()> {
             protected:
@@ -91,6 +88,7 @@ namespace dovah {
       public:
          active_load_order& owner;
          callback_set   callbacks;
+         mutable std::mutex forms_lock; // used only during multi-threaded file indexing
          _form_map      forms;
          _typed_map_set forms_by_type;
          _form_map      active_file_forms; // forms defined OR overridden by the active file

@@ -524,9 +524,9 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       // will need to do further down.
       //
       auto& fsc   = alo.get_form_stub_collection();
-      auto  guard = std::lock_guard(fsc.forms.lock);
+      auto  guard = std::lock_guard(fsc.forms_lock);
       if (form_id) {
-         form_stub*& stub = fsc.forms.forms[form_id];
+         form_stub*& stub = fsc.forms[form_id];
          if (stub) {
             if (stub->form_type == form_type::setting) {
                stub->_add_source_file({}, const_cast<tes::file&>(source_file), record_offset, (uint32_t)record_header.flags);
@@ -550,11 +550,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             stub->_add_source_file({}, const_cast<tes::file&>(source_file), record_offset, (uint32_t)record_header.flags);
             stub->form_id   = form_id;
             stub->form_type = form_type::setting;
-            fsc.forms_by_type[form_type::setting].forms[form_id] = stub;
+            fsc.forms_by_type[form_type::setting][form_id] = stub;
          }
          if (this->_source_file_is_active) {
-            fsc.active_file_forms.forms[form_id] = stub;
-            fsc.active_file_forms_by_type[form_type::setting].forms[form_id] = stub;
+            fsc.active_file_forms[form_id] = stub;
+            fsc.active_file_forms_by_type[form_type::setting][form_id] = stub;
          }
       }
       
@@ -600,12 +600,12 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             // in that case, there's no new stub to create, and we can stick with the old stub.
             //
             if (form_id) {
-               auto* old_stub = fsc.forms.forms[old_form_id];
+               auto* old_stub = fsc.forms[old_form_id];
                assert(!!old_stub);
-               fsc.forms.forms.erase(old_form_id);
-               fsc.forms_by_type[form_type::setting].forms.erase(old_form_id);
-               fsc.active_file_forms.forms.erase(old_form_id);
-               fsc.active_file_forms_by_type[form_type::setting].forms.erase(old_form_id);
+               fsc.forms.erase(old_form_id);
+               fsc.forms_by_type[form_type::setting].erase(old_form_id);
+               fsc.active_file_forms.erase(old_form_id);
+               fsc.active_file_forms_by_type[form_type::setting].erase(old_form_id);
                delete old_stub;
             }
          }
@@ -635,7 +635,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
 
       auto& fsc = alo.get_form_stub_collection();
       
-      std::lock_guard<std::mutex> guard_for_all_forms(fsc.forms.lock);
+      std::lock_guard<std::mutex> guard_for_all_forms(fsc.forms_lock);
 
       const bare_form_id record_id  = record_header.formID;
       const bare_form_id form_id    = stub->form_id;
@@ -643,8 +643,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
 
       form_stub* existing_form = nullptr;
       {
-         auto it = fsc.forms.forms.find(form_id);
-         if (it != fsc.forms.forms.end())
+         auto it = fsc.forms.find(form_id);
+         if (it != fsc.forms.end())
             existing_form = it->second;
       }
 
@@ -733,11 +733,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          // Insert the stub into the form maps:
          //
          auto& type = fsc.forms_by_type[stub->form_type];
-         fsc.forms.forms[form_id] = stub;
-         {
-            std::lock_guard<std::mutex> guard_for_form_type(type.lock);
-            type.forms[form_id] = stub;
-         }
+         fsc.forms[form_id] = stub;
+         type[form_id] = stub;
       }
       //
       // We've either stored the stub as new, or treated it as an override (moving relevant data to the 
@@ -746,8 +743,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       // Place the stub inside of the active file form maps, if appropriate.
       //
       if (this->_source_file_is_active) {
-         fsc.active_file_forms.forms[form_id] = stub;
-         fsc.active_file_forms_by_type[stub->form_type].forms[form_id] = stub;
+         fsc.active_file_forms[form_id] = stub;
+         fsc.active_file_forms_by_type[stub->form_type][form_id] = stub;
       }
       //
       // Finally, some finishing touches.

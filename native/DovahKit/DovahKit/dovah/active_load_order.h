@@ -106,7 +106,6 @@ namespace dovah {
          constexpr form_stub_collection& _get_form_stub_collection(lu::passkey<form_stub>) noexcept { return this->_forms; };
 
       protected:
-         void _build_form_stubs_from_file(tes::file&);
          void _build_use_info();
          void _make_hardcoded_forms();
    };

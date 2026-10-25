@@ -10,6 +10,7 @@
 #include "./facts/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 #include "./facts/game_setting_types.h"
 #include "./load_order_interfaces/file_load.h"
+#include "./load_order_processes/build_form_stubs_from_file/process.h"
 #include "./load_order_processes/reparent_persistent_refs/process.h"
 #include "./load_order_processes/use_info_build/worker_thread.h"
 #include "./localization/string_file_bundle.h"
@@ -147,7 +148,7 @@ namespace dovah {
       {
          using list_t = decltype(flo.masters);
          //
-         auto lambda = [this, &active_file_name, &intfc](list_t& list) {
+         auto lambda = [this, &active_file_name, &callbacks, &intfc](list_t& list) {
             for (auto& info_ptr : list) {
                auto* file = new tes::file({}, *this);
                this->_files.list.push_back(file);
@@ -156,7 +157,14 @@ namespace dovah {
                }
                try {
                   file->open(this->_data_directory / info_ptr->filename);
-                  this->_build_form_stubs_from_file(*file);
+                  {
+                     load_order_processes::build_form_stubs_from_file::process process({
+                        *this,
+                        callbacks,
+                        *file
+                     });
+                     process.execute();
+                  }
                } catch (...) {
                   if (this->_bsa_collection)
                      this->_bsa_collection->abort_load();
@@ -388,7 +396,6 @@ namespace dovah {
       }
    #pragma endregion
    
-   void active_load_order::_build_form_stubs_from_file(tes::file&);
    void active_load_order::_build_use_info() {
       auto* dummy = this->_files.dummies.none_stubs = tes::file::_make_none_stubs_dummy_file({}, this->_game);
       //
