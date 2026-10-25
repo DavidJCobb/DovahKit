@@ -221,6 +221,9 @@
     <ClCompile Include="dovah\form_data_function_tables\build_outbound_use_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tests\basic\index_stubs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1145,6 +1148,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\use_info\management_mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\basic\index_stubs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

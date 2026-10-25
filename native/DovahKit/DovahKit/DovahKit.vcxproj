@@ -184,6 +184,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tests\basic\count_all_records.cpp" />
     <ClCompile Include="tests\basic\file_list_to_load_order.cpp" />
+    <ClCompile Include="tests\basic\index_stubs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\active_load_order.h" />
@@ -494,6 +495,7 @@
     <ClInclude Include="lu\windows\read_single_ini_setting.h" />
     <ClInclude Include="tests\basic\count_all_records.h" />
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
+    <ClInclude Include="tests\basic\index_stubs.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\bsa\archive.inl" />
