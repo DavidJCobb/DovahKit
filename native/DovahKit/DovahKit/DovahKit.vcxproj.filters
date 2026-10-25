@@ -1018,9 +1018,6 @@
     <ClInclude Include="dovah\notices\file_parse_warnings\singleton_form_is_redundantly_defined.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\fold_overriding_stub_into_overridden_stub.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\notices\file_parse_warnings\esl_defined_interior_cell_is_overridden.h">
       <Filter>Header Files</Filter>
     </ClInclude>

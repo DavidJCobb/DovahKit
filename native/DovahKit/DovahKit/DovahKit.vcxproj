@@ -263,7 +263,6 @@
     <ClInclude Include="dovah\load_order_interfaces\form_load.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\check_and_report_override_legality.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\extract_high_value_subrecords_for_stub.h" />
-    <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\fold_overriding_stub_into_overridden_stub.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\impl\file_offset_of_exception.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\make_stub_from_record.h" />
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\process.h" />

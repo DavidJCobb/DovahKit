@@ -4,6 +4,7 @@
 #include "dovah/form_stub_addenda.h"
 #include "dovah/load_order_interfaces/form_load.h"
 #include "dovah/termination_handler.h"
+#include "dovah/tes/reading/file_view.h"
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/tes/reading/subrecord_view.h"
 #include "./world_cell_map.h"

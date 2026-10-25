@@ -20,10 +20,10 @@ namespace dovah::bsa {
             break;
          try {
             archive->open();
-         } catch (const std::system_error& e) {
+         } catch ([[maybe_unused]] const std::system_error& e) {
             // TODO: log these
             continue;
-         } catch (const exceptions::bsa_parse_error& e) {
+         } catch ([[maybe_unused]] const exceptions::bsa_parse_error& e) {
             // TODO: log these
             continue;
          }

@@ -6,6 +6,7 @@
 #include "./base_bytereader.h"
 #include "../bit/byteswap_in_place.h"
 #include "../concepts/instantiation_of/std_array.h"
+#include "../type_aliases/uint_of_size.h"
 #include "../utils/bool_sequences/clear_all_from.h"
 #include "../utils/bool_sequences/true_run_extents_of.h"
 #include "../utils/type_pack_to_bool_run_by_predicate.h"
@@ -61,6 +62,11 @@ namespace lu::bytestreams {
          dst = (T)std::byteswap((std::underlying_type_t<T>)dst);
       } else if constexpr (lu::utils::integral_wrapper_type<T>) {
          dst.set_from_integral(std::byteswap(dst.as_integral()));
+      } else if constexpr (std::is_floating_point_v<T>) {
+         using integral_type = lu::uint_of_size<sizeof(T)>;
+         integral_type v = std::bit_cast<integral_type>(dst);
+         v = std::byteswap(v);
+         dst = std::bit_cast<T>(v);
       } else {
          bits::byteswap_in_place(dst);
       }

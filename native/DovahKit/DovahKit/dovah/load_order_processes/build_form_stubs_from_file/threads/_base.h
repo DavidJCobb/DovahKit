@@ -68,7 +68,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
             termination_handler::update_this_thread();
             try {
                instance->execute_on_thread();
-            } catch (const std::exception& ex) {
+            } catch (...) {
                instance->exception = std::current_exception();
             }
          }

@@ -118,7 +118,8 @@ namespace dovah {
       if (!this->has_multiple_source_files()) {
          intfc.is_winning_record = true;
          if (this->file.record_offset != 0) {
-            callable(_open_record(*this->file.pointer, this->file.record_offset), intfc);
+            FileView view = _open_record(*this->file.pointer, this->file.record_offset);
+            callable(view.subviews.record, intfc);
          }
          return;
       }

@@ -2,6 +2,7 @@
 #include <array>
 #include <string>
 #include "lu/passkey.h"
+#include "dovah/types/bare_form_id.h"
 #include "dovah/types/game_settings/managed_value_variant.h"
 #include "./process_params.h"
 #include "./threads/exterior_cells_and_children.h"
@@ -77,6 +78,15 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             size_t record_offset,
             const tes::record_header&
          );
+
+         #pragma region Helpers for _commit_stub
+            void _fold_overriding_stub_into_overridden_stub(
+               form_stub&   overriding_stub,
+               form_stub&   overridden_stub,
+               size_t       override_record_offset,
+               bare_form_id override_record_id
+            );
+         #pragma endregion
 
       protected:
          process_params    _params;

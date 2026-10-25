@@ -8,12 +8,14 @@ namespace dovah {
    class form_stub_addenda;
 
    namespace load_order_processes::build_form_stubs_from_file {
+      class process;
       extern void extract_high_value_subrecords_for_stub(const tes::file&, form_stub&, tes::record_view&);
    }
 }
 
 namespace dovah::form_stub_addendum_types::passkeys {
    class alter_ordered_children_during_load {
+      friend load_order_processes::build_form_stubs_from_file::process;
       friend void load_order_processes::build_form_stubs_from_file::extract_high_value_subrecords_for_stub(const tes::file&, form_stub&, tes::record_view&);
       private:
          constexpr alter_ordered_children_during_load() {}

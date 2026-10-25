@@ -61,10 +61,10 @@ namespace lu::iterators {
          constexpr difference_type operator-(const pointer_based_iterator& o) {
             return this->target - o.target;
          }
-
+         
          template<bool OtherConst>
-         friend constexpr std::strong_ordering operator<=>(const pointer_based_iterator& a, const _with_constness<OtherConst>& b) noexcept {
-            return a.target <=> b.target;
+         constexpr std::strong_ordering operator<=>(const _with_constness<OtherConst>& other) const noexcept {
+            return this->target <=> other.target;
          }
          template<bool OtherConst>
          constexpr bool operator==(const _with_constness<OtherConst>& other) const noexcept {

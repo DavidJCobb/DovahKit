@@ -33,7 +33,7 @@ namespace dovah::utils::worldspaces {
          return out;
       } else { // "canonical" implementation
          auto out = ci / side_length;
-         if (ci < 0 && ci > -side_length)
+         if (ci < 0 && ci > -(int)side_length)
             --out;
          return out;
       }

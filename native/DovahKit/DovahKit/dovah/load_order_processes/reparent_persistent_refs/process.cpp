@@ -64,7 +64,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
                if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)) {
                   auto* child = entry.other;
                   if (child && utils::form_types::is_ref(child->form_type)) {
-                     refs.emplace_back(*child);
+                     refs.emplace_back(child);
                      if (--entry.refcount == 0)
                         continue;
                   }
@@ -84,7 +84,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
          // the refs still track themselves as using the persistent cell. Let's change that.
          //
          {
-            auto workers = lu::arrays::make_filled<set_parent_cell_worker, 4>(cells, refs, *p_cell);
+            auto workers = lu::arrays::make_filled<set_parent_cell_worker, 4>(cells, refs);
             if (refs.size() > workers.size()) {
                size_t per_thread = refs.size() / workers.size();
                size_t start      = 0;
