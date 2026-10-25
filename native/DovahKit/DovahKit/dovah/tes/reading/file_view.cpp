@@ -19,16 +19,18 @@ namespace dovah::tes {
 
    /*static*/ file_view file_view::open_view_to_group(const file& file, size_t group_header_offset) {
       file_view out;
-      out.set_target_file(&file);
-      out.set_position(group_header_offset);
+      out._set_target_file_impl(&file);
+      out._reader.seek(group_header_offset);
       auto r = out.next_record_or_group();
       assert(r == chunk_type::group);
       return out;
    }
    /*static*/ file_view file_view::open_view_to_record(const file& file, size_t record_header_offset) {
       file_view out;
-      out.set_target_file(&file);
-      out.set_position(record_header_offset);
+      out._set_target_file_impl(&file);
+      out._reader.seek(record_header_offset);
+      out.options.allow_suspicious_record_signatures = true;
+      out.options.allow_unknown_record_signatures    = true;
       auto r = out.next_record_or_group();
       assert(r == chunk_type::record);
       return out;
@@ -226,7 +228,7 @@ namespace dovah::tes {
       this->_last_potential_group_parent = 0;
    }
 
-   void file_view::set_target_file(const file* file) {
+   void file_view::_set_target_file_impl(const file* file) {
       this->_target_file = file;
       if (file) {
          this->_reader.set_buffer({ file->data(), file->size() });
@@ -238,6 +240,10 @@ namespace dovah::tes {
       } else {
          this->_reader.set_buffer({});
       }
+   }
+
+   void file_view::set_target_file(const file* file) {
+      this->_set_target_file_impl(file);
       this->_reset_parse_state();
    }
    void file_view::set_position(size_t p) {
