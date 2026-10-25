@@ -74,8 +74,7 @@ namespace dovah {
             file_data      file;
             file_data_list files;
          };
-         base_managed_form_data* loaded   = nullptr;
-         std::atomic<uint32_t>   refcount = 0; // of loaded form data
+         base_managed_form_data* loaded = nullptr;
       public:
          form_stub_addenda* addenda   = nullptr;
          bare_form_id       form_id   = 0;
@@ -85,6 +84,8 @@ namespace dovah {
          std::string        editor_id;
          use_info_list      inbound;  // other forms that use this form.  entry flags describe `this`, the used form.
          use_info_list      outbound; // other forms that this form uses. entry flags descirbe `this`, the user form.
+      protected:
+      std::atomic<uint32_t> refcount = 0; // of loaded form data
 
       public: // member functions
          bool can_unload_form() const noexcept;
