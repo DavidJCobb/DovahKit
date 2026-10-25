@@ -19,7 +19,14 @@ namespace dovah::load_order_processes::use_info_build {
       auto& list = this->queue;
       this->progress.maximum = (uint32_t)list.size();
       for (auto* stub : list) {
-         const bool can_be_parent = form_type_info::lookup(stub->form_type).flags & form_type_info::flag::can_have_children;
+         const auto& fti = form_type_info::lookup(stub->form_type);
+         if (fti.flags & form_type_info::flag::no_connections)
+            //
+            // Don't waste time walking records for form types that can never have outbound uses.
+            //
+            continue;
+
+         const bool can_be_parent = fti.flags & form_type_info::flag::can_have_children;
          const auto file_count    = stub->source_file_count();
 
          use_info_builder uib(*stub);
