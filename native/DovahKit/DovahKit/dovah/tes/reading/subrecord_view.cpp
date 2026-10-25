@@ -14,7 +14,10 @@ namespace dovah::tes {
    }
 
    void subrecord_view::read_all_to_string(std::string& dst) {
-      dst.assign((const char*)this->data(), this->size());
-      this->seek(this->size());
+      const size_t size = this->size();
+      dst.assign((const char*)this->data(), size);
+      this->seek(size);
+      if (size && dst[size - 1] == '\0')
+         dst.resize(size - 1);
    }
 }

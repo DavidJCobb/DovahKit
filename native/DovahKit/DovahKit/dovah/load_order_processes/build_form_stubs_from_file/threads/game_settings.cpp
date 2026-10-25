@@ -22,6 +22,10 @@
 #include "dovah/notices/file_parse_warnings/game_setting_value_type_unknown.h"
 #include "dovah/notices/file_parse_warnings/game_setting_value_unreadable.h"
 
+namespace {
+   constexpr const auto expected_record_signature = dovah::form_type_info::lookup(dovah::form_type::setting).signature;
+}
+
 namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
    void game_settings::execute_on_thread() {
       auto& alo         = this->_config.active_load_order;
@@ -45,11 +49,17 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          while (ot = view.next_record_or_group(), ot != tes::file_view::chunk_type::none) {
             if (!group_of_interest.signature) {
                //
-               // We've reached the end of the desired group.
+               // We've reached the end of this queued-for-parse group.
                //
                break;
             }
             if (ot == tes::file_view::chunk_type::group) {
+               if (view.get_current_group() == &group_of_interest) [[likely]] {
+                  //
+                  // We've reached the end of this queued-for-parse group.
+                  //
+                  break;
+               }
                throw exceptions::file_parse_errors::unexpected_nested_group(
                   source_file,
                   group_of_interest.position,
@@ -60,7 +70,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
             }
             if (ot == tes::file_view::chunk_type::record) {
                auto& record = view.subviews.record;
-               if (record.signature() != form_type_info::lookup(form_type::setting).signature) {
+               if (record.signature() != expected_record_signature) [[unlikely]] {
                   throw exceptions::file_parse_errors::record_fatally_misplaced(
                      source_file,
                      record.file_offset_of_header(),

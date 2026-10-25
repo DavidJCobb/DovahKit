@@ -36,11 +36,17 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          while (ot = view.next_record_or_group(), ot != tes::file_view::chunk_type::none) {
             if (!group_of_interest.signature) {
                //
-               // We've reached the end of the desired group.
+               // We've reached the end of this queued-for-parse group.
                //
                break;
             }
             if (ot == tes::file_view::chunk_type::group) {
+               if (view.get_current_group() == &group_of_interest) [[likely]] {
+                  //
+                  // We've reached the end of this queued-for-parse group.
+                  //
+                  break;
+               }
                throw exceptions::file_parse_errors::unexpected_nested_group(
                   source_file,
                   group_of_interest.position,
@@ -52,7 +58,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
             if (ot == tes::file_view::chunk_type::record) {
                auto& record = view.subviews.record;
                auto* stub   = make_stub_from_record(source_file, record.file_offset_of_header(), record.header());
-               if (stub->form_type != group_form_type) {
+               if (stub->form_type != group_form_type) [[unlikely]] {
                   impl::fail_if_form_fatally_misplaced<form_type::none>(source_file, record, *stub);
                   if (callbacks.on_warning) {
                      (callbacks.on_warning)(

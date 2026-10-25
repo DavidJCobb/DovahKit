@@ -194,7 +194,7 @@ namespace lu::type_containers {
             if constexpr (std::is_same_v<impl::_type_to_value_map::callable_invoke_result_for_pair<Callable, nth_pair<0>, Args...>, foreach_lambda_result>) {
                (
                   (callable.template operator()<typename Pairs::key_type, Pairs::value>(std::forward<Args>(args)...) != foreach_lambda_result::stop)
-                  || ...
+                  && ...
                );
             } else {
                (
@@ -221,7 +221,7 @@ namespace lu::type_containers {
             if constexpr (std::is_same_v<impl::_type_to_value_map::callable_invoke_result_for_key<Callable, nth_key_type<0>, Args...>, foreach_lambda_result>) {
                (
                   (callable.template operator()<typename Pairs::key_type>(std::forward<Args>(args)...) != foreach_lambda_result::stop)
-                  || ...
+                  && ...
                );
             } else {
                (

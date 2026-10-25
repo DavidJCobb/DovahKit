@@ -47,14 +47,20 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          while (ot = view.next_record_or_group(), ot != tes::file_view::chunk_type::none) {
             if (!sub_block_group.signature) {
                //
-               // We've reached the end of the topic group.
+               // We've reached the end of this queued-for-parse group.
                //
                break;
             }
 
             if (ot == tes::file_view::chunk_type::group) {
                auto& current_group = *view.get_current_group();
-               auto& opened_from   = *view.parent_of_group(current_group);
+               if (&current_group == &sub_block_group) {
+                  //
+                  // We've reached the end of this queued-for-parse group.
+                  //
+                  break;
+               }
+               auto& opened_from = *view.parent_of_group(current_group);
 
                bool valid = false;
                if (&opened_from == &sub_block_group) {
@@ -70,7 +76,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                if (valid) {
                   if (current_group.type == tes::group_type::cell_children) {
                      cell_stub_for_group = &impl::get_parent_stub_for_group<form_type::cell>(this->_config, current_group.position, current_group);
-                     if (cell_stub_for_group != last_seen_cell_record) {
+                     if (cell_stub_for_group != last_seen_cell_record) [[unlikely]] {
                         //
                         // The outer "children" group specifies a parent cell ID that doesn't correspond 
                         // to the immediately preceding CELL record. There's no guarantee that the parent 
@@ -85,7 +91,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                         );
                      }
                   } else {
-                     if (opened_from.label != current_group.label) {
+                     if (opened_from.label != current_group.label) [[unlikely]] {
                         //
                         // The outer "children" group and the inner "children" group specify different 
                         // parent cell IDs from one another. We can't be sure which cell any child forms 

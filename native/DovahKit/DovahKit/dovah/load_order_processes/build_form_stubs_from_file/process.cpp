@@ -290,24 +290,46 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      continue;
                   case tes::group_type::interior_cell_block:
                      {  // Error-checking.
-                        auto* parent = view.parent_of_group(group);
-                        if (!parent) {
-                           throw exceptions::file_parse_errors::interior_cell_block_has_no_parent_group(
+                        auto* parent_group = view.parent_of_group(group);
+                        if (!parent_group) {
+                           throw exceptions::file_parse_errors::orphaned_group(
                               source_file,
                               group.position,
                               group
                            );
                         }
-                        if (parent->type != tes::group_type::forms_of_type || std::byteswap(parent->label) != 'CELL') {
-                           throw exceptions::file_parse_errors::interior_cell_block_group_badly_nested(
-                              this->_params.source_file,
+                        if (parent_group->type != tes::group_type::forms_of_type || std::byteswap(parent_group->label) != 'CELL') {
+                           throw exceptions::file_parse_errors::unexpected_nested_group(
+                              source_file,
+                              (*parent_group).position,
+                              (*parent_group),
                               group.position,
                               group
                            );
                         }
                      }
-                     ENQUEUE(interior_cells_and_children, { std::byteswap(group.label), (uint32_t)group.position });
-                     view.skip_current_group();
+                     continue;
+                  case tes::group_type::interior_cell_sub_block:
+                     {
+                        auto* parent_group = view.parent_of_group(group);
+                        if (!parent_group) {
+                           throw exceptions::file_parse_errors::orphaned_group(
+                              source_file,
+                              group.position,
+                              group
+                           );
+                        } else if (parent_group->type != tes::group_type::interior_cell_block) {
+                           throw exceptions::file_parse_errors::unexpected_nested_group(
+                              source_file,
+                              (*parent_group).position,
+                              (*parent_group),
+                              group.position,
+                              group
+                           );
+                        }
+                        ENQUEUE(interior_cells_and_children, { parent_group->label, (uint32_t)group.position });
+                        view.skip_current_group();
+                     }
                      continue;
                   case tes::group_type::forms_of_type:
                      last_worldspace      = nullptr;
@@ -380,9 +402,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                //
                form_type formType = form_type_info::signature_to_form_type(record.signature());
                auto* stub = make_stub_from_record(source_file, record.file_offset_of_header(), record.header());
-               if (stub->form_type == form_type::worldspace) {
-                  last_worldspace = stub;
-               }
 
                switch (group.type) {
                   case tes::group_type::world_children:
@@ -391,8 +410,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                         // Loading (probable) persistent cell.
                         //
                         stub->_set_parent_form_one_way({}, last_worldspace);
-                        last_persistent_cell = stub;
-
                         if (!stub->test_record_flags((uint32_t)1 << (size_t)tes::record_flag::persistent)) {
                            stub->_amend_source_file_flag({}, source_file, tes::record_flag::persistent, true); // auto-correct
                            if (callbacks.on_warning) {
@@ -424,6 +441,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                this->_commit_stub(stub, record.file_offset_of_header(), record.header());
                if (!stub) {
                   continue;
+               }
+               if (stub->form_type == form_type::worldspace) {
+                  last_worldspace = stub;
+               } else if (stub->form_type == form_type::cell) {
+                  last_persistent_cell = stub;
                }
                extract_high_value_subrecords_for_stub(this->_params.source_file, *stub, record);
                

@@ -22,8 +22,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
       tes::file_view view;
       view.set_target_file(&source_file);
 
-      const auto& topic_group      = view.groups[0];
-      const auto& topic_info_group = view.groups[1];
+      const auto& all_topics_group = view.groups[0]; // group of all DIAL forms
+      const auto& topic_info_group = view.groups[1]; // group of INFO children of a particular DIAL
 
       const size_t size = this->queue.size();
       this->_progress.maximum = (uint32_t)size;
@@ -37,14 +37,20 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
 
          tes::file_view::chunk_type ot;
          while (ot = view.next_record_or_group(), ot != tes::file_view::chunk_type::none) {
-            if (!topic_group.signature) {
+            if (!all_topics_group.signature) {
                //
-               // We've reached the end of the topic group.
+               // We've reached the end of this queued-for-parse group.
                //
                break;
             }
             if (ot == tes::file_view::chunk_type::group) {
-               if (view.groups[2].signature) {
+               if (view.get_current_group() == &all_topics_group) {
+                  //
+                  // We've reached the end of this queued-for-parse group.
+                  //
+                  break;
+               }
+               if (view.groups[2].signature) [[unlikely]] {
                   //
                   // We were already in the topic-info group, and we just opened a nested group inside 
                   // of that. No such group should be present.
@@ -67,7 +73,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   // Loaded [what should be] a topic info.
                   //
                   assert(!!topic_stub);
-                  if (stub->form_type == form_type::topic_info) {
+                  if (stub->form_type == form_type::topic_info) [[likely]] {
                      this->_set_stub_parent(*stub, topic_stub);
                   } else {
                      impl::fail_if_form_fatally_misplaced<form_type::topic>(source_file, record, *stub);
@@ -89,14 +95,14 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   //
                   // Loaded [what should be] a topic.
                   //
-                  if (stub->form_type != form_type::topic) {
+                  if (stub->form_type != form_type::topic) [[unlikely]] {
                      impl::fail_if_form_fatally_misplaced<form_type::none>(source_file, record, *stub);
                      if (callbacks.on_warning) {
                         (callbacks.on_warning)(
                            notices::file_parse_warnings::record_found_in_wrong_group(
                               source_file.path().filename().string(),
-                              topic_group.position,
-                              topic_group,
+                              all_topics_group.position,
+                              all_topics_group,
                               nullptr,
                               record.file_offset_of_header(),
                               record.header(),

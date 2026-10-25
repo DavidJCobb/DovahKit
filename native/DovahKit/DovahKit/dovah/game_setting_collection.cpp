@@ -16,15 +16,21 @@ namespace dovah {
          //
          // Verify that the setting name properly identifies the setting type.
          //
-         bool valid = false;
+         bool identifiable = false;
+         bool valid        = false;
          if (!name.empty()) {
-            facts::game_setting_types<true>::for_each_pair([&name, &value, &valid]<typename K, char V>() {
+            facts::game_setting_types<true>::for_each_pair([&name, &value, &identifiable, &valid]<typename K, char V>() {
+               bool is_this_type = name[0] == V || name[0] == (V - 0x20); // case-insensitive char check
+               if (is_this_type)
+                  identifiable = true;
                if (std::holds_alternative<K>(value)) {
-                  valid = name[0] == V || name[0] == (V - 0x20); // case-insensitive char check
+                  valid = is_this_type;
                }
             });
          }
-         assert(!!valid);
+         if (identifiable) {
+            assert(!!valid);
+         }
       }
       #endif
 
