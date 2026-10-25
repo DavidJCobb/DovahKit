@@ -1153,6 +1153,9 @@
     <ClInclude Include="tests\basic\index_stubs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\group_must_be_empty.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">

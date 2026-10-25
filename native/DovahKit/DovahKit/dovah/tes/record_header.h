@@ -10,7 +10,7 @@ namespace dovah::tes {
       
       public:
          lu::four_cc  signature = 0;
-         uint32_t     size      = 0;
+         uint32_t     size      = 0; // size of the serialized record body. DOES NOT include the size of this header.
          record_flags flags;
          uint32_t     formID    = 0;
          union {

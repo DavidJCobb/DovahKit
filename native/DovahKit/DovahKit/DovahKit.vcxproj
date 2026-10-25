@@ -218,6 +218,7 @@
     <ClInclude Include="dovah\exceptions\file_parse_errors\child_form_group_specifies_bad_parent_id.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\form_override_has_type_mismatch.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\groups_too_deeply_nested.h" />
+    <ClInclude Include="dovah\exceptions\file_parse_errors\group_must_be_empty.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\interior_cell_block_group_badly_nested.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\interior_cell_block_has_no_parent_group.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_decompression_failed.h" />

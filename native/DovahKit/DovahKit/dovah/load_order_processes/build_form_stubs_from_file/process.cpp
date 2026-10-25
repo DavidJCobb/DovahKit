@@ -32,6 +32,7 @@
 
 #include "dovah/exceptions/file_parse_errors/child_form_group_follows_wrong_parent.h"
 #include "dovah/exceptions/file_parse_errors/child_form_group_specifies_bad_parent_id.h"
+#include "dovah/exceptions/file_parse_errors/group_must_be_empty.h"
 #include "dovah/exceptions/file_parse_errors/interior_cell_block_group_badly_nested.h"
 #include "dovah/exceptions/file_parse_errors/interior_cell_block_has_no_parent_group.h"
 #include "dovah/exceptions/file_parse_errors/orphaned_group.h"
@@ -357,6 +358,32 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                   case 'GMST':
                      is_gmst = true;
                      break;
+                  case 'CLDC': // BGSCloudClusterForm (removed in v1.2)
+                  case 'HAIR': // TESHair             (removed in v1.2)
+                     //
+                     // BGSCloudClusterForm was removed from the game in v1.2. No records for it are known 
+                     // to have existed, but it has a top-level GRUP in official game files that we'll need 
+                     // to skip.
+                     // 
+                     // Its constant in the game's form-type enum was wholly removed, and I'd prefer for 
+                     // our form-type enum to match that one, so there's no constant. As such, if we try to 
+                     // assign it to a worker thread, that thread'll choke on the unrecognized signature.
+                     // 
+                     // TESHair is a similar story, though according to SKSE source code, it still exists 
+                     // in Skyrim Classic at the very least.
+                     //
+                     if (group.size > lu::bytestreams::serialized_bytecount<tes::bytereader, tes::group_header>::value) {
+                        //
+                        // Group is non-empty.
+                        //
+                        throw exceptions::file_parse_errors::group_must_be_empty(
+                           source_file,
+                           group.position,
+                           group
+                        );
+                     }
+                     view.skip_current_group();
+                     continue;
                }
                if (is_gmst) {
                   ENQUEUE(game_settings, { (uint32_t)group.position });
