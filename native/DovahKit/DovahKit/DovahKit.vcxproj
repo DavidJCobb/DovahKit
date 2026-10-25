@@ -240,6 +240,8 @@
     <ClInclude Include="dovah\facts\game\hardcoded_form_ids_ignore_record_id_prefix.h" />
     <ClInclude Include="dovah\facts\game\max_file_version.h" />
     <ClInclude Include="dovah\facts\game\min_file_version.h" />
+    <ClInclude Include="dovah\facts\game_settings\all_definitions.h" />
+    <ClInclude Include="dovah\facts\game_settings\definition.h" />
     <ClInclude Include="dovah\facts\game_setting_types.h" />
     <ClInclude Include="dovah\facts\localized_strings\all_language_names.h" />
     <ClInclude Include="dovah\facts\localized_strings\serialized_strings_are_length_prefixed.h" />

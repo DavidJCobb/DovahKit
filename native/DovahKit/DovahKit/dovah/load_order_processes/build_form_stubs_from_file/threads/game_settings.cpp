@@ -1,6 +1,7 @@
 #include "./game_settings.h"
 #include "dovah/active_load_order.h"
 #include "dovah/callback_sets/data_load.h"
+#include "dovah/facts/game_settings/all_definitions.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_collection.h"
 #include "dovah/form_type.h"
@@ -82,7 +83,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          std::string name;
          subrecord.read_all_to_string(name);
          working.name       = name;
-         working.definition = game_setting_definition::lookup(name.c_str());
+         working.definition = facts::game_settings::lookup_by_name(name.c_str());
       } else {
          found_data = subrecord.signature() == 'DATA';
          if (found_data) {

@@ -1102,6 +1102,12 @@
     <ClInclude Include="dovah\notices\file_parse_warnings\apparent_persistent_cell_not_flagged_as_persistent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\facts\game_settings\definition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\facts\game_settings\all_definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
