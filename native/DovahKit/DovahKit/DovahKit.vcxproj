@@ -532,6 +532,7 @@
   <ItemGroup>
     <Natvis Include="dovah\bsa\packed_file_info.natvis" />
     <Natvis Include="dovah\bsa\packed_folder_info.natvis" />
+    <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="lu\containers\bitset.natvis" />
     <Natvis Include="lu\containers\grids\fixed_grid.natvis" />
     <Natvis Include="lu\containers\grids\resizable_grid.natvis" />

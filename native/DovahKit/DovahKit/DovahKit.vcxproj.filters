@@ -1225,5 +1225,6 @@
     <Natvis Include="lu\containers\small_vector.natvis" />
     <Natvis Include="lu\memory\threaded_slab_heap.natvis" />
     <Natvis Include="lu\utils\nominal_integer_type.natvis" />
+    <Natvis Include="dovah\form_stub.natvis" />
   </ItemGroup>
 </Project>
