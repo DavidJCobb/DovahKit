@@ -123,6 +123,7 @@
     <ClCompile Include="dovah\bsa\archive_collection.cpp" />
     <ClCompile Include="dovah\bsa\thread_for_parsing.cpp" />
     <ClCompile Include="dovah\form_data\can_load_form_data_of_type.cpp" />
+    <ClCompile Include="dovah\form_data_function_tables\build_outbound_use_info.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_addendum_types\ordered_child_collection.cpp" />
     <ClCompile Include="dovah\form_stub_collection.cpp" />
@@ -246,8 +247,10 @@
     <ClInclude Include="dovah\facts\game_setting_types.h" />
     <ClInclude Include="dovah\facts\localized_strings\all_language_names.h" />
     <ClInclude Include="dovah\facts\localized_strings\serialized_strings_are_length_prefixed.h" />
+    <ClInclude Include="dovah\form_data\all_types.h" />
     <ClInclude Include="dovah\form_data\base_managed_form_data.h" />
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
+    <ClInclude Include="dovah\form_data\params.h" />
     <ClInclude Include="dovah\form_data_function_tables\build_outbound_use_info.h" />
     <ClInclude Include="dovah\form_stub.h" />
     <ClInclude Include="dovah\form_stub_addenda.h" />
@@ -372,6 +375,7 @@
     <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.define.h" />
     <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.undef.h" />
     <ClInclude Include="dovah\use_info\is_entry_flag_type.h" />
+    <ClInclude Include="dovah\use_info\management_mode.h" />
     <ClInclude Include="dovah\utils\files\bsa\fold_path.h" />
     <ClInclude Include="dovah\utils\files\bsa\fold_path_component.h" />
     <ClInclude Include="dovah\utils\files\bsa\path_to_hashes.h" />

@@ -218,6 +218,9 @@
     <ClCompile Include="dovah\game_setting_collection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\form_data_function_tables\build_outbound_use_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1133,6 +1136,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_has_multiple_records_in_a_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\all_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\params.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\management_mode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

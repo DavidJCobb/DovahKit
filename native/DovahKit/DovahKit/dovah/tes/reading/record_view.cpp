@@ -12,10 +12,16 @@ namespace {
 }
 
 namespace dovah::tes {
+   const subrecord_view& record_view::get_current_subrecord() const noexcept {
+      return this->owner.subviews.subrecord;
+   }
+   subrecord_view& record_view::get_current_subrecord() noexcept {
+      return const_cast<subrecord_view&>(std::as_const(*this).get_current_subrecord());
+   }
    subrecord_view& record_view::next_subrecord() {
       auto& subrecord = this->owner.subviews.subrecord;
       if (subrecord) {
-         auto pos = this->owner.subviews.subrecord.end_pos_in_record();
+         auto pos = subrecord.end_pos_in_record();
          if (pos >= this->size()) {
             subrecord._signature = 0;
             subrecord._body_pos  = this->size();

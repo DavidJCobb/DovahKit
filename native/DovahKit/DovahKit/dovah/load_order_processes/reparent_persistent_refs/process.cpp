@@ -1,4 +1,5 @@
 #include "./process.h"
+#include <memory>
 #include "lu/arrays/make_filled.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_addenda.h"
@@ -21,9 +22,12 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
          auto* p_cell = addenda->persistent_cell;
          if (!p_cell)
             return;
+
+         // this is very large, so let's spawn it on the heap
+         auto  cells_ptr = std::make_unique<world_cell_map>();
+         auto& cells = *cells_ptr;
          
          std::vector<queued_ref> refs;
-         world_cell_map cells;
          cells.set_world(world);
          //
          // We need to bidirectionally sever the references from the persistent cell children 
@@ -142,14 +146,14 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             //
             auto workers = lu::arrays::make_filled<make_parenthood_bidirectional_worker, 8>(refs);
 
-            const size_t max_radius = [&cells]() {
+            const uint32_t max_radius = [&cells]() {
                auto x_span = cells.grid_extents.x.max - cells.grid_extents.x.min / 2;
                auto y_span = cells.grid_extents.y.max - cells.grid_extents.y.min / 2;
                if (x_span > y_span)
                   return x_span;
                return y_span;
             }();
-            const uint32_t radius_per_worker = max_radius / workers.size();
+            const uint32_t radius_per_worker = max_radius / (uint32_t)workers.size();
 
             if (radius_per_worker <= 1) {
                auto& worker = workers[0];
