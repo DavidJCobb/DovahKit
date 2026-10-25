@@ -1,5 +1,6 @@
 #include "./form_stub.h"
 #include <cassert>
+#include <limits>
 #include "lu/bit/edit_bit.h"
 #include "./_passkeys/add_form_stub_source_file.h"
 #include "./form_data/base_managed_form_data.h"
@@ -237,7 +238,58 @@ namespace dovah {
          entry.flags |= flags;
       }
    }
-   void form_stub::_set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub& parent) {
+   void form_stub::_amend_source_file_flag(_passkeys::add_form_stub_source_file, const tes::file& file, tes::record_flag flag, bool clear_or_set) {
+      const uint32_t mask = (uint32_t)1 << (size_t)flag;
+      if (this->has_multiple_source_files()) {
+         auto& info = this->file;
+         if (info.pointer != &file) [[unlikely]]
+            return;
+         if (clear_or_set)
+            info.record_flags |= mask;
+         else
+            info.record_flags &= ~mask;
+      } else {
+         for (uint16_t i = 0; i < this->files.count; ++i) {
+            auto& info = this->files.entries[i];
+            if (info.pointer == &file) {
+               if (clear_or_set)
+                  info.record_flags |= mask;
+               else
+                  info.record_flags &= ~mask;
+               break;
+            }
+         }
+      }
+   }
+   void form_stub::_replace_source_file_list(_passkeys::add_form_stub_source_file, std::vector<file_data>&& list) {
+      if (this->has_multiple_source_files())
+         delete[] this->files.entries;
+      auto size = list.size();
+      if (size < 2) {
+         this->flags &= ~flag::has_multiple_source_files;
+         this->file = {
+            .pointer       = nullptr,
+            .record_offset = 0,
+            .record_flags  = 0,
+         };
+         if (size) {
+            this->file = list[0];
+         }
+         return;
+      }
+      assert(size <= std::numeric_limits<uint16_t>::max());
+      this->flags |= flag::has_multiple_source_files;
+      this->files = {
+         .entries = new file_data[size],
+         .count   = (uint16_t)size,
+      };
+      for (uint16_t i = 0; i < size; ++i) {
+         auto& f = this->files.entries[i];
+         auto& o = list[i];
+         f = o;
+      }
+   }
+   void form_stub::_set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub* parent) {
       //
       // When setting a parent form during the load process (i.e. before the use info build step), 
       // you should use this function instead of (set_parent_form). This is because at the end of 
@@ -251,7 +303,7 @@ namespace dovah {
          auto& pair  = *it;
          auto& entry = pair.second;
          if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)) {
-            if (entry.other == &parent)
+            if (entry.other == parent)
                return;
             entry.flags &= ~use_info::entry_flag_to_mask(use_info::entry_flags::base::parent);
             if (--entry.refcount == 0)
@@ -262,6 +314,7 @@ namespace dovah {
       //
       // Set the new parent form.
       //
-      this->_add_one_way_outbound_use({}, parent, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
+      if (parent)
+         this->_add_one_way_outbound_use({}, *parent, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
    }
 }

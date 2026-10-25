@@ -9,7 +9,6 @@
 #include "dovah/utils/form_types/is_cell_child.h"
 #include "../impl/fail_if_form_fatally_misplaced.h"
 #include "../make_stub_from_record.h"
-#include "../process.h"
 
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
 #include "dovah/notices/file_parse_warnings/record_found_in_wrong_group.h"
@@ -123,7 +122,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   }
                }
                if (!is_misplaced_form_type) {
-                  stub->_set_parent_form_one_way({}, desired.cell);
+                  this->_set_stub_parent(*stub, desired.cell);
                }
                this->_finish_stub(std::move(stub), record);
             }

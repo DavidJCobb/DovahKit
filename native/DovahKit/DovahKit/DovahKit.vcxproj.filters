@@ -1093,6 +1093,15 @@
     <ClInclude Include="dovah\load_order_processes\build_form_stubs_from_file\impl\file_offset_of_exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\record_not_in_any_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_parse_errors\orphaned_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\apparent_persistent_cell_not_flagged_as_persistent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">

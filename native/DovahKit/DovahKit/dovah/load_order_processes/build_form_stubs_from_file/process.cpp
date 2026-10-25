@@ -2,6 +2,7 @@
 #include <bit>
 #include <tuple> // tuple_size_v
 #include "lu/arrays/make_filled.h"
+#include "dovah/_passkeys/build_use_info_during_load.h"
 #include "dovah/active_load_order.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_collection.h"
@@ -31,6 +32,10 @@
 #include "dovah/exceptions/file_parse_errors/child_form_group_specifies_bad_parent_id.h"
 #include "dovah/exceptions/file_parse_errors/interior_cell_block_group_badly_nested.h"
 #include "dovah/exceptions/file_parse_errors/interior_cell_block_has_no_parent_group.h"
+#include "dovah/exceptions/file_parse_errors/orphaned_group.h"
+#include "dovah/exceptions/file_parse_errors/record_not_in_any_group.h"
+#include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
+#include "dovah/notices/file_parse_warnings/apparent_persistent_cell_not_flagged_as_persistent.h"
 #include "dovah/notices/file_parse_warnings/record_found_in_wrong_group.h"
 
 #define FOR_EACH_THREAD_TYPE(X) \
@@ -178,15 +183,20 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                auto& group = *view.get_current_group();
                switch (group.type) {
                   //
-                  // In order to skip the group's contents, call (view.skip_current_group()) and then (continue). In order 
-                  // to enter the group's contents and parse them, (continue) without skipping the group.
+                  // In order to skip the group's contents, call `view.skip_current_group()` and then `continue`. In order 
+                  // to enter the group's contents and parse them, `continue` without skipping the group.
                   //
                   case tes::group_type::world_children:
                      //
                      // Parse direct children of the worldspace (i.e. the persistent cell).
                      //
                      if (!last_worldspace) [[unlikely]] {
-                        static_assert(false, "TODO: Error: world-children GRUP not immediately preceded by any WRLD record");
+                        throw exceptions::file_parse_errors::child_form_group_follows_wrong_parent(
+                           source_file,
+                           group.position,
+                           group,
+                           nullptr
+                        );
                      } else {
                         auto result = utils::form_ids::record_id_to_form_id(source_file, group.label);
                         if (!result.has_value()) [[unlikely]] {
@@ -233,7 +243,21 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      continue;
                   case tes::group_type::cell_persistent_children:
                   case tes::group_type::cell_temporary_children:
-                     static_assert(false, "TODO: Unexpected top-level or nested group");
+                     if (auto* parent_group = view.parent_of_group(group)) {
+                        throw exceptions::file_parse_errors::unexpected_nested_group(
+                           source_file,
+                           (*parent_group).position,
+                           (*parent_group),
+                           group.position,
+                           group
+                        );
+                     } else {
+                        throw exceptions::file_parse_errors::orphaned_group(
+                           source_file,
+                           group.position,
+                           group
+                        );
+                     }
                      continue;
                   case tes::group_type::exterior_cell_block:
                      last_ext_block_y = group.label & 0xFFFF;
@@ -241,7 +265,12 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      continue;
                   case tes::group_type::exterior_cell_sub_block:
                      if (!last_worldspace) {
-                        static_assert(false, "TODO: Misplaced group (must follow a WRLD record).");
+                        throw exceptions::file_parse_errors::child_form_group_follows_wrong_parent(
+                           source_file,
+                           group.position,
+                           group,
+                           nullptr
+                        );
                      }
                      {
                         int16_t sub_x = group.label >> 0x10;
@@ -319,7 +348,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                   if (record.signature() == 'TES4') [[likely]] {
                      continue;
                   }
-                  static_assert(false, "TODO: error: (non-file-header) record not in any group");
+                  throw exceptions::file_parse_errors::record_not_in_any_group(
+                     source_file,
+                     record.file_offset_of_header(),
+                     record.header()
+                  );
                }
                auto& group = *group_ptr;
 
@@ -352,14 +385,15 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                         last_persistent_cell = stub;
 
                         if (!stub->test_record_flags((uint32_t)1 << (size_t)tes::record_flag::persistent)) {
-                           stub->edit_record_flags((uint32_t)1 << (size_t)tes::record_flag::persistent, true); // auto-correct
-                           notices::file_load_warnings::apparent_persistent_cell_not_flagged_as_persistent notice(
-                              stub->get_parent_form(),
-                              *stub,
-                              true
-                           );
-                           notice.source_file = this->get_file_loader().get_filename();
-                           this->get_file_loader().get_load_interface(*this).log_warning(notice);
+                           stub->_amend_source_file_flag({}, source_file, tes::record_flag::persistent, true); // auto-correct
+                           if (callbacks.on_warning) {
+                              (callbacks.on_warning)(
+                                 notices::file_parse_warnings::apparent_persistent_cell_not_flagged_as_persistent(
+                                    source_file.path().filename().string(),
+                                    *stub
+                                 )
+                              );
+                           }
                         }
                      } else {
                         if (callbacks.on_warning) {
@@ -410,8 +444,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       this->_threads.start();
       this->_threads.wait();
       this->_threads.rethrow_earliest_caught_exception();
-
-      return !this->aborted;
    }
 
    void process::_done_parsing_stub(
@@ -524,7 +556,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                //
                // Strip the flag for a non-injected non-override, as the game would.
                //
-               stub->file.flags &= ~((uint32_t)1 << (size_t)tes::record_flag::partial);
+               stub->_amend_source_file_flag({}, source_file, tes::record_flag::partial, false);
             }
             if (callbacks.on_warning) {
                if (utils::form_stubs::is_interior_cell(*stub) && source_file.is_light()) {

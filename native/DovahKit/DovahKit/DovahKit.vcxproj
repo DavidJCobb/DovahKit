@@ -221,7 +221,9 @@
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_fatally_misplaced.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_has_invalid_record_id.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\record_has_invalid_signature.h" />
+    <ClInclude Include="dovah\exceptions\file_parse_errors\record_not_in_any_group.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\unexpected_nested_group.h" />
+    <ClInclude Include="dovah\exceptions\file_parse_errors\orphaned_group.h" />
     <ClInclude Include="dovah\exceptions\load_order_error.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\active_file_is_a_master_and_there_are_plugins.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\cyclical_dependency_between_files.h" />
@@ -290,6 +292,7 @@
     <ClInclude Include="dovah\notices\base_file_parse_warning.h" />
     <ClInclude Include="dovah\notices\base_form_load_warning.h" />
     <ClInclude Include="dovah\notices\base_warning.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\apparent_persistent_cell_not_flagged_as_persistent.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\esl_defined_an_interior_cell.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\esl_defined_interior_cell_is_overridden.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\form_initial_record_is_partial.h" />

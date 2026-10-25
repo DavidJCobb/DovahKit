@@ -1,9 +1,8 @@
 #pragma once
-#include <cstdint>
 #include "lu/enums/enum_flags.h"
 
 namespace dovah::tes {
-   enum class record_flag : uint32_t {
+   enum class record_flag {
       deleted    =  5,
       persistent = 10,
       ignored    = 12,

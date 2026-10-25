@@ -44,6 +44,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       protected:
          void _abort();
          void _finish_stub(form_stub*&& stub, tes::record_view& record);
+         void _set_stub_parent(form_stub& stub, form_stub* parent);
 
       public:
          inline void wait_for() {

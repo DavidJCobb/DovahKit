@@ -3,7 +3,6 @@
 #include "dovah/form_type.h"
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/utils/form_types/is_cell_child.h"
-#include "./_base.h"
 
 #include "dovah/exceptions/file_parse_errors/record_fatally_misplaced.h"
 
@@ -43,7 +42,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::impl {
 
       delete &stub;
       throw exceptions::file_parse_errors::record_fatally_misplaced(
-         ource_file,
+         source_file,
          record_view.file_offset_of_header(),
          record_view.header()
       );

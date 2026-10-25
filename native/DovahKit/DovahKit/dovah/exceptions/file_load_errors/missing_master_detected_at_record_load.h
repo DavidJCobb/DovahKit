@@ -3,6 +3,10 @@
 #include "dovah/types/form_id.h"
 
 namespace dovah::exceptions::file_load_errors {
+   //
+   // This should never be thrown. Missing-master errors should be detected 
+   // before we attempt to fully parse any file.
+   //
    class missing_master_detected_at_record_load : public file_load_error {
       public:
          missing_master_detected_at_record_load(

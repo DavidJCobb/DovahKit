@@ -10,7 +10,6 @@
 #include "../impl/fail_if_form_fatally_misplaced.h"
 #include "../impl/get_parent_stub_for_group.h"
 #include "../make_stub_from_record.h"
-#include "../process.h"
 
 #include "dovah/exceptions/file_parse_errors/child_form_group_follows_wrong_parent.h"
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
@@ -153,7 +152,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      }
                   }
                   if (is_cell_child) {
-                     stub->_set_parent_form_one_way({}, cell_stub_for_group);
+                     this->_set_stub_parent(*stub, cell_stub_for_group);
                   }
                } else {
                   //

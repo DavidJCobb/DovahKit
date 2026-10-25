@@ -9,7 +9,6 @@
 #include "../impl/fail_if_form_fatally_misplaced.h"
 #include "../impl/get_parent_stub_for_group.h"
 #include "../make_stub_from_record.h"
-#include "../process.h"
 
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
 #include "dovah/notices/file_parse_warnings/record_found_in_wrong_group.h"
@@ -69,7 +68,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   //
                   assert(!!topic_stub);
                   if (stub->form_type == form_type::topic_info) {
-                     stub->_set_parent_form_one_way({}, topic_stub);
+                     this->_set_stub_parent(*stub, topic_stub);
                   } else {
                      impl::fail_if_form_fatally_misplaced<form_type::topic>(source_file, record, *stub);
                      if (callbacks.on_warning) {

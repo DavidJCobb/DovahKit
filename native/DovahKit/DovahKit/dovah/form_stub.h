@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <type_traits>
+#include <vector>
 #include "lu/enums/enum_flags.h"
 #include "lu/memory/threaded_slab_allocator.h"
 #include "./_passkeys/build_use_info_during_load.h"
@@ -21,7 +22,7 @@ namespace dovah {
       class file;
       class file_view;
       class record_view;
-      enum class record_flag : uint32_t;
+      enum class record_flag;
    }
    class active_load_order;
    class base_managed_form_data;
@@ -136,7 +137,9 @@ namespace dovah {
          void _add_source_file(_passkeys::add_form_stub_source_file, tes::file&, uint32_t record_offset, uint32_t record_flags = 0);
          void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, form_stub&, use_info::entry_flag_underlying_type flags = 0);
          void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, bare_form_id, use_info::entry_flag_underlying_type flags = 0);
-         void _set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub& parent);
+         void _amend_source_file_flag(_passkeys::add_form_stub_source_file, const tes::file&, tes::record_flag flag, bool clear_or_set);
+         void _replace_source_file_list(_passkeys::add_form_stub_source_file, std::vector<file_data>&&);
+         void _set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub* parent);
    };
 }
 

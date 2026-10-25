@@ -8,7 +8,7 @@
 #include "dovah/tes/group_header.h"
 #include "dovah/types/bare_form_id.h"
 #include "dovah/utils/form_ids/record_id_to_form_id.h"
-#include "./process.h"
+#include "../process_params.h"
 namespace dovah {
    enum class form_type : uint8_t;
 }

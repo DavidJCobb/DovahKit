@@ -10,7 +10,6 @@
 #include "../impl/fail_if_form_fatally_misplaced.h"
 #include "../impl/get_parent_stub_for_group.h"
 #include "../make_stub_from_record.h"
-#include "../process.h"
 
 #include "dovah/exceptions/file_parse_errors/child_form_group_follows_wrong_parent.h"
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
@@ -152,7 +151,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      }
                   }
                   if (is_cell_child) {
-                     stub->_set_parent_form_one_way({}, cell_stub_for_group);
+                     this->_set_stub_parent(*stub, cell_stub_for_group);
                   }
                } else {
                   //
@@ -166,7 +165,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      // TODO: Warn if cell record ID doesn't match block/sub-block numbers.
                      //
                      last_seen_cell_record = stub;
-                     stub->_set_parent_form_one_way({}, queue_item.worldspace);
+                     this->_set_stub_parent(*stub, queue_item.worldspace);
                   }
                }
                this->_finish_stub(std::move(stub), record);

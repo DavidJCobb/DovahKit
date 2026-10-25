@@ -1,6 +1,8 @@
 #include "./game_settings.h"
+#include "dovah/active_load_order.h"
 #include "dovah/callback_sets/data_load.h"
 #include "dovah/form_stub.h"
+#include "dovah/form_stub_collection.h"
 #include "dovah/form_type.h"
 #include "dovah/form_type_info.h"
 #include "dovah/game_setting_collection.h"
@@ -9,7 +11,6 @@
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/tes/reading/subrecord_view.h"
 #include "dovah/loaded_game_setting.h"
-#include "../process.h"
 
 #include "dovah/exceptions/file_parse_errors/record_fatally_misplaced.h"
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
@@ -182,6 +183,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
 
       // Can't quite separate this into the GSC only: the `form_stub_collection` needs to store 
       // dummy stubs marking form IDs occupied by game settings!
-      alo.get_game_setting_collection().accept_game_setting(this->loader, working, record.formID());
+      alo.get_game_setting_collection().accept_game_setting(source_file, working, record.formID());
    }
 }

@@ -67,6 +67,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             continue;
          stub_files.push_back(*data);
       }
-      newest_stub._replace_source_file_list(stub_files);
+      newest_stub._replace_source_file_list({}, std::move(stub_files));
    }
 }
