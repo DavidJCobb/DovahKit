@@ -25,6 +25,6 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          void execute_on_thread();
 
       protected:
-         void _parse_record(tes::record_view&);
+         void _parse_record(tes::record_view&, bare_form_id form_id);
    };
 }

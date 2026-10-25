@@ -12,6 +12,7 @@
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/tes/reading/subrecord_view.h"
 #include "dovah/loaded_game_setting.h"
+#include "../make_stub_from_record.h"
 
 #include "dovah/exceptions/file_parse_errors/record_fatally_misplaced.h"
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
@@ -66,13 +67,17 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      record.header()
                   );
                }
-               this->_parse_record(record);
+               form_stub*   stub    = make_stub_from_record(source_file, record.file_offset_of_header(), record.header());
+               bare_form_id form_id = stub->form_id;
+               this->_finish_stub(std::move(stub), record);
+               static_assert(false, "TODO: the above will discard injected+partial stubs, but I'm not sure that should be done for GMSTs?");
+               this->_parse_record(record, form_id);
             }
          }
       }
    }
 
-   void game_settings::_parse_record(tes::record_view& record) {
+   void game_settings::_parse_record(tes::record_view& record, bare_form_id form_id) {
       auto& alo         = this->_config.active_load_order;
       auto& callbacks   = this->_config.callbacks;
       auto& source_file = this->_config.source_file;
@@ -81,16 +86,12 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
 
       bool found_data        = false;
       bool logged_misordered = false;
-
-      loaded_game_setting working;
-      working.last_source_file = &source_file;
+      std::string                                 setting_name;
+      types::game_settings::managed_value_variant setting_value;
 
       record.next_subrecord();
       if (subrecord.signature() == 'EDID') {
-         std::string name;
-         subrecord.read_all_to_string(name);
-         working.name       = name;
-         working.definition = facts::game_settings::lookup_by_name(name.c_str());
+         subrecord.read_all_to_string(setting_name);
       } else {
          found_data = subrecord.signature() == 'DATA';
          if (found_data) {
@@ -99,7 +100,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                (callbacks.on_warning)(
                   notices::file_parse_warnings::game_setting_record_is_misordered(
                      source_file.path().filename().string(),
-                     std::string_view(working.name),
+                     std::string_view(setting_name),
                      record.formID()
                   )
                );
@@ -114,7 +115,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   (callbacks.on_warning)(
                      notices::file_parse_warnings::game_setting_record_is_misordered(
                         source_file.path().filename().string(),
-                        std::string_view(working.name),
+                        std::string_view(setting_name),
                         record.formID()
                      )
                   );
@@ -127,7 +128,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                (callbacks.on_warning)(
                   notices::file_parse_warnings::game_setting_record_has_unrecognized_subrecord(
                      source_file.path().filename().string(),
-                     std::string_view(working.name),
+                     std::string_view(setting_name),
                      record.formID(),
                      subrecord.signature()
                   )
@@ -138,45 +139,23 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          found_data = true;
          
          bool no_read_error = true;
-         bool type_is_known = true;
-         switch (working.get_type()) {
-            case game_setting_type::boolean:
-               {
-                  uint32_t dummy;
-                  no_read_error = subrecord.read(dummy);
-                  working.value.b = dummy != 0;
-               }
-               break;
-            case game_setting_type::float32:
-               no_read_error = subrecord.read(working.value.f);
-               break;
-            case game_setting_type::integer:
-               no_read_error = subrecord.read(working.value.i);
-               break;
-            case game_setting_type::string:
-               no_read_error = subrecord.read(working.value.s);
-               break;
-            default:
-               type_is_known = false;
-               if (!working.name.empty()) { // if name is empty, we already logged a "misordered" warning
-                  if (callbacks.on_warning) {
-                     (callbacks.on_warning)(
-                        notices::file_parse_warnings::game_setting_value_type_unknown(
-                           source_file.path().filename().string(),
-                           std::string_view(working.name),
-                           record.formID()
-                        )
-                     );
-                  }
-               }
-               break;
-         }
+         bool type_is_known = false;
+         facts::game_setting_types<true>::for_each_pair([&subrecord, &no_read_error, &type_is_known, &setting_name, &setting_value]<typename K, char V>() {
+            if (setting_name.empty())
+               return lu::foreach_lambda_result::stop;
+            if (setting_name[0] == V || setting_name[0] == (V - 0x20)) {
+               type_is_known = true;
+               no_read_error = subrecord.read(setting_value.emplace<K>());
+               return lu::foreach_lambda_result::stop;
+            }
+            return lu::foreach_lambda_result::keep_going;
+         });
          if (callbacks.on_warning) {
             if (!no_read_error) {
                (callbacks.on_warning)(
                   notices::file_parse_warnings::game_setting_value_unreadable(
                      source_file.path().filename().string(),
-                     std::string_view(working.name),
+                     std::string_view(setting_name),
                      record.formID(),
                      true
                   )
@@ -185,12 +164,22 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                (callbacks.on_warning)(
                   notices::file_parse_warnings::game_setting_value_has_extra_content(
                      source_file.path().filename().string(),
-                     std::string_view(working.name),
+                     std::string_view(setting_name),
                      record.formID(),
                      subrecord.position(),
                      subrecord.size()
                   )
                );
+            } else if (!type_is_known) {
+               if (!setting_name.empty()) { // if name is empty, we already logged a "misordered" warning
+                  (callbacks.on_warning)(
+                     notices::file_parse_warnings::game_setting_value_type_unknown(
+                        source_file.path().filename().string(),
+                        std::string_view(setting_name),
+                        record.formID()
+                     )
+                  );
+               }
             }
          }
          break;
@@ -200,16 +189,37 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
             (callbacks.on_warning)(
                notices::file_parse_warnings::game_setting_value_unreadable(
                   source_file.path().filename().string(),
-                  std::string_view(working.name),
+                  std::string_view(setting_name),
                   record.formID(),
                   false
                )
             );
          }
+         //
+         // Ensure that we have a dummy value to use, since in Debug, `_store_game_setting` 
+         // validates that the setting name and type match.
+         //
+         if (!setting_name.empty()) {
+            facts::game_setting_types<true>::for_each_pair([&setting_name, &setting_value]<typename K, char V>() {
+               if (setting_name.empty())
+                  return lu::foreach_lambda_result::stop;
+               if (setting_name[0] == V || setting_name[0] == (V - 0x20)) {
+                  setting_value.emplace<K>();
+                  return lu::foreach_lambda_result::stop;
+               }
+               return lu::foreach_lambda_result::keep_going;
+            });
+         }
       }
 
       // Can't quite separate this into the GSC only: the `form_stub_collection` needs to store 
       // dummy stubs marking form IDs occupied by game settings!
-      alo.get_game_setting_collection().accept_game_setting(source_file, working, record.formID());
+      alo.get_game_setting_collection()._store_game_setting(
+         {}, // passkey
+         source_file,
+         setting_name,
+         form_id,
+         std::move(setting_value)
+      );
    }
 }

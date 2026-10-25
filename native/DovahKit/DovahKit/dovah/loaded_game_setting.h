@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 #include <variant>
-#include "./facts/game_setting_types.h"
 #include "./types/bare_form_id.h"
+#include "./types/game_settings/managed_value_variant.h"
 namespace dovah {
    namespace facts::game_settings {
       class definition;
@@ -15,7 +15,7 @@ namespace dovah {
 namespace dovah {
    class loaded_game_setting {
       protected:
-         using value_variant = facts::game_setting_types<true>::unpack_types_into<std::variant>;
+         using value_variant = types::game_settings::managed_value_variant;
 
       public:
          const facts::game_settings::definition* definition       = nullptr;

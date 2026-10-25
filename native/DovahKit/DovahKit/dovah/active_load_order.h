@@ -58,6 +58,9 @@ namespace dovah {
          constexpr const form_stub_collection& get_form_stub_collection() const noexcept { return this->_forms; };
          constexpr form_stub_collection& get_form_stub_collection() noexcept { return this->_forms; };
 
+         constexpr const game_setting_collection& get_game_setting_collection() const noexcept { return this->_game_settings; };
+         constexpr game_setting_collection& get_game_setting_collection() noexcept { return this->_game_settings; };
+
          constexpr const tes::file* get_active_file() const noexcept { return this->_files.active; }
          constexpr tes::file* get_active_file() noexcept { return this->_files.active; }
 
