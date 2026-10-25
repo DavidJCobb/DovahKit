@@ -126,6 +126,7 @@
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_addendum_types\ordered_child_collection.cpp" />
     <ClCompile Include="dovah\form_stub_collection.cpp" />
+    <ClCompile Include="dovah\game_setting_collection.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\extract_high_value_subrecords_for_stub.cpp" />
@@ -299,6 +300,11 @@
     <ClInclude Include="dovah\notices\file_parse_warnings\esl_defined_interior_cell_is_overridden.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\form_initial_record_is_partial.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\form_override_has_armo_arma_mismatch.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_has_multiple_records_in_a_file.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_name_is_unrecognized.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_wants_to_override_a_real_form.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_has_bad_form_id.h" />
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_has_no_name.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_has_unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_is_misordered.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_has_extra_content.h" />
@@ -340,6 +346,7 @@
     <ClInclude Include="dovah\types\cells\grid_position.h" />
     <ClInclude Include="dovah\types\file_prefix.h" />
     <ClInclude Include="dovah\types\form_id.h" />
+    <ClInclude Include="dovah\types\game_settings\managed_value_variant.h" />
     <ClInclude Include="dovah\types\localized_string_type.h" />
     <ClInclude Include="dovah\types\managed_localized_string_use.h" />
     <ClInclude Include="dovah\types\unmanaged_localized_string_use.h" />

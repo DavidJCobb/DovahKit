@@ -215,6 +215,9 @@
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\impl\file_offset_of_exception.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\game_setting_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1121,6 +1124,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_has_extra_content.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\types\game_settings\managed_value_variant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_has_bad_form_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_has_no_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_wants_to_override_a_real_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_name_is_unrecognized.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_has_multiple_records_in_a_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

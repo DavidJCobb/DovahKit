@@ -36,6 +36,11 @@
 #include "dovah/exceptions/file_parse_errors/record_not_in_any_group.h"
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
 #include "dovah/notices/file_parse_warnings/apparent_persistent_cell_not_flagged_as_persistent.h"
+#include "dovah/notices/file_parse_warnings/game_setting_has_multiple_records_in_a_file.h"
+#include "dovah/notices/file_parse_warnings/game_setting_name_is_unrecognized.h"
+#include "dovah/notices/file_parse_warnings/game_setting_record_has_bad_form_id.h"
+#include "dovah/notices/file_parse_warnings/game_setting_record_has_no_name.h"
+#include "dovah/notices/file_parse_warnings/game_setting_wants_to_override_a_real_form.h"
 #include "dovah/notices/file_parse_warnings/record_found_in_wrong_group.h"
 
 #define FOR_EACH_THREAD_TYPE(X) \
@@ -463,6 +468,160 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       }
       if (stub)
          extract_high_value_subrecords_for_stub(this->_params.source_file, *stub, record);
+   }
+
+   void process::_commit_game_setting(
+      lu::passkey<threads::game_settings>,
+      size_t        record_offset,
+      const tes::record_header& record_header,
+      std::string&& setting_name,
+      types::game_settings::managed_value_variant&& setting_value
+   ) {
+      auto&       alo         = this->_params.active_load_order;
+      const auto& callbacks   = this->_params.callbacks;
+      auto&       source_file = this->_params.source_file;
+
+      bare_form_id record_id = record_header.formID;
+      bare_form_id form_id   = 0;
+      {
+         auto result = utils::form_ids::record_id_to_form_id(source_file, record_id);
+         if (result.has_value()) {
+            form_id = result.value();
+         } else {
+            if (callbacks.on_warning) {
+               (callbacks.on_warning)(
+                  notices::file_parse_warnings::game_setting_record_has_bad_form_id(
+                     source_file.path().filename().string(),
+                     static_cast<const std::string&>(setting_name), // casting from && to & is probably paranoid, but eh
+                     record_id
+                  )
+               );
+            }
+         }
+      }
+      if (setting_name.empty()) {
+         if (callbacks.on_warning) {
+            (callbacks.on_warning)(
+               notices::file_parse_warnings::game_setting_record_has_no_name(
+                  source_file.path().filename().string(),
+                  record_id,
+                  form_id
+               )
+            );
+         }
+         return;
+      }
+
+      //
+      // We want every GMST to have a form stub so that we can prevent form ID conflicts 
+      // between GMSTs and forms. Technically, TESV.exe would allow a form to reuse the 
+      // GMST's form ID if it loaded after the GMST, but given that we multi-thread our 
+      // form loading, I don't want to have to try and account for that edge-case. Plus, 
+      // other community-created tools can't be expected to cope with distinct entities 
+      // having the same form ID.
+      // 
+      // We get the lock from out here because there are some correctness checks that we 
+      // will need to do further down.
+      //
+      auto& fsc   = alo.get_form_stub_collection();
+      auto  guard = std::lock_guard(fsc.forms.lock);
+      if (form_id) {
+         form_stub*& stub = fsc.forms.forms[form_id];
+         if (stub) {
+            if (stub->form_type == form_type::setting) {
+               stub->_add_source_file({}, const_cast<tes::file&>(source_file), record_offset, (uint32_t)record_header.flags);
+            } else {
+               //
+               // Don't allow GMSTs to override form IDs of other types; discard the GMST.
+               //
+               if (callbacks.on_warning) {
+                  (callbacks.on_warning)(
+                     notices::file_parse_warnings::game_setting_wants_to_override_a_real_form(
+                        source_file.path().filename().string(),
+                        static_cast<const std::string&>(setting_name), // casting from && to & is probably paranoid, but eh
+                        *stub
+                     )
+                  );
+               }
+               return;
+            }
+         } else {
+            stub = new form_stub;
+            stub->_add_source_file({}, const_cast<tes::file&>(source_file), record_offset, (uint32_t)record_header.flags);
+            stub->form_id   = form_id;
+            stub->form_type = form_type::setting;
+            fsc.forms_by_type[form_type::setting].forms[form_id] = stub;
+         }
+         if (this->_source_file_is_active) {
+            fsc.active_file_forms.forms[form_id] = stub;
+            fsc.active_file_forms_by_type[form_type::setting].forms[form_id] = stub;
+         }
+      }
+      
+      //
+      // Deal with the loaded game setting.
+      //
+      auto& gsc = alo.get_game_setting_collection();
+      auto  insertion_result = gsc._store_game_setting(
+         {}, // passkey
+         source_file,
+         setting_name,
+         form_id,
+         std::move(setting_value)
+      );
+      if (insertion_result.second) {
+         if (callbacks.on_warning) {
+            (callbacks.on_warning)(
+               notices::file_parse_warnings::game_setting_has_multiple_records_in_a_file(
+                  source_file.path().filename().string(),
+                  insertion_result.first.name,
+                  record_id,
+                  form_id,
+                  insertion_result.second
+               )
+            );
+         }
+         if (this->_source_file_is_active) {
+            //
+            // If the active file has redundant GMST records, then we should strip them out. We don't want to 
+            // maintain multiple active-file form stubs for the same GMST, because that complicates the task 
+            // of editing settings' values and the task of saving them into a file. Plus, this will give us 
+            // consistent behavior with the Creation Kit: a game setting will have the last-seen form ID.
+            // 
+            // We don't want to strip redundant GMST records from dependencies, however, because we need to 
+            // remember that all of the form IDs occupied by those records are, in fact, occupied; we need to 
+            // know that we can't inject new active-file forms overtop those form IDs.
+            // 
+            // (This, incidentally, is why we hold the FSC lock for so much of this function.)
+            //
+            const bare_form_id old_form_id = insertion_result.second;
+            //
+            // Of course, none of this applies if the new redundant record didn't resolve to a valid form ID; 
+            // in that case, there's no new stub to create, and we can stick with the old stub.
+            //
+            if (form_id) {
+               auto* old_stub = fsc.forms.forms[old_form_id];
+               assert(!!old_stub);
+               fsc.forms.forms.erase(old_form_id);
+               fsc.forms_by_type[form_type::setting].forms.erase(old_form_id);
+               fsc.active_file_forms.forms.erase(old_form_id);
+               fsc.active_file_forms_by_type[form_type::setting].forms.erase(old_form_id);
+               delete old_stub;
+            }
+         }
+      }
+      if (!insertion_result.first.definition) {
+         if (callbacks.on_warning) {
+            (callbacks.on_warning)(
+               notices::file_parse_warnings::game_setting_name_is_unrecognized(
+                  source_file.path().filename().string(),
+                  insertion_result.first.name,
+                  record_id,
+                  form_id
+               )
+            );
+         }
+      }
    }
 
    void process::_commit_stub(

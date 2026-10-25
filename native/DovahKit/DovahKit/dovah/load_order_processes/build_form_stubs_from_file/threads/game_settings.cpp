@@ -12,7 +12,7 @@
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/tes/reading/subrecord_view.h"
 #include "dovah/loaded_game_setting.h"
-#include "../make_stub_from_record.h"
+#include "../process.h"
 
 #include "dovah/exceptions/file_parse_errors/record_fatally_misplaced.h"
 #include "dovah/exceptions/file_parse_errors/unexpected_nested_group.h"
@@ -67,17 +67,13 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      record.header()
                   );
                }
-               form_stub*   stub    = make_stub_from_record(source_file, record.file_offset_of_header(), record.header());
-               bare_form_id form_id = stub->form_id;
-               this->_finish_stub(std::move(stub), record);
-               static_assert(false, "TODO: the above will discard injected+partial stubs, but I'm not sure that should be done for GMSTs?");
-               this->_parse_record(record, form_id);
+               this->_parse_record(record);
             }
          }
       }
    }
 
-   void game_settings::_parse_record(tes::record_view& record, bare_form_id form_id) {
+   void game_settings::_parse_record(tes::record_view& record) {
       auto& alo         = this->_config.active_load_order;
       auto& callbacks   = this->_config.callbacks;
       auto& source_file = this->_config.source_file;
@@ -214,11 +210,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
 
       // Can't quite separate this into the GSC only: the `form_stub_collection` needs to store 
       // dummy stubs marking form IDs occupied by game settings!
-      alo.get_game_setting_collection()._store_game_setting(
-         {}, // passkey
-         source_file,
-         setting_name,
-         form_id,
+      this->_config.process._commit_game_setting(
+         {},
+         record.file_offset_of_header(),
+         record.header(),
+         std::move(setting_name),
          std::move(setting_value)
       );
    }
