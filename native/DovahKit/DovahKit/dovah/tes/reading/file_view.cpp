@@ -211,10 +211,22 @@ namespace dovah::tes {
       return true;
    }
 
-   void file_view::set_target_file(const file* file) {
+   void file_view::_reset_parse_state() {
       auto& record    = this->subviews.record;
       auto& subrecord = this->subviews.subrecord;
 
+      record.set_buffer({});
+      record._header      = {};
+      record.file_offsets = {};
+      subrecord.set_buffer({});
+      subrecord._body_pos  = 0;
+      subrecord._signature = 0;
+      this->groups = {};
+      this->_decompressed_record.clear();
+      this->_last_potential_group_parent = 0;
+   }
+
+   void file_view::set_target_file(const file* file) {
       this->_target_file = file;
       if (file) {
          this->_reader.set_buffer({ file->data(), file->size() });
@@ -226,18 +238,11 @@ namespace dovah::tes {
       } else {
          this->_reader.set_buffer({});
       }
-      record.set_buffer({});
-      record._header      = {};
-      record.file_offsets = {};
-      subrecord.set_buffer({});
-      subrecord._body_pos  = 0;
-      subrecord._signature = 0;
-      this->groups = {};
-      this->_decompressed_record.clear();
-      this->_last_potential_group_parent = 0;
+      this->_reset_parse_state();
    }
    void file_view::set_position(size_t p) {
       this->_reader.seek(p);
+      this->_reset_parse_state();
    }
 
    file_view::opened_group* file_view::parent_of_group(const opened_group& g) {

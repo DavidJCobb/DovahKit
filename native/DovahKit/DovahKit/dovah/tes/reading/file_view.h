@@ -33,6 +33,7 @@ namespace dovah::tes {
          void _validate_record_signature() const;
          void _open_group_here(); // call after reading the GRUP signature
          bool _open_record_here(lu::four_cc signature); // call after reading the non-GRUP signature
+         void _reset_parse_state();
 
       public:
          std::array<opened_group, 7> groups;

@@ -151,7 +151,13 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                return lu::foreach_lambda_result::stop;
             if (setting_name[0] == V || setting_name[0] == (V - 0x20)) {
                type_is_known = true;
-               no_read_error = subrecord.read(setting_value.emplace<K>());
+               if constexpr (std::is_same_v<K, bool>) {
+                  uint32_t dword = 0;
+                  no_read_error = subrecord.read(dword);
+                  setting_value.emplace<K>() = dword;
+               } else {
+                  no_read_error = subrecord.read(setting_value.emplace<K>());
+               }
                return lu::foreach_lambda_result::stop;
             }
             return lu::foreach_lambda_result::keep_going;
