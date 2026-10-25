@@ -63,7 +63,7 @@ namespace dovah::tes {
          void reopen(const std::filesystem::path&, enum game); // reopen with alternate path and name (e.g. for cross-game conversions)
 
       public: // passkeyed
-         static file* _make_hardcoded_dummy_file(lu::passkey<active_load_order>, enum game);
-         static file* _make_none_stubs_dummy_file(lu::passkey<active_load_order>, enum game);
+         static file* _make_hardcoded_dummy_file(lu::passkey<active_load_order>, active_load_order&);
+         static file* _make_none_stubs_dummy_file(lu::passkey<active_load_order>, active_load_order&);
    };
 }

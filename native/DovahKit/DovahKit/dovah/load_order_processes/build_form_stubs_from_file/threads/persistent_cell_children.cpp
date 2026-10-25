@@ -130,7 +130,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                if (!is_misplaced_form_type) {
                   this->_set_stub_parent(*stub, desired.cell);
                }
-               this->_finish_stub(std::move(stub), record);
+               this->_finish_stub(stub, record);
             }
 
             // else unreachable

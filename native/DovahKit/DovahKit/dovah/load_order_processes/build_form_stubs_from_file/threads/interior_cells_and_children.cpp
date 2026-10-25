@@ -166,12 +166,20 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   //
                   if (stub->form_type != form_type::cell) {
                      impl::fail_if_form_fatally_misplaced<form_type::none>(source_file, record, *stub);
+                  }
+               }
+               this->_finish_stub(stub, record);
+               if (!all_children_group.signature) {
+                  //
+                  // Have to update `last_seen_cell_record` *after* `_finish_stub`, since that may 
+                  // replace the `stub` pointer.
+                  //
+                  if (!stub || stub->form_type != form_type::cell) {
                      last_seen_cell_record = nullptr;
                   } else {
                      last_seen_cell_record = stub;
                   }
                }
-               this->_finish_stub(std::move(stub), record);
             }
 
             // else unreachable

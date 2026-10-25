@@ -190,7 +190,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             //       nested under the sub-block GRUPs.
             //
             if (ot == tes::file_view::chunk_type::group) {
-               auto& group = *view.get_current_group();
+               auto&      group          = *view.get_current_group();
+               const bool group_is_empty = group.size <= lu::bytestreams::serialized_bytecount<tes::bytereader, tes::group_header>::value;
                switch (group.type) {
                   //
                   // In order to skip the group's contents, call `view.skip_current_group()` and then `continue`. In order 
@@ -248,7 +249,9 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      continue;
                   case tes::group_type::cell_children:
                      assert(!!last_persistent_cell && "We should be ignoring these GRUPs when they don't appear directly after a worldspace's persistent cell!");
-                     ENQUEUE(persistent_cell_children, { last_persistent_cell, (uint32_t)group.position });
+                     if (!group_is_empty) {
+                        ENQUEUE(persistent_cell_children, { last_persistent_cell, (uint32_t)group.position });
+                     }
                      view.skip_current_group();
                      continue;
                   case tes::group_type::cell_persistent_children:
@@ -282,7 +285,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                            nullptr
                         );
                      }
-                     {
+                     if (!group_is_empty) {
                         int16_t sub_x = group.label >> 0x10;
                         int16_t sub_y = group.label & 0xFFFF;
                         ENQUEUE(exterior_cells_and_children, { last_worldspace, { last_ext_block_x, last_ext_block_y }, { sub_x, sub_y }, (uint32_t)group.position });
@@ -328,7 +331,9 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                               group
                            );
                         }
-                        ENQUEUE(interior_cells_and_children, { parent_group->label, (uint32_t)group.position });
+                        if (!group_is_empty) {
+                           ENQUEUE(interior_cells_and_children, { parent_group->label, (uint32_t)group.position });
+                        }
                         view.skip_current_group();
                      }
                      continue;
@@ -360,6 +365,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      break;
                   case 'CLDC': // BGSCloudClusterForm (removed in v1.2)
                   case 'HAIR': // TESHair             (removed in v1.2)
+                  case 'PWAT': // <unknown>           (removed)
                      //
                      // BGSCloudClusterForm was removed from the game in v1.2. No records for it are known 
                      // to have existed, but it has a top-level GRUP in official game files that we'll need 
@@ -371,8 +377,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      // 
                      // TESHair is a similar story, though according to SKSE source code, it still exists 
                      // in Skyrim Classic at the very least.
+                     // 
+                     // I'm not sure we even know what PWAT corresponds to? But it's another removed form 
+                     // type with a leftover empty GRUP in official files.
                      //
-                     if (group.size > lu::bytestreams::serialized_bytecount<tes::bytereader, tes::group_header>::value) {
+                     if (!group_is_empty) {
                         //
                         // Group is non-empty.
                         //
@@ -385,12 +394,14 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
                      view.skip_current_group();
                      continue;
                }
-               if (is_gmst) {
-                  ENQUEUE(game_settings, { (uint32_t)group.position });
-               } else if (is_dialogue) {
-                  ENQUEUE(topics_and_infos, { (uint32_t)group.position });
-               } else {
-                  ENQUEUE(forms_of_type, { std::byteswap(group.label), (uint32_t)group.position });
+               if (!group_is_empty) {
+                  if (is_gmst) {
+                     ENQUEUE(game_settings, { (uint32_t)group.position });
+                  } else if (is_dialogue) {
+                     ENQUEUE(topics_and_infos, { (uint32_t)group.position });
+                  } else {
+                     ENQUEUE(forms_of_type, { std::byteswap(group.label), (uint32_t)group.position });
+                  }
                }
                //
                // Skip the group's actual content; the main thread only cares about locating the groups 

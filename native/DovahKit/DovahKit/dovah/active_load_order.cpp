@@ -399,7 +399,7 @@ namespace dovah {
    #pragma endregion
    
    void active_load_order::_build_use_info() {
-      auto* dummy = this->_files.dummies.none_stubs = tes::file::_make_none_stubs_dummy_file({}, this->_game);
+      auto* dummy = this->_files.dummies.none_stubs = tes::file::_make_none_stubs_dummy_file({}, *this);
       //
       // We generate Use Info using two passes. First, we divide all forms across multiple 
       // threads; each thread generates outbound Use Info for the forms. Then, a single 
@@ -467,7 +467,7 @@ namespace dovah {
       });
    }
    void active_load_order::_make_hardcoded_forms() {
-      auto* dummy = this->_files.dummies.hardcoded = tes::file::_make_hardcoded_dummy_file({}, this->_game);
+      auto* dummy = this->_files.dummies.hardcoded = tes::file::_make_hardcoded_dummy_file({}, *this);
       this->_forms._make_hardcoded_forms({}, *dummy);
    }
 }

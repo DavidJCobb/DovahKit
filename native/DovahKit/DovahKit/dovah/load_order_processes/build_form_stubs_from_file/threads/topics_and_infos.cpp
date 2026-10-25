@@ -112,7 +112,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      }
                   }
                }
-               this->_finish_stub(std::move(stub), record);
+               this->_finish_stub(stub, record);
             }
          }
       }

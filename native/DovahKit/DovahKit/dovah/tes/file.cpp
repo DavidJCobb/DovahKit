@@ -58,13 +58,15 @@ namespace dovah::tes {
    // passkeyed:
    //
 
-   /*static*/ file* file::_make_hardcoded_dummy_file(lu::passkey<active_load_order>, enum game g) {
-      auto* f = new file(g);
+   /*static*/ file* file::_make_hardcoded_dummy_file(lu::passkey<active_load_order>, active_load_order& alo) {
+      auto* f = new file(alo.get_current_game());
+      f->_active_load_order = &alo;
       f->_app_flags.set_each_of<file_app_specific_flag::is_hardcoded_dummy>();
       return f;
    }
-   /*static*/ file* file::_make_none_stubs_dummy_file(lu::passkey<active_load_order>, enum game g) {
-      auto* f = new file(g);
+   /*static*/ file* file::_make_none_stubs_dummy_file(lu::passkey<active_load_order>, active_load_order& alo) {
+      auto* f = new file(alo.get_current_game());
+      f->_active_load_order = &alo;
       f->_app_flags.set_each_of<file_app_specific_flag::is_none_stub_dummy>();
       return f;
    }

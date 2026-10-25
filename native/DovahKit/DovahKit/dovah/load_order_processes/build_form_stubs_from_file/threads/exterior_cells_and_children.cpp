@@ -174,7 +174,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      this->_set_stub_parent(*stub, queue_item.worldspace);
                   }
                }
-               this->_finish_stub(std::move(stub), record);
+               this->_finish_stub(stub, record);
             }
 
             // else unreachable
