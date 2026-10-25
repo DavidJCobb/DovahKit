@@ -3,6 +3,7 @@
 #include "./form_stub.h"
 #include "./form_type_info.h"
 #include "./_impl/form_stub_collection/create_hardcoded_form_stubs.h"
+#include "./_impl/form_stub_collection/create_none_stubs.h"
 #include "./utils/form_stubs/can_load_form_data.h"
 #include "./utils/form_stubs/is_defined_in_active_file.h"
 #include "./utils/form_stubs/is_exterior_cell.h"
