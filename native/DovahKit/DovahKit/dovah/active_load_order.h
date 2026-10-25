@@ -79,7 +79,6 @@ namespace dovah {
          // May throw `exceptions::file_parse_error`
          void load(
             tes::file_load_order&,
-            std::string_view active_file_name, // must also be in the provided FLO
             const callback_sets::data_load&
          );
 

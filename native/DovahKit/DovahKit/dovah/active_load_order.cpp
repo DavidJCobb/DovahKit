@@ -57,9 +57,11 @@ namespace dovah {
 
    void active_load_order::load(
       tes::file_load_order& flo,
-      std::string_view active_file_name,
       const callback_sets::data_load& callbacks
    ) {
+      this->_data_directory = flo.config.data_directory;
+      this->_game           = flo.config.target_game;
+      const std::string_view active_file_name = flo.config.active_file_name;
       //
       // Check file versions.
       //

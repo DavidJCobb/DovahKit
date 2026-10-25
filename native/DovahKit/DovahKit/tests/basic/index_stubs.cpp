@@ -55,7 +55,6 @@ namespace dovahkit::tests {
       try {
          alo.load(
             flo,
-            {},
             dovah::callback_sets::data_load{
                .on_warning = &on_warning,
             }

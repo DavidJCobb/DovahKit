@@ -244,7 +244,7 @@ namespace dovah::tes {
       auto* data = this->groups.data();
       auto  i    = &g - data;
       if (i)
-         return &data[i];
+         return &data[i - 1];
       return nullptr;
    }
    file_view::opened_group* file_view::get_current_group() {
