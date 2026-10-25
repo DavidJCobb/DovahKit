@@ -529,7 +529,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          form_stub*& stub = fsc.forms[form_id];
          if (stub) {
             if (stub->form_type == form_type::setting) {
-               stub->_add_source_file({}, const_cast<tes::file&>(source_file), record_offset, (uint32_t)record_header.flags);
+               stub->_add_source_file({}, const_cast<tes::file&>(source_file), (uint32_t)record_offset, (uint32_t)record_header.flags);
             } else {
                //
                // Don't allow GMSTs to override form IDs of other types; discard the GMST.
@@ -547,7 +547,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             }
          } else {
             stub = new form_stub;
-            stub->_add_source_file({}, const_cast<tes::file&>(source_file), record_offset, (uint32_t)record_header.flags);
+            stub->_add_source_file({}, const_cast<tes::file&>(source_file), (uint32_t)record_offset, (uint32_t)record_header.flags);
             stub->form_id   = form_id;
             stub->form_type = form_type::setting;
             fsc.forms_by_type[form_type::setting][form_id] = stub;

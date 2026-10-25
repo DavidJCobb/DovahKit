@@ -4,12 +4,12 @@
 
 namespace dovah {
    inline size_t form_stub_collection::count_all_forms() const noexcept {
-      return this->forms.forms.size();
+      return this->forms.size();
    }
    inline size_t form_stub_collection::count_forms_of_type(form_type ft) const noexcept {
       if ((size_t)ft >= this->forms_by_type.size())
          return 0;
-      return this->forms_by_type[(size_t)ft].forms.size();
+      return this->forms_by_type[(size_t)ft].size();
    }
 
    template<typename Functor>
@@ -75,7 +75,7 @@ namespace dovah {
    }
    
    inline const form_stub* form_stub_collection::get_form_by_id(bare_form_id form_id, bool ignore_none_stubs) const {
-      auto& map = this->forms.forms;
+      auto& map = this->forms;
       auto  it  = map.find(form_id);
       if (it == map.end())
          return nullptr;
@@ -90,7 +90,7 @@ namespace dovah {
    inline const form_stub* form_stub_collection::get_form_by_id(bare_form_id form_id, form_type ft, bool ignore_none_stubs) const {
       if ((size_t)ft >= this->forms_by_type.size())
          return nullptr;
-      auto& map = this->forms_by_type[(size_t)ft].forms;
+      auto& map = this->forms_by_type[(size_t)ft];
       auto  it  = map.find(form_id);
       if (it == map.end())
          return nullptr;

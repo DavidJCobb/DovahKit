@@ -1,5 +1,6 @@
 #pragma once
 #include "./form_stub.h"
+#include "lu/foreach_lambda_result.h"
 #include "./tes/record_flags.h"
 
 namespace dovah {

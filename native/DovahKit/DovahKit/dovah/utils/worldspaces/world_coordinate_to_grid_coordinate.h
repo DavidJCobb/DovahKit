@@ -14,7 +14,7 @@ namespace dovah::utils::worldspaces {
       //
       constexpr auto side_length = facts::cells::exterior_cell_side_length;
       //
-      constexpr auto shift_by     = std::bit_width((unsigned int)side_length) - 1;
+      constexpr auto shift_by     = std::bit_width(side_length) - 1;
       constexpr bool signed_shift = ((int32_t)(-90) >> 2 == -23);
       //
       auto ci = (int32_t)c;
@@ -28,7 +28,7 @@ namespace dovah::utils::worldspaces {
                return (ci / side_length) - 1;
          }
          auto out = ci >> shift_by;
-         if (ci < 0 && ci > -side_length)
+         if (ci < 0 && ci > -(int)side_length)
             --out;
          return out;
       } else { // "canonical" implementation

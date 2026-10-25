@@ -2,6 +2,8 @@
 #include "dovah/callback_sets/data_load.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_addenda.h"
+#include "dovah/form_stub_addendum_types/ordered_child_collection.h"
+#include "dovah/form_stub_addendum_types/passkeys/ordered_child_collection.h"
 #include "dovah/form_type.h"
 #include "dovah/tes/file.h"
 #include "dovah/utils/form_stubs/get_parent_form.h"
@@ -76,7 +78,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          }
       }
       assert(!overriding_stub.has_multiple_source_files()); // the input stub should've been read by ONE file
-      overridden_stub._add_source_file({}, const_cast<tes::file&>(overriding_file), override_record_offset, overriding_stub.file.flags);
+      overridden_stub._add_source_file({}, const_cast<tes::file&>(overriding_file), (uint32_t)override_record_offset, overriding_stub.file.record_flags);
       overridden_stub._set_parent_form_one_way({}, new_parent);
    }
 }

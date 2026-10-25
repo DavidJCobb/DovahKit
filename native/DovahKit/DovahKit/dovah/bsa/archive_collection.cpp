@@ -68,7 +68,7 @@ namespace dovah::bsa {
       for (auto* loader : this->_load_state.threads)
          loader->start();
    }
-   archive_collection::load_results&& archive_collection::wait_for_load_to_finish() {
+   archive_collection::load_results archive_collection::wait_for_load_to_finish() {
       if (!this->_load_state.loading)
          return load_results{};
       this->_load_state.timestamps.when_waiting_started = std::chrono::high_resolution_clock::now();
@@ -76,7 +76,7 @@ namespace dovah::bsa {
          if (loader)
             loader->wait_for();
       this->_load_state.results.time_spent_waiting = std::chrono::high_resolution_clock::now() - this->_load_state.timestamps.when_waiting_started;
-      return std::move(this->_load_state.results);
+      return this->_load_state.results;
    }
    void archive_collection::abort_load() {
       this->_load_state.aborted = true;

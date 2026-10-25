@@ -3,24 +3,6 @@
 #include "lu/ascii/equals_i.h"
 
 namespace dovah::bsa {
-   /*static*/ constexpr void archive::split_path_and_filename(const std::string& full_path, std::string& out_folder, std::string& out_file) {
-      size_t size = full_path.size();
-      for (char c : full_path) {
-         if (c == '\\' || c == '/') {
-            if (out_file.empty()) // skip leading and redundant slashes
-               continue;
-            if (!out_folder.empty())
-               out_folder += '\\';
-            out_folder += out_file;
-            out_file.clear();
-         } else {
-            if (c >= 'A' && c <= 'Z')
-               c += 0x20;
-            out_file += c;
-         }
-      }
-   }
-
    template<typename Functor>
    constexpr bool archive::for_each_folder(Functor&& functor) const requires std::is_invocable_r_v<bool, Functor, const folder_entry&> {
       for (auto& folder : this->folders)

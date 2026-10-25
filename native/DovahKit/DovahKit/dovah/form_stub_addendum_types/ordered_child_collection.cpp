@@ -108,7 +108,7 @@ namespace dovah::form_stub_addendum_types {
          if (at >= size)
             at = size - 1;
          auto i = std::distance(list.begin(), it);
-         lu::vectors::move_item_within(list, i, (int)at - i);
+         lu::vectors::move_item_within(list, (size_t)i, (int)(at - i));
       }
    }
    void ordered_child_collection::_remove_child_after_load(passkeys::reorder_children_after_load, form_stub& child) {

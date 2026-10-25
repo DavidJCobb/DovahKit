@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <thread>
 #include <vector>
 namespace dovah {

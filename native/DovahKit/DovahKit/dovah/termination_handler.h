@@ -34,7 +34,7 @@ namespace dovah {
          static void update_this_thread();
 
       protected:
-         handler_type       _handler;
+         handler_type       _handler = nullptr;
          mutable std::mutex _mutex;
    };
 }

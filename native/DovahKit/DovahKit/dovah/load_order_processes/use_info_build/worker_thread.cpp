@@ -17,7 +17,7 @@ namespace dovah::load_order_processes::use_info_build {
       const auto* active_file = this->owner.get_active_file();
 
       auto& list = this->queue;
-      this->progress.maximum = list.size();
+      this->progress.maximum = (uint32_t)list.size();
       for (auto* stub : list) {
          const bool can_be_parent = form_type_info::lookup(stub->form_type).flags & form_type_info::flag::can_have_children;
          const auto file_count    = stub->source_file_count();

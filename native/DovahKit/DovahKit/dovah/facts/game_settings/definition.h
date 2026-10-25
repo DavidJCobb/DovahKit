@@ -20,7 +20,7 @@ namespace dovah::facts::game_settings {
          CONSTRUCTOR(bool, b)
          CONSTRUCTOR(float, f)
          CONSTRUCTOR(int, i)
-         CONSTRUCTOR(std::string_view, s)
+         CONSTRUCTOR(const char*, s)
          #undef CONSTRUCTOR
 
       public:

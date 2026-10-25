@@ -11,10 +11,10 @@ namespace lu::windows {
       const std::string fileA = file.string();
       std::string out;
       out.resize(base_size_to_try);
-      DWORD count = GetPrivateProfileStringA(category.c_str(), key.c_str(), nullptr, out.data(), out.size(), fileA.c_str());
+      DWORD count = GetPrivateProfileStringA(category.c_str(), key.c_str(), nullptr, out.data(), (DWORD)out.size(), fileA.c_str());
       while (count == out.size() - 1) {
          out.resize(out.size() + size_increment_to_try);
-         count = GetPrivateProfileStringA(category.c_str(), key.c_str(), nullptr, out.data(), out.size(), fileA.c_str());
+         count = GetPrivateProfileStringA(category.c_str(), key.c_str(), nullptr, out.data(), (DWORD)out.size(), fileA.c_str());
       }
       out.resize(count);
       return out;
@@ -24,10 +24,10 @@ namespace lu::windows {
       const std::wstring fileW = file.wstring();
       std::wstring out;
       out.resize(base_size_to_try);
-      DWORD count = GetPrivateProfileStringW(category.c_str(), key.c_str(), nullptr, out.data(), out.size(), fileW.c_str());
+      DWORD count = GetPrivateProfileStringW(category.c_str(), key.c_str(), nullptr, out.data(), (DWORD)out.size(), fileW.c_str());
       while (count == out.size() - 1) {
          out.resize(out.size() + size_increment_to_try);
-         count = GetPrivateProfileStringW(category.c_str(), key.c_str(), nullptr, out.data(), out.size(), fileW.c_str());
+         count = GetPrivateProfileStringW(category.c_str(), key.c_str(), nullptr, out.data(), (DWORD)out.size(), fileW.c_str());
       }
       out.resize(count);
       return out;

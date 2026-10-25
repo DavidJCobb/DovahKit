@@ -10,7 +10,7 @@ namespace lu::vectors {
    constexpr bool move_item_to_index(Vector& list, size_t from, size_t to) {
       if (from == to)
          return false;
-      return move_item_within(list, from, (std::make_signed_t<size_t>)to - from);
+      return move_item_within(list, from, (int)((std::make_signed_t<size_t>)to - from));
    }
 
    //

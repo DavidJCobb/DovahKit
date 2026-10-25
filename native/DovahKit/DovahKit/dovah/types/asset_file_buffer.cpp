@@ -1,5 +1,6 @@
 #include "./asset_file_buffer.h"
 #include <cassert>
+#include <utility> // std::move
 
 namespace dovah {
    asset_file_buffer::asset_file_buffer(lu::memory::basic_buffer&& owned) {

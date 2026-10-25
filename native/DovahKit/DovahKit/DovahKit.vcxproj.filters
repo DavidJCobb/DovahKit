@@ -346,16 +346,10 @@
     <ClInclude Include="lu\memory\buffer_view.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lu\bytestreams\concepts\can_read_struct.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="lu\bytestreams\concepts\checked_reads_can_be_implemented_using_unchecked_reads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lu\bytestreams\concepts\serializable_scalar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lu\bytestreams\concepts\unchecked_read_is_noexcept.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lu\bytestreams\customization\serialized_bytecount.h">

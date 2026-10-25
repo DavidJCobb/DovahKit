@@ -4,6 +4,7 @@
 #include "dovah/exceptions/file_parse_errors/record_has_invalid_record_id.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_type_info.h"
+#include "dovah/tes/file.h"
 #include "dovah/tes/record_header.h"
 #include "dovah/utils/form_ids/record_id_to_form_id.h"
 namespace dovah::tes {
@@ -47,7 +48,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       }
 
       auto* stub = new form_stub;
-      stub->_add_source_file({}, const_cast<tes::file&>(source_file), record_offset, (uint32_t)header.flags);
+      stub->_add_source_file({}, const_cast<tes::file&>(source_file), (uint32_t)record_offset, (uint32_t)header.flags);
       stub->form_id   = form_id;
       stub->form_type = form_type_info::signature_to_form_type(header.signature);
       return stub;

@@ -31,7 +31,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             form_stub* cell = this->cells.cell_for_position(x, y);
             if (cell) {
                assert(cell->addenda->grid_position.has_value());
-               item.ref->_set_parent_form_one_way({}, *cell);
+               item.ref->_set_parent_form_one_way({}, cell);
                item.cell          = cell;
                item.grid_position = cell->addenda->grid_position.value();
             } else {
@@ -55,7 +55,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
    void set_parent_cell_worker::start() noexcept {
       assert(!this->is_active());
       this->progress.current = 0;
-      this->progress.maximum = this->range.end - this->range.start;
+      this->progress.maximum = (uint32_t)(this->range.end - this->range.start);
       this->thread = std::thread(&_thread_handler, this);
    }
    void set_parent_cell_worker::wait_for() noexcept {

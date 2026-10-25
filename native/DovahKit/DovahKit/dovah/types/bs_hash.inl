@@ -102,7 +102,7 @@ namespace dovah {
       // Byte 1: to_lower'd penultimate character, or 0
       // Byte 2: length, truncated
       // Byte 3: to_lower'd first character
-      out.set_part<uint8_t, 2>(path.size());
+      out.set_part<uint8_t, 2>((uint8_t)path.size());
       out.set_part<uint8_t, 3>(_to_lower(path[0]));
       if (path.size() > 2) {
          out.set_part<uint8_t, 0>(_to_lower(path[path.size() - 1]));

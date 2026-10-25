@@ -266,7 +266,7 @@ namespace dovah {
          delete[] this->files.entries;
       auto size = list.size();
       if (size < 2) {
-         this->flags &= ~flag::has_multiple_source_files;
+         this->flags.unset_each_of<flag::has_multiple_source_files>();
          this->file = {
             .pointer       = nullptr,
             .record_offset = 0,
@@ -278,7 +278,7 @@ namespace dovah {
          return;
       }
       assert(size <= std::numeric_limits<uint16_t>::max());
-      this->flags |= flag::has_multiple_source_files;
+      this->flags.set_each_of<flag::has_multiple_source_files>();
       this->files = {
          .entries = new file_data[size],
          .count   = (uint16_t)size,

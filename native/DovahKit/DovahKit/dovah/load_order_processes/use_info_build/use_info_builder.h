@@ -77,7 +77,6 @@ namespace dovah::load_order_processes::use_info_build {
          constexpr bool is_base_record() const noexcept { return this->_is_base_record; }
          constexpr bool is_final_file() const noexcept { return this->_is_final_file; }
          constexpr bool is_partial_record() const noexcept { return this->_is_partial_record; }
-         constexpr uint32_t last_record_flags() const noexcept { return this->_last_record_flags; }
          
          void clear_pending_use_info() noexcept; // discard any yet-to-be-committed use info inside of this builder instance specifically
          void clear_all_prior_use_info() const noexcept; // delete ALL existing use info for the form stub. needed for TopicInfos due to their bizarre partial-record behavior

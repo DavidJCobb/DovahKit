@@ -52,7 +52,7 @@ namespace dovah::bsa {
          void insert_archive(size_t, const std::filesystem::path&);
 
          void load_archives(const load_options& = {});
-         load_results&& wait_for_load_to_finish();
+         load_results wait_for_load_to_finish();
          void abort_load();
          bool is_load_aborted() const noexcept;
          bool is_load_in_progress() const noexcept; // an aborted load is still "in progress" if any loader threads have yet to join

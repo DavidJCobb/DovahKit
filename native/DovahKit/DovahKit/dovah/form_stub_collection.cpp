@@ -15,7 +15,7 @@ namespace dovah {
          return 0;
       bare_form_id min_id = active_prefix.min_form_id();
       bare_form_id max_id = active_prefix.max_form_id();
-      bare_form_id id = search_from ? active_prefix.coerce_form_id(id) : min_id;
+      bare_form_id id = search_from ? active_prefix.coerce_form_id(search_from) : min_id;
       //
       auto& map = this->active_file_forms;
       if (map.size() >= (max_id - min_id)) // no form IDs available

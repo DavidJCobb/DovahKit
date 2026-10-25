@@ -273,7 +273,7 @@ namespace dovah::bsa {
             // Prior to FO4/SSE, BSA files used zlib.
             //
             uint32_t out_size = uncompressed_size;
-            uncompress((Bytef*)out.data(), (uLongf*)&out_size, (Bytef*)src_buffer, src_bytes_remaining);
+            uncompress((Bytef*)out.data(), (uLongf*)&out_size, (Bytef*)src_buffer, (uLongf)src_bytes_remaining);
             #if _DEBUG
                if (out_size != uncompressed_size) {
                   __debugbreak(); // Actual decompressed size did not match the expected decompressed size. Expected `out.size()`, got `length`.

@@ -111,7 +111,7 @@ namespace dovah::localization {
             if (offset > file.buffer.size())
                break;
             const char*    start  = (const char*)file.buffer.data_at(offset);
-            const uint32_t length = strnlen_s(
+            const uint32_t length = (uint32_t)strnlen_s(
                start,
                std::max(file.buffer.size() - offset, (size_t)std::numeric_limits<uint32_t>::max())
             );

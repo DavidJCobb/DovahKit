@@ -149,14 +149,14 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
                   return x_span;
                return y_span;
             }();
-            const size_t radius_per_worker = max_radius / workers.size();
+            const uint32_t radius_per_worker = max_radius / workers.size();
 
             if (radius_per_worker <= 1) {
                auto& worker = workers[0];
                worker.run_on_this_thread();
             } else {
                const auto center       = cells.grid_extents.center();
-               size_t     inner_radius = 0;
+               uint32_t   inner_radius = 0;
                for (size_t i = 0; i < workers.size() - 1; ++i) {
                   auto& worker = workers[i];
                   worker.set_ring(center, inner_radius, inner_radius + radius_per_worker);

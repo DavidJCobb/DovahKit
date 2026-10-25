@@ -5,13 +5,9 @@
 #include "../bytereader.h"
 #include "../record_header.h"
 #include "./impl/enforce_endianness.h"
-namespace dovah {
-   namespace tes {
-      class file_view;
-      class subrecord_view;
-   }
-   class managed_localized_string_use;
-   class managed_form_use;
+namespace dovah::tes {
+   class file_view;
+   class subrecord_view;
 }
 
 namespace dovah::tes {

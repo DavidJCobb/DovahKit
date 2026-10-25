@@ -70,9 +70,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <ModuleOutputFile>$(IntDir)$(RelativeDir)</ModuleOutputFile>
-      <ModuleDependenciesFile>$(IntDir)$(RelativeDir)</ModuleDependenciesFile>
-      <ObjectFileName>$(IntDir)$(RelativeDir)</ObjectFileName>
+      <ModuleOutputFile>$(IntDir)%(RelativeDir)</ModuleOutputFile>
+      <ModuleDependenciesFile>$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
       <AdditionalOptions>/w14996 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir);$(ProjectDir)</AdditionalIncludeDirectories>
@@ -81,9 +81,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <ModuleOutputFile>$(IntDir)$(RelativeDir)</ModuleOutputFile>
-      <ModuleDependenciesFile>$(IntDir)$(RelativeDir)</ModuleDependenciesFile>
-      <ObjectFileName>$(IntDir)$(RelativeDir)</ObjectFileName>
+      <ModuleOutputFile>$(IntDir)%(RelativeDir)</ModuleOutputFile>
+      <ModuleDependenciesFile>$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
       <AdditionalOptions>/w14996 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir);$(ProjectDir)</AdditionalIncludeDirectories>
@@ -413,11 +413,9 @@
     <ClInclude Include="lu\bit\replace_most_significant_bits.h" />
     <ClInclude Include="lu\bytestreams\apply_modifiers.h" />
     <ClInclude Include="lu\bytestreams\base_bytereader.h" />
-    <ClInclude Include="lu\bytestreams\concepts\can_read_struct.h" />
     <ClInclude Include="lu\bytestreams\concepts\checked_reads_can_be_implemented_using_unchecked_reads.h" />
     <ClInclude Include="lu\bytestreams\concepts\serializable_scalar.h" />
     <ClInclude Include="lu\bytestreams\concepts\serializable_struct.h" />
-    <ClInclude Include="lu\bytestreams\concepts\unchecked_read_is_noexcept.h" />
     <ClInclude Include="lu\bytestreams\customization\serialized_bytecount.h" />
     <ClInclude Include="lu\bytestreams\customization\type_has_opposite_endianness.h" />
     <ClInclude Include="lu\bytestreams\impl\innermost_kind_of.h" />
