@@ -12,12 +12,4 @@ namespace dovah::tes {
    const file& subrecord_view::get_source_file() const {
       return *this->_owner.get_target_file();
    }
-
-   void subrecord_view::read_all_to_string(std::string& dst) {
-      const size_t size = this->size();
-      dst.assign((const char*)this->data(), size);
-      this->seek(size);
-      if (size && dst[size - 1] == '\0')
-         dst.resize(size - 1);
-   }
 }

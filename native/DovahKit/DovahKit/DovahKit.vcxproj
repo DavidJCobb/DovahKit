@@ -464,6 +464,7 @@
     <ClInclude Include="lu\memory\threaded_slab_heap.h" />
     <ClInclude Include="lu\passkey.h" />
     <ClInclude Include="lu\singleton.h" />
+    <ClInclude Include="lu\strings\low_footprint_string.h" />
     <ClInclude Include="lu\tuples\contains_type.h" />
     <ClInclude Include="lu\tuples\prepend_types.h" />
     <ClInclude Include="lu\tuples\unpack_types_into_template.h" />
@@ -528,6 +529,7 @@
     <None Include="lu\memory\basic_buffer.inl" />
     <None Include="lu\memory\buffer_view.inl" />
     <None Include="lu\memory\threaded_slab_heap.inl" />
+    <None Include="lu\strings\low_footprint_string.inl" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dovah\bsa\packed_file_info.natvis" />
@@ -541,6 +543,7 @@
     <Natvis Include="lu\enums\enum_in.natvis" />
     <Natvis Include="lu\integral_character_code.natvis" />
     <Natvis Include="lu\memory\threaded_slab_heap.natvis" />
+    <Natvis Include="lu\strings\low_footprint_string.natvis" />
     <Natvis Include="lu\utils\nominal_integer_type.natvis" />
   </ItemGroup>
   <ItemGroup>

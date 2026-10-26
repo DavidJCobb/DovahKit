@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="lu::basic_low_footprint_string&lt;*,*,*&gt;">
+      <Intrinsic Name="data" Expression="_data" />
+      <Intrinsic Name="size" Expression="_size" />
+
+      <DisplayString>{data(),[size()]na}</DisplayString>
+      <StringView>data(),[size()]na</StringView>
+      <Expand>
+         <Item Name="[size]">size()</Item>
+         <ArrayItems>
+            <Size>size()</Size>
+            <ValuePointer>data()</ValuePointer>
+         </ArrayItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

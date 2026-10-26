@@ -59,7 +59,24 @@ namespace dovah::tes {
                return true;
             }
 
-            void read_all_to_string(std::string& dst);
+            template<typename StringLike>
+               requires requires(StringLike& s, const char* cc, size_t size) {
+                  typename StringLike::value_type;
+                  requires std::is_same_v<typename StringLike::value_type, char>;
+                  { s.assign(cc, size) };
+                  { s.resize(size) };
+                  { s[size] } -> std::convertible_to<char>;
+                  // just to really make sure that `s` owns its own buffer:
+                  { s.capacity() } -> std::convertible_to<size_t>;
+               }
+            void read_all_to_string(StringLike& dst) {
+               const size_t size = this->size();
+               dst.assign((const char*)this->data(), size);
+               this->seek(size);
+               // if the subrecord data was null-terminated, ensure that that null isn't considered part of `dst`:
+               if (size && dst[size - 1] == '\0')
+                  dst.resize(size - 1);
+            }
          #pragma endregion
    };
 }

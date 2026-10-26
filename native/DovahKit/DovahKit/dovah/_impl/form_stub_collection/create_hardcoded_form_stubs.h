@@ -28,9 +28,11 @@ namespace dovah::impl::_form_stub_collection {
             auto& stub = _make_stub(item.form_id);
             stub.form_type = form_type::actor_value_info;
             {
-               stub.editor_id.reserve(2 + item.name.size());
-               stub.editor_id += "AV";
-               stub.editor_id += item.name;
+               std::string working;
+               working.reserve(2 + item.name.size());
+               working += "AV";
+               working += item.name;
+               stub.editor_id = working;
             }
             self._add_hardcoded_form(stub);
          }

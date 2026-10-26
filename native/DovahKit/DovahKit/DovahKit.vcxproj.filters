@@ -1156,6 +1156,9 @@
     <ClInclude Include="dovah\exceptions\file_parse_errors\group_must_be_empty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lu\strings\low_footprint_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -1212,6 +1215,9 @@
     <None Include="lu\memory\threaded_slab_heap.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="lu\strings\low_footprint_string.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />
@@ -1226,5 +1232,6 @@
     <Natvis Include="lu\memory\threaded_slab_heap.natvis" />
     <Natvis Include="lu\utils\nominal_integer_type.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="lu\strings\low_footprint_string.natvis" />
   </ItemGroup>
 </Project>

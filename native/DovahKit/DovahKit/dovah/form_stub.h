@@ -8,6 +8,7 @@
 #include <vector>
 #include "lu/enums/enum_flags.h"
 #include "lu/memory/threaded_slab_allocator.h"
+#include "lu/strings/low_footprint_string.h"
 #include "./_passkeys/build_use_info_during_load.h"
 #include "./types/bare_form_id.h"
 #include "./use_info/entry.h"
@@ -74,18 +75,18 @@ namespace dovah {
             file_data      file;
             file_data_list files;
          };
-         base_managed_form_data* loaded = nullptr;
+         base_managed_form_data*  loaded = nullptr;
       public:
-         form_stub_addenda* addenda   = nullptr;
-         bare_form_id       form_id   = 0;
-         enum form_type     form_type = {};
-         flags_type         flags;
+         form_stub_addenda*       addenda   = nullptr;
+         bare_form_id             form_id   = 0;
+         enum form_type           form_type = {};
+         flags_type               flags;
          // two bytes of padding available here to use
-         std::string        editor_id;
-         use_info_list      inbound;  // other forms that use this form.  entry flags describe `this`, the used form.
-         use_info_list      outbound; // other forms that this form uses. entry flags descirbe `this`, the user form.
+         lu::low_footprint_string editor_id;
+         use_info_list            inbound;  // other forms that use this form.  entry flags describe `this`, the used form.
+         use_info_list            outbound; // other forms that this form uses. entry flags descirbe `this`, the user form.
       protected:
-      std::atomic<uint32_t> refcount = 0; // of loaded form data
+         std::atomic<uint32_t>    refcount = 0; // of loaded form data
 
       public: // member functions
          bool can_unload_form() const noexcept;
