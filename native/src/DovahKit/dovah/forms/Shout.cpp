@@ -133,9 +133,9 @@ namespace dovah::loaded_forms {
       }
       uib.add_outbound_reference(equip_type);
       uib.add_outbound_reference(menu_display_object);
-      for (; word_count < 3; ++word_count) {
-         uib.add_outbound_reference(uib.extra_form_ids[(word_count * 2) + 0]);
-         uib.add_outbound_reference(uib.extra_form_ids[(word_count * 2) + 1]);
+      for (size_t i = 0; i < 3; ++i) {
+         uib.add_outbound_reference(uib.extra_form_ids[(i * 2) + 0]);
+         uib.add_outbound_reference(uib.extra_form_ids[(i * 2) + 1]);
       }
    }
    void Shout::setup(const file_load_order& load_order) noexcept {
