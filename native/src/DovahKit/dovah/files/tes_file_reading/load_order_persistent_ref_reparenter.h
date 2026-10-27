@@ -72,7 +72,10 @@ namespace dovah::tes_file_reading {
             public:
                worker(load_order_persistent_ref_reparenter&);
 
+               size_t orphan_ref_count = 0;
+
                void set_range(size_t start, size_t end);
+               constexpr std::pair<size_t> get_range() const noexcept { return { this->range.start, this->range.end }; }
                void start() noexcept;
                void wait_for() noexcept;
                

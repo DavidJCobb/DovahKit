@@ -74,7 +74,7 @@ namespace dovah::tes_file_reading {
       const auto& cells = this->owner.cells_for_current_world;
       for (size_t i = this->range.start; i < this->range.end; ++i) {
          auto& item = list[i];
-         item.refr->do_custom_parse_during_load({}, this, [&item, &cells](form_stub& refr, record& record, dovah::load_order_interfaces::form_load& intfc) {
+         item.refr->do_custom_parse_during_load({}, this, [this, &item, &cells](form_stub& refr, record& record, dovah::load_order_interfaces::form_load& intfc) {
             if (!intfc.is_winning_record)
                return;
             float x = 0.0;
@@ -95,6 +95,8 @@ namespace dovah::tes_file_reading {
                item.cell = cell;
                item.gx   = cell->addenda->grid_position.value().x;
                item.gy   = cell->addenda->grid_position.value().y;
+            } else {
+               ++this->orphan_ref_count;
             }
          });
          ++this->progress.current;
@@ -259,13 +261,36 @@ namespace dovah::tes_file_reading {
             }
          }
          //
-         // So now, the cell children still refer to the persistent cell, but the persistent 
-         // cell is no longer aware of this.
+         // So now, the persistent refs still refer to the persistent cell, but the persistent 
+         // cell is no longer aware of this. Time to update the persistent refs to point to a 
+         // valid non-persistent cell to re-parent them to.
          //
          for (auto& thread : this->threads)
             thread.start();
          for (auto& thread : this->threads)
             thread.wait_for();
+         //
+         // We need to deal with an edge-case: what if a ref's coordinates would place it 
+         // outside of all defined non-persistent cells? I don't want to create cells on load 
+         // that didn't originally exist, so the most "honest" thing to do would be to just 
+         // keep those refs in the persistent cell: we need to re-establish the uses we just 
+         // severed.
+         //
+         for (const auto& worker : this->threads) {
+            if (!worker.orphan_ref_count) [[likely]] {
+               continue;
+            }
+            auto [start, end] = worker.get_range();
+            for (size_t i = start; i < end; ++i) {
+               auto& item = refs[i];
+               if (item.cell)
+                  continue;
+               auto& use_for_used = p_cell->inbound[item.refr->formID];
+               use_for_used.other  = item.refr;
+               use_for_used.flags |= use_info::entry_flag_to_mask(use_info::entry_flags::base::parent);
+               ++use_for_used.refcount;
+            }
+         }
          //
          // The multi-threaded process will have both identified the proper parent cell to 
          // move the child to, and performed a one-way set operation to change the child's 
