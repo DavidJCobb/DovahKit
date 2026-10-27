@@ -9,7 +9,7 @@ namespace dovah::load_order_processes::use_info_build {
       auto& stub = uib.stub();
       switch (stub.form_id) {
          case facts::form_ids::hardcoded::PlayerRef:
-            uib.add_outbound_reference(facts::form_ids::hardcoded::Player, use_info::entry_flags::reference::base_form);
+            uib.add_outbound_use(facts::form_ids::hardcoded::Player, use_info::entry_flags::reference::base_form);
             break;
          case facts::form_ids::hardcoded::DefaultWeather:
             //

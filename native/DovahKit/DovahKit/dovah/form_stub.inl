@@ -2,6 +2,7 @@
 #include "./form_stub.h"
 #include "lu/foreach_lambda_result.h"
 #include "./tes/record_flags.h"
+#include "./form_data_pointer.h"
 
 namespace dovah {
    constexpr bool form_stub::is_deleted() const noexcept {
@@ -12,6 +13,11 @@ namespace dovah {
    }
    constexpr bool form_stub::is_hardcoded() const noexcept {
       return this->flags.has_all_of<flag::is_hardcoded>();
+   }
+
+   template<template<auto> typename FormDataTemplate>
+   void form_stub::load_as_type() {
+      return form_data_pointer<FormDataTemplate>(this->load());
    }
 
    #pragma region Record flag functions

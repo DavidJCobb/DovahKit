@@ -8,6 +8,7 @@
 #include <vector>
 #include "lu/enums/enum_flags.h"
 #include "lu/memory/threaded_slab_allocator.h"
+#include "lu/passkey.h"
 #include "lu/strings/low_footprint_string.h"
 #include "./_passkeys/build_use_info_during_load.h"
 #include "./types/bare_form_id.h"
@@ -29,11 +30,18 @@ namespace dovah {
    class base_managed_form_data;
    class form_stub_addenda;
    class form_stub_collection;
+   class managed_form_use;
    enum class form_type : uint8_t;
+
+   class untyped_form_data_pointer;
+
+   template<template<typename> typename FormDataTemplate>
+   class form_data_pointer;
 }
 
 namespace dovah {
    class form_stub {
+      friend untyped_form_data_pointer;
       public:
          static void* operator new(std::size_t sz);
          static void operator delete(void* ptr, std::size_t sz);
@@ -101,6 +109,11 @@ namespace dovah {
 
          form_stub_addenda& get_or_create_addenda();
 
+         untyped_form_data_pointer load();
+
+         template<template<auto> typename FormDataTemplate>
+         void load_as_type();
+
          #pragma region Record flag functions
             void edit_record_flags(uint32_t mask, bool clear_or_set) noexcept; // also sets the form as edited
             constexpr uint32_t get_record_flags() const noexcept;
@@ -139,13 +152,23 @@ namespace dovah {
             void _add_source_file(tes::file&, uint32_t record_offset, uint32_t record_flags = 0);
          #pragma endregion
 
+         #pragma region Use info (internal)
+            void _sever_outbound_use(form_stub& used, use_info::entry_flag_underlying_type);
+            void _build_outbound_use(form_stub& used, use_info::entry_flag_underlying_type);
+         #pragma endregion
+
       public: // passkeyed
-         void _add_source_file(_passkeys::add_form_stub_source_file, tes::file&, uint32_t record_offset, uint32_t record_flags = 0);
-         void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, form_stub&, use_info::entry_flag_underlying_type flags = 0);
-         void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, bare_form_id, use_info::entry_flag_underlying_type flags = 0);
-         void _amend_source_file_flag(_passkeys::add_form_stub_source_file, const tes::file&, tes::record_flag flag, bool clear_or_set);
-         void _replace_source_file_list(_passkeys::add_form_stub_source_file, std::vector<file_data>&&);
-         void _set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub* parent);
+         #pragma region During initial load
+            void _add_source_file(_passkeys::add_form_stub_source_file, tes::file&, uint32_t record_offset, uint32_t record_flags = 0);
+            void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, form_stub&, use_info::entry_flag_underlying_type flags = 0);
+            void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, bare_form_id, use_info::entry_flag_underlying_type flags = 0);
+            void _amend_source_file_flag(_passkeys::add_form_stub_source_file, const tes::file&, tes::record_flag flag, bool clear_or_set);
+            void _replace_source_file_list(_passkeys::add_form_stub_source_file, std::vector<file_data>&&);
+            void _set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub* parent);
+         #pragma endregion
+
+         // Bidirectional; use post-load.
+         void _replace_outbound_use(lu::passkey<managed_form_use>, form_stub* previously_used, form_stub* now_used, use_info::entry_flag_underlying_type flags_mask);
    };
 }
 

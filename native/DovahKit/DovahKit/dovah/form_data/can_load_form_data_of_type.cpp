@@ -1,5 +1,7 @@
 #include "./can_load_form_data_of_type.h"
-#include "../form_type.h"
+#include "dovah/form_data_function_tables/create_blank_instance.h"
+#include "dovah/form_data_function_tables/load.h"
+#include "dovah/form_type.h"
 
 namespace dovah {
    extern bool can_load_form_data_of_type(form_type ft) {
@@ -15,10 +17,10 @@ namespace dovah {
          case form_type::active_magic_effect:
             return false;
       }
-      //
-      // TODO: If we have "construct" and "load" functions for this form type, 
-      //       return `true`.
-      //
-      return false; // TODO
+      if (!form_data_function_tables::load::lookup(ft))
+         return false;
+      if (!form_data_function_tables::create_blank_instance::lookup(ft))
+         return false;
+      return true;
    }
 }

@@ -123,7 +123,12 @@
     <ClCompile Include="dovah\bsa\archive_collection.cpp" />
     <ClCompile Include="dovah\bsa\thread_for_parsing.cpp" />
     <ClCompile Include="dovah\form_data\can_load_form_data_of_type.cpp" />
+    <ClCompile Include="dovah\form_data\helpers\load_hardcoded_form_data.cpp" />
+    <ClCompile Include="dovah\form_data\types\s\shout.cpp" />
     <ClCompile Include="dovah\form_data_function_tables\build_outbound_use_info.cpp" />
+    <ClCompile Include="dovah\form_data_function_tables\create_blank_instance.cpp" />
+    <ClCompile Include="dovah\form_data_function_tables\load.cpp" />
+    <ClCompile Include="dovah\form_data_pointer.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_addendum_types\ordered_child_collection.cpp" />
     <ClCompile Include="dovah\form_stub_collection.cpp" />
@@ -159,6 +164,8 @@
     <ClCompile Include="dovah\tes\skimming\file_header_skimmer.cpp" />
     <ClCompile Include="dovah\types\asset_file_buffer.cpp" />
     <ClCompile Include="dovah\types\form_id.cpp" />
+    <ClCompile Include="dovah\types\managed_form_use.cpp" />
+    <ClCompile Include="dovah\types\managed_localized_string_use.cpp" />
     <ClCompile Include="dovah\utils\files\bsa\fold_path.cpp" />
     <ClCompile Include="dovah\utils\files\bsa\fold_path_component.cpp" />
     <ClCompile Include="dovah\utils\files\bsa\path_to_hashes.cpp" />
@@ -185,6 +192,7 @@
     <ClCompile Include="tests\basic\count_all_records.cpp" />
     <ClCompile Include="tests\basic\file_list_to_load_order.cpp" />
     <ClCompile Include="tests\basic\index_stubs.cpp" />
+    <ClCompile Include="tests\basic\load_a_shout.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\active_load_order.h" />
@@ -200,7 +208,7 @@
     <ClInclude Include="dovah\bsa\path_separators.h" />
     <ClInclude Include="dovah\bsa\thread_for_parsing.h" />
     <ClInclude Include="dovah\callback_sets\data_load.h" />
-    <ClInclude Include="dovah\callback_sets\form_stub_collection_callbacks.h" />
+    <ClInclude Include="dovah\callback_sets\post_load.h" />
     <ClInclude Include="dovah\exceptions\bsa_extract_error.h" />
     <ClInclude Include="dovah\exceptions\bsa_extract_errors\lz4_error.h" />
     <ClInclude Include="dovah\exceptions\bsa_parse_error.h" />
@@ -251,9 +259,19 @@
     <ClInclude Include="dovah\facts\localized_strings\serialized_strings_are_length_prefixed.h" />
     <ClInclude Include="dovah\form_data\all_types.h" />
     <ClInclude Include="dovah\form_data\base_managed_form_data.h" />
+    <ClInclude Include="dovah\form_data\base_unmanaged_form_data.h" />
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
+    <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h" />
+    <ClInclude Include="dovah\form_data\helpers\subrecord_was_handled_at_stub_creation.h" />
+    <ClInclude Include="dovah\form_data\helpers\type_aliases.h" />
+    <ClInclude Include="dovah\form_data\helpers\load_hardcoded_form_data.h" />
     <ClInclude Include="dovah\form_data\params.h" />
+    <ClInclude Include="dovah\form_data\types\s\shout.h" />
+    <ClInclude Include="dovah\form_data\types\_base.h" />
     <ClInclude Include="dovah\form_data_function_tables\build_outbound_use_info.h" />
+    <ClInclude Include="dovah\form_data_function_tables\create_blank_instance.h" />
+    <ClInclude Include="dovah\form_data_function_tables\load.h" />
+    <ClInclude Include="dovah\form_data_pointer.h" />
     <ClInclude Include="dovah\form_stub.h" />
     <ClInclude Include="dovah\form_stub_addenda.h" />
     <ClInclude Include="dovah\form_stub_addendum_types\ordered_child_collection.h" />
@@ -319,6 +337,8 @@
     <ClInclude Include="dovah\notices\file_parse_warnings\record_misplaced_in_topic_child_group.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\singleton_form_is_redundantly_defined.h" />
     <ClInclude Include="dovah\notices\file_parse_warnings\the_game_doesnt_load_new_actor_value_infos.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\shout\wrong_word_count.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\form_use_is_wrong_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\_boilerplate\base_warning.define.h" />
     <ClInclude Include="dovah\notices\_boilerplate\base_warning.undef.h" />
@@ -352,6 +372,7 @@
     <ClInclude Include="dovah\types\form_id.h" />
     <ClInclude Include="dovah\types\game_settings\managed_value_variant.h" />
     <ClInclude Include="dovah\types\localized_string_type.h" />
+    <ClInclude Include="dovah\types\managed_form_use.h" />
     <ClInclude Include="dovah\types\managed_localized_string_use.h" />
     <ClInclude Include="dovah\types\unmanaged_localized_string_use.h" />
     <ClInclude Include="dovah\use_info\entry.h" />
@@ -498,10 +519,17 @@
     <ClInclude Include="tests\basic\count_all_records.h" />
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
     <ClInclude Include="tests\basic\index_stubs.h" />
+    <ClInclude Include="tests\basic\load_a_shout.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\bsa\archive.inl" />
     <None Include="dovah\bsa\packed_folder_info.inl" />
+    <None Include="dovah\form_data\helpers\define_form_type_constant.inl" />
+    <None Include="dovah\form_data\helpers\define_visitors.inl" />
+    <None Include="dovah\form_data\helpers\enable_construction_via_table.inl" />
+    <None Include="dovah\form_data\helpers\pull_type_aliases.inl" />
+    <None Include="dovah\form_data_function_tables\_helpers.inl" />
+    <None Include="dovah\form_data_pointer.inl" />
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stub_collection.inl" />
     <None Include="dovah\tes\file_queue.inl" />
@@ -535,6 +563,8 @@
     <Natvis Include="dovah\bsa\packed_file_info.natvis" />
     <Natvis Include="dovah\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="dovah\types\managed_form_use.natvis" />
+    <Natvis Include="dovah\types\managed_localized_string_use.natvis" />
     <Natvis Include="lu\containers\bitset.natvis" />
     <Natvis Include="lu\containers\grids\fixed_grid.natvis" />
     <Natvis Include="lu\containers\grids\resizable_grid.natvis" />

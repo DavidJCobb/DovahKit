@@ -224,6 +224,30 @@
     <ClCompile Include="tests\basic\index_stubs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\types\managed_form_use.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data\types\s\shout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data_pointer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data_function_tables\load.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data_function_tables\create_blank_instance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data\helpers\load_hardcoded_form_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\basic\load_a_shout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\types\managed_localized_string_use.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -539,9 +563,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\callback_sets\data_load.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\callback_sets\form_stub_collection_callbacks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\exceptions\bsa_extract_error.h">
@@ -1159,6 +1180,51 @@
     <ClInclude Include="lu\strings\low_footprint_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\form_data\types\s\shout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\base_unmanaged_form_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\helpers\type_aliases.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\types\_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\types\managed_form_use.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\helpers\subrecord_was_handled_at_stub_creation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\callback_sets\post_load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\form_use_is_wrong_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\shout\wrong_word_count.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data_pointer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data_function_tables\load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data_function_tables\create_blank_instance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\helpers\load_hardcoded_form_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\basic\load_a_shout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -1218,6 +1284,24 @@
     <None Include="lu\strings\low_footprint_string.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\form_data\helpers\pull_type_aliases.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\form_data\helpers\define_visitors.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\form_data\helpers\define_form_type_constant.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\form_data_pointer.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\form_data_function_tables\_helpers.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\form_data\helpers\enable_construction_via_table.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />
@@ -1233,5 +1317,7 @@
     <Natvis Include="lu\utils\nominal_integer_type.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="lu\strings\low_footprint_string.natvis" />
+    <Natvis Include="dovah\types\managed_form_use.natvis" />
+    <Natvis Include="dovah\types\managed_localized_string_use.natvis" />
   </ItemGroup>
 </Project>

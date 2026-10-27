@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "lu/containers/small_vector.h"
 #include "dovah/types/bare_form_id.h"
+#include "dovah/types/form_id.h"
 #include "dovah/use_info/entry_flag_to_mask.h"
 #include "dovah/use_info/entry_flag_underlying_type.h"
 #include "dovah/use_info/is_entry_flag_type.h"
@@ -44,16 +45,18 @@ namespace dovah::load_order_processes::use_info_build {
          ~use_info_builder();
          
       public:
-         void add_outbound_reference(bare_form_id toFormID, use_info::entry_flag_underlying_type flags = 0);
-         void cancel_outbound_reference(bare_form_id toFormID, use_info::entry_flag_underlying_type flags = 0);
+         void add_outbound_use(form_id toFormID, use_info::entry_flag_underlying_type flags = 0);
+         void cancel_outbound_use(form_id toFormID, use_info::entry_flag_underlying_type flags = 0);
 
-         template<typename UseInfoFlag> requires use_info::is_entry_flag_type_v<UseInfoFlag>
-         void add_outbound_reference(bare_form_id to_form_id, UseInfoFlag flag) {
-            this->add_outbound_reference(to_form_id, use_info::entry_flag_to_mask(flag));
+         template<typename UseInfoFlag>
+            requires use_info::is_entry_flag_type_v<UseInfoFlag>
+         void add_outbound_use(form_id to_form_id, UseInfoFlag flag) {
+            this->add_outbound_use(to_form_id, use_info::entry_flag_to_mask(flag));
          }
-         template<typename UseInfoFlag> requires use_info::is_entry_flag_type_v<UseInfoFlag>
-         void cancel_outbound_reference(bare_form_id to_form_id, UseInfoFlag flag) {
-            this->cancel_outbound_reference(to_form_id, use_info::entry_flag_to_mask(flag));
+         template<typename UseInfoFlag>
+            requires use_info::is_entry_flag_type_v<UseInfoFlag>
+         void cancel_outbound_use(form_id to_form_id, UseInfoFlag flag) {
+            this->cancel_outbound_use(to_form_id, use_info::entry_flag_to_mask(flag));
          }
 
          void commit();

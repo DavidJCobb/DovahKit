@@ -23,6 +23,7 @@ namespace dovah::tes {
       if (subrecord) {
          auto pos = subrecord.end_pos_in_record();
          if (pos >= this->size()) {
+            this->unchecked_seek(this->size());
             subrecord._signature = 0;
             subrecord._body_pos  = this->size();
             subrecord.set_buffer({});

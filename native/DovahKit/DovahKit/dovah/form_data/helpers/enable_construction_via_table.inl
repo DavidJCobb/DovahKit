@@ -1,0 +1,1 @@
+CLASSNAME (lu::passkey<form_data_function_tables::create_blank_instance::entry<DOVAH_FORM_TYPE>>, form_stub& stub) : base_managed_form_data(stub) {}

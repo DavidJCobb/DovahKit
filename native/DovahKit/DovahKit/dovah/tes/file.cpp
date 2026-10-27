@@ -2,6 +2,7 @@
 #include "lu/ascii/equals_i.h"
 #include "lu/integral_character_code.h"
 #include "./bytereader.h"
+#include "./reading/file_view.h"
 #include "../active_load_order.h"
 
 namespace dovah::tes {
@@ -37,6 +38,58 @@ namespace dovah::tes {
          }
       }
       this->_update_endianness_from_header();
+
+      file_view view;
+      view.set_target_file(this);
+      {
+         auto r = view.next_record_or_group();
+         assert(r == file_view::chunk_type::record);
+      }
+
+      auto& record = view.subviews.record;
+      this->_header.flags.set_from_integral((uint32_t)record.flags());
+      this->_header.record_version = record.version();
+
+      lu::four_cc last_subrecord;
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'HEDR':
+               subrecord.read(
+                  this->_header.file_version,
+                  this->_header.record_and_group_count
+               );
+               break;
+            case 'CNAM': // creator
+               subrecord.read_all_to_string(this->_header.author);
+               break;
+            case 'SNAM': // description
+               subrecord.read_all_to_string(this->_header.description);
+               break;
+            case 'MAST':
+               {
+                  auto& out = this->_header.masters.emplace_back();
+                  subrecord.read_all_to_string(out.master);
+               }
+               break;
+            case 'DATA':
+               if (last_subrecord == 'MAST') {
+                  subrecord.read(this->_header.masters.back().data);
+               }
+               break;
+            case 'ONAM':
+               //
+               // TODO
+               //
+               break;
+            case 'INTV':
+               subrecord.read(this->_header.subINTV);
+               break;
+            case 'INCC':
+               subrecord.read(this->_header.interior_cell_count);
+               break;
+         }
+         last_subrecord = subrecord.signature();
+      }
    }
    void file::close() {
       this->_file = {};

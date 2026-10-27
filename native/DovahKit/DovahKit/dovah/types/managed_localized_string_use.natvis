@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::_base_managed_localized_string_use">
+      <Intrinsic Name="is_localized" Expression="_value.index() == 1" />
+      <DisplayString Condition="!is_localized()">{_value._Head}</DisplayString>
+      <DisplayString Condition="is_localized()">&lt;ID#{_value._Tail._Head.id,d}&gt;</DisplayString>
+      <Expand>
+         <Item Name="[localized string ID]" Condition="is_localized()">_value._Tail._Head.id,d</Item>
+         <Item Name="[TES file]" Condition="is_localized()">_value._Tail._Head.file,na</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::managed_localized_string_use&lt;*&gt;">
+      <DisplayString>{(_base_managed_localized_string_use)this,na}</DisplayString>
+      <Expand>
+         <Item Name="[non-localized text]" Condition="!is_localized()">_value._Head</Item>
+         <Item Name="[localized string ID]" Condition="is_localized()">_value._Tail._Head.id,d</Item>
+         <Item Name="[TES file]" Condition="is_localized()">_value._Tail._Head.file,na</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

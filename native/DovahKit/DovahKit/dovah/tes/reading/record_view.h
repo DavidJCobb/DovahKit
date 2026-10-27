@@ -40,7 +40,7 @@ namespace dovah::tes {
          constexpr uint32_t             formID() const noexcept { return this->_header.formID; }
          constexpr const record_header& header() const noexcept { return this->_header; }
          constexpr lu::four_cc          signature() const noexcept { return this->_header.signature; }
-         constexpr size_type            size() const noexcept { return this->_view.size(); }
+         constexpr size_type            size() const noexcept { return (size_type)this->_view.size(); }
          constexpr uint16_t             version() const noexcept { return this->_header.version; }
 
          constexpr const void* data() const noexcept { return this->_view.data(); }

@@ -4,6 +4,7 @@
 #include <optional>
 #include <vector>
 #include "lu/passkey.h"
+#include "./callback_sets/post_load.h"
 #include "./form_stub_collection.h"
 #include "./game_setting_collection.h"
 #include "./game.h"
@@ -48,7 +49,9 @@ namespace dovah {
          bsa::archive_collection* _bsa_collection = nullptr;
          form_stub_collection     _forms{ *this };
          game_setting_collection  _game_settings;
-         game _game = game::skyrim_classic;
+         game                     _game = game::skyrim_classic;
+      public:
+         callback_sets::post_load post_load_callbacks;
 
       public:
          bsa::archive_collection* get_or_create_bsa_collection() noexcept;

@@ -1,16 +1,26 @@
 #include "./build_outbound_use_info.h"
 #include <array>
 #include <concepts>
+#include "dovah/form_data/all_types.h"
 #include "dovah/form_type_info.h"
 
 namespace dovah::form_data_function_tables::build_outbound_use_info {
    namespace {
       using table_type = std::array<function_type, std::tuple_size_v<decltype(form_types)>>;
 
-      template<form_type T>
+      template<form_type V>
       concept entry_is_defined = requires {
-         { &entry<T>::execute } -> std::same_as<function_type>;
+         { &entry<V>::execute } -> 
+            #ifdef __INTELLISENSE__
+               std::same_as<function_type>
+            #else
+               std::same_as<function_type&>
+            #endif
+         ;
       };
+
+      // sanity check/test
+      static_assert(entry_is_defined<form_type::shout>);
 
       template<form_type V>
       constexpr function_type entry_for = []() -> function_type {

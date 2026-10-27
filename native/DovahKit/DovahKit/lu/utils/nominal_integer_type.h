@@ -102,7 +102,7 @@ namespace lu::utils {
                return v;
             }
             LU_FORCE_INLINE constexpr Self operator!(this const Self& self) noexcept {
-               return Self(self.wrapped_integral != 0);
+               return Self(self.wrapped_integral == 0);
             }
          #pragma endregion
 

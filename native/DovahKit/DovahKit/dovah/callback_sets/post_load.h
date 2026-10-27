@@ -6,7 +6,7 @@ namespace dovah {
 }
 
 namespace dovah::callback_sets {
-   struct form_stub_collection_callbacks {
+   struct post_load {
       public:
          using on_warning_type = void(*)(const notices::base_warning&);
       public:

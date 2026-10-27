@@ -13,13 +13,13 @@ namespace dovah::tes {
          };
 
       public:
-         file_header_flags flags;
+         file_header_flags flags; // record flags
          uint16_t          record_version = 0;
-         float             file_version   = 0.94F;
-         uint32_t          record_and_group_count = 0;
-         uint32_t          nextFormID     = 0x00000800;
-         std::string       author;
-         std::string       description;
+         float             file_version   = 0.94F;      // HEDR+0x00
+         uint32_t          record_and_group_count = 0;  // HEDR+0x04
+         uint32_t          nextFormID     = 0x00000800; // HEDR+0x08
+         std::string       author;      // CNAM
+         std::string       description; // SNAM
          std::vector<master_entry> masters;
          // TODO: ONAM, a list of overridden records within temporary CELLs, of the following types: ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA
          // TODO: DELE

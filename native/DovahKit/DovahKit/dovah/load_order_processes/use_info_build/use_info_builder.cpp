@@ -15,17 +15,20 @@ namespace dovah::load_order_processes::use_info_build {
       }
    }
 
-   void use_info_builder::add_outbound_reference(uint32_t used_form_id, use_info::entry_flag_underlying_type flags) {
+   void use_info_builder::add_outbound_use(form_id used_form_id, use_info::entry_flag_underlying_type flags) {
+      if (!used_form_id)
+         return;
       this->_pending.push_back(pending_entry{
-         .target_id = used_form_id,
+         .target_id = (bare_form_id)used_form_id,
          .flags     = flags
       });
    }
-   void use_info_builder::cancel_outbound_reference(uint32_t used_form_id, use_info::entry_flag_underlying_type flags) {
-      const size_t size = this->_pending.size();
+   void use_info_builder::cancel_outbound_use(form_id used_form_id, use_info::entry_flag_underlying_type flags) {
+      const auto   bare_used_form_id = (bare_form_id)used_form_id;
+      const size_t size              = this->_pending.size();
       for (size_t i = 0; i < size; ++i) {
          auto& entry = this->_pending[i];
-         if (entry.target_id == used_form_id && entry.flags == flags) {
+         if (entry.target_id == bare_used_form_id && entry.flags == flags) {
             this->_pending.erase(this->_pending.begin() + i);
             return;
          }

@@ -1,6 +1,6 @@
 #pragma once
+#include <array>
 #include <cstdint>
-
 namespace dovah {
    namespace notices {
       class base_form_load_warning;
@@ -12,6 +12,8 @@ namespace dovah {
    }
    class active_load_order;
    class form_stub;
+   enum class form_type : uint8_t;
+   class managed_form_use;
 }
 
 namespace dovah::load_order_interfaces {
@@ -43,6 +45,23 @@ namespace dovah::load_order_interfaces {
          bool is_active_file() const noexcept;
 
          void log_load_warning(notices::base_form_load_warning&&);
+
+      protected:
+         void _warn_if_use_is_wrong_type_impl(const managed_form_use&, const tes::subrecord_view&, const form_type* types, size_t type_count);
+         void _warn_if_use_is_wrong_type_impl(const managed_form_use&, const tes::subrecord_view&, size_t nth_subrecord, const form_type* types, size_t type_count);
+
+      public:
+         void warn_if_use_is_wrong_type(const managed_form_use&, form_type, const tes::subrecord_view&);
+         void warn_if_use_is_wrong_type(const managed_form_use&, form_type, const tes::subrecord_view&, size_t nth_subrecord);
+         //
+         template<size_t Size>
+         void warn_if_use_is_wrong_type(const managed_form_use& use, const std::array<form_type, Size>& types, const tes::subrecord_view& subrecord) {
+            _warn_if_use_is_wrong_type_impl(use, subrecord, types.data(), types.size());
+         }
+         template<size_t Size>
+         void warn_if_use_is_wrong_type(const managed_form_use& use, const std::array<form_type, Size>& types, const tes::subrecord_view& subrecord, size_t nth_subrecord) {
+            _warn_if_use_is_wrong_type_impl(use, subrecord, nth_subrecord, types.data(), types.size());
+         }
 
          void warn_on_unrecognized_subrecord(const tes::subrecord_view&);
    };
