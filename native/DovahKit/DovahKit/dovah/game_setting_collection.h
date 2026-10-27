@@ -33,6 +33,7 @@ namespace dovah {
             }
          }
 
+         // NOTE: Subject to iterator invalidation if settings are added/removed from the collection.
          const loaded_game_setting* get_loaded_game_setting(std::string_view) const noexcept;
 
       public: // passkeyed

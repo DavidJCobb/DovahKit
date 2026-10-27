@@ -178,8 +178,7 @@ namespace dovah {
       
       uint32_t last_record_flags = files[0].record_flags;
       for (uint16_t i = first_file_to_load_from; i < file_count; ++i) {
-         auto offset = files[i].record_offset;
-         if (offset == 0) // file has no actual data (unsaved new active file, etc.). skip it
+         if (files[i].record_offset == 0) // file has no actual data (unsaved new active file, etc.). skip it
             continue;
          auto* file = files[i].pointer;
          
@@ -188,6 +187,7 @@ namespace dovah {
          intfc.is_partial_record = can_be_parent && i > first_file_to_load_from && (files[i].record_flags & ((uint32_t)1 << (size_t)tes::record_flag::partial));
          intfc.last_record_flags = last_record_flags;
 
+         #pragma warning(suppress:28182) // suppress spurious IntelliSense warning: `file` should never be nullptr
          auto file_view = _open_record(*file, files[i].record_offset);
          (loader)(*this->loaded, file_view.subviews.record, intfc);
 

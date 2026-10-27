@@ -13,12 +13,12 @@ namespace dovah {
 
    asset_file_buffer::asset_file_buffer(asset_file_buffer&& src) noexcept {
       this->owned = std::move(src.owned);
-      this->view  = { this->owned.data(), this->owned.size() };
+      this->view  = src.view;
       src.view    = {};
    }
    asset_file_buffer& asset_file_buffer::operator=(asset_file_buffer&& src) noexcept {
       this->owned = std::move(src.owned);
-      this->view  = { this->owned.data(), this->owned.size() };
+      this->view  = src.view;
       src.view    = {};
       return *this;
    }

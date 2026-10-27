@@ -2,6 +2,7 @@
 #include <limits>
 #include "lu/bytestreams/base_bytereader.h"
 #include "dovah/bsa/archive_collection.h"
+#include "dovah/facts/localized_strings/all_language_names.h"
 #include "dovah/facts/localized_strings/serialized_strings_are_length_prefixed.h"
 
 namespace dovah::localization {
@@ -20,26 +21,36 @@ namespace dovah::localization {
       }
       for (size_t i = 0; i < language_count; ++i) {
          auto& data = this->_by_language[i];
+
+         std::string base_name_with_lang;
+         {
+            const auto& lang_name = facts::localized_strings::all_language_names[i];
+            base_name_with_lang.reserve(base_name.size() + 1 + lang_name.size());
+            base_name_with_lang += base_name;
+            base_name_with_lang += '_';
+            base_name_with_lang += lang_name;
+         }
+
          {
             auto& dst      = data.general;
-            auto  filename = base_name + ".strings";
-            dst.buffer = archives.lookup_file(std::string("strings\\") + base_name);
+            auto  filename = base_name_with_lang + ".strings";
+            dst.buffer = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!dst.buffer.empty())
                this->_parse_single_file(localized_string_type::general, dst);
          }
          {
             auto& dst      = data.description;
-            auto  filename = base_name + ".dlstrings";
-            dst.buffer = archives.lookup_file(std::string("strings\\") + base_name);
+            auto  filename = base_name_with_lang + ".dlstrings";
+            dst.buffer = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!dst.buffer.empty())
                this->_parse_single_file(localized_string_type::description, dst);
          }
          {
             auto& dst      = data.info;
-            auto  filename = base_name + ".ilstrings";
-            dst.buffer = archives.lookup_file(std::string("strings\\") + base_name);
+            auto  filename = base_name_with_lang + ".ilstrings";
+            dst.buffer = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!dst.buffer.empty())
                this->_parse_single_file(localized_string_type::info, dst);
@@ -82,6 +93,9 @@ namespace dovah::localization {
          return;
       }
       reader.skip_bytes(4); // size of all string data
+
+      const uint32_t text_data_base_offset = reader.position() + (count * 8);
+
       file.strings_by_id[0] = { 0, 0 }; // by convention, ID 0 is an empty string
       if (facts::localized_strings::serialized_strings_are_length_prefixed(type)) {
          for (uint32_t i = 0; i < count; ++i) {
@@ -92,6 +106,7 @@ namespace dovah::localization {
             //
             // The length is paired with the string data, not the header.
             //
+            offset += text_data_base_offset;
             uint32_t length;
             if (offset + sizeof(length) > file.buffer.size())
                continue;
@@ -108,6 +123,7 @@ namespace dovah::localization {
             uint32_t                 offset = 0;
             if (!reader.read(id, offset))
                break;
+            offset += text_data_base_offset;
             if (offset > file.buffer.size())
                break;
             const char*    start  = (const char*)file.buffer.data_at(offset);

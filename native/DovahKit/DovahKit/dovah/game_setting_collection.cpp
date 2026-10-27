@@ -4,6 +4,19 @@
 #include "dovah/facts/game_setting_types.h"
 
 namespace dovah {
+   const loaded_game_setting* game_setting_collection::get_loaded_game_setting(std::string_view name) const noexcept {
+      std::string key;
+      {
+         key = name;
+         for (auto& c : key)
+            c = std::tolower(c);
+      }
+      auto it = this->_settings_by_name.find(key);
+      if (it == this->_settings_by_name.end())
+         return nullptr;
+      return &it->second;
+   }
+
    std::pair<loaded_game_setting&, bare_form_id> game_setting_collection::_store_game_setting(
       lu::passkey<load_order_processes::build_form_stubs_from_file::process>,
       const tes::file&   source_file,

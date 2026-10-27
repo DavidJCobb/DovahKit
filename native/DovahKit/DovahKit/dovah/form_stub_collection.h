@@ -11,6 +11,9 @@ namespace dovah {
    namespace callback_sets {
       struct data_load;
    }
+   namespace load_order_processes::build_form_stubs_from_file {
+      class process;
+   }
    namespace tes {
       class  file;
       struct record_header;
@@ -30,6 +33,7 @@ namespace dovah {
    class form_stub_collection {
       friend void impl::_form_stub_collection::create_hardcoded_form_stubs(form_stub_collection&, tes::file&);
       friend void impl::_form_stub_collection::create_none_stubs(form_stub_collection&, tes::file&);
+      friend load_order_processes::build_form_stubs_from_file::process;
       public:
          form_stub_collection(active_load_order& owner) : owner(owner) {}
          form_stub_collection(const form_stub_collection&) = delete;
@@ -83,6 +87,7 @@ namespace dovah {
 
       public:
          active_load_order& owner;
+      protected:
          mutable std::mutex forms_lock; // used only during multi-threaded file indexing
          _form_map      forms;
          _typed_map_set forms_by_type;
@@ -115,6 +120,22 @@ namespace dovah {
          template<typename Functor>
             requires std::is_invocable_v<Functor, form_stub&>
          void for_each_form_of_type(form_type, Functor&& functor);
+         
+         template<typename Functor>
+            requires std::is_invocable_v<Functor, const form_stub&>
+         void for_each_active_file_form(Functor&& functor) const;
+         //
+         template<typename Functor>
+            requires std::is_invocable_v<Functor, form_stub&>
+         void for_each_active_file_form(Functor&& functor);
+         
+         template<typename Functor>
+            requires std::is_invocable_v<Functor, const form_stub&>
+         void for_each_active_file_form_of_type(form_type, Functor&& functor) const;
+         //
+         template<typename Functor>
+            requires std::is_invocable_v<Functor, form_stub&>
+         void for_each_active_file_form_of_type(form_type, Functor&& functor);
 
          form_stub* get_canonical_instance_of_singleton_form(form_type) const noexcept;
          form_stub* get_or_create_canonical_instance_of_singleton_form(form_type);
