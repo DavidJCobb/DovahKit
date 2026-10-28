@@ -149,7 +149,7 @@
       <item row="0" column="0">
        <widget class="QStackedWidget" name="optionsStack">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="optionsQuest">
          <layout class="QGridLayout" name="gridLayout_3">
@@ -279,7 +279,7 @@
           <item row="3" column="0" colspan="2">
            <widget class="QStackedWidget" name="entryPointParamsStack">
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="entryPointParamsNone">
              <layout class="QGridLayout" name="gridLayout_7">
@@ -361,6 +361,9 @@
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -408,6 +411,9 @@
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -421,6 +427,9 @@
                  <widget class="QDoubleSpinBox" name="entryPointParamsTwoFloats_ValueB">
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
                   </property>
                  </widget>
                 </item>
@@ -498,6 +507,9 @@
                  <widget class="QDoubleSpinBox" name="entryPointParamsOneAVOneFloat_Float">
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
                   </property>
                  </widget>
                 </item>
