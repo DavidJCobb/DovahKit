@@ -84,7 +84,14 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
       }
       uib.add_outbound_use(equip_type);
       uib.add_outbound_use(menu_display_object);
-      for (size_t i = 0; i < max_word_count; ++i) {
+      //
+      // If the winning record defines fewer than three words (i.e. fewer than three 
+      // SNAM subrecords), then we want the SNAMs from the losing records to "bleed 
+      // through." We stored those in `uib.extra_form_ids` when handling the losing 
+      // records earlier, so let's now pull from those for all words after the ones 
+      // we've loaded during this go-around.
+      //
+      for (size_t i = word_count; i < max_word_count; ++i) {
          uib.add_outbound_use(uib.extra_form_ids[(i * 2) + 0]);
          uib.add_outbound_use(uib.extra_form_ids[(i * 2) + 1]);
       }
