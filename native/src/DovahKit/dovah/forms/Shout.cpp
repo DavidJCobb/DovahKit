@@ -133,7 +133,14 @@ namespace dovah::loaded_forms {
       }
       uib.add_outbound_reference(equip_type);
       uib.add_outbound_reference(menu_display_object);
-      for (size_t i = 0; i < 3; ++i) {
+      //
+      // If the winning record defines fewer than three words (i.e. fewer than three 
+      // SNAM subrecords), then we want the SNAMs from the losing records to "bleed 
+      // through." We stored those in `uib.extra_form_ids` when handling the losing 
+      // records earlier, so let's now pull from those for all words after the ones 
+      // we've loaded during this go-around.
+      //
+      for (size_t i = word_count; i < 3; ++i) {
          uib.add_outbound_reference(uib.extra_form_ids[(i * 2) + 0]);
          uib.add_outbound_reference(uib.extra_form_ids[(i * 2) + 1]);
       }
