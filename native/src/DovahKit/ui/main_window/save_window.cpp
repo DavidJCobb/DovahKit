@@ -264,9 +264,13 @@ bool ActiveFileSaveDialog::_check_cross_game_masters_exist(dovah::game game) {
 
    std::vector<std::string> missing_files;
    {
+      auto* flo           = editor.get_file_load_order();
       auto  files         = editor.get_loaded_files();
+      auto* active_file   = flo ? flo->get_active_file() : nullptr;
       auto* active_header = editor.get_active_file_header();
       for (auto* file : files) {
+         if (file == active_file)
+            continue;
          auto filename      = file->get_filename();
          auto matching_file = dst_path / filename;
          if (!std::filesystem::exists(matching_file))
