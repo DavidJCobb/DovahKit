@@ -12,6 +12,8 @@
 #include "../load_order_requests/form_deletion_request.h"
 
 #include "../data/game/hardcoded_form_ids_ignore_record_id_prefix.h"
+#include "../data/game/max_file_version.h"
+#include "../data/game/min_file_version.h"
 
 namespace dovah::load_order_processes {
    void file_save::execute() {
@@ -48,7 +50,15 @@ namespace dovah::load_order_processes {
       //
       // Double-check for any illegal form IDs.
       //
-      float desired_file_version = this->write_config.use_file_version.value_or(active_load_order.active_file->header.file_version);
+      float desired_file_version = this->write_config.use_file_version.value_or(
+         std::min(
+            game_feature_support::max_file_version(this->write_config.output_game),
+            std::max(
+               game_feature_support::min_file_version(this->write_config.output_game),
+               active_load_order.active_file->header.file_version
+            )
+         )
+      );
       {
          enum class hardcoded_range_handling {
             ignore,

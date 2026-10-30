@@ -509,6 +509,16 @@ void ActiveFileSaveDialog::commit() {
          config.use_file_version = 1.70F;
       }
    }
+   // 
+   // Clamp the file version (needed for SE -> LE conversion).
+   // 
+   // (The main consequence of this is that we might go from 1.71 to 1.70, but the only difference 
+   // there is the expanded form ID space, which we check here in this file. Failing to do this 
+   // will save a file with too new a version, which DovahKit and the game will subsequently refuse 
+   // to load at all (xEdit can be used to fix the header).)
+   // 
+   if (config.use_file_version > dovah::game_feature_support::max_file_version(game))
+      config.use_file_version = dovah::game_feature_support::max_file_version(game);
 
    if (game != game_prior)
       if (!_check_cross_game_masters_exist(game))

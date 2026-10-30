@@ -75,7 +75,7 @@ namespace dovah::tes_file_reading {
                size_t orphan_ref_count = 0;
 
                void set_range(size_t start, size_t end);
-               constexpr std::pair<size_t> get_range() const noexcept { return { this->range.start, this->range.end }; }
+               constexpr std::pair<size_t, size_t> get_range() const noexcept { return { this->range.start, this->range.end }; }
                void start() noexcept;
                void wait_for() noexcept;
                

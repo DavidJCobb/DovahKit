@@ -3,8 +3,9 @@
 namespace dovah::tes_file_writing {
    /*static*/ write_config write_config::for_skyrim_classic() {
       write_config out;
-      out.output_game    = game::skyrim_classic;
-      out.record_version = 43;
+      out.output_game      = game::skyrim_classic;
+      out.record_version   = 43;
+      //out.use_file_version = 1.70F;
       return out;
    }
    /*static*/ write_config write_config::for_skyrim_special() {

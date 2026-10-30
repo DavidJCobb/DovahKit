@@ -164,6 +164,9 @@ namespace dovah::tes_file_writing {
          if (this->config.use_file_version.has_value()) {
             subrecord.write(this->config.use_file_version.value());
          } else {
+            // TODO: We already set this in `file_save`; we have to, so it can validate various version-specific 
+            // things. The struct as stored on `file_writer` should not use a `std::optional` here; we should 
+            // have a "finalized write config" data type instead.
             subrecord.write(
                std::min(
                   game_feature_support::max_file_version(this->config.output_game),
