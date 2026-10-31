@@ -59,7 +59,7 @@
         <item>
          <widget class="QStackedWidget" name="conditionExplanationStack">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="conditionExplanationNormal">
            <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -78,10 +78,10 @@
             <item>
              <widget class="QLabel" name="label_4">
               <property name="text">
-               <string>&lt;p&gt;Conditions can be defined separately for each effect in this list, both on this Spell and inside of the Magic Effects themselves. The basic behavior is as follows. (Concentration spells are a more advanced topic; select that Casting Type to read more.)&lt;/p&gt;
+               <string>&lt;p&gt;Conditions can be defined separately for each effect in this list, both on this Spell and inside of the Magic Effects themselves.&lt;/p&gt;
 &lt;p&gt;Magic Effect-side conditions are checked once each time something tries to apply the spell's effects to a target, and they control whether the effect actually is applied. Prefer those conditions for things like immunities (e.g. Restoration healing spells failing to work at all on undead actors and Dwarven robots).&lt;/p&gt;
 &lt;p&gt;Once an effect is applied to the target, its Spell-side conditions are checked every second afterward. If these conditions are met, then the effect is active and will affect the target. If the conditions cease to be met, then the effect will stop being active: the target will still &lt;em&gt;have&lt;/em&gt; the effect, but it won't do anything until the conditions are met again. Prefer these conditions for effects that should turn on and off (e.g. vampires' sunlight nerfs existing persistently on a vampire, but only being active during certain times of day).&lt;/p&gt;
-&lt;p&gt;Reapplying an effect will reset its elapsed time, which prevents it from expiring; the same timer is used to schedule Spell-side condition checks, so those get delayed. This is mainly a relevant concern for Concentration spells.&lt;/p&gt;</string>
+&lt;p&gt;Concentration spells follow the same rules but under different circumstances, with peculiar results. Select the &quot;Concentration&quot; casting type to learn more.&lt;/p&gt;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
@@ -110,10 +110,10 @@
             <item>
              <widget class="QLabel" name="label_16">
               <property name="text">
-               <string>&lt;p&gt;Conditions can be defined separately for each effect in this list, both on this Spell and inside of the Magic Effects themselves. (Concentration spells are a more advanced topic; select another Casting Type to read about the basic behavior.)&lt;/p&gt;
-&lt;p&gt;Magic Effect-side conditions are checked every time something tries to apply the spell's effects to a target. An effect is only applied if those conditions match. Once an effect is applied, its Spell-side conditions will be checked every second, to determine when the effect is active.&lt;/p&gt;
-&lt;p&gt;Reapplying an effect will reset its elapsed time, which prevents it from expiring. The elapsed time also serves as the timer that the game relies on to know when to re-check the effect's Spell-side conditions, so reapplying the effect very quickly will delay the game from checking those conditions and changing whether the effect is active.&lt;/p&gt;
-&lt;p&gt;Concentration spells do exactly that. If a target is being hit with multiple projectiles per second, for example, each projectile will try to (re)apply the effect, checking the Magic Effect-side conditions. The Spell-side conditions can't be re-checked (and the applied effect can't expire) after first contact until the target stops being hit, or until the Magic Effect-side conditions stop matching.&lt;/p&gt;</string>
+               <string>&lt;p&gt;Conditions can be defined separately for each effect in this list, both on this Spell and inside of the Magic Effects themselves. Concentration spells in particular are a bit peculiar, however.&lt;/p&gt;
+&lt;p&gt;Magic Effect-side conditions are checked once every time something tries to apply the spell's effects to a target. An effect is only applied if those conditions match. Once an effect is applied, its Spell-side conditions will be checked every second, to determine when the effect is active.&lt;/p&gt;
+&lt;p&gt;Reapplying an effect will reset its elapsed time, which prevents it from expiring. The game also relies on the elapsed time to know when to re-check the effect's Spell-side conditions, so reapplying the effect rapidly and repeatedly will delay those checks.&lt;/p&gt;
+&lt;p&gt;Concentration spells do exactly that. If a target is being hit with multiple projectiles per second, each one will try to (re)apply the effect, checking the Magic Effect-side conditions. The Spell-side conditions can't be re-checked after the effect is first applied until the target stops being hit, or until the Magic Effect-side conditions stop matching.&lt;/p&gt;</string>
               </property>
               <property name="wordWrap">
                <bool>true</bool>
