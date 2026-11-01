@@ -37,7 +37,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
    /*static*/ void patrol_ref_data::generate_use_info(tes_file_reading::record& record, form_stub_use_info_builder& uib, extra_data_use_info_state& uis) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() == signature_event) {
-         uis.patrol_ref_data.generate_use_info(record);
+         uis.types.patrol_ref_data.generate_use_info(record);
       }
    }
    /*virtual*/ void patrol_ref_data::clear_contained_formIDs(loaded_forms::Form& my_owner) /*override*/ {

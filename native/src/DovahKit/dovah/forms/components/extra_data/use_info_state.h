@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <optional>
 #include <set>
 #include <vector>
 #include "../../../form_id_t.h"
@@ -7,6 +8,14 @@
 
 namespace dovah::loaded_forms::components {
    class extra_data_use_info_state {
+      public:
+         using optional_use_list = std::optional<std::vector<form_id_t>>;
+
+         struct water_current_zone_data_uses {
+            // see `form_ids::water_current_zone_data` for `cell`
+            std::set<form_id_t> refs;
+         };
+
       public:
          union {
             struct {
@@ -56,6 +65,7 @@ namespace dovah::loaded_forms::components {
                form_id_t teleport_name;
                struct {
                   form_id_t cell;
+                  // see `water_current_zone_data_uses` for `refs`
                } water_current_zone_data;
             } by_name;
             std::array<form_id_t, 28> list = {};
@@ -68,11 +78,11 @@ namespace dovah::loaded_forms::components {
                form_id_t target_door; // use info entry flag: base_extra_data::extra_teleport_destination
             } teleport;
          } form_ids_with_flags;
-         std::vector<form_id_t> cell_region_list;
-         loaded_forms::components::package_event_dialogue::use_info_state patrol_ref_data;
          struct {
-            std::set<form_id_t> refs;
-         } water_current_zone_data;
+            optional_use_list cell_region_list;
+            loaded_forms::components::package_event_dialogue::use_info_state patrol_ref_data;
+            std::optional<water_current_zone_data_uses> water_current_zone_data;
+         } types;
 
          static_assert(sizeof(form_ids.list) >= sizeof(form_ids.by_name), "The array has too few elements.");
          static_assert(sizeof(form_ids.list) <= sizeof(form_ids.by_name), "The array has too many elements.");

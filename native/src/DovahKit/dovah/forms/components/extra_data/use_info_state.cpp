@@ -7,22 +7,25 @@ namespace dovah::loaded_forms::components {
       for (auto& id : this->form_ids.list)
          id = 0;
       this->form_ids_with_flags = {};
-      this->cell_region_list.clear();
-      this->patrol_ref_data.clear();
-      this->water_current_zone_data.refs.clear();
+      this->types = {};
    }
    void extra_data_use_info_state::commit_to(form_stub_use_info_builder& uib) {
       for (auto id : this->form_ids.list)
          if (id)
             uib.add_outbound_reference(id);
-      for(auto id : this->cell_region_list)
-         if (id)
-            uib.add_outbound_reference(id);
-      this->patrol_ref_data.commit_to(uib);
-      for (auto id : this->water_current_zone_data.refs)
-         if (id)
-            uib.add_outbound_reference(id);
-
+      if (auto& dst_opt = this->types.cell_region_list; dst_opt.has_value()) {
+         auto& dst = dst_opt.value();
+         for (auto id : dst)
+            if (id)
+               uib.add_outbound_reference(id);
+      }
+      this->types.patrol_ref_data.commit_to(uib);
+      if (auto& dst_opt = this->types.water_current_zone_data; dst_opt.has_value()) {
+         auto& dst = dst_opt.value();
+         for (auto id : dst.refs)
+            if (id)
+               uib.add_outbound_reference(id);
+      }
       {
          auto id = this->form_ids_with_flags.encounter_zone;
          if (id)

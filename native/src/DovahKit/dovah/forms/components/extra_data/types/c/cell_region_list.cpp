@@ -35,12 +35,18 @@ namespace dovah::loaded_forms::components::extra_data_types {
    /*static*/ void cell_region_list::generate_use_info(tes_file_reading::record& record, form_stub_use_info_builder& uib, extra_data_use_info_state& uis) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() == signature) {
-         uis.cell_region_list.clear();
+         auto& dst_opt = uis.types.cell_region_list;
+         if (dst_opt.has_value()) {
+            dst_opt.value().clear();
+         } else {
+            dst_opt.emplace();
+         }
+         auto& dst = dst_opt.value();
          auto count = subrecord.size() / 4;
          for (size_t i = 0; i < count; ++i) {
             form_id_t formID;
-            if (subrecord.read(formID))
-               uis.cell_region_list.push_back(formID);
+            if (subrecord.read(formID) && formID)
+               dst.push_back(formID);
          }
       }
    }

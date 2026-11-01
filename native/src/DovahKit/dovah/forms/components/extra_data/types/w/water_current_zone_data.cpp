@@ -131,8 +131,11 @@ namespace dovah::loaded_forms::components::extra_data_types {
       }
       if (subrecord.signature() == signature_zone_ref) {
          form_id_t form_id;
-         if (subrecord.read(form_id)) {
-            uis.water_current_zone_data.refs.insert(form_id);
+         if (subrecord.read(form_id) && form_id) {
+            auto& dst_opt = uis.types.water_current_zone_data;
+            if (!dst_opt.has_value())
+               dst_opt.emplace();
+            dst_opt.value().refs.insert(form_id);
          }
          record.next_subrecord(); // swallow XCZA
          return;
