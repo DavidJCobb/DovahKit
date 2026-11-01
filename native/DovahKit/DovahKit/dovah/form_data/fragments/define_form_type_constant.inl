@@ -7,8 +7,6 @@ namespace dovah {
 
    template<form_data_params Params>
    struct form_type_for_form_data_class<form_data::DOVAH_FORM_CLASSNAME<Params>> {
-      static constexpr const form_type value = DOVAH_FORM_TYPE;
+      static constexpr const form_type value = form_type::DOVAH_FORM_TYPE;
    };
 }
-#undef DOVAH_FORM_CLASSNAME
-#undef DOVAH_FORM_TYPE

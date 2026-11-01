@@ -1299,13 +1299,13 @@
     <None Include="lu\strings\low_footprint_string.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="dovah\form_data\helpers\pull_type_aliases.inl">
+    <None Include="dovah\form_data\fragments\pull_type_aliases.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="dovah\form_data\helpers\define_visitors.inl">
+    <None Include="dovah\form_data\fragments\define_visitors.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="dovah\form_data\helpers\define_form_type_constant.inl">
+    <None Include="dovah\form_data\fragments\define_form_type_constant.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\form_data_pointer.inl">
@@ -1314,12 +1314,20 @@
     <None Include="dovah\form_data_function_tables\_helpers.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="dovah\form_data\helpers\enable_construction_via_table.inl">
+    <None Include="dovah\form_data\fragments\enable_construction_via_table.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\localization\string_file_bundle.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\localization\active_string_file_bundle.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\localization\README.md" />
+    <None Include="dovah\form_data\fragments\declare_tabled_load_functions.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\form_data\fragments\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />

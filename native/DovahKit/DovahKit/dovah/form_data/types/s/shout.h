@@ -1,28 +1,17 @@
 #pragma once
 #include <array>
-#include "lu/passkey.h"
-#include "dovah/form_data/helpers/type_aliases.h"
-#include "dovah/form_type.h"
 #include "dovah/types/managed_form_use.h"
 #include "dovah/types/managed_localized_string_use.h"
 #include "dovah/types/unmanaged_localized_string_use.h"
 #include "../_base.h"
-namespace dovah {
-   namespace load_order_interfaces {
-      class form_load;
-   }
-   namespace load_order_processes::use_info_build {
-      class use_info_builder;
-   }
-   namespace tes {
-      class record_view;
-   }
-}
+
+#define DOVAH_FORM_TYPE      shout // `dovah::form_type` enumeration member
+#define DOVAH_FORM_CLASSNAME shout // identifier in `dovah::form_data` namespace
 
 namespace dovah::form_data {
    template<form_data_params Params>
    struct shout : public _base<Params> {
-      #include "dovah/form_data/helpers/pull_type_aliases.inl"
+      #include "dovah/form_data/fragments/pull_type_aliases.inl"
 
       enum class shout_record_flag { // bit indices
          treat_as_power = 7,
@@ -39,7 +28,7 @@ namespace dovah::form_data {
             X(spell) \
             X(word_of_power) \
             X(recovery_time)
-         #include "dovah/form_data/helpers/define_visitors.inl"
+         #include "dovah/form_data/fragments/define_visitors.inl"
       };
       
       localized_general_string_use     name;                // FULL
@@ -48,7 +37,6 @@ namespace dovah::form_data {
       form_use                         menu_display_object; // MDOB -> STAT
       std::array<word_type, 3>         words;               // SNAM[3]
 
-      #define DOVAH_FORM_TYPE form_type::shout
       #define CLASSNAME shout
       #define TYPENAME  CLASSNAME<FORM_DATA_PARAMS>
       #define PER_FIELD(X) \
@@ -57,24 +45,13 @@ namespace dovah::form_data {
          X(equip_type) \
          X(menu_display_object) \
          X(words)
-      #include "dovah/form_data/helpers/enable_construction_via_table.inl"
-      #include "dovah/form_data/helpers/define_visitors.inl"
+      #include "dovah/form_data/fragments/enable_construction_via_table.inl"
+      #include "dovah/form_data/fragments/define_visitors.inl"
    };
 }
 
-#define DOVAH_FORM_TYPE      form_type::shout
-#define DOVAH_FORM_CLASSNAME shout
-#include "dovah/form_data/helpers/define_form_type_constant.inl"
+#include "dovah/form_data/fragments/declare_tabled_load_functions.inl"
+#include "dovah/form_data/fragments/define_form_type_constant.inl"
 
-namespace dovah::form_data_function_tables::build_outbound_use_info {
-   template<form_type>
-   struct entry;
-
-   template<>
-   struct entry<form_type::shout> {
-      static void execute(tes::record_view&, load_order_processes::use_info_build::use_info_builder&);
-   };
-}
-namespace dovah::form_data_function_tables::serialize_form_data {
-   extern void load(form_data::shout<managed_form_params>&, tes::record_view&, load_order_interfaces::form_load&);
-}
+#undef DOVAH_FORM_CLASSNAME
+#undef DOVAH_FORM_TYPE
