@@ -106,17 +106,17 @@ namespace dovah {
       this->queued_load.files.clear();
       this->queued_load.active_file.clear();
       //
-      for (auto& f : this->forms.forms) {
+      for (auto& f : this->forms) {
          auto stub = f.second;
          if (stub)
             delete stub;
       }
-      this->forms.forms.clear();
+      this->forms.clear();
       for (auto& m : this->forms_by_type)
-         m.forms.clear();
-      this->active_file_forms.forms.clear();
+         m.clear();
+      this->active_file_forms.clear();
       for (auto& m : this->active_file_forms_by_type)
-         m.forms.clear();
+         m.clear();
       //
       for (auto* f : this->files)
          delete f;
@@ -163,15 +163,14 @@ namespace dovah {
    }
    void file_load_order::_accept_hardcoded_form(form_stub* stub, uint32_t record_flags) noexcept {
       auto& type = this->forms_by_type[stub->form_type];
-      std::lock_guard<std::mutex> guard_for_form_type(type.lock);
-      std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+      std::lock_guard<std::mutex> guard_for_all_forms(this->forms_lock);
       //
       stub->_add_file(*this->hardcoded_forms_file, 0, record_flags);
       stub->flags |= form_stub::flag::is_hardcoded;
       //
       bare_form_id_t formID = stub->formID;
-      type.forms[formID] = stub;
-      this->forms.forms[formID] = stub;
+      type[formID] = stub;
+      this->forms[formID] = stub;
    }
    void file_load_order::_build_none_stubs() {
       load_order_interfaces::file_load dummy(*this);
@@ -180,7 +179,7 @@ namespace dovah {
       //
       std::vector<bare_form_id_t> formIDs;
       std::vector<form_stub*> users;
-      for (auto& pair : this->forms.forms) {
+      for (auto& pair : this->forms) {
          auto* stub = pair.second;
          if (!stub)
             continue;
@@ -202,8 +201,8 @@ namespace dovah {
          stub->form_type = form_type::none;
          stub->_add_file(*this->none_stubs_file, 0);
          //
-         this->forms_by_type[form_type::none].forms[id] = stub;
-         this->forms.forms[id] = stub;
+         this->forms_by_type[form_type::none][id] = stub;
+         this->forms[id] = stub;
       }
       //
       // Simply creating the none-stubs isn't enough, though: the use info in the 
@@ -243,7 +242,7 @@ namespace dovah {
       auto& builders = this->use_info_build_threads;
       {
          auto guard     = std::lock_guard(this->use_info_build_threads_lock);
-         auto count_per = this->forms.forms.size() / builders.size();
+         auto count_per = this->forms.size() / builders.size();
          for (auto& entry : builders) {
             entry = new tes_file_reading::threaded_load_order_use_info_builder;
             entry->reserve(count_per + 1);
@@ -251,7 +250,7 @@ namespace dovah {
       }
       int which_thread = 0;
       // Inbound first, since we can multi-thread that
-      for (auto it = this->forms.forms.begin(); it != this->forms.forms.end(); ++it) {
+      for (auto it = this->forms.begin(); it != this->forms.end(); ++it) {
          form_stub* stub = it->second;
          builders[which_thread]->add_to_queue(stub);
          if (++which_thread >= this->use_info_build_threads.size())
@@ -305,7 +304,7 @@ namespace dovah {
       // references to them are properly made bidirectional.
       //
       this->_build_none_stubs();
-      for (auto& pair : this->forms.forms) {
+      for (auto& pair : this->forms) {
          auto* stub = pair.second;
          if (!stub || stub->form_type == form_type::none) // none-type forms (which are usually, but not always, none-stubs) should never have outbound references, so we can skip them
             continue;
@@ -454,7 +453,7 @@ namespace dovah {
             total += header->record_and_group_count;
          for (auto* header : this->normalizer.plugins)
             total += header->record_and_group_count;
-         this->forms.forms.reserve((size_t)(total * 1.1) + 0x800);
+         this->forms.reserve((size_t)(total * 1.1) + 0x800);
       }
       {
          dovah::logging::print_line("Final load order:");
@@ -570,7 +569,7 @@ namespace dovah {
    };
 
    file_load_order::form_id_status file_load_order::accept_form_stub(form_stub*& stub) {
-      std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+      std::lock_guard<std::mutex> guard_for_all_forms(this->forms_lock);
 
       uint32_t formID;
       auto     result = this->local_formID_to_global_formID(stub, formID);
@@ -612,8 +611,8 @@ namespace dovah {
 
       form_stub* existing_form = nullptr;
       {
-         auto it = this->forms.forms.find(formID);
-         if (it != this->forms.forms.end()) {
+         auto it = this->forms.find(formID);
+         if (it != this->forms.end()) {
             existing_form = it->second;
          }
       }
@@ -805,10 +804,8 @@ namespace dovah {
          stub->formID = formID;
          //
          auto& type = this->forms_by_type[stub->form_type];
-         // DO NOT lock the all-forms map; we already locked it at the start of the function!!
-         std::lock_guard<std::mutex> guard_for_form_type(type.lock);
-         this->forms.forms[formID] = stub;
-         type.forms[formID] = stub;
+         this->forms[formID] = stub;
+         type[formID] = stub;
       }
       //
       // Quick note: This function is guaranteed never to delete the input stub if an error occurs. In one 
@@ -842,9 +839,9 @@ namespace dovah {
       //
       if (this->active_file) {
          if (stub->file_list_includes(this->active_file)) {
-            this->active_file_forms.forms[formID] = stub;
+            this->active_file_forms[formID] = stub;
             auto& at = this->active_file_forms_by_type[stub->form_type];
-            at.forms[formID] = stub;
+            at[formID] = stub;
          }
       }
       //
@@ -942,9 +939,9 @@ namespace dovah {
          //
          // Do not allow GMST to override form IDs of other types; discard the GMST.
          //
-         std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+         std::lock_guard<std::mutex> guard_for_all_forms(this->forms_lock);
          //
-         form_stub*& prior = this->forms.forms[formID];
+         form_stub*& prior = this->forms[formID];
          if (prior) {
             if (prior->form_type == form_type::setting) {
                prior->_add_file(*const_cast<loaded_file*>(file), 0);
@@ -969,11 +966,11 @@ namespace dovah {
             prior->formID   = formID;
             prior->form_type = form_type::setting;
          }
-         this->forms_by_type[form_type::setting].forms[formID] = prior;
+         this->forms_by_type[form_type::setting][formID] = prior;
          //
          if (file == this->active_file) {
-            this->active_file_forms.forms[formID] = prior;
-            this->active_file_forms_by_type[form_type::setting].forms[formID] = prior;
+            this->active_file_forms[formID] = prior;
+            this->active_file_forms_by_type[form_type::setting][formID] = prior;
          }
       }
       //
@@ -1019,14 +1016,14 @@ namespace dovah {
             //
             if (file == this->active_file) {
                if (this->_count_game_settings_with_form_id(priorID) == 1) { // Only delete the form stub if no other settings are using it.
-                  std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
-                  if (cobb::unordered_map_contains(this->forms.forms, priorID)) {
-                     auto* old_stub = this->forms.forms[priorID];
+                  std::lock_guard<std::mutex> guard_for_all_forms(this->forms_lock);
+                  if (cobb::unordered_map_contains(this->forms, priorID)) {
+                     auto* old_stub = this->forms[priorID];
                      delete old_stub;
-                     this->forms.forms.erase(priorID);
-                     this->forms_by_type[form_type::setting].forms.erase(priorID);
-                     this->active_file_forms.forms.erase(priorID);
-                     this->active_file_forms_by_type[form_type::setting].forms.erase(priorID);
+                     this->forms.erase(priorID);
+                     this->forms_by_type[form_type::setting].erase(priorID);
+                     this->active_file_forms.erase(priorID);
+                     this->active_file_forms_by_type[form_type::setting].erase(priorID);
                   }
                }
                //
@@ -1105,10 +1102,10 @@ namespace dovah {
          (this->on_form_loss)(stub);
       //
       bare_form_id_t formID = stub.formID;
-      this->forms.forms.erase(formID);
-      this->forms_by_type[stub.form_type].forms.erase(formID);
-      this->active_file_forms.forms.erase(formID);
-      this->active_file_forms_by_type[stub.form_type].forms.erase(formID);
+      this->forms.erase(formID);
+      this->forms_by_type[stub.form_type].erase(formID);
+      this->active_file_forms.erase(formID);
+      this->active_file_forms_by_type[stub.form_type].erase(formID);
       //
       delete &stub;
    }
@@ -1183,15 +1180,15 @@ namespace dovah {
       //
       // Now move the form stub within the load order's maps.
       //
-      auto _extract = [this, old_id, new_id](_form_map& map) {
-         auto guard = std::lock_guard(map.lock);
-         auto node  = map.forms.extract(old_id);
+      auto _extract = [this, old_id, new_id](map_of_forms& map) {
+         auto node  = map.extract(old_id);
          if (node.empty())
             return;
          node.key() = new_id;
-         map.forms.insert(std::move(node));
+         map.insert(std::move(node));
       };
       auto form_type = stub.form_type;
+      auto guard = std::lock_guard(this->forms_lock);
       _extract(this->forms);
       _extract(this->forms_by_type[form_type]);
       _extract(this->active_file_forms);
@@ -1214,11 +1211,11 @@ namespace dovah {
       //
       bare_form_id_t old_id = entry.formID;
       //
-      auto       form_guard             = std::lock_guard(this->forms.lock);
+      auto       form_guard             = std::lock_guard(this->forms_lock);
       uint32_t   stub_count_for_this_id = this->_count_game_settings_with_form_id(old_id);
       form_stub* stub = nullptr;
       if (stub_count_for_this_id == 1) {
-         stub = this->forms.forms[old_id];
+         stub = this->forms[old_id];
          if (stub) {
             if (!stub->inbound.empty()) {
                //
@@ -1253,19 +1250,19 @@ namespace dovah {
             //
             // Now move the form stub within the load order's maps.
             //
-            auto _extract = [this, stub, old_id, new_id](_form_map& map) {
-               auto node = map.forms.extract(old_id);
+            auto _extract = [this, stub, old_id, new_id](map_of_forms& map) {
+               auto node = map.extract(old_id);
                if (node.empty()) {
                   //
                   // There is no existing node. This can happen if, for example, we are changing 
                   // the form ID of a game setting that was not previously defined in the active 
                   // file.
                   //
-                  map.forms[new_id] = stub;
+                  map[new_id] = stub;
                   return;
                }
                node.key() = new_id;
-               map.forms.insert(std::move(node));
+               map.insert(std::move(node));
             };
             _extract(this->forms);
             _extract(this->forms_by_type[form_type::setting]);
@@ -1284,10 +1281,10 @@ namespace dovah {
          stub = new form_stub;
          stub->formID   = new_id;
          stub->form_type = form_type::setting;
-         this->forms.forms[new_id] = stub;
-         this->forms_by_type[form_type::setting].forms[new_id] = stub;
-         this->active_file_forms.forms[new_id] = stub;
-         this->active_file_forms_by_type[form_type::setting].forms[new_id] = stub;
+         this->forms[new_id] = stub;
+         this->forms_by_type[form_type::setting][new_id] = stub;
+         this->active_file_forms[new_id] = stub;
+         this->active_file_forms_by_type[form_type::setting][new_id] = stub;
          //
          if (this->on_form_create)
             (this->on_form_create)(stub);
@@ -1298,7 +1295,7 @@ namespace dovah {
 
    uint32_t file_load_order::_count_game_settings_with_form_id(bare_form_id_t id) const noexcept {
       uint32_t stub_count_for_this_id = 0;
-      if (cobb::unordered_map_contains(this->forms.forms, id)) {
+      if (cobb::unordered_map_contains(this->forms, id)) {
          //
          // A form stub exists for this form ID, which means that the form ID is being used by 
          // at least one game setting. Count the number of loaded game settings that are using 
@@ -1601,7 +1598,7 @@ namespace dovah {
 
    uint32_t file_load_order::count_forms_of_type(form_type ft) const noexcept {
       if (decltype(this->forms_by_type)::supports_form_type(ft)) {
-         auto& list = this->forms_by_type[ft].forms;
+         auto& list = this->forms_by_type[ft];
          return list.size();
       }
       return 0;
@@ -1616,7 +1613,7 @@ namespace dovah {
          return nullptr;
       uint16_t   length  = 0;
       form_stub* longest = nullptr;
-      auto&      map     = this->forms_by_type[ft].forms;
+      auto&      map     = this->forms_by_type[ft];
       for (auto pair : map) {
          auto* stub = pair.second;
          if (!stub)
@@ -1639,7 +1636,7 @@ namespace dovah {
    form_stub* file_load_order::get_form(bare_form_id_t formID, bool ignore_none_stubs) const noexcept {
       if (formID == 0)
          return nullptr;
-      auto& list = this->forms.forms;
+      auto& list = this->forms;
       auto  it   = list.find(formID);
       if (it != list.end()) {
          auto* stub = it->second;
@@ -1653,7 +1650,7 @@ namespace dovah {
       if (formID == 0)
          return nullptr;
       if (decltype(this->forms_by_type)::supports_form_type(formType)) {
-         auto& list = this->forms_by_type[formType].forms;
+         auto& list = this->forms_by_type[formType];
          auto  it   = list.find(formID);
          if (it != list.end())
             return it->second;
@@ -1664,7 +1661,7 @@ namespace dovah {
       if (formID == 0)
          return nullptr;
       if (decltype(this->forms_by_type)::supports_form_type(formType)) {
-         auto& list = this->forms_by_type[formType].forms;
+         auto& list = this->forms_by_type[formType];
          auto  it   = list.find(formID);
          if (it != list.end())
             return it->second;
@@ -1673,7 +1670,7 @@ namespace dovah {
    }
    bool file_load_order::for_each_form_of_type(form_type formType, std::function<bool(form_stub*)> functor) {
       if (decltype(this->forms_by_type)::supports_form_type(formType)) {
-         auto& list = this->forms_by_type[formType].forms;
+         auto& list = this->forms_by_type[formType];
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
             if (!stub)
@@ -1695,12 +1692,12 @@ namespace dovah {
    uint32_t file_load_order::active_file_form_count() const noexcept {
       uint32_t total = 0;
       for (auto& map : this->active_file_forms_by_type)
-         total += map.forms.size();
+         total += map.size();
       return total;
    }
    bool file_load_order::active_file_has_forms_of_type(enum form_type form_type) const noexcept {
       if (decltype(this->forms_by_type)::supports_form_type(form_type)) {
-         auto& list = this->active_file_forms_by_type[form_type].forms;
+         auto& list = this->active_file_forms_by_type[form_type];
          return !list.empty();
       }
       return false;
@@ -1713,7 +1710,7 @@ namespace dovah {
       auto max_id = active_prefix.max_form_id();
       id = id ? active_prefix.coerce_form_id(id) : min_id;
       //
-      auto& map = this->active_file_forms.forms;
+      auto& map = this->active_file_forms;
       if (map.size() >= (max_id - min_id)) // no form IDs available
          return 0;
       //
@@ -1767,7 +1764,7 @@ namespace dovah {
       return 0;
    }
    bool file_load_order::for_each_active_file_form(std::function<bool(form_stub*)> functor) {
-      auto& list = this->active_file_forms.forms;
+      auto& list = this->active_file_forms;
       for (auto& pair : list) {
          auto* stub = pair.second;
          if (!stub)
@@ -1779,7 +1776,7 @@ namespace dovah {
    }
    bool file_load_order::for_each_active_file_form_of_type(form_type form_type, std::function<bool(form_stub*)> functor) {
       if (decltype(this->forms_by_type)::supports_form_type(form_type)) {
-         auto& list = this->active_file_forms_by_type[form_type].forms;
+         auto& list = this->active_file_forms_by_type[form_type];
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
             if (!stub)
@@ -1796,7 +1793,7 @@ namespace dovah {
       if (!this->active_file)
          return false;
 
-      auto& list = this->active_file_forms_by_type[form_type].forms;
+      auto& list = this->active_file_forms_by_type[form_type];
       for (auto& pair : list) {
          auto  id   = pair.first;
          auto* stub = pair.second;
@@ -1834,7 +1831,7 @@ namespace dovah {
       // need to loop over active file forms.
       //
       if (form_type_info::lookup(form_type).flags & form_type_info::flag::can_have_children) {
-         auto& list = this->forms_by_type[form_type].forms;
+         auto& list = this->forms_by_type[form_type];
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
             if (!stub)
@@ -1850,7 +1847,7 @@ namespace dovah {
          //    - TODO: break that function apart into the general checks and parent checks; have the 
          //      latter call the former; choose which to invoke in this function
          //
-         auto& list = this->active_file_forms_by_type[form_type].forms;
+         auto& list = this->active_file_forms_by_type[form_type];
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
             if (!stub)
@@ -1943,7 +1940,7 @@ namespace dovah {
          auto  guard = std::lock_guard(this->form_creation_request_info.lock);
          auto& list  = this->form_creation_request_info.reserved_formIDs;
          {
-            auto guard = std::lock_guard(this->forms.lock);
+            auto guard = std::lock_guard(this->forms_lock);
             if (std::find(list.begin(), list.end(), formID) != list.end()) // if the form ID is reserved, then we need to find a new one
                formID = 0;
             if (!(formID & 0x00FFFFFF) || this->get_form(formID, true) != nullptr) {
@@ -2087,11 +2084,11 @@ namespace dovah {
       }
       //
       {
-         auto guard = std::lock_guard(this->forms.lock);
-         this->forms.forms[formID] = stub;
-         this->forms_by_type[stub->form_type].forms[formID] = stub;
-         this->active_file_forms.forms[formID] = stub;
-         this->active_file_forms_by_type[stub->form_type].forms[formID] = stub;
+         auto guard = std::lock_guard(this->forms_lock);
+         this->forms[formID] = stub;
+         this->forms_by_type[stub->form_type][formID] = stub;
+         this->active_file_forms[formID] = stub;
+         this->active_file_forms_by_type[stub->form_type][formID] = stub;
       }
       //
       if (request.child_of) {
@@ -2199,7 +2196,7 @@ namespace dovah {
          }
       }
       //
-      auto guard1 = std::lock_guard(this->forms.lock);
+      auto guard1 = std::lock_guard(this->forms_lock);
       auto guard2 = std::lock_guard(this->form_creation_request_info.lock);
       if (this->has_form(desiredID)) {
          throw exception(error_code::form_id_is_occupied, stub);
@@ -2376,8 +2373,8 @@ namespace dovah {
          }
          //
          bool reserve = true;
-         if (cobb::unordered_map_contains(this->forms.forms, desired)) {
-            auto* stub = this->forms.forms[desired];
+         if (cobb::unordered_map_contains(this->forms, desired)) {
+            auto* stub = this->forms[desired];
             if (stub) {
                if (stub->form_type != form_type::setting) {
                   throw exception(error_code::form_id_is_occupied, request.setting.name);
@@ -2413,10 +2410,10 @@ namespace dovah {
       assert(this->active_file && "How were we able to get the prefix of the active file when the pointer has been lost?"); // in case any code changes in the future
       auto formID = prefix.coerce_form_id(this->active_file->header.nextFormID);
       {
-         auto guard = std::lock_guard(this->forms.lock);
+         auto guard = std::lock_guard(this->forms_lock);
          if (std::find(list.begin(), list.end(), formID) != list.end()) // if the form ID is reserved, then we need to find a new one
             formID = 0;
-         if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
+         if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms, formID)) {
             formID = this->find_first_free_form_id_in_active_file();
             if (!formID) { // no form ID available
                throw exception(error_code::no_form_id_available, request.setting.name);
@@ -2453,8 +2450,8 @@ namespace dovah {
       }
       //
       bool reserve = true;
-      if (cobb::unordered_map_contains(this->forms.forms, desired)) {
-         auto* stub = this->forms.forms[desired];
+      if (cobb::unordered_map_contains(this->forms, desired)) {
+         auto* stub = this->forms[desired];
          if (stub) {
             if (stub->form_type != form_type::setting) {
                auto ex = exception(error_code::form_id_is_occupied, request.setting);
@@ -2514,9 +2511,9 @@ namespace dovah {
    }
 
    void file_load_order::stub_flagged_as_edited(form_stub* stub) noexcept {
-      this->active_file_forms.forms[stub->formID] = stub;
+      this->active_file_forms[stub->formID] = stub;
       auto& at = this->active_file_forms_by_type[stub->form_type];
-      at.forms[stub->formID] = stub;
+      at[stub->formID] = stub;
       //
       // NOTE: Merely flagging a form stub as edited SHOULD NOT result in the active file being 
       // added to the stub's source file list (if not already present). Currently, our handling 

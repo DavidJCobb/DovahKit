@@ -287,10 +287,10 @@ namespace dovah {
          auto formID = stub->formID;
          if (formID < lowestID)
             lowestID = formID;
-         this->owner.forms.forms.erase(formID);
-         this->owner.forms_by_type[stub->form_type].forms.erase(formID);
-         this->owner.active_file_forms.forms.erase(formID);
-         this->owner.active_file_forms_by_type[stub->form_type].forms.erase(formID);
+         this->owner.forms.erase(formID);
+         this->owner.forms_by_type[stub->form_type].erase(formID);
+         this->owner.active_file_forms.erase(formID);
+         this->owner.active_file_forms_by_type[stub->form_type].erase(formID);
          //
          delete stub;
       }

@@ -92,7 +92,7 @@ namespace dovah::load_order_processes {
             }
          }
          if (verify_all_ids_in_light_range || hardcoded_range_handling != hardcoded_range_handling::ignore) {
-            for (auto& pair : active_load_order.active_file_forms.forms) {
+            for (auto& pair : active_load_order.active_file_forms) {
                auto id = pair.second->formID;
                if (!_old_active_file_prefix.contains_form_id(id)) // don't check overrides or injections; only new non-injected forms
                   continue;
@@ -267,7 +267,7 @@ namespace dovah::load_order_processes {
          auto new_prefix = active_load_order.expected_active_file_prefix_post_save(this->_save_as_light_plugin);
          //
          std::vector<form_stub*> stubs;
-         for (auto& pair : active_load_order.active_file_forms.forms) {
+         for (auto& pair : active_load_order.active_file_forms) {
             auto* stub = pair.second;
             if (!stub)
                continue;
@@ -324,8 +324,8 @@ namespace dovah::load_order_processes {
             // it would be because a child/descendant form or parent/ancestor form was edited. 
             // We need to add this form to the active file form list.
             //
-            active_load_order.active_file_forms.forms[stub->formID] = stub;
-            active_load_order.active_file_forms_by_type[stub->form_type].forms[stub->formID] = stub;
+            active_load_order.active_file_forms[stub->formID] = stub;
+            active_load_order.active_file_forms_by_type[stub->form_type][stub->formID] = stub;
          }
          stub->set_edited(false);
       }
@@ -396,7 +396,7 @@ namespace dovah::load_order_processes {
       // in an active file that was just converted to LE).
       //
       std::vector<form_stub*> stubs_to_remove;
-      for (auto& pair : active_load_order.active_file_forms.forms) {
+      for (auto& pair : active_load_order.active_file_forms) {
          bare_form_id_t id = pair.first;
          if (!writer.fixup_data.form_stubs.contains(id))
             stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
@@ -408,7 +408,7 @@ namespace dovah::load_order_processes {
       // such none-stubs and delete them.
       //
       size_t only_none_stubs_past_this_point = stubs_to_remove.size();
-      for (auto& pair : active_load_order.forms_by_type[form_type::none].forms) {
+      for (auto& pair : active_load_order.forms_by_type[form_type::none]) {
          auto* stub = pair.second;
          if (!stub || !stub->is_none_stub())
             continue;

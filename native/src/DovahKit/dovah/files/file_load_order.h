@@ -110,11 +110,7 @@ namespace dovah {
          using emit_warning_callback = void(*)(const notices::base_warning&);
          
       protected:
-         struct _form_map {
-            mutable std::mutex lock;
-            map_of_forms forms;
-         };
-         class _form_map_by_type : public std::array<_form_map, form_types.size()> {
+         class _form_map_by_type : public std::array<map_of_forms, form_types.size()> {
             protected:
                static constexpr const size_t form_types_are_contiguous_up_to = []() -> size_t {
                   for (size_t i = 0; i < form_types.size(); ++i)
@@ -127,10 +123,10 @@ namespace dovah {
             public:
                using array::operator[];
 
-               constexpr _form_map& operator[](form_type ft) {
-                  return const_cast<_form_map&>(std::as_const(*this).operator[](ft));
+               constexpr map_of_forms& operator[](form_type ft) {
+                  return const_cast<map_of_forms&>(std::as_const(*this).operator[](ft));
                }
-               constexpr const _form_map& operator[](form_type ft) const {
+               constexpr const map_of_forms& operator[](form_type ft) const {
                   if constexpr (all_form_types_are_contiguous) {
                      return operator[]((size_t)ft);
                   } else {
@@ -166,16 +162,17 @@ namespace dovah {
             std::unordered_map<std::string, std::vector<loaded_game_setting>> by_name; // convert name to lowercase before lookups/insertions. vector should end up going from oldest-loaded to latest-loaded
             mutable std::mutex lock;
          } game_settings;
-         bsa_load_order*   archives             = nullptr;
+         bsa_load_order*    archives             = nullptr;
          std::vector<loaded_file*> files;
-         loaded_file*      hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
-         loaded_file*      none_stubs_file      = nullptr; // needed so that none-stubs can find this file_load_order.
-         loaded_file*      active_file          = nullptr; // note: if no active file is specified when loading, but the load order has room for one, then we auto-create an active file with no name, so editing operations work smoothly.
-         _form_map         forms;
-         _form_map_by_type forms_by_type;
-         _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
-         _form_map_by_type active_file_forms_by_type;
-         game              current_game = game::skyrim_special;
+         loaded_file*       hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
+         loaded_file*       none_stubs_file      = nullptr; // needed so that none-stubs can find this file_load_order.
+         loaded_file*       active_file          = nullptr; // note: if no active file is specified when loading, but the load order has room for one, then we auto-create an active file with no name, so editing operations work smoothly.
+         mutable std::mutex forms_lock;
+         map_of_forms       forms;
+         _form_map_by_type  forms_by_type;
+         map_of_forms       active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
+         _form_map_by_type  active_file_forms_by_type;
+         game               current_game = game::skyrim_special;
          //
          struct {
             mutable std::recursive_mutex lock;
