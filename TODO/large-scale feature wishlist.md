@@ -30,3 +30,9 @@ The following features could be useful:
 * **View revision:** Get a list of all records for a form (base and overrides, including losing overrides) and view the form as it would've existed at a given record.
 
 "Reset form" and "Revert form" are tricky bordering on impossible in DovahKit's current (alpha) design. Use Info is originally built as part of the overall file load process, so for "Reset form," we'd have to be able to clear all Use Info for a form stub, remove the active file from the form stub's source file list, and then rebuild Use Info for that form stub individually. For "Revert form," we'd need the ability to load unmanaged form data only up to a given source file. Neither functionality currently exists in DovahKit.
+
+## "Load and check everything" button
+
+It'd be nice to have a button in the UI which, when activated, triggers the mass loading of all forms *and* all bespoke checks that the frontend would have to initiate.
+
+The per-form-type `load` functions can only check the validity of a form's own data, and whether any used stubs are of the right types. For example, a Navmesh can validate that its door links point to refs, but it can't validate whether those refs are load doors because that would require loading those refs. (I don't want the loading of one form to potentially trigger the loading of others, for a variety of reasons including anxiety about potential cycles.) I could write functions in the backend which run validity checks across multiple forms, but the frontend would have to call into those manually.
