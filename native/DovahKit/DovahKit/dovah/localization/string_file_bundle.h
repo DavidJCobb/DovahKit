@@ -1,18 +1,28 @@
 #pragma once
 #include <array>
-#include <filesystem>
 #include <map>
 #include <optional>
+#include <set>
 #include <string_view>
 #include "dovah/types/asset_file_buffer.h"
 #include "dovah/types/bare_localized_string_id.h"
 #include "dovah/types/localized_string_type.h"
+#include "dovah/utils/localization/data_by_string_type.h"
 #include "./language.h"
-namespace dovah::bsa {
-   class archive_collection;
+namespace dovah {
+   namespace bsa {
+      class archive_collection;
+   }
+   namespace tes {
+      class file;
+   }
 }
 
 namespace dovah::localization {
+   //
+   // A read-only holder for loaded localized string content, suitable for use for TES files 
+   // besides the active file. See `active_string_file_bundle` for an active-file counterpart.
+   //
    class string_file_bundle {
       public:
          using const_string_view = std::basic_string_view<const char>;
@@ -24,28 +34,42 @@ namespace dovah::localization {
          };
 
          using id_to_string_map = std::map<bare_localized_string_id, string_info>;
+         using id_set           = std::set<bare_localized_string_id>;
 
          struct string_file {
             asset_file_buffer buffer;
             id_to_string_map  strings_by_id;
          };
 
-         struct per_language_data {
-            string_file description;
-            string_file general;
-            string_file info;
-         };
+         using per_language_data = utils::localization::data_by_string_type<string_file>;
 
       public:
-         string_file_bundle(const std::string& tes_filename);
+         string_file_bundle(const tes::file&);
+
+         template<typename Callable>
+            requires std::is_invocable_v<Callable, bare_localized_string_id>
+         void for_each_string_id_of_type(localized_string_type, Callable&&) const;
+
+         template<typename Callable>
+            requires std::is_invocable_v<Callable, bare_localized_string_id, const_string_view>
+         void for_each_string_matching_criteria(localized_string_type, language, Callable&&) const;
+
+         constexpr const tes::file& get_tes_file() const noexcept {
+            return this->_tes_file;
+         }
+
+         bool id_exists(localized_string_type, bare_localized_string_id) const noexcept;
 
          void load(const dovah::bsa::archive_collection&);
          std::optional<const_string_view> lookup(localized_string_type, language, bare_localized_string_id) const noexcept;
 
       protected:
-         std::string _tes_filename;
-         std::array<per_language_data, language_count> _by_language;
+         const tes::file& _tes_file;
+         std::array<per_language_data, language_count>    _by_language;
+         utils::localization::data_by_string_type<id_set> _defined_ids;
 
-         void _parse_single_file(localized_string_type, string_file&);
+         void _parse_single_file(localized_string_type, string_file&, id_set&);
    };
 }
+
+#include "./string_file_bundle.inl"

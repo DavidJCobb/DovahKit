@@ -248,6 +248,12 @@
     <ClCompile Include="dovah\types\managed_localized_string_use.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\localization\string_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\localization\active_string_file_bundle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1225,6 +1231,15 @@
     <ClInclude Include="tests\basic\load_a_shout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\localization\string_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\localization\active_string_file_bundle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\localization\data_by_string_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -1300,6 +1315,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\form_data\helpers\enable_construction_via_table.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\localization\string_file_bundle.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

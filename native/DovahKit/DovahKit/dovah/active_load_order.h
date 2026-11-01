@@ -8,6 +8,7 @@
 #include "./form_stub_collection.h"
 #include "./game_setting_collection.h"
 #include "./game.h"
+#include "./localization/string_collection.h"
 namespace dovah {
    namespace bsa {
       class archive_collection;
@@ -41,15 +42,15 @@ namespace dovah {
             std::vector<tes::file*> list; // owned
             tes::file*              active = nullptr; // unowned; also in `list`
             struct {
-               tes::file* hardcoded  = nullptr;
-               tes::file* none_stubs = nullptr;
+               tes::file* hardcoded  = nullptr; // owned; not in `list`
+               tes::file* none_stubs = nullptr; // owned; not in `list`
             } dummies;
-            std::vector<localization::string_file_bundle*> string_file_bundles;
          } _files;
-         bsa::archive_collection* _bsa_collection = nullptr;
-         form_stub_collection     _forms{ *this };
-         game_setting_collection  _game_settings;
-         game                     _game = game::skyrim_classic;
+         bsa::archive_collection*        _bsa_collection = nullptr;
+         form_stub_collection            _forms{ *this };
+         game_setting_collection         _game_settings;
+         game                            _game = game::skyrim_classic;
+         localization::string_collection _localized_strings;
       public:
          callback_sets::post_load post_load_callbacks;
 
@@ -63,6 +64,9 @@ namespace dovah {
 
          constexpr const game_setting_collection& get_game_setting_collection() const noexcept { return this->_game_settings; };
          constexpr game_setting_collection& get_game_setting_collection() noexcept { return this->_game_settings; };
+
+         constexpr const localization::string_collection& get_localized_string_collection() const noexcept { return this->_localized_strings; }
+         constexpr localization::string_collection& get_localized_string_collection() noexcept { return this->_localized_strings; }
 
          constexpr const tes::file* get_active_file() const noexcept { return this->_files.active; }
          constexpr tes::file* get_active_file() noexcept { return this->_files.active; }

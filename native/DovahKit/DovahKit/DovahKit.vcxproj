@@ -153,6 +153,8 @@
     <ClCompile Include="dovah\load_order_processes\use_info_build\use_info_builder.cpp" />
     <ClCompile Include="dovah\load_order_processes\use_info_build\use_info_builder_form_specific_data.cpp" />
     <ClCompile Include="dovah\load_order_processes\use_info_build\worker_thread.cpp" />
+    <ClCompile Include="dovah\localization\active_string_file_bundle.cpp" />
+    <ClCompile Include="dovah\localization\string_collection.cpp" />
     <ClCompile Include="dovah\localization\string_file_bundle.cpp" />
     <ClCompile Include="dovah\termination_handler.cpp" />
     <ClCompile Include="dovah\tes\file.cpp" />
@@ -311,7 +313,9 @@
     <ClInclude Include="dovah\load_order_processes\use_info_build\use_info_builder.h" />
     <ClInclude Include="dovah\load_order_processes\use_info_build\use_info_builder_form_specific_data.h" />
     <ClInclude Include="dovah\load_order_processes\use_info_build\worker_thread.h" />
+    <ClInclude Include="dovah\localization\active_string_file_bundle.h" />
     <ClInclude Include="dovah\localization\language.h" />
+    <ClInclude Include="dovah\localization\string_collection.h" />
     <ClInclude Include="dovah\localization\string_file_bundle.h" />
     <ClInclude Include="dovah\notices\base_file_load_warning.h" />
     <ClInclude Include="dovah\notices\base_file_parse_warning.h" />
@@ -416,6 +420,7 @@
     <ClInclude Include="dovah\utils\form_types\is_cell_child.h" />
     <ClInclude Include="dovah\utils\form_types\is_ref.h" />
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
+    <ClInclude Include="dovah\utils\localization\data_by_string_type.h" />
     <ClInclude Include="dovah\utils\worldspaces\world_coordinate_to_grid_coordinate.h" />
     <ClInclude Include="dovah\utils\worldspaces\world_position_to_grid_position.h" />
     <ClInclude Include="dovah\_impl\form_stubs\make_one_way_use_bidirectional.h" />
@@ -532,6 +537,7 @@
     <None Include="dovah\form_data_pointer.inl" />
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stub_collection.inl" />
+    <None Include="dovah\localization\string_file_bundle.inl" />
     <None Include="dovah\tes\file_queue.inl" />
     <None Include="dovah\tes\reading\record_view.inl" />
     <None Include="dovah\types\bs_hash.inl" />

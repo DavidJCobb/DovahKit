@@ -25,6 +25,15 @@ namespace dovah {
    active_load_order::active_load_order() {
    }
    active_load_order::~active_load_order() {
+      for (auto* bundle : this->_files.string_file_bundles) {
+         delete bundle;
+      }
+      this->_files.string_file_bundles.clear();
+      if (auto* p = this->_bsa_collection) {
+         this->_bsa_collection = nullptr;
+         delete p;
+      }
+
       this->_files.active = nullptr;
       for (auto* file : this->_files.list) {
          delete file;
@@ -36,14 +45,6 @@ namespace dovah {
       }
       if (auto* p = this->_files.dummies.none_stubs) {
          this->_files.dummies.none_stubs = nullptr;
-         delete p;
-      }
-      for (auto* bundle : this->_files.string_file_bundles) {
-         delete bundle;
-      }
-      this->_files.string_file_bundles.clear();
-      if (auto* p = this->_bsa_collection) {
-         this->_bsa_collection = nullptr;
          delete p;
       }
    }
@@ -222,17 +223,11 @@ namespace dovah {
       if (this->_bsa_collection) {
          this->_bsa_collection->wait_for_load_to_finish();
 
-         const auto&  tes_list = this->_files.list;
-         auto&        str_list = this->_files.string_file_bundles;
-         const size_t size     = tes_list.size();
-         str_list.reserve(size);
-         for (size_t i = 0; i < size; ++i) {
-            auto* p = new localization::string_file_bundle(tes_list[i]->path().filename().string());
-            str_list.push_back(p);
-         }
-         for (size_t i = 0; i < size; ++i) {
-            str_list[i]->load(*this->_bsa_collection);
-         }
+         size_t non_active_file_count = this->_files.list.size();
+         if (this->_files.active)
+            --non_active_file_count;
+
+         this->_localized_strings._load({}, *this->_bsa_collection, { this->_files.list.begin(), non_active_file_count }, this->_files.active);
       }
       //
       // We're done!
