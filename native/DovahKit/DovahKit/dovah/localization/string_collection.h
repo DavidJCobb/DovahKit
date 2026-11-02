@@ -37,7 +37,11 @@ namespace dovah::localization {
          const string_file_bundle* bundle_for_non_active_file(const tes::file&) const;
          std::optional<const_string_view> lookup(const tes::file&, localized_string_type, language, bare_localized_string_id) const noexcept;
 
+      protected:
+         void _clear();
+
       public: // passkeyed
+         void _clear(lu::passkey<active_load_order>);
          void _load(lu::passkey<active_load_order>, const dovah::bsa::archive_collection&, std::span<const tes::file* const>, const tes::file* active_file);
    };
 }

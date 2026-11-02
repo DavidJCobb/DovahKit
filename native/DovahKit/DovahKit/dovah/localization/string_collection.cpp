@@ -5,11 +5,7 @@
 
 namespace dovah::localization {
    string_collection::~string_collection() {
-      for (auto*& p : this->_non_active_files) {
-         delete p;
-         p = nullptr;
-      }
-      this->_non_active_files.clear();
+      this->_clear();
    }
 
    const active_string_file_bundle* string_collection::bundle_for_active_file() const {
@@ -39,6 +35,21 @@ namespace dovah::localization {
       return bundle->lookup(type, lang, id);
    }
 
+   void string_collection::_clear() {
+      if (auto* p = this->_active_file) {
+         this->_active_file = nullptr;
+         delete p;
+      }
+      for (auto*& bundle : this->_non_active_files) {
+         delete bundle;
+         bundle = nullptr;
+      }
+      this->_non_active_files.clear();
+   }
+
+   void string_collection::_clear(lu::passkey<active_load_order>) {
+      this->_clear();
+   }
    void string_collection::_load(lu::passkey<active_load_order>, const dovah::bsa::archive_collection& bsa_collection, std::span<const tes::file* const> tes_files, const tes::file* active_file) {
       const size_t size = tes_files.size();
       this->_non_active_files.reserve(size);

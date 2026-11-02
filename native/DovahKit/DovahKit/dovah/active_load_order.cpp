@@ -25,10 +25,8 @@ namespace dovah {
    active_load_order::active_load_order() {
    }
    active_load_order::~active_load_order() {
-      for (auto* bundle : this->_files.string_file_bundles) {
-         delete bundle;
-      }
-      this->_files.string_file_bundles.clear();
+      this->_localized_strings._clear({});
+
       if (auto* p = this->_bsa_collection) {
          this->_bsa_collection = nullptr;
          delete p;
