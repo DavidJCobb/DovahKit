@@ -37,7 +37,7 @@ namespace dovah::tes {
          constexpr bool exists() const noexcept { return this->_header.signature != 0; }
          
          constexpr record_flags         flags() const noexcept { return this->_header.flags; }
-         constexpr uint32_t             formID() const noexcept { return this->_header.formID; }
+         constexpr uint32_t             record_id() const noexcept { return this->_header.record_id; }
          constexpr const record_header& header() const noexcept { return this->_header; }
          constexpr lu::four_cc          signature() const noexcept { return this->_header.signature; }
          constexpr size_type            size() const noexcept { return (size_type)this->_view.size(); }

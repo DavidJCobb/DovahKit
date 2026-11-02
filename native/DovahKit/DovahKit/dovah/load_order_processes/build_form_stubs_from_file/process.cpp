@@ -545,7 +545,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       const auto& callbacks   = this->_params.callbacks;
       auto&       source_file = this->_params.source_file;
 
-      bare_form_id record_id = record_header.formID;
+      bare_form_id record_id = record_header.record_id;
       bare_form_id form_id   = 0;
       {
          auto result = utils::form_ids::record_id_to_form_id(source_file, record_id);
@@ -701,7 +701,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       
       std::lock_guard<std::mutex> guard_for_all_forms(fsc.forms_lock);
 
-      const bare_form_id record_id  = record_header.formID;
+      const bare_form_id record_id  = record_header.record_id;
       const bare_form_id form_id    = stub->form_id;
       form_stub*         new_parent = utils::form_stubs::get_parent_form(*stub); // set by caller before calling us
 

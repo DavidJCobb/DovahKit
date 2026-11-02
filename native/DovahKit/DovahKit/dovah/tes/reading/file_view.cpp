@@ -117,7 +117,7 @@ namespace dovah::tes {
       this->_reader.read(
          record._header.size,
          record._header.flags,
-         record._header.formID,
+         record._header.record_id,
          record._header.version_control,
          record._header.version,
          record._header.version_control_2
@@ -134,7 +134,7 @@ namespace dovah::tes {
             case 'CELL':
             case 'DIAL':
             case 'WRLD':
-               this->_last_potential_group_parent = record._header.formID;
+               this->_last_potential_group_parent = record._header.record_id;
                break;
             default:
                this->_last_potential_group_parent = 0;

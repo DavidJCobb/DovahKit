@@ -107,7 +107,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   notices::file_parse_warnings::game_setting_record_is_misordered(
                      source_file.path().filename().string(),
                      std::string_view(setting_name),
-                     record.formID()
+                     record.record_id()
                   )
                );
             }
@@ -122,7 +122,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      notices::file_parse_warnings::game_setting_record_is_misordered(
                         source_file.path().filename().string(),
                         std::string_view(setting_name),
-                        record.formID()
+                        record.record_id()
                      )
                   );
                }
@@ -135,7 +135,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   notices::file_parse_warnings::game_setting_record_has_unrecognized_subrecord(
                      source_file.path().filename().string(),
                      std::string_view(setting_name),
-                     record.formID(),
+                     record.record_id(),
                      subrecord.signature()
                   )
                );
@@ -168,7 +168,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   notices::file_parse_warnings::game_setting_value_unreadable(
                      source_file.path().filename().string(),
                      std::string_view(setting_name),
-                     record.formID(),
+                     record.record_id(),
                      true
                   )
                );
@@ -177,7 +177,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   notices::file_parse_warnings::game_setting_value_has_extra_content(
                      source_file.path().filename().string(),
                      std::string_view(setting_name),
-                     record.formID(),
+                     record.record_id(),
                      subrecord.position(),
                      subrecord.size()
                   )
@@ -188,7 +188,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                      notices::file_parse_warnings::game_setting_value_type_unknown(
                         source_file.path().filename().string(),
                         std::string_view(setting_name),
-                        record.formID()
+                        record.record_id()
                      )
                   );
                }
@@ -202,7 +202,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                notices::file_parse_warnings::game_setting_value_unreadable(
                   source_file.path().filename().string(),
                   std::string_view(setting_name),
-                  record.formID(),
+                  record.record_id(),
                   false
                )
             );

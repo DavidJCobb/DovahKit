@@ -15,7 +15,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
    inline form_stub* make_stub_from_record(const tes::file& source_file, size_t record_offset, const tes::record_header& header) {
       using invalid_id_exception = exceptions::file_parse_errors::record_has_invalid_record_id;
 
-      auto expected_form_id = utils::form_ids::record_id_to_form_id(source_file, header.formID);
+      auto expected_form_id = utils::form_ids::record_id_to_form_id(source_file, header.record_id);
       if (!expected_form_id.has_value()) {
          invalid_id_exception::problem_type type;
 
@@ -26,8 +26,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             case utils::form_ids::record_id_to_form_id_error::missing_master:
                throw exceptions::file_load_errors::missing_master_detected_at_record_load(
                   source_file.path(),
-                  source_file.header().masters[header.formID >> 0x18].master,
-                  header.formID
+                  source_file.header().masters[header.record_id >> 0x18].master,
+                  header.record_id
                );
          }
          throw invalid_id_exception(
