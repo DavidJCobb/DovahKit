@@ -2,54 +2,46 @@
 #include <intrin.h>
 #include "../cpuinfo.h"
 
+#include "./_macros/ARE_128_BIT_REGISTERS_DIFFERENT.h"
+#include "./_macros/CASE_FOLD_REGISTERS_IN_TANDEM.h"
+
 namespace lu::ascii {
    extern bool equals_i_simd(const std::string_view a, const std::string_view b) {
-      size_t size = a.size();
+      const size_t size = a.size();
       if (size != b.size())
          return false;
-      //
+
+      // help perf for debug builds where inlining never happens:
+      const auto* a_data = a.data();
+      const auto* b_data = b.data();
+      
       size_t i = 0;
-      if (auto& cpu = cpuinfo::get(); cpu.extension_support.sse_2 && cpu.extension_support.sse_3) {
+      const auto& cpu = cpuinfo::get();
+      if (cpu.extension_support.sse_2 && cpu.extension_support.sse_3) {
          auto mb_a = _mm_set1_epi8('A' - 1);
          auto mb_z = _mm_set1_epi8('Z' + 1);
-         //
-         auto _to_lower = [&mb_a, &mb_z](__m128i& data) {
-            //
-            // Goal: for each active byte in (mask_a), OR the byte in (data) by 0x20
-            //
-            auto mask_a = _mm_cmpgt_epi8(data, mb_a); // per byte: (a >= 'A') ? 0xFF : 0
-            auto mask_z = _mm_cmplt_epi8(data, mb_z); // per byte: (a <= 'Z') ? 0xFF : 0
-            mask_a = _mm_and_si128(mask_a, mask_z); // bitwise-AND
-            mask_a = _mm_and_si128(_mm_set1_epi8(0x20), mask_a); // per byte: (a >= 'A' && a <= 'Z') ? 0x20 : 0
-            data = _mm_or_si128(data, mask_a); // bitwise-OR
-         };
-         //
          for (; i + 15 < size; i += 16) {
-            auto ma = _mm_loadu_si128((const __m128i*)(a.data() + i));
-            auto mb = _mm_loadu_si128((const __m128i*)(b.data() + i));
-            _to_lower(ma);
-            _to_lower(mb);
-            auto eq = _mm_movemask_epi8(_mm_cmpeq_epi8(ma, mb));
-            if (eq != 0xFFFF) {
+            auto ma = _mm_loadu_si128((const __m128i*)(a_data + i));
+            auto mb = _mm_loadu_si128((const __m128i*)(b_data + i));
+            CASE_FOLD_REGISTERS_IN_TANDEM(ma, mb);
+            if (ARE_128_BIT_REGISTERS_DIFFERENT(ma, mb)) {
                return false;
             }
          }
          if (i + 7 < size) {
-            auto ma = _mm_loadl_epi64((const __m128i*)(a.data() + i));
-            auto mb = _mm_loadl_epi64((const __m128i*)(b.data() + i));
-            _to_lower(ma);
-            _to_lower(mb);
-            auto eq = _mm_movemask_epi8(_mm_cmpeq_epi8(ma, mb));
-            if (eq != 0xFFFF) {
+            auto ma = _mm_loadl_epi64((const __m128i*)(a_data + i));
+            auto mb = _mm_loadl_epi64((const __m128i*)(b_data + i));
+            CASE_FOLD_REGISTERS_IN_TANDEM(ma, mb);
+            if (ARE_128_BIT_REGISTERS_DIFFERENT(ma, mb)) {
                return false;
             }
-            //
+            
             i += 8;
          }
       }
       for (; i < size; ++i) {
-         char x = a[i];
-         char y = b[i];
+         char x = a_data[i];
+         char y = b_data[i];
          if (x >= 'A' && x <= 'Z')
             x |= 0x20;
          if (y >= 'A' && y <= 'Z')

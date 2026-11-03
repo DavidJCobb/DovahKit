@@ -11,6 +11,7 @@
 #include "./form_data_function_tables/load.h"
 #include "./form_stub_addenda.h"
 #include "./load_order_interfaces/form_load.h"
+#include "./localization/use_node.h"
 #include "./tes/file.h"
 #include "./tes/reading/file_view.h"
 #include "./tes/record_flags.h"
@@ -461,4 +462,112 @@ namespace dovah {
       if (now_used)
          this->_build_outbound_use(*now_used, flags_mask);
    }
+   
+   #pragma region Localized string use info
+      void form_stub::_add_string_use(_passkeys::build_use_info_during_load, const tes::file& tes_file, localized_string_type type, bare_localized_string_id id) {
+         auto* list_ptr = this->_string_use_info.get();
+         if (list_ptr) {
+            auto& list = *list_ptr;
+            for (auto* use_ptr : list) {
+               if (use_ptr->used.type == type && use_ptr->used.id == id && use_ptr->used.tes_file == &tes_file) {
+                  ++use_ptr->users.forms[this];
+                  return;
+               }
+            }
+         }
+
+         auto& alo = this->get_load_order();
+         auto& lsc = alo.get_localized_string_collection();
+
+         auto& use = lsc._get_or_create_use_node({}, tes_file, type, id);
+         ++use.users.forms[this];
+         if (!list_ptr) {
+            list_ptr = (this->_string_use_info = std::make_unique<std::vector<localization::use_node*>>()).get();
+         }
+         list_ptr->push_back(&use);
+      }
+
+      void form_stub::_replace_active_file_string_use(
+         lu::passkey<_base_managed_localized_string_use>,
+         localized_string_type    type,
+         bare_localized_string_id prior_id,
+         bare_localized_string_id after_id
+      ) {
+         if (prior_id == after_id)
+            return;
+         auto& alo         = this->get_load_order();
+         auto& lsc         = alo.get_localized_string_collection();
+         auto* active_file = alo.get_active_file();
+         assert(!!active_file);
+
+         localization::use_node* after_node = nullptr;
+         if (prior_id) {
+            assert(!!this->_string_use_info);
+            localization::use_node* prior_node = nullptr;
+            {
+               //
+               // Find and remove any entry for the previous localized string, and find any 
+               // existing entry for the replacement localized string.
+               //
+               auto& list     = *this->_string_use_info.get();
+               auto  prior_it = list.end();
+               for (auto it = list.begin(); it != list.end(); ++it) {
+                  auto&       use  = **it;
+                  const auto& used = use.used;
+                  if (used.type != type || used.tes_file != active_file)
+                     continue;
+                  if (used.id == prior_id) {
+                     prior_node = &use;
+                     prior_it   = it;
+                     break;
+                  }
+                  if (used.id == after_id) {
+                     after_node = &use;
+                  }
+               }
+               assert(!!prior_node);
+               assert(prior_it != list.end());
+               list.erase(prior_it);
+            }
+            //
+            // Pass the node for the previous localized string to the LSC, and let that lower 
+            // our use count. That way, the LSC can delete the use-node if we're severing the 
+            // last use of the localized string in question.
+            //
+            lsc._remove_active_file_string_user({}, *prior_node, *this);
+         } else if (after_id) {
+            if (!this->_string_use_info) {
+               //
+               // Ensure the list exists, since we want to insert into it soon.
+               //
+               this->_string_use_info = std::make_unique<std::vector<localization::use_node*>>();
+            } else {
+               //
+               // List already exists; see if we already have a pointer to the use node for 
+               // the target string (if such a node already exists), so we avoid adding a 
+               // duplicate pointer to the list.
+               //
+               auto& list = *this->_string_use_info.get();
+               for (auto* prior_use_ptr : list) {
+                  const auto& used = prior_use_ptr->used;
+                  if (used.type != type || used.tes_file != active_file)
+                     continue;
+                  if (used.id == after_id) {
+                     after_node = prior_use_ptr;
+                     break;
+                  }
+               }
+            }
+         }
+         if (after_id) {
+            if (after_node) {
+               ++after_node->users.forms[this];
+            } else {
+               auto& use = lsc._get_or_create_use_node({}, *active_file, type, after_id);
+               this->_string_use_info->push_back(&use);
+               ++use.users.forms[this];
+            }
+         }
+      }
+   #pragma endregion
 }

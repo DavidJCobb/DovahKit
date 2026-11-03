@@ -54,33 +54,10 @@ namespace dovah {
             c = std::tolower(c);
       }
 
-      bare_form_id last_form_id = 0;
+      auto  guard = std::lock_guard(this->_lock);
+      auto& dst   = this->_settings_by_name[key];
 
-      auto  guard       = std::lock_guard(this->_lock);
-      auto& dst         = this->_settings_by_name[key];
-      bool  is_new_file = false;
-      if (dst.data.empty()) {
-         dst.name       = name;
-         dst.definition = facts::game_settings::lookup_by_name(name);
-         is_new_file = true;
-      } else {
-         auto& last_file_info = dst.data.back();
-         last_form_id = last_file_info.last_form_id;
-         is_new_file  = last_file_info.source_file == &source_file;
-         if (!is_new_file) {
-            if (form_id) {
-               last_file_info.last_form_id = form_id;
-            }
-            last_file_info.value = std::move(value);
-         }
-      }
-      if (is_new_file) {
-         dst.data.push_back({
-            .source_file  = &source_file,
-            .last_form_id = form_id,
-            .value        = std::move(value)
-         });
-      }
-      return { dst, last_form_id };
+      bare_form_id moved_from_form_id = dst._on_record_loaded({}, source_file, form_id, name, std::move(value));
+      return { dst, moved_from_form_id };
    }
 }

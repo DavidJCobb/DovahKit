@@ -23,11 +23,9 @@
 
 * `string_file_bundle`, as read-only storage for non-active-file localized strings
 
+* `active_string_file_bundle`, as mutable storage for active-file localized strings
+
 ### Need
-
-* A data structure to store localized strings (mapping IDs to definitions, per language) for the active file
-
-  * Code to load L-string files not into immutable buffers, but into this data structure (i.e. for the active file exclusively, we need to load localized strings (if any are present) the way the alpha used to; though instead of `std::string`, we can potentially use `lu::low_footprint_string`).
 
 * A process whereby an active file can be switched between using localized and non-localized strings.
 

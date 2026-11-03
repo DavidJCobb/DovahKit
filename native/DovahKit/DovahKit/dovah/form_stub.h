@@ -3,6 +3,7 @@
 #include <concepts>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -12,6 +13,8 @@
 #include "lu/strings/low_footprint_string.h"
 #include "./_passkeys/build_use_info_during_load.h"
 #include "./types/bare_form_id.h"
+#include "./types/bare_localized_string_id.h"
+#include "./types/localized_string_type.h"
 #include "./use_info/entry.h"
 namespace dovah {
    namespace _passkeys {
@@ -19,6 +22,9 @@ namespace dovah {
    }
    namespace load_order_interfaces {
       class form_load;
+   }
+   namespace localization {
+      class use_node;
    }
    namespace tes {
       class file;
@@ -32,6 +38,8 @@ namespace dovah {
    class form_stub_collection;
    class managed_form_use;
    enum class form_type : uint8_t;
+
+   class _base_managed_localized_string_use;
 
    class untyped_form_data_pointer;
 
@@ -95,6 +103,7 @@ namespace dovah {
          use_info_list            outbound; // other forms that this form uses. entry flags descirbe `this`, the user form.
       protected:
          std::atomic<uint32_t>    refcount = 0; // of loaded form data
+         std::unique_ptr<std::vector<localization::use_node*>> _string_use_info; // vector owned; use nodes unowned
 
       public: // member functions
          bool can_unload_form() const noexcept;
@@ -169,6 +178,19 @@ namespace dovah {
 
          // Bidirectional; use post-load.
          void _replace_outbound_use(lu::passkey<managed_form_use>, form_stub* previously_used, form_stub* now_used, use_info::entry_flag_underlying_type flags_mask);
+
+         #pragma region Localized string use info
+            // during load
+            void _add_string_use(_passkeys::build_use_info_during_load, const tes::file&, localized_string_type, bare_localized_string_id);
+
+            // post-load, for editing
+            void _replace_active_file_string_use(
+               lu::passkey<_base_managed_localized_string_use>,
+               localized_string_type,
+               bare_localized_string_id prior_id,
+               bare_localized_string_id after_id
+            );
+         #pragma endregion
    };
 }
 

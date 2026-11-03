@@ -216,7 +216,6 @@ namespace dovah {
       }
       //
       // Wait for BSAs to finish loading, and then load localized strings.
-      // TODO: We could multi-thread this.
       //
       if (this->_bsa_collection) {
          this->_bsa_collection->wait_for_load_to_finish();
