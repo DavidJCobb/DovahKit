@@ -23,7 +23,7 @@ namespace dovah {
       const std::string& name,
       uint32_t           record_offset,
       bare_form_id       form_id,
-      types::game_settings::managed_value_variant&& value
+      types::game_settings::value_variant&& value
    ) {
       #if _DEBUG
       {
@@ -33,7 +33,7 @@ namespace dovah {
          bool identifiable = false;
          bool valid        = false;
          if (!name.empty()) {
-            facts::game_setting_types<true>::for_each_pair([&name, &value, &identifiable, &valid]<typename K, char V>() {
+            facts::game_setting_types::for_each_pair([&name, &value, &identifiable, &valid]<typename K, char V>() {
                bool is_this_type = name[0] == V || name[0] == (V - 0x20); // case-insensitive char check
                if (is_this_type)
                   identifiable = true;
@@ -57,6 +57,7 @@ namespace dovah {
 
       auto  guard = std::lock_guard(this->_lock);
       auto& dst   = this->_settings_by_name[key];
+      dst._owner = this; // in case newly-created
 
       bare_form_id moved_from_form_id = dst._on_record_loaded({}, source_file, record_offset, form_id, name, key, std::move(value));
       return { dst, moved_from_form_id };

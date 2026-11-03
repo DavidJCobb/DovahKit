@@ -254,6 +254,12 @@
     <ClCompile Include="dovah\localization\active_string_file_bundle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lu\ascii\compare_i.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\loaded_game_setting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1150,7 +1156,7 @@
     <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_value_has_extra_content.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\types\game_settings\managed_value_variant.h">
+    <ClInclude Include="dovah\types\game_settings\value_variant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\file_parse_warnings\game_setting_record_has_bad_form_id.h">
@@ -1238,6 +1244,33 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\utils\localization\data_by_string_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\localization\use_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\ascii\_macros\ARE_128_BIT_REGISTERS_DIFFERENT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\ascii\_macros\CASE_FOLD_REGISTERS_IN_TANDEM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\ascii\char_traits_ci.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\ascii\compare_i.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\ascii\contains_i.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\ascii\find_i.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\helpers\is_visitable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\types\localized_string_id.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1328,6 +1361,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\form_data\fragments\README.md" />
+    <None Include="dovah\loaded_game_setting.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />

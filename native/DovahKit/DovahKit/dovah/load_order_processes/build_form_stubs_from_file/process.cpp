@@ -539,7 +539,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
       size_t        record_offset,
       const tes::record_header& record_header,
       std::string&& setting_name,
-      types::game_settings::managed_value_variant&& setting_value
+      types::game_settings::value_variant&& setting_value
    ) {
       auto&       alo         = this->_params.active_load_order;
       const auto& callbacks   = this->_params.callbacks;
@@ -639,7 +639,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             (callbacks.on_warning)(
                notices::file_parse_warnings::game_setting_has_multiple_records_in_a_file(
                   source_file.path().filename().string(),
-                  insertion_result.first.name,
+                  insertion_result.first.name(),
                   record_id,
                   form_id,
                   insertion_result.second
@@ -675,12 +675,12 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             }
          }
       }
-      if (!insertion_result.first.definition) {
+      if (!insertion_result.first.definition()) {
          if (callbacks.on_warning) {
             (callbacks.on_warning)(
                notices::file_parse_warnings::game_setting_name_is_unrecognized(
                   source_file.path().filename().string(),
-                  insertion_result.first.name,
+                  insertion_result.first.name(),
                   record_id,
                   form_id
                )

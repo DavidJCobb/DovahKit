@@ -48,7 +48,7 @@ namespace dovah {
          } _files;
          bsa::archive_collection*        _bsa_collection = nullptr;
          form_stub_collection            _forms{ *this };
-         game_setting_collection         _game_settings;
+         game_setting_collection         _game_settings{ *this };
          game                            _game = game::skyrim_classic;
          localization::string_collection _localized_strings;
       public:

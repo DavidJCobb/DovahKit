@@ -133,6 +133,7 @@
     <ClCompile Include="dovah\form_stub_addendum_types\ordered_child_collection.cpp" />
     <ClCompile Include="dovah\form_stub_collection.cpp" />
     <ClCompile Include="dovah\game_setting_collection.cpp" />
+    <ClCompile Include="dovah\loaded_game_setting.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\extract_high_value_subrecords_for_stub.cpp" />
@@ -184,6 +185,7 @@
     <ClCompile Include="editor\localize\errno_code.cpp" />
     <ClCompile Include="editor\localize\exceptions\file_load_error.cpp" />
     <ClCompile Include="editor\localize\exceptions\load_order_error.cpp" />
+    <ClCompile Include="lu\ascii\compare_i.cpp" />
     <ClCompile Include="lu\ascii\equals_i.cpp" />
     <ClCompile Include="lu\bit\byteswap_in_place.cpp" />
     <ClCompile Include="lu\cpuinfo.cpp" />
@@ -267,6 +269,7 @@
     <None Include="dovah\form_data\fragments\declare_tabled_load_functions.inl">
       <FileType>Document</FileType>
     </None>
+    <ClInclude Include="dovah\form_data\helpers\is_visitable.h" />
     <ClInclude Include="dovah\form_data\helpers\subrecord_was_handled_at_stub_creation.h" />
     <ClInclude Include="dovah\form_data\helpers\type_aliases.h" />
     <ClInclude Include="dovah\form_data\helpers\load_hardcoded_form_data.h" />
@@ -320,6 +323,7 @@
     <ClInclude Include="dovah\localization\language.h" />
     <ClInclude Include="dovah\localization\string_collection.h" />
     <ClInclude Include="dovah\localization\string_file_bundle.h" />
+    <ClInclude Include="dovah\localization\use_node.h" />
     <ClInclude Include="dovah\notices\base_file_load_warning.h" />
     <ClInclude Include="dovah\notices\base_file_parse_warning.h" />
     <ClInclude Include="dovah\notices\base_form_load_warning.h" />
@@ -377,7 +381,8 @@
     <ClInclude Include="dovah\types\cells\grid_position.h" />
     <ClInclude Include="dovah\types\file_prefix.h" />
     <ClInclude Include="dovah\types\form_id.h" />
-    <ClInclude Include="dovah\types\game_settings\managed_value_variant.h" />
+    <ClInclude Include="dovah\types\game_settings\value_variant.h" />
+    <ClInclude Include="dovah\types\localized_string_id.h" />
     <ClInclude Include="dovah\types\localized_string_type.h" />
     <ClInclude Include="dovah\types\managed_form_use.h" />
     <ClInclude Include="dovah\types\managed_localized_string_use.h" />
@@ -438,8 +443,14 @@
     <ClInclude Include="lu\allocation_policies\incremental.h" />
     <ClInclude Include="lu\allocation_policies\one_at_a_time.h" />
     <ClInclude Include="lu\arrays\make_filled.h" />
+    <ClInclude Include="lu\ascii\char_traits_ci.h" />
+    <ClInclude Include="lu\ascii\compare_i.h" />
+    <ClInclude Include="lu\ascii\contains_i.h" />
     <ClInclude Include="lu\ascii\equals_i.h" />
+    <ClInclude Include="lu\ascii\find_i.h" />
     <ClInclude Include="lu\ascii\trim.h" />
+    <ClInclude Include="lu\ascii\_macros\ARE_128_BIT_REGISTERS_DIFFERENT.h" />
+    <ClInclude Include="lu\ascii\_macros\CASE_FOLD_REGISTERS_IN_TANDEM.h" />
     <ClInclude Include="lu\bit\all_ones.h" />
     <ClInclude Include="lu\bit\byteswap_in_place.h" />
     <ClInclude Include="lu\bit\edit_bit.h" />
@@ -544,6 +555,7 @@
     <None Include="dovah\form_data_pointer.inl" />
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stub_collection.inl" />
+    <None Include="dovah\loaded_game_setting.inl" />
     <None Include="dovah\localization\active_string_file_bundle.inl" />
     <None Include="dovah\localization\README.md">
       <SubType>

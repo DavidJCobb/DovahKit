@@ -5,20 +5,25 @@
 #include "lu/passkey.h"
 #include "dovah/loaded_game_setting.h"
 #include "dovah/types/bare_form_id.h"
-#include "dovah/types/game_settings/managed_value_variant.h"
+#include "dovah/types/game_settings/value_variant.h"
 namespace dovah {
    namespace load_order_processes::build_form_stubs_from_file {
       class process;
    }
+   class active_load_order;
 }
 
 namespace dovah {
    class game_setting_collection {
+      public:
+         active_load_order& owner;
       protected:
          std::unordered_map<std::string, loaded_game_setting> _settings_by_name; // keys are lowercase
          mutable std::mutex _lock; // for multi-threaded loads
 
       public:
+         constexpr game_setting_collection(active_load_order& alo) : owner(alo) {}
+
          template<typename Callable>
             requires std::is_invocable_v<Callable, const loaded_game_setting&>
          void for_each_loaded_game_setting(Callable&& callable) const {
@@ -44,7 +49,7 @@ namespace dovah {
             const std::string& name,
             uint32_t           record_offset,
             bare_form_id       form_id,
-            types::game_settings::managed_value_variant&&
+            types::game_settings::value_variant&&
          );
    };
 }

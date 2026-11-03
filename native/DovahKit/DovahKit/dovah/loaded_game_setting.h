@@ -4,7 +4,8 @@
 #include <vector>
 #include "lu/passkey.h"
 #include "./types/bare_form_id.h"
-#include "./types/game_settings/managed_value_variant.h"
+#include "./types/game_settings/value_variant.h"
+#include "./types/localized_string_type.h"
 namespace dovah {
    namespace facts::game_settings {
       class definition;
@@ -16,13 +17,16 @@ namespace dovah {
       class file;
    }
    class game_setting_collection;
+
+   template<localized_string_type LStringType>
+   class localized_string_id;
 }
 
 namespace dovah {
    class loaded_game_setting {
       friend game_setting_collection;
       protected:
-         using value_variant = types::game_settings::managed_value_variant;
+         using value_variant = types::game_settings::value_variant;
 
       public:
          struct source_file_info {
@@ -31,18 +35,34 @@ namespace dovah {
             bare_form_id     form_id       = 0; // may be zero if the GMST's record ID did not resolve to a valid form ID
          };
 
-      public:
-         const facts::game_settings::definition* definition = nullptr;
+      protected:
+         game_setting_collection*                _owner      = nullptr;
+         const facts::game_settings::definition* _definition = nullptr;
          struct {
             std::string loaded;    // needed separately from the definition so we can track GMSTs with invalid/no names
             std::string lowercase; // for faster lookups from maps, etc.
-         } name;
-         std::vector<source_file_info> source_files;
-      protected:
+         } _name;
+         std::vector<source_file_info> _source_files;
          struct {
             value_variant           variant;
             localization::use_node* string_use_info = nullptr;
          } _value;
+
+      public:
+         constexpr const facts::game_settings::definition* definition() const noexcept;
+         constexpr const std::string_view name() const noexcept;
+         constexpr const std::string_view name_in_lowercase() const noexcept;
+         constexpr const std::vector<source_file_info>& source_file_list() const noexcept;
+
+         constexpr const value_variant& get_value_variant() const noexcept;
+
+         // These assert that the typing is correct.
+         void set_value(bool);
+         void set_value(float);
+         void set_value(int32_t);
+         // These assert on typing, but also on writing localized strings to a non-localized active file or vice versa.
+         void set_value(localized_string_id<localized_string_type::general>);
+         void set_value(std::string&&);
 
       protected:
          // If the GMST was already defined in this source file, with a valid form ID, then this returns 
@@ -59,3 +79,5 @@ namespace dovah {
          );
    };
 }
+
+#include "./loaded_game_setting.inl"

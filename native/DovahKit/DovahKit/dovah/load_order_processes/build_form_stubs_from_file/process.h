@@ -3,7 +3,7 @@
 #include <string>
 #include "lu/passkey.h"
 #include "dovah/types/bare_form_id.h"
-#include "dovah/types/game_settings/managed_value_variant.h"
+#include "dovah/types/game_settings/value_variant.h"
 #include "./process_params.h"
 #include "./threads/exterior_cells_and_children.h"
 #include "./threads/forms_of_type.h"
@@ -69,7 +69,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
             size_t record_offset,
             const tes::record_header&,
             std::string&& setting_name,
-            types::game_settings::managed_value_variant&&
+            types::game_settings::value_variant&&
          );
 
       protected:
