@@ -130,23 +130,8 @@ namespace dovah::localization {
       assert(!!this->_active_file);
       assert(use.used.tes_file == &this->_active_file->get_tes_file());
 
-      std::string lowercase;
-      {
-         const size_t size = user.name.size();
-         lowercase.resize(size);
-         for (size_t i = 0; i < size; ++i) {
-            char c = user.name[i];
-            if (c >= 'A' && c <= 'Z')
-               c |= 0x20;
-            lowercase[i] = c;
-         }
-      }
-
-      auto it = use.users.game_settings.find(lowercase);
+      auto it = use.users.game_settings.find(user.name.lowercase);
       assert(it != use.users.game_settings.end() && "use isn't bidirectional?!");
-      if (--(it->second) == 0) {
-         use.users.game_settings.erase(it);
-         this->_destroy_use_node_if_no_users(use);
-      }
+      use.users.game_settings.erase(it);
    }
 }

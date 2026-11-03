@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <set>
 #include <string>
 #include "dovah/types/bare_localized_string_id.h"
 #include "dovah/types/localized_string_type.h"
@@ -22,7 +23,7 @@ namespace dovah::localization {
          struct {
             // the map values are use counts for each individual user
             std::map<form_stub*,  size_t> forms;
-            std::map<std::string, size_t> game_settings; // by name, forced to lowercase
+            std::set<std::string>         game_settings; // by name, forced to lowercase
          } users;
    };
 }

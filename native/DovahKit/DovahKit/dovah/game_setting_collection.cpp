@@ -21,6 +21,7 @@ namespace dovah {
       lu::passkey<load_order_processes::build_form_stubs_from_file::process>,
       const tes::file&   source_file,
       const std::string& name,
+      uint32_t           record_offset,
       bare_form_id       form_id,
       types::game_settings::managed_value_variant&& value
    ) {
@@ -57,7 +58,7 @@ namespace dovah {
       auto  guard = std::lock_guard(this->_lock);
       auto& dst   = this->_settings_by_name[key];
 
-      bare_form_id moved_from_form_id = dst._on_record_loaded({}, source_file, form_id, name, std::move(value));
+      bare_form_id moved_from_form_id = dst._on_record_loaded({}, source_file, record_offset, form_id, name, key, std::move(value));
       return { dst, moved_from_form_id };
    }
 }

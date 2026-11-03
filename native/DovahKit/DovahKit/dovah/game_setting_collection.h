@@ -42,6 +42,7 @@ namespace dovah {
             lu::passkey<load_order_processes::build_form_stubs_from_file::process>,
             const tes::file&   source_file,
             const std::string& name,
+            uint32_t           record_offset,
             bare_form_id       form_id,
             types::game_settings::managed_value_variant&&
          );

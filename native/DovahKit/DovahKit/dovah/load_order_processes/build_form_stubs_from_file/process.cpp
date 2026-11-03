@@ -630,6 +630,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file {
          {}, // passkey
          source_file,
          setting_name,
+         record_offset,
          form_id,
          std::move(setting_value)
       );
