@@ -12,6 +12,10 @@ namespace {
 }
 
 namespace dovah::tes {
+   const file& record_view::get_source_file() const {
+      return *this->owner.get_target_file();
+   }
+
    const subrecord_view& record_view::get_current_subrecord() const noexcept {
       return this->owner.subviews.subrecord;
    }

@@ -50,6 +50,9 @@ namespace dovah::tes {
          constexpr size_type file_offset_of_body() const noexcept { return this->file_offsets.body; }
          constexpr size_type file_offset_of_end() const noexcept { return this->file_offsets.end; }
 
+         // Precondition: the owning `file_view` must have had a target file set.
+         const file& get_source_file() const;
+
          const subrecord_view& get_current_subrecord() const noexcept;
          subrecord_view& get_current_subrecord() noexcept;
          subrecord_view& next_subrecord();

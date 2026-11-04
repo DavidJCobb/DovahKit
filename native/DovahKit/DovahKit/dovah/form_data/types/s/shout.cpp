@@ -2,9 +2,11 @@
 #include "dovah/form_data/helpers/subrecord_was_handled_at_stub_creation.h"
 #include "dovah/load_order_interfaces/form_load.h"
 #include "dovah/load_order_processes/use_info_build/use_info_builder.h"
+#include "dovah/tes/file.h"
 #include "dovah/tes/reading/record_view.h"
 #include "dovah/tes/reading/subrecord_view.h"
 #include "dovah/types/form_id.h"
+#include "dovah/types/localized_string_id.h"
 
 #include "dovah/notices/form_load_warnings/by_form_type/shout/wrong_word_count.h"
 
@@ -23,6 +25,8 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
          std::tuple_size_v<std::decay_t<decltype(uib.extra_form_ids)>> >= (max_word_count * 2),
          "UIBs must offer enough room for enough \"extra form IDs\" to accommodate the two forms per word in a Shout."
       );
+
+      const bool uses_localized_strings = record.get_source_file().header().flags.has_all_of<tes::file_header_flag::localized_strings>();
 
       size_t word_count = 0;
          
@@ -50,11 +54,23 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
          }
          return;
       }
-      //
+      
+      localized_string_id<localization::category::general>     name;
+      localized_string_id<localization::category::description> description;
       form_id equip_type;
       form_id menu_display_object;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
+            case 'FULL': // displayed name
+               if (uses_localized_strings) {
+                  subrecord.read(name);
+               }
+               break;
+            case 'DESC': // description
+               if (uses_localized_strings) {
+                  subrecord.read(description);
+               }
+               break;
             case 'MDOB': // menu display object
                subrecord.read(menu_display_object);
                break;
@@ -77,10 +93,12 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
                ++word_count;
                break;
             case 'EDID': // editor ID
-            case 'FULL': // displayed name
-            case 'DESC': // description
                break;
          }
+      }
+
+      if (uses_localized_strings) {
+         static_assert(false, "TODO: add `name` and `description`");
       }
       uib.add_outbound_use(equip_type);
       uib.add_outbound_use(menu_display_object);
