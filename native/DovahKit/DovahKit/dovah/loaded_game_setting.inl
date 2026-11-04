@@ -5,10 +5,10 @@ namespace dovah {
    constexpr const facts::game_settings::definition* loaded_game_setting::definition() const noexcept {
       return this->_definition;
    }
-   constexpr const std::string_view loaded_game_setting::name() const noexcept {
+   constexpr const std::string& loaded_game_setting::name() const noexcept {
       return this->_name.loaded;
    }
-   constexpr const std::string_view loaded_game_setting::name_in_lowercase() const noexcept {
+   constexpr const std::string& loaded_game_setting::name_in_lowercase() const noexcept {
       return this->_name.lowercase;
    }
    constexpr const std::vector<loaded_game_setting::source_file_info>& loaded_game_setting::source_file_list() const noexcept {

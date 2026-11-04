@@ -50,8 +50,8 @@ namespace dovah {
 
       public:
          constexpr const facts::game_settings::definition* definition() const noexcept;
-         constexpr const std::string_view name() const noexcept;
-         constexpr const std::string_view name_in_lowercase() const noexcept;
+         constexpr const std::string& name() const noexcept;
+         constexpr const std::string& name_in_lowercase() const noexcept;
          constexpr const std::vector<source_file_info>& source_file_list() const noexcept;
 
          constexpr const value_variant& get_value_variant() const noexcept;

@@ -92,8 +92,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
 
       bool found_data        = false;
       bool logged_misordered = false;
-      std::string                                 setting_name;
-      types::game_settings::managed_value_variant setting_value;
+      std::string                         setting_name;
+      types::game_settings::value_variant setting_value;
 
       record.next_subrecord();
       if (subrecord.signature() == 'EDID') {
@@ -212,7 +212,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          // validates that the setting name and type match.
          //
          if (!setting_name.empty()) {
-            facts::game_setting_types<true>::for_each_pair([&setting_name, &setting_value]<typename K, char V>() {
+            facts::game_setting_types::for_each_pair([&setting_name, &setting_value]<typename K, char V>() {
                if (setting_name.empty())
                   return lu::foreach_lambda_result::stop;
                if (setting_name[0] == V || setting_name[0] == (V - 0x20)) {
