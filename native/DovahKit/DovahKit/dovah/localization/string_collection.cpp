@@ -22,7 +22,7 @@ namespace dovah::localization {
 
    std::optional<string_collection::const_string_view> string_collection::lookup(
       const tes::file& tes_file,
-      localized_string_type type,
+      category category,
       language lang,
       bare_localized_string_id id
    ) const noexcept {
@@ -30,11 +30,11 @@ namespace dovah::localization {
       if (!bundle) {
          auto* ab = this->_active_file;
          if (ab && &ab->get_tes_file() == &tes_file) {
-            return ab->lookup(type, lang, id);
+            return ab->lookup(category, lang, id);
          }
          return {};
       }
-      return bundle->lookup(type, lang, id);
+      return bundle->lookup(category, lang, id);
    }
 
    void string_collection::_clear() {
@@ -65,7 +65,7 @@ namespace dovah::localization {
          //
          // This active-file string is now unused.
          //
-         auto& uses = this->_use_info[use.used.tes_file].for_type(use.used.type);
+         auto& uses = this->_use_info[use.used.tes_file].for_category(use.used.category);
          auto  uit  = std::find(uses.begin(), uses.end(), &use);
          assert(uit != uses.end() && "use that the string collection doesn't know about?!");
          uses.erase(uit);
@@ -95,18 +95,18 @@ namespace dovah::localization {
    use_node& string_collection::_get_or_create_use_node(
       lu::passkey<form_stub, loaded_game_setting>,
       const tes::file& tes_file,
-      localized_string_type type,
+      category category,
       bare_localized_string_id id
    ) {
       auto& data = this->_use_info[&tes_file];
-      auto& uses = data.for_type(type);
+      auto& uses = data.for_category(category);
       for (auto* use_ptr : uses)
          if (use_ptr->used.id == id)
             return *use_ptr;
       auto* use_ptr = new use_node;
       use_ptr->used = {
          .tes_file = &tes_file,
-         .type     = type,
+         .category = category,
          .id       = id
       };
       uses.push_back(use_ptr);
@@ -130,7 +130,7 @@ namespace dovah::localization {
       assert(!!this->_active_file);
       assert(use.used.tes_file == &this->_active_file->get_tes_file());
 
-      auto it = use.users.game_settings.find(user.name.lowercase);
+      auto it = use.users.game_settings.find(user.name_in_lowercase());
       assert(it != use.users.game_settings.end() && "use isn't bidirectional?!");
       use.users.game_settings.erase(it);
    }

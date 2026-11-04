@@ -784,9 +784,6 @@
     <ClInclude Include="dovah\types\file_prefix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\types\localized_string_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\types\managed_localized_string_use.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1243,7 +1240,7 @@
     <ClInclude Include="dovah\localization\active_string_file_bundle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\utils\localization\data_by_string_type.h">
+    <ClInclude Include="dovah\utils\localization\data_by_string_category.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\localization\use_node.h">
@@ -1271,6 +1268,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\types\localized_string_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\localization\category.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

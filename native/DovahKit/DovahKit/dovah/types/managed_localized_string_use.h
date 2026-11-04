@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 #include <variant>
+#include "dovah/localization/category.h"
 #include "./bare_localized_string_id.h"
-#include "./localized_string_type.h"
 namespace dovah {
    namespace tes {
       class file;
@@ -28,12 +28,12 @@ namespace dovah {
          > _value;
 
       private:
-         void _discard_localized_id(form_stub& containing_form, localized_string_type);
+         void _discard_localized_id(form_stub& containing_form, localization::category);
 
       protected:
-         void _set_localized_id(form_stub& containing_form, localized_string_type, bare_localized_string_id);
-         void _set_non_localized_string(form_stub& containing_form, localized_string_type, std::string_view);
-         void _set_non_localized_string(form_stub& containing_form, localized_string_type, std::string&&);
+         void _set_localized_id(form_stub& containing_form, localization::category, bare_localized_string_id);
+         void _set_non_localized_string(form_stub& containing_form, localization::category, std::string_view);
+         void _set_non_localized_string(form_stub& containing_form, localization::category, std::string&&);
 
       public:
          constexpr bool empty() const noexcept {
@@ -60,17 +60,19 @@ namespace dovah {
          bool stream(tes::subrecord_view& subrecord);
    };
 
-   template<auto LStringType>
+   template<localization::category V>
    class managed_localized_string_use : public _base_managed_localized_string_use {
       public:
+         static constexpr const localization::category category = V;
+
          void set_localized_id(form_stub& containing_form, bare_localized_string_id id) {
-            _base_managed_localized_string_use::_set_localized_id(containing_form, LStringType, id);
+            _base_managed_localized_string_use::_set_localized_id(containing_form, category, id);
          }
          void set_non_localized_string(form_stub& containing_form, std::string_view v) {
-            _base_managed_localized_string_use::_set_non_localized_string(containing_form, LStringType, v);
+            _base_managed_localized_string_use::_set_non_localized_string(containing_form, category, v);
          }
          void set_non_localized_string(form_stub& containing_form, std::string&& v) {
-            _base_managed_localized_string_use::_set_non_localized_string(containing_form, LStringType, std::move(v));
+            _base_managed_localized_string_use::_set_non_localized_string(containing_form, category, std::move(v));
          }
    };
 }

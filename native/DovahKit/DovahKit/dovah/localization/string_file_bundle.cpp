@@ -10,8 +10,8 @@ namespace dovah::localization {
    string_file_bundle::string_file_bundle(const tes::file& tes_file) : _tes_file(tes_file) {
    }
 
-   bool string_file_bundle::id_exists(localized_string_type type, bare_localized_string_id id) const noexcept {
-      auto& presence = this->_defined_ids.for_type(type);
+   bool string_file_bundle::id_exists(category category, bare_localized_string_id id) const noexcept {
+      auto& presence = this->_defined_ids.for_category(category);
       return presence.find(id) != presence.end();
    }
 
@@ -60,8 +60,8 @@ namespace dovah::localization {
          }
       }
    }
-   std::optional<string_file_bundle::const_string_view> string_file_bundle::lookup(localized_string_type type, language lang, bare_localized_string_id id) const noexcept {
-      auto& file = this->_by_language[(size_t)lang].for_type(type);
+   std::optional<string_file_bundle::const_string_view> string_file_bundle::lookup(category category, language lang, bare_localized_string_id id) const noexcept {
+      auto& file = this->_by_language[(size_t)lang].for_category(category);
       auto  it   = file.strings_by_id.find(id);
       if (it == file.strings_by_id.end())
          return {};
@@ -72,7 +72,7 @@ namespace dovah::localization {
       );
    }
 
-   void string_file_bundle::_parse_single_file(localized_string_type type, string_file& file, id_set& presence) {
+   void string_file_bundle::_parse_single_file(category category, string_file& file, id_set& presence) {
       lu::bytestreams::base_bytereader reader;
       reader.set_buffer({ file.buffer.data(), file.buffer.size() });
       if constexpr (std::endian::native != std::endian::little) {
@@ -89,7 +89,7 @@ namespace dovah::localization {
       const uint32_t text_data_base_offset = reader.position() + (count * 8);
 
       file.strings_by_id[0] = { 0, 0 }; // by convention, ID 0 is an empty string
-      if (facts::localized_strings::serialized_strings_are_length_prefixed(type)) {
+      if (facts::localized_strings::serialized_strings_are_length_prefixed(category)) {
          for (uint32_t i = 0; i < count; ++i) {
             bare_localized_string_id id;
             uint32_t                 offset = 0;

@@ -1,11 +1,11 @@
 #pragma once
-#include "dovah/types/localized_string_type.h"
+#include "dovah/localization/category.h"
 
 namespace dovah::facts::localized_strings {
-   constexpr bool serialized_strings_are_length_prefixed(localized_string_type type) {
+   constexpr bool serialized_strings_are_length_prefixed(localization::category type) {
       switch (type) {
-         case localized_string_type::description:
-         case localized_string_type::info:
+         case localization::category::description:
+         case localization::category::info:
             return true;
       }
       return false;

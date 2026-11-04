@@ -3,9 +3,9 @@
 #include <variant>
 #include <vector>
 #include "lu/passkey.h"
+#include "./localization/category.h"
 #include "./types/bare_form_id.h"
 #include "./types/game_settings/value_variant.h"
-#include "./types/localized_string_type.h"
 namespace dovah {
    namespace facts::game_settings {
       class definition;
@@ -18,7 +18,7 @@ namespace dovah {
    }
    class game_setting_collection;
 
-   template<localized_string_type LStringType>
+   template<localization::category LStringType>
    class localized_string_id;
 }
 
@@ -61,7 +61,7 @@ namespace dovah {
          void set_value(float);
          void set_value(int32_t);
          // These assert on typing, but also on writing localized strings to a non-localized active file or vice versa.
-         void set_value(localized_string_id<localized_string_type::general>);
+         void set_value(localized_string_id<localization::category::general>);
          void set_value(std::string&&);
 
       protected:

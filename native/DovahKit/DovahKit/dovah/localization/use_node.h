@@ -3,7 +3,7 @@
 #include <set>
 #include <string>
 #include "dovah/types/bare_localized_string_id.h"
-#include "dovah/types/localized_string_type.h"
+#include "./category.h"
 namespace dovah {
    namespace tes {
       class file;
@@ -17,7 +17,7 @@ namespace dovah::localization {
       public:
          struct {
             const tes::file*         tes_file = nullptr;
-            localized_string_type    type     = {};
+            enum category            category = {};
             bare_localized_string_id id       = 0;
          } used;
          struct {

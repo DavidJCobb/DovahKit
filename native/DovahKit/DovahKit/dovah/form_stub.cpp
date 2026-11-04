@@ -464,12 +464,12 @@ namespace dovah {
    }
    
    #pragma region Localized string use info
-      void form_stub::_add_string_use(_passkeys::build_use_info_during_load, const tes::file& tes_file, localized_string_type type, bare_localized_string_id id) {
+      void form_stub::_add_string_use(_passkeys::build_use_info_during_load, const tes::file& tes_file, localization::category c, bare_localized_string_id id) {
          auto* list_ptr = this->_string_use_info.get();
          if (list_ptr) {
             auto& list = *list_ptr;
             for (auto* use_ptr : list) {
-               if (use_ptr->used.type == type && use_ptr->used.id == id && use_ptr->used.tes_file == &tes_file) {
+               if (use_ptr->used.category == c && use_ptr->used.id == id && use_ptr->used.tes_file == &tes_file) {
                   ++use_ptr->users.forms[this];
                   return;
                }
@@ -479,7 +479,7 @@ namespace dovah {
          auto& alo = this->get_load_order();
          auto& lsc = alo.get_localized_string_collection();
 
-         auto& use = lsc._get_or_create_use_node({}, tes_file, type, id);
+         auto& use = lsc._get_or_create_use_node({}, tes_file, c, id);
          ++use.users.forms[this];
          if (!list_ptr) {
             list_ptr = (this->_string_use_info = std::make_unique<std::vector<localization::use_node*>>()).get();
@@ -489,7 +489,7 @@ namespace dovah {
 
       void form_stub::_replace_active_file_string_use(
          lu::passkey<_base_managed_localized_string_use>,
-         localized_string_type    type,
+         localization::category   category,
          bare_localized_string_id prior_id,
          bare_localized_string_id after_id
       ) {
@@ -514,7 +514,7 @@ namespace dovah {
                for (auto it = list.begin(); it != list.end(); ++it) {
                   auto&       use  = **it;
                   const auto& used = use.used;
-                  if (used.type != type || used.tes_file != active_file)
+                  if (used.category != category || used.tes_file != active_file)
                      continue;
                   if (used.id == prior_id) {
                      prior_node = &use;
@@ -550,7 +550,7 @@ namespace dovah {
                auto& list = *this->_string_use_info.get();
                for (auto* prior_use_ptr : list) {
                   const auto& used = prior_use_ptr->used;
-                  if (used.type != type || used.tes_file != active_file)
+                  if (used.category != category || used.tes_file != active_file)
                      continue;
                   if (used.id == after_id) {
                      after_node = prior_use_ptr;
@@ -563,7 +563,7 @@ namespace dovah {
             if (after_node) {
                ++after_node->users.forms[this];
             } else {
-               auto& use = lsc._get_or_create_use_node({}, *active_file, type, after_id);
+               auto& use = lsc._get_or_create_use_node({}, *active_file, category, after_id);
                this->_string_use_info->push_back(&use);
                ++use.users.forms[this];
             }

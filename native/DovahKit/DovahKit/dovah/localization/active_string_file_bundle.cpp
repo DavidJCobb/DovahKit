@@ -11,8 +11,8 @@ namespace dovah::localization {
    active_string_file_bundle::active_string_file_bundle(const tes::file& tes_file) : _tes_file(tes_file) {
    }
 
-   bool active_string_file_bundle::id_exists(localized_string_type type, bare_localized_string_id id) const noexcept {
-      auto& presence = this->_defined_ids.for_type(type);
+   bool active_string_file_bundle::id_exists(category category, bare_localized_string_id id) const noexcept {
+      auto& presence = this->_defined_ids.for_category(category);
       return presence.find(id) != presence.end();
    }
 
@@ -48,7 +48,7 @@ namespace dovah::localization {
             auto  buffer   = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!buffer.empty())
-               this->_parse_single_file(buffer, localized_string_type::general, dst, this->_defined_ids.general);
+               this->_parse_single_file(buffer, category::general, dst, this->_defined_ids.general);
          }
          {
             auto& dst      = data.description;
@@ -56,7 +56,7 @@ namespace dovah::localization {
             auto  buffer = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!buffer.empty())
-               this->_parse_single_file(buffer, localized_string_type::description, dst, this->_defined_ids.description);
+               this->_parse_single_file(buffer, category::description, dst, this->_defined_ids.description);
          }
          {
             auto& dst      = data.info;
@@ -64,27 +64,27 @@ namespace dovah::localization {
             auto  buffer = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!buffer.empty())
-               this->_parse_single_file(buffer, localized_string_type::info, dst, this->_defined_ids.info);
+               this->_parse_single_file(buffer, category::info, dst, this->_defined_ids.info);
          }
       }
    }
-   std::optional<active_string_file_bundle::const_string_view> active_string_file_bundle::lookup(localized_string_type type, language lang, bare_localized_string_id id) const noexcept {
-      auto& file = this->_by_language[(size_t)lang].for_type(type);
+   std::optional<active_string_file_bundle::const_string_view> active_string_file_bundle::lookup(category category, language lang, bare_localized_string_id id) const noexcept {
+      auto& file = this->_by_language[(size_t)lang].for_category(category);
       auto  it   = file.strings_by_id.find(id);
       if (it == file.strings_by_id.end())
          return {};
       const auto& s = it->second;
       return const_string_view(s.data(), s.size());
    }
-   void active_string_file_bundle::replace(localized_string_type type, language lang, bare_localized_string_id id, const std::string& v) {
+   void active_string_file_bundle::replace(category category, language lang, bare_localized_string_id id, const std::string& v) {
       if (id == 0) {
          return;
       }
-      auto& file = this->_by_language[(size_t)lang].for_type(type);
+      auto& file = this->_by_language[(size_t)lang].for_category(category);
       file.strings_by_id[id] = v;
    }
 
-   void active_string_file_bundle::_parse_single_file(asset_file_buffer& buffer, localized_string_type type, string_file& file, id_set& presence) {
+   void active_string_file_bundle::_parse_single_file(asset_file_buffer& buffer, category category, string_file& file, id_set& presence) {
       lu::bytestreams::base_bytereader reader;
       reader.set_buffer({ buffer.data(), buffer.size() });
       if constexpr (std::endian::native != std::endian::little) {
@@ -100,7 +100,7 @@ namespace dovah::localization {
       const uint32_t text_data_base_offset = reader.position() + (count * 8);
 
       file.strings_by_id[0] = { 0, 0 }; // by convention, ID 0 is an empty string
-      if (facts::localized_strings::serialized_strings_are_length_prefixed(type)) {
+      if (facts::localized_strings::serialized_strings_are_length_prefixed(category)) {
          for (uint32_t i = 0; i < count; ++i) {
             bare_localized_string_id id;
             uint32_t                 offset = 0;

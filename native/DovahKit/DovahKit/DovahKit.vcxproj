@@ -320,6 +320,7 @@
     <ClInclude Include="dovah\load_order_processes\use_info_build\use_info_builder_form_specific_data.h" />
     <ClInclude Include="dovah\load_order_processes\use_info_build\worker_thread.h" />
     <ClInclude Include="dovah\localization\active_string_file_bundle.h" />
+    <ClInclude Include="dovah\localization\category.h" />
     <ClInclude Include="dovah\localization\language.h" />
     <ClInclude Include="dovah\localization\string_collection.h" />
     <ClInclude Include="dovah\localization\string_file_bundle.h" />
@@ -383,7 +384,6 @@
     <ClInclude Include="dovah\types\form_id.h" />
     <ClInclude Include="dovah\types\game_settings\value_variant.h" />
     <ClInclude Include="dovah\types\localized_string_id.h" />
-    <ClInclude Include="dovah\types\localized_string_type.h" />
     <ClInclude Include="dovah\types\managed_form_use.h" />
     <ClInclude Include="dovah\types\managed_localized_string_use.h" />
     <ClInclude Include="dovah\types\unmanaged_localized_string_use.h" />
@@ -428,7 +428,7 @@
     <ClInclude Include="dovah\utils\form_types\is_cell_child.h" />
     <ClInclude Include="dovah\utils\form_types\is_ref.h" />
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
-    <ClInclude Include="dovah\utils\localization\data_by_string_type.h" />
+    <ClInclude Include="dovah\utils\localization\data_by_string_category.h" />
     <ClInclude Include="dovah\utils\worldspaces\world_coordinate_to_grid_coordinate.h" />
     <ClInclude Include="dovah\utils\worldspaces\world_position_to_grid_position.h" />
     <ClInclude Include="dovah\_impl\form_stubs\make_one_way_use_bidirectional.h" />

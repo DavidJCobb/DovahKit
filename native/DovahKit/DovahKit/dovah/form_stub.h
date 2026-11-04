@@ -12,9 +12,9 @@
 #include "lu/passkey.h"
 #include "lu/strings/low_footprint_string.h"
 #include "./_passkeys/build_use_info_during_load.h"
+#include "./localization/category.h"
 #include "./types/bare_form_id.h"
 #include "./types/bare_localized_string_id.h"
-#include "./types/localized_string_type.h"
 #include "./use_info/entry.h"
 namespace dovah {
    namespace _passkeys {
@@ -181,12 +181,12 @@ namespace dovah {
 
          #pragma region Localized string use info
             // during load
-            void _add_string_use(_passkeys::build_use_info_during_load, const tes::file&, localized_string_type, bare_localized_string_id);
+            void _add_string_use(_passkeys::build_use_info_during_load, const tes::file&, localization::category, bare_localized_string_id);
 
             // post-load, for editing
             void _replace_active_file_string_use(
                lu::passkey<_base_managed_localized_string_use>,
-               localized_string_type,
+               localization::category,
                bare_localized_string_id prior_id,
                bare_localized_string_id after_id
             );

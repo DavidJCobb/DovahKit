@@ -6,8 +6,8 @@
 #include <vector>
 #include "lu/passkey.h"
 #include "../types/bare_localized_string_id.h"
-#include "../types/localized_string_type.h"
-#include "../utils/localization/data_by_string_type.h"
+#include "../utils/localization/data_by_string_category.h"
+#include "./category.h"
 #include "./language.h"
 namespace dovah {
    namespace bsa {
@@ -38,7 +38,7 @@ namespace dovah::localization {
          active_string_file_bundle*       _active_file = nullptr; // owned
          std::unordered_map<
             const tes::file*,
-            utils::localization::data_by_string_type<
+            utils::localization::data_by_string_category<
                std::vector<use_node*> // owned
             >
          > _use_info;
@@ -46,7 +46,7 @@ namespace dovah::localization {
       public:
          const active_string_file_bundle* bundle_for_active_file() const;
          const string_file_bundle* bundle_for_non_active_file(const tes::file&) const;
-         std::optional<const_string_view> lookup(const tes::file&, localized_string_type, language, bare_localized_string_id) const noexcept;
+         std::optional<const_string_view> lookup(const tes::file&, category, language, bare_localized_string_id) const noexcept;
 
       protected:
          void _clear();
@@ -60,7 +60,7 @@ namespace dovah::localization {
          use_node& _get_or_create_use_node(
             lu::passkey<form_stub, loaded_game_setting>,
             const tes::file&,
-            localized_string_type,
+            category,
             bare_localized_string_id
          );
 

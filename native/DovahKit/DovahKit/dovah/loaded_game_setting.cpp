@@ -36,7 +36,7 @@ namespace dovah {
       #endif
       std::get<decltype(v)>(this->_value.variant) = v;
    }
-   void loaded_game_setting::set_value(localized_string_id<localized_string_type::general> id) {
+   void loaded_game_setting::set_value(localized_string_id<localization::category::general> id) {
       #if _DEBUG
       {
          auto n = this->name_in_lowercase();
@@ -58,7 +58,7 @@ namespace dovah {
       }
       if (id) {
          auto& lsc = alo.get_localized_string_collection();
-         auto& use = lsc._get_or_create_use_node({}, *active_file, localized_string_type::general, (bare_localized_string_id)id);
+         auto& use = lsc._get_or_create_use_node({}, *active_file, localization::category::general, (bare_localized_string_id)id);
          use.users.game_settings.insert(this->_name.lowercase);
          this->_value.string_use_info = &use;
       }
@@ -136,7 +136,7 @@ namespace dovah {
             }
          }
          if (string_id_after) {
-            auto& use = lsc._get_or_create_use_node({}, source_file, localized_string_type::general, string_id_after);
+            auto& use = lsc._get_or_create_use_node({}, source_file, localization::category::general, string_id_after);
             use.users.game_settings.insert(this->_name.lowercase);
          }
       }

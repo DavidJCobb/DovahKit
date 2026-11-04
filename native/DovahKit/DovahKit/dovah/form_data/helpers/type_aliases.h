@@ -1,6 +1,6 @@
 #pragma once
 #include "../params.h"
-#include "dovah/types/localized_string_type.h"
+#include "dovah/localization/category.h"
 namespace dovah {
    class form_stub;
    class managed_form_use;
@@ -23,9 +23,9 @@ namespace dovah::form_data_helpers {
          template<auto UseInfoEntryFlag>
          using unique_form_use = unique_managed_form_use<UseInfoEntryFlag>;
 
-         using localized_general_string_use     = managed_localized_string_use<localized_string_type::general>;
-         using localized_description_string_use = managed_localized_string_use<localized_string_type::description>;
-         using localized_info_string_use        = managed_localized_string_use<localized_string_type::info>;
+         using localized_general_string_use     = managed_localized_string_use<localization::category::general>;
+         using localized_description_string_use = managed_localized_string_use<localization::category::description>;
+         using localized_info_string_use        = managed_localized_string_use<localization::category::info>;
       };
       struct unmanaged {
          using form_use = form_stub*;
@@ -33,9 +33,9 @@ namespace dovah::form_data_helpers {
          template<auto UseInfoEntryFlag>
          using unique_form_use = form_use;
 
-         using localized_general_string_use     = unmanaged_localized_string_use<localized_string_type::general>;
-         using localized_description_string_use = unmanaged_localized_string_use<localized_string_type::description>;
-         using localized_info_string_use        = unmanaged_localized_string_use<localized_string_type::info>;
+         using localized_general_string_use     = unmanaged_localized_string_use<localization::category::general>;
+         using localized_description_string_use = unmanaged_localized_string_use<localization::category::description>;
+         using localized_info_string_use        = unmanaged_localized_string_use<localization::category::info>;
       };
    }
    template<form_data_params Params>

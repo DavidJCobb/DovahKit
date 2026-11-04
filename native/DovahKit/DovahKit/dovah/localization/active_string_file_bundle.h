@@ -6,8 +6,8 @@
 #include <string>
 #include <string_view>
 #include "dovah/types/bare_localized_string_id.h"
-#include "dovah/types/localized_string_type.h"
-#include "dovah/utils/localization/data_by_string_type.h"
+#include "dovah/utils/localization/data_by_string_category.h"
+#include "./category.h"
 #include "./language.h"
 namespace dovah {
    namespace bsa {
@@ -37,35 +37,35 @@ namespace dovah::localization {
             id_to_string_map strings_by_id;
          };
 
-         using per_language_data = utils::localization::data_by_string_type<string_file>;
+         using per_language_data = utils::localization::data_by_string_category<string_file>;
 
       public:
          active_string_file_bundle(const tes::file&);
 
          template<typename Callable>
             requires std::is_invocable_v<Callable, bare_localized_string_id>
-         void for_each_string_id_of_type(localized_string_type, Callable&&) const;
+         void for_each_string_id_of_category(category, Callable&&) const;
 
          template<typename Callable>
             requires std::is_invocable_v<Callable, bare_localized_string_id, const std::string&>
-         void for_each_string_matching_criteria(localized_string_type, language, Callable&&) const;
+         void for_each_string_matching_criteria(category, language, Callable&&) const;
 
          constexpr const tes::file& get_tes_file() const noexcept {
             return this->_tes_file;
          }
 
-         bool id_exists(localized_string_type, bare_localized_string_id) const noexcept;
+         bool id_exists(category, bare_localized_string_id) const noexcept;
 
          void load(const dovah::bsa::archive_collection&);
-         std::optional<const_string_view> lookup(localized_string_type, language, bare_localized_string_id) const noexcept;
-         void replace(localized_string_type, language, bare_localized_string_id, const std::string& new_text);
+         std::optional<const_string_view> lookup(category, language, bare_localized_string_id) const noexcept;
+         void replace(category, language, bare_localized_string_id, const std::string& new_text);
 
       protected:
          const tes::file& _tes_file;
          std::array<per_language_data, language_count>    _by_language;
-         utils::localization::data_by_string_type<id_set> _defined_ids;
+         utils::localization::data_by_string_category<id_set> _defined_ids;
 
-         void _parse_single_file(asset_file_buffer&, localized_string_type, string_file&, id_set&);
+         void _parse_single_file(asset_file_buffer&, category, string_file&, id_set&);
    };
 }
 

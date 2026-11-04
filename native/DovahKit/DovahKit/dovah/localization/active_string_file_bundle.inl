@@ -5,8 +5,8 @@
 namespace dovah::localization {
    template<typename Callable>
       requires std::is_invocable_v<Callable, bare_localized_string_id>
-   void active_string_file_bundle::for_each_string_id_of_type(localized_string_type type, Callable&& callable) const {
-      const auto& presence = this->_defined_ids.for_type(type);
+   void active_string_file_bundle::for_each_string_id_of_category(category cat, Callable&& callable) const {
+      const auto& presence = this->_defined_ids.for_category(cat);
       for (const auto id : presence) {
          if constexpr (std::is_invocable_r_v<lu::foreach_lambda_result, Callable, bare_localized_string_id>) {
             auto result = callable(id);
@@ -20,8 +20,8 @@ namespace dovah::localization {
 
    template<typename Callable>
       requires std::is_invocable_v<Callable, bare_localized_string_id, const std::string&>
-   void active_string_file_bundle::for_each_string_matching_criteria(localized_string_type type, language lang, Callable&& callable) const {
-      const auto& file = this->_by_language[(size_t)lang].for_type(type);
+   void active_string_file_bundle::for_each_string_matching_criteria(category cat, language lang, Callable&& callable) const {
+      const auto& file = this->_by_language[(size_t)lang].for_category(cat);
       for (const auto& [id, string] : file.strings_by_id) {
          if constexpr (std::is_invocable_r_v<lu::foreach_lambda_result, Callable, bare_localized_string_id, const std::string&>) {
             auto result = callable(id, string);

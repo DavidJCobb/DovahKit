@@ -9,7 +9,7 @@
 #include "dovah/tes/reading/subrecord_view.h"
 
 namespace dovah {
-   void _base_managed_localized_string_use::_discard_localized_id(form_stub& containing_form, localized_string_type type) {
+   void _base_managed_localized_string_use::_discard_localized_id(form_stub& containing_form, localization::category category) {
       auto& alo         = containing_form.get_load_order();
       auto& lsc         = alo.get_localized_string_collection();
       auto* active_file = alo.get_active_file();
@@ -20,12 +20,12 @@ namespace dovah {
       if (std::holds_alternative<_localized_id>(this->_value)) {
          prior_id = std::get<_localized_id>(this->_value).id;
          if (prior_id) {
-            containing_form._replace_active_file_string_use({}, type, prior_id, 0);
+            containing_form._replace_active_file_string_use({}, category, prior_id, 0);
          }
       }
    }
 
-   void _base_managed_localized_string_use::_set_localized_id(form_stub& containing_form, localized_string_type type, bare_localized_string_id id) {
+   void _base_managed_localized_string_use::_set_localized_id(form_stub& containing_form, localization::category category, bare_localized_string_id id) {
       auto& alo         = containing_form.get_load_order();
       auto& lsc         = alo.get_localized_string_collection();
       auto* active_file = alo.get_active_file();
@@ -38,18 +38,18 @@ namespace dovah {
       }
       if (prior_id == id)
          return;
-      containing_form._replace_active_file_string_use({}, type, prior_id, id);
+      containing_form._replace_active_file_string_use({}, category, prior_id, id);
       this->_value.emplace<_localized_id>() = {
          .file = active_file,
          .id   = id,
       };
    }
-   void _base_managed_localized_string_use::_set_non_localized_string(form_stub& containing_form, localized_string_type type, std::string_view text) {
-      this->_discard_localized_id(containing_form, type);
+   void _base_managed_localized_string_use::_set_non_localized_string(form_stub& containing_form, localization::category category, std::string_view text) {
+      this->_discard_localized_id(containing_form, category);
       this->_value.emplace<std::string>() = text;
    }
-   void _base_managed_localized_string_use::_set_non_localized_string(form_stub& containing_form, localized_string_type type, std::string&& text) {
-      this->_discard_localized_id(containing_form, type);
+   void _base_managed_localized_string_use::_set_non_localized_string(form_stub& containing_form, localization::category category, std::string&& text) {
+      this->_discard_localized_id(containing_form, category);
       this->_value.emplace<std::string>() = std::move(text);
    }
 
