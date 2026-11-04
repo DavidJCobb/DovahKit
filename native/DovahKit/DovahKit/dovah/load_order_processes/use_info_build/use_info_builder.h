@@ -1,12 +1,12 @@
 #pragma once
 #include <array>
-#include <cstdint>
 #include "lu/containers/small_vector.h"
 #include "dovah/types/bare_form_id.h"
 #include "dovah/types/form_id.h"
 #include "dovah/use_info/entry_flag_to_mask.h"
 #include "dovah/use_info/entry_flag_underlying_type.h"
 #include "dovah/use_info/is_entry_flag_type.h"
+#include "dovah/utils/localization/data_by_string_type.h"
 
 namespace dovah {
    namespace load_order_processes::use_info_build {
@@ -35,7 +35,10 @@ namespace dovah::load_order_processes::use_info_build {
          bool _is_base_record    = false;
          bool _is_final_file     = false;
          bool _is_partial_record = false;
-         lu::small_vector<pending_entry, 20> _pending;
+         struct {
+            lu::small_vector<pending_entry, 20> of_forms;
+            utils::localization::data_by_string_type<lu::small_vector<bare_localized_string_id, 2>> of_strings;
+         } _pending_uses;
          form_specific_data* _form_specific_data = nullptr;
          use_info_builder*   _parent = nullptr;
          

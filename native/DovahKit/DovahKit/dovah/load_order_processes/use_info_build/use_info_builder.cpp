@@ -18,18 +18,18 @@ namespace dovah::load_order_processes::use_info_build {
    void use_info_builder::add_outbound_use(form_id used_form_id, use_info::entry_flag_underlying_type flags) {
       if (!used_form_id)
          return;
-      this->_pending.push_back(pending_entry{
+      this->_pending_uses.of_forms.push_back(pending_entry{
          .target_id = (bare_form_id)used_form_id,
          .flags     = flags
       });
    }
    void use_info_builder::cancel_outbound_use(form_id used_form_id, use_info::entry_flag_underlying_type flags) {
       const auto   bare_used_form_id = (bare_form_id)used_form_id;
-      const size_t size              = this->_pending.size();
+      const size_t size              = this->_pending_uses.of_forms.size();
       for (size_t i = 0; i < size; ++i) {
-         auto& entry = this->_pending[i];
+         auto& entry = this->_pending_uses.of_forms[i];
          if (entry.target_id == bare_used_form_id && entry.flags == flags) {
-            this->_pending.erase(this->_pending.begin() + i);
+            this->_pending_uses.of_forms.erase(this->_pending_uses.of_forms.begin() + i);
             return;
          }
       }
@@ -40,10 +40,10 @@ namespace dovah::load_order_processes::use_info_build {
             fsd->commit(*this->_parent);
             fsd->clear();
          }
-         for (auto& entry : this->_pending) {
-            this->_parent->_pending.push_back(entry);
+         for (auto& entry : this->_pending_uses.of_forms) {
+            this->_parent->_pending_uses.of_forms.push_back(entry);
          }
-         this->_pending.clear();
+         this->_pending_uses.of_forms.clear();
          return;
       }
 
@@ -51,13 +51,13 @@ namespace dovah::load_order_processes::use_info_build {
          fsd->commit(*this);
          fsd->clear();
       }
-      for (auto& entry : this->_pending) {
+      for (auto& entry : this->_pending_uses.of_forms) {
          if (auto* to_stub = entry.target_stub)
             this->_stub._add_one_way_outbound_use({}, *to_stub, entry.flags);
          else
             this->_stub._add_one_way_outbound_use({}, entry.target_id, entry.flags);
       }
-      this->_pending.clear();
+      this->_pending_uses.of_forms.clear();
    }
    
    [[nodiscard]] use_info_builder* use_info_builder::spawn_subordinate() noexcept {
@@ -83,7 +83,7 @@ namespace dovah::load_order_processes::use_info_build {
       if (auto* fsd = this->_form_specific_data) {
          fsd->clear();
       }
-      this->_pending.clear();
+      this->_pending_uses.of_forms.clear();
    }
    void use_info_builder::clear_all_prior_use_info() const noexcept {
       use_info::entry parent_entry;
