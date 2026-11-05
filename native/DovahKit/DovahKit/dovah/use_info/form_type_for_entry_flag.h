@@ -4,13 +4,13 @@
 #include "./entry_flags/base_extra_data.h"
 #include "./FOR_EACH_ENTRY_FLAG_TYPE.define.h"
 
-namespace dovah::use_info::entry_flags {
+namespace dovah::form_use_info::entry_flags {
    #define X(name, ...) enum class name : entry_flag_underlying_type;
    FOR_EACH_ENTRY_FLAG_TYPE(X);
    #undef X
 }
 
-namespace dovah::use_info {
+namespace dovah::form_use_info {
    template<auto UseInfoEntryFlag>
    constexpr const form_type form_type_for_entry_flag = []() -> form_type {
       using entry_flag_type = decltype(UseInfoEntryFlag);

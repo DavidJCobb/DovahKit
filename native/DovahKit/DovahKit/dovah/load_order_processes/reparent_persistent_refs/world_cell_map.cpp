@@ -28,7 +28,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
       auto* p_cell = world.addenda ? world.addenda->persistent_cell : nullptr;
       for (auto& pair : world.inbound) {
          auto& entry = pair.second;
-         if (!(entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)))
+         if (!(entry.flags & form_use_info::entry_flag_to_mask(form_use_info::entry_flags::base::parent)))
             continue;
          auto* cell = entry.other;
          if (!cell || cell->form_type != form_type::cell)

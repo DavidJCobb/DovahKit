@@ -15,7 +15,7 @@ namespace dovah::load_order_processes::use_info_build {
       }
    }
 
-   void use_info_builder::add_outbound_use(form_id used_form_id, use_info::entry_flag_underlying_type flags) {
+   void use_info_builder::add_outbound_use(form_id used_form_id, form_use_info::entry_flag_underlying_type flags) {
       if (!used_form_id)
          return;
       this->_pending_uses.of_forms.push_back(pending_entry{
@@ -23,7 +23,7 @@ namespace dovah::load_order_processes::use_info_build {
          .flags     = flags
       });
    }
-   void use_info_builder::cancel_outbound_use(form_id used_form_id, use_info::entry_flag_underlying_type flags) {
+   void use_info_builder::cancel_outbound_use(form_id used_form_id, form_use_info::entry_flag_underlying_type flags) {
       const auto   bare_used_form_id = (bare_form_id)used_form_id;
       const size_t size              = this->_pending_uses.of_forms.size();
       for (size_t i = 0; i < size; ++i) {
@@ -86,12 +86,12 @@ namespace dovah::load_order_processes::use_info_build {
       this->_pending_uses.of_forms.clear();
    }
    void use_info_builder::clear_all_prior_use_info() const noexcept {
-      use_info::entry parent_entry;
+      form_use_info::entry parent_entry;
       //
       auto& stub = this->_stub;
       for (auto& pair : stub.outbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent))
+         if (entry.flags & form_use_info::entry_flag_to_mask(form_use_info::entry_flags::base::parent))
             parent_entry = entry;
       }
       stub.outbound.clear();

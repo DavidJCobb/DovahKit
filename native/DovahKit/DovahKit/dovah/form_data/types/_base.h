@@ -21,7 +21,7 @@ namespace dovah {
 namespace dovah::form_data {
    template<form_data_params Params>
    using _base = std::conditional_t<
-      (Params::management_mode == use_info::management_mode::managed),
+      (Params::management_mode == form_use_info::management_mode::managed),
       base_managed_form_data,
       base_unmanaged_form_data
    >;

@@ -21,7 +21,7 @@ namespace dovah {
          void set(form_stub& containing_form, form_stub* value);
 
       protected:
-         void _set_with_flags(form_stub& containing_form, form_stub* value, use_info::entry_flag_underlying_type mask);
+         void _set_with_flags(form_stub& containing_form, form_stub* value, form_use_info::entry_flag_underlying_type mask);
 
       public:
          bool stream(tes::subrecord_view& subrecord);

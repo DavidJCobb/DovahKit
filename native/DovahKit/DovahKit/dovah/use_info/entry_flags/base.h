@@ -4,7 +4,7 @@
 #include "../entry_flag_type_pertains_to_form_type.h"
 #include "../../form_type.h"
 
-namespace dovah::use_info::entry_flags {
+namespace dovah::form_use_info::entry_flags {
    using underlying_type = entry_flag_underlying_type;
 
    // Use info flags that are available on any user-form type.
@@ -17,7 +17,7 @@ namespace dovah::use_info::entry_flags {
    constexpr const size_t first_form_type_specific_flag = (size_t)base::__COUNT;
 }
 
-namespace dovah::use_info {
+namespace dovah::form_use_info {
    template<>
    struct is_entry_flag_type<entry_flags::base> {
       static constexpr const bool value = true;

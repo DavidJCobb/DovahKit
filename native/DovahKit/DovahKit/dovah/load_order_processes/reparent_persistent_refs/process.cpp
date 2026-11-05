@@ -65,7 +65,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
             //
             for (auto& pair : src) {
                auto& entry = pair.second;
-               if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)) {
+               if (entry.flags & form_use_info::entry_flag_to_mask(form_use_info::entry_flags::base::parent)) {
                   auto* child = entry.other;
                   if (child && utils::form_types::is_ref(child->form_type)) {
                      refs.emplace_back(child);
@@ -125,7 +125,7 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
                      continue;
                   auto& use_for_used = p_cell->inbound[item.ref->form_id];
                   use_for_used.other  = item.ref;
-                  use_for_used.flags |= use_info::entry_flag_to_mask(use_info::entry_flags::base::parent);
+                  use_for_used.flags |= form_use_info::entry_flag_to_mask(form_use_info::entry_flags::base::parent);
                   ++use_for_used.refcount;
                }
             }

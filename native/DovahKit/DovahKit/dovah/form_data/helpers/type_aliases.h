@@ -8,7 +8,7 @@ namespace dovah {
    template<auto UseInfoEntryFlag>
    class unique_managed_form_use;
 
-   template<auto LStringType>
+   template<localization::category C>
    class managed_localized_string_use;
 
    template<auto LStringType>
@@ -40,7 +40,7 @@ namespace dovah::form_data_helpers {
    }
    template<form_data_params Params>
    using type_aliases = std::conditional_t<
-      (Params::management_mode == use_info::management_mode::managed),
+      (Params::management_mode == form_use_info::management_mode::managed),
       type_alias_groups::managed,
       type_alias_groups::unmanaged
    >;

@@ -6,14 +6,14 @@
 #include "dovah/utils/form_types/is_ref.h"
 #include "./entry_flag_underlying_type.h"
 namespace dovah {
-   namespace use_info::entry_flags {
+   namespace form_use_info::entry_flags {
       enum class base : entry_flag_underlying_type;
       enum class base_extra_data : entry_flag_underlying_type;
    }
    enum class form_type : uint8_t;
 }
 
-namespace dovah::use_info {
+namespace dovah::form_use_info {
    template<typename T>
    struct entry_flag_type_form_types;
 

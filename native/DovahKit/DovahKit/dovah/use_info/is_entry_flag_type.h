@@ -1,6 +1,6 @@
 #pragma once
 
-namespace dovah::use_info {
+namespace dovah::form_use_info {
    template<typename T>
    struct is_entry_flag_type {
       static constexpr const bool value = false;

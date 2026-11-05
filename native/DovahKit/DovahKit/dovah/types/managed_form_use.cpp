@@ -11,7 +11,7 @@ namespace dovah {
          return;
       containing_form._replace_outbound_use({}, this->_used, value, 0);
    }
-   void managed_form_use::_set_with_flags(form_stub& containing_form, form_stub* value, use_info::entry_flag_underlying_type mask) {
+   void managed_form_use::_set_with_flags(form_stub& containing_form, form_stub* value, form_use_info::entry_flag_underlying_type mask) {
       if (this->_used == value)
          return;
       containing_form._replace_outbound_use({}, this->_used, value, mask);

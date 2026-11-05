@@ -1,14 +1,14 @@
 #pragma once
 #include "./base.h"
 
-namespace dovah::use_info::entry_flags {
+namespace dovah::form_use_info::entry_flags {
    enum class topic : underlying_type {
       parent_branch = first_form_type_specific_flag, // DIAL/BNAM
       parent_quest, // DIAL/QNAM
    };
 }
 
-namespace dovah::use_info {
+namespace dovah::form_use_info {
    template<>
    struct is_entry_flag_type<entry_flags::topic> {
       static constexpr const bool value = true;

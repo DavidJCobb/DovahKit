@@ -6,7 +6,7 @@ namespace dovah {
    class form_stub;
 }
 
-namespace dovah::use_info {
+namespace dovah::form_use_info {
    struct entry {
       public:
          form_stub* other    = nullptr;

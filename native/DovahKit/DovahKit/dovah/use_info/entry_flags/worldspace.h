@@ -1,7 +1,7 @@
 #pragma once
 #include "./base.h"
 
-namespace dovah::use_info::entry_flags {
+namespace dovah::form_use_info::entry_flags {
    enum class worldspace : underlying_type {
       parent_worldspace = first_form_type_specific_flag, // WRLD/WNAM
       encounter_zone, // WRLD/XEZN
@@ -9,7 +9,7 @@ namespace dovah::use_info::entry_flags {
    };
 }
 
-namespace dovah::use_info {
+namespace dovah::form_use_info {
    template<>
    struct is_entry_flag_type<entry_flags::worldspace> {
       static constexpr const bool value = true;

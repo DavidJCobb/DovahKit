@@ -6,14 +6,14 @@ namespace dovah {
    // This is a struct in case we need to extend it later.
    struct default_form_data_params {
       default_form_data_params() = delete;
-      static constexpr const use_info::management_mode management_mode = use_info::management_mode::managed;
+      static constexpr const form_use_info::management_mode management_mode = form_use_info::management_mode::managed;
    };
 
    struct managed_form_params : public default_form_data_params {
-      static constexpr const use_info::management_mode management_mode = use_info::management_mode::managed;
+      static constexpr const form_use_info::management_mode management_mode = form_use_info::management_mode::managed;
    };
    struct unmanaged_form_params : public default_form_data_params {
-      static constexpr const use_info::management_mode management_mode = use_info::management_mode::unmanaged;
+      static constexpr const form_use_info::management_mode management_mode = form_use_info::management_mode::unmanaged;
    };
    
    template<typename T>

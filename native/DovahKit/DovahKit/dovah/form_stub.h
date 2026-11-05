@@ -57,9 +57,9 @@ namespace dovah {
       private:
          using use_info_list = std::map<
             bare_form_id,
-            use_info::entry,
+            form_use_info::entry,
             std::less<bare_form_id>,
-            lu::memory::threaded_slab_allocator<std::pair<const bare_form_id, use_info::entry>, 64000>
+            lu::memory::threaded_slab_allocator<std::pair<const bare_form_id, form_use_info::entry>, 64000>
          >;
 
       public:
@@ -162,22 +162,22 @@ namespace dovah {
          #pragma endregion
 
          #pragma region Use info (internal)
-            void _sever_outbound_use(form_stub& used, use_info::entry_flag_underlying_type);
-            void _build_outbound_use(form_stub& used, use_info::entry_flag_underlying_type);
+            void _sever_outbound_use(form_stub& used, form_use_info::entry_flag_underlying_type);
+            void _build_outbound_use(form_stub& used, form_use_info::entry_flag_underlying_type);
          #pragma endregion
 
       public: // passkeyed
          #pragma region During initial load
             void _add_source_file(_passkeys::add_form_stub_source_file, tes::file&, uint32_t record_offset, uint32_t record_flags = 0);
-            void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, form_stub&, use_info::entry_flag_underlying_type flags = 0);
-            void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, bare_form_id, use_info::entry_flag_underlying_type flags = 0);
+            void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, form_stub&, form_use_info::entry_flag_underlying_type flags = 0);
+            void _add_one_way_outbound_use(_passkeys::build_use_info_during_load, bare_form_id, form_use_info::entry_flag_underlying_type flags = 0);
             void _amend_source_file_flag(_passkeys::add_form_stub_source_file, const tes::file&, tes::record_flag flag, bool clear_or_set);
             void _replace_source_file_list(_passkeys::add_form_stub_source_file, std::vector<file_data>&&);
             void _set_parent_form_one_way(_passkeys::build_use_info_during_load, form_stub* parent);
          #pragma endregion
 
          // Bidirectional; use post-load.
-         void _replace_outbound_use(lu::passkey<managed_form_use>, form_stub* previously_used, form_stub* now_used, use_info::entry_flag_underlying_type flags_mask);
+         void _replace_outbound_use(lu::passkey<managed_form_use>, form_stub* previously_used, form_stub* now_used, form_use_info::entry_flag_underlying_type flags_mask);
 
          #pragma region Localized string use info
             // during load
