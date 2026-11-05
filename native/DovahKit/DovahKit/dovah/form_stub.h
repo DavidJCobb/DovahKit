@@ -27,6 +27,9 @@ namespace dovah {
    namespace localization {
       class use_node;
    }
+   namespace requests {
+      class create_form;
+   }
    namespace tes {
       class file;
       class file_view;
@@ -179,6 +182,8 @@ namespace dovah {
 
          // Bidirectional; use post-load.
          void _replace_outbound_form_use(lu::passkey<managed_form_use>, form_stub* previously_used, form_stub* now_used, form_use_info::entry_flag_underlying_type flags_mask);
+
+         void _on_newly_created_with_data(lu::passkey<requests::create_form>, base_managed_form_data&); // takes ownership of the data
 
          #pragma region Localized string use info
             // during load

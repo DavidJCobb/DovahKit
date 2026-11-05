@@ -263,6 +263,24 @@
     <ClCompile Include="dovah\requests\create_form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\form_stubs\get_worldspace_persistent_cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\utils\form_stubs\is_worldspace_persistent_cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\utils\form_stubs\get_worldspace_cell_by_grid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\utils\form_ids\normalize_next_record_id.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\exceptions\form_creation_failed.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data_function_tables\clear_outbound_uses.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1277,6 +1295,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\requests\create_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_stubs\get_worldspace_persistent_cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_stubs\is_worldspace_persistent_cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_stubs\get_worldspace_cell_by_grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_types\actually_is_a_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_ids\normalize_next_record_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\form_creation_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data_function_tables\clear_outbound_uses.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

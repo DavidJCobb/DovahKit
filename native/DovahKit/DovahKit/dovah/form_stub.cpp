@@ -462,7 +462,11 @@ namespace dovah {
       if (now_used)
          this->_build_outbound_form_use(*now_used, flags_mask);
    }
-   
+
+   void form_stub::_on_newly_created_with_data(lu::passkey<requests::create_form>, base_managed_form_data& data) {
+      this->loaded = &data;
+   }
+
    #pragma region Localized string use info
       void form_stub::_add_string_use(_passkeys::build_use_info_during_load, const tes::file& tes_file, localization::category c, bare_localized_string_id id) {
          auto* list_ptr = this->_string_use_info.get();

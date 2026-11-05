@@ -155,10 +155,12 @@ namespace dovah {
          void _add_hardcoded_form(form_stub&);
 
       public: // passkeyed
+         void _destroy_none_stub(lu::passkey<requests::create_form>, form_stub& none_stub);
          void _make_hardcoded_forms(lu::passkey<active_load_order>, tes::file& hardcoded_forms_file);
          void _make_none_stubs(lu::passkey<active_load_order>, tes::file& none_stubs_file);
          void _on_stub_flagged_as_edited(lu::passkey<form_stub>, form_stub&);
          void _reserve(lu::passkey<active_load_order>, size_t expected_total_form_count);
+         void _store_newly_created_form(lu::passkey<requests::create_form>, form_stub&);
 
          bare_form_id _reserve_form_id(lu::passkey<requests::create_form>);
          void _abandon_form_id_reservation(lu::passkey<requests::create_form>, bare_form_id);

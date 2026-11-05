@@ -4,6 +4,7 @@
 #include "./form_type_info.h"
 #include "./_impl/form_stub_collection/create_hardcoded_form_stubs.h"
 #include "./_impl/form_stub_collection/create_none_stubs.h"
+#include "./form_data_function_tables/clear_outbound_uses.h"
 #include "./requests/create_form.h"
 #include "./tes/file.h"
 #include "./types/file_prefix.h"
@@ -108,6 +109,37 @@ namespace dovah {
    // passkeyed
    //
 
+   void form_stub_collection::_destroy_none_stub(lu::passkey<requests::create_form>, form_stub& none_stub) {
+      assert(none_stub.is_none_stub());
+      assert(none_stub.outbound.empty()); // a none-stub should never refer to other forms
+      
+      std::vector<form_stub*> pending;
+      
+      for (auto& pair : none_stub.inbound) {
+         auto& entry = pair.second;
+         auto* other = entry.other;
+         auto  form = other->load();
+         pending.push_back(other); // gather forms to process later. we don't want to sever refs now, as that will change use info and potentially invalidate iterators during the loop
+         other->set_edited(true);
+      }
+      for (auto* user : pending) {
+         auto form    = user->load();
+         auto handler = form_data_function_tables::clear_outbound_uses::lookup(user->form_type);
+         assert(!!handler);
+         (handler)(*form);
+      }
+      //
+      if (auto callback = this->owner.post_load_callbacks.on_form_lost)
+         (callback)(none_stub);
+      //
+      const bare_form_id form_id = none_stub.form_id;
+      this->forms.erase(form_id);
+      this->forms_by_type[form_type::none].erase(form_id);
+      this->active_file_forms.erase(form_id);
+      this->active_file_forms_by_type[form_type::none].erase(form_id);
+      //
+      delete &none_stub;
+   }
    void form_stub_collection::_make_hardcoded_forms(lu::passkey<active_load_order>, tes::file& hardcoded_forms_file) {
       impl::_form_stub_collection::create_hardcoded_form_stubs(*this, hardcoded_forms_file);
    }
@@ -127,6 +159,13 @@ namespace dovah {
    }
    void form_stub_collection::_reserve(lu::passkey<active_load_order>, size_t expected_total_form_count) {
       this->forms.reserve((size_t)(expected_total_form_count * 1.1F) + 0x800);
+   }
+   void form_stub_collection::_store_newly_created_form(lu::passkey<requests::create_form>, form_stub& stub) {
+      auto guard = std::lock_guard(this->forms_lock);
+      this->forms[stub.form_id] = &stub;
+      this->forms_by_type[stub.form_type][stub.form_id] = &stub;
+      this->active_file_forms[stub.form_id] = &stub;
+      this->active_file_forms_by_type[stub.form_type][stub.form_id] = &stub;
    }
 
    bare_form_id form_stub_collection::_reserve_form_id(lu::passkey<requests::create_form>) {

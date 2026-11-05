@@ -4,6 +4,9 @@ namespace dovah {
    namespace callback_sets {
       struct data_load;
    }
+   namespace requests {
+      class create_form;
+   }
    namespace tes {
       class  file;
       struct record_header;
@@ -31,6 +34,7 @@ namespace dovah {
 namespace dovah::_passkeys {
    class add_form_stub_source_file {
       friend load_order_processes::build_form_stubs_from_file::process;
+      friend requests::create_form;
       friend void       impl::_form_stub_collection::create_hardcoded_form_stubs(form_stub_collection&, tes::file&);
       friend void       impl::_form_stub_collection::create_none_stubs(form_stub_collection&, tes::file&);
       friend void       load_order_processes::build_form_stubs_from_file::set_file_list_for_newest_singleton_stub(

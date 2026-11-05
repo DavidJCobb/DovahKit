@@ -1,16 +1,24 @@
 #include "./create_form.h"
 #include <cassert>
+#include "../_passkeys/add_form_stub_source_file.h"
 #include "../active_load_order.h"
+#include "../exceptions/form_creation_failed.h"
+#include "../facts/cells/exterior_cell_side_length.h"
 #include "../form_data/can_load_form_data_of_type.h"
+#include "../form_data/types/r/object_reference.h"
 #include "../form_data_function_tables/create_blank_instance.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../form_stub_collection.h"
 #include "../tes/file.h"
 #include "../tes/record_flags.h"
+#include "../utils/form_ids/normalize_next_record_id.h"
 #include "../utils/form_stubs/can_load_form_data.h"
+#include "../utils/form_stubs/get_worldspace_cell_by_grid.h"
 #include "../utils/form_stubs/is_exterior_cell.h"
 #include "../utils/form_stubs/is_interior_cell.h"
+#include "../utils/form_stubs/is_worldspace_persistent_cell.h"
+#include "../utils/form_types/actually_is_a_form.h"
 #include "../utils/form_types/is_cell_child.h"
 #include "../utils/form_types/is_ref.h"
 
@@ -28,7 +36,7 @@ namespace dovah::requests {
    std::optional<create_form::error_code> create_form::would_fail() const {
       const auto& alo = this->active_load_order;
       const auto& fsc = alo.get_form_stub_collection();
-      if (!is_valid_form_type(this->form_type))
+      if (!utils::form_types::actually_is_a_form(this->form_type))
          return error_code::invalid_form_type;
       if (!alo.get_active_file())
          return error_code::no_active_file;
@@ -45,12 +53,29 @@ namespace dovah::requests {
          }
       }
 
-      // Can we destroy any occupying none-stub?
-      if (form_stub* occupier = fsc.get_form_by_id(this->form_id, false)) {
-         assert(occupier->is_none_stub() && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
-         if (!fsc._can_destroy_none_stub(*occupier))
-            return error_code::cannot_sever_references_to_none_stub;
-      }
+      #if _DEBUG
+         //
+         // Verify that the target form ID is either unoccupied, or occupied only by a none-stub 
+         // that we can delete.
+         //
+         if (const form_stub* occupier = fsc.get_form_by_id(this->form_id, false)) {
+            assert(occupier->is_none_stub() && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+            for (auto& [_, entry] : occupier->inbound) {
+               assert(!!entry.other && "Use info entry with no form-stub pointer?");
+               //
+               // Verify that we can actually delete the none-stub. This requires being able to 
+               // load all of the user-forms, so they can be told to sever the use.
+               // 
+               // None-stubs should only be created when we build the user-forms' use info, and 
+               // in general, when we implement support for a form type, we should be starting 
+               // with *both* the "build use info" and "load" functions. The only way we can have 
+               // a none-stub that we can't delete is if only the former function was implemented, 
+               // and I don't feel that should be considered a normal scenario.
+               //
+               assert(utils::form_stubs::can_load_form_data(*entry.other) && "How did we end up with a none-stub that we can't delete?");
+            }
+         }
+      #endif
 
       if (this->child_of) {
          auto parent_type = this->child_of->form_type;
@@ -70,7 +95,7 @@ namespace dovah::requests {
             return error_code::invalid_parent_child_relationship;
 
          if (utils::form_types::is_cell_child(child_type)) {
-            if (form_stub_helpers::is_worldspace_persistent_cell(*this->child_of)) {
+            if (utils::form_stubs::is_worldspace_persistent_cell(*this->child_of)) {
                return error_code::do_not_use_worldspace_persistent_cell_as_parent;
             }
          }
@@ -81,7 +106,7 @@ namespace dovah::requests {
                return error_code::exterior_cell_must_have_grid_coordinates;
             auto& grid_coords = grid_opt.value();
 
-            auto* existing = form_stub_helpers::get_worldspace_cell_by_grid(*this->child_of, grid_coords.x, grid_coords.y);
+            auto* existing = utils::form_stubs::get_worldspace_cell_by_grid(*this->child_of, grid_coords.x, grid_coords.y);
             if (existing)
                return error_code::exterior_grid_coordinates_already_taken;
          }
@@ -117,7 +142,6 @@ namespace dovah::requests {
 
       if (form_stub* occupier = fsc.get_form_by_id(this->form_id, false)) {
          assert(occupier->is_none_stub() && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
-         assert(this->_can_destroy_none_stub(*occupier));
          fsc._destroy_none_stub({}, *occupier);
       }
 
@@ -131,9 +155,9 @@ namespace dovah::requests {
          assert(!!factory);
          loaded = &((factory)(*stub));
          assert(loaded != nullptr && "Previous checks already established that we can construct this form type. Why did we receive nullptr when trying?");
+         stub->_on_newly_created_with_data({}, *loaded);
       }
-      stub->loaded    = loaded;
-      stub->_add_file(*active_file, 0);
+      stub->_add_source_file({}, *active_file, 0);
       stub->form_id   = this->form_id;
       stub->editor_id = this->editor_id;
       stub->set_edited(true);
@@ -143,13 +167,7 @@ namespace dovah::requests {
          stub->get_or_create_addenda().grid_position = this->grid_position.value();
       }
       //
-      {
-         auto guard = std::lock_guard(fsc.forms_lock);
-         fsc.forms[this->form_id] = stub;
-         fsc.forms_by_type[stub->form_type][this->form_id] = stub;
-         fsc.active_file_forms[this->form_id] = stub;
-         fsc.active_file_forms_by_type[stub->form_type][this->form_id] = stub;
-      }
+      fsc._store_newly_created_form({}, *stub);
       //
       if (this->child_of) {
          stub->set_parent_form(this->child_of);
@@ -163,19 +181,18 @@ namespace dovah::requests {
             // so that the ref doesn't have coordinates that place it oustide of its intended 
             // parent cell.
             //
-            assert(stub->loaded != nullptr && "Previous checks already established that we can construct this form type. Why did we receive nullptr when trying?");
-            int32_t gx = 0;
-            int32_t gy = 0;
-            if (this->child_of->get_grid_coordinates(gx, gy)) {
+            assert(loaded != nullptr && "Previous checks already established that we can construct this form type. Why did we receive nullptr when trying?");
+            if (this->child_of->addenda && this->child_of->addenda->grid_position.has_value()) {
+               auto [gx, gy] = this->child_of->addenda->grid_position.value();
                //
                // cell grid coordinates -> world units of point centered within the cell
                //
-               float wx = gx * core_constants::exterior_cell_side_length;
-               float wy = gy * core_constants::exterior_cell_side_length;
-               wx += (core_constants::exterior_cell_side_length / 2.0F);
-               wy += (core_constants::exterior_cell_side_length / 2.0F);
+               float wx = gx * facts::cells::exterior_cell_side_length;
+               float wy = gy * facts::cells::exterior_cell_side_length;
+               wx += (facts::cells::exterior_cell_side_length / 2.0F);
+               wy += (facts::cells::exterior_cell_side_length / 2.0F);
                
-               auto* casted = (loaded_forms::ObjectReference*)stub->form;
+               auto* casted = (form_data::object_reference<managed_form_params>*)loaded;
                casted->position.x = wx;
                casted->position.y = wy;
                casted->position.z = 0;
@@ -194,6 +211,7 @@ namespace dovah::requests {
          if (original) {
             loaded = original->clone(*stub);
             assert(loaded != nullptr && "Previous checks already established that we can construct this form type. Why did we receive nullptr when trying?");
+            stub->_on_newly_created_with_data({}, *loaded);
          }
       } else {
          loaded->setup(*this);
@@ -202,9 +220,9 @@ namespace dovah::requests {
       if (active_file) {
          auto next_id = fsc.find_first_free_form_id_in_active_file(this->form_id + 1);
          if (next_id) {
-            active_file->header.nextFormID = utils::form_ids::normalize_next_record_id(next_id, alo.file_prefix_for(*active_file));
+            active_file->header().nextFormID = utils::form_ids::normalize_next_record_id(next_id, alo.file_prefix_for(*active_file));
          } else {
-            active_file->header.nextFormID = 0; // not sure what the CK would do in this case
+            active_file->header().nextFormID = 0; // not sure what the CK would do in this case
          }
       }
       //

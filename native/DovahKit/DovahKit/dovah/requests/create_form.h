@@ -52,12 +52,6 @@ namespace dovah::requests {
             // grid coordinates are already taken by an existing cell.
             exterior_grid_coordinates_already_taken,
 
-            // The form ID that DovahKit tried to use is occupied by a none-stub; that is, it's the 
-            // target of dangling references from one or more forms. The forms in question are all 
-            // defined in the active file; however, a call to `form_stub::load` failed for at least one 
-            // of them, so we were unable to sever the dangling reference(s).
-            cannot_sever_references_to_none_stub,
-
             // This form type doesn't exist in the currently loaded game (e.g. Skyrim Special Edition-
             // exclusive form types in Skyrim Classic).
             form_type_unavailable_in_current_game,
