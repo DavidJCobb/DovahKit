@@ -4,8 +4,8 @@
 #include "dovah/types/unmanaged_localized_string_use.h" // `loaded_game_setting` manages l-string use info itself
 #include "lu/type_containers/type_to_value_map.h"
 
-namespace dovah::facts {
-   using game_setting_types = lu::type_containers::type_to_value_map<
+namespace dovah::facts::game_settings {
+   using value_types = lu::type_containers::type_to_value_map<
       lu::type_containers::type_to_value_map_pair<bool,    'b'>,
       lu::type_containers::type_to_value_map_pair<float,   'f'>,
       lu::type_containers::type_to_value_map_pair<int32_t, 'i'>,

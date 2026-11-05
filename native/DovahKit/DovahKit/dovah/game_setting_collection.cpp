@@ -1,7 +1,7 @@
 #include "./game_setting_collection.h"
 #include <cassert>
 #include "dovah/facts/game_settings/all_definitions.h"
-#include "dovah/facts/game_setting_types.h"
+#include "dovah/facts/game_settings/value_types.h"
 
 namespace dovah {
    const loaded_game_setting* game_setting_collection::get_loaded_game_setting(std::string_view name) const noexcept {
@@ -33,7 +33,7 @@ namespace dovah {
          bool identifiable = false;
          bool valid        = false;
          if (!name.empty()) {
-            facts::game_setting_types::for_each_pair([&name, &value, &identifiable, &valid]<typename K, char V>() {
+            facts::game_settings::value_types::for_each_pair([&name, &value, &identifiable, &valid]<typename K, char V>() {
                bool is_this_type = name[0] == V || name[0] == (V - 0x20); // case-insensitive char check
                if (is_this_type)
                   identifiable = true;

@@ -8,7 +8,7 @@
 #include "./exceptions/load_order_errors/some_files_are_too_new.h"
 #include "./facts/game/game_supports_light_plugins.h"
 #include "./facts/game/hardcoded_form_ids_ignore_record_id_prefix.h"
-#include "./facts/game_setting_types.h"
+#include "./facts/game_settings/value_types.h"
 #include "./load_order_interfaces/file_load.h"
 #include "./load_order_processes/build_form_stubs_from_file/process.h"
 #include "./load_order_processes/reparent_persistent_refs/process.h"

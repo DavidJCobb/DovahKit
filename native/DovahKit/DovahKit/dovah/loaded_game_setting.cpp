@@ -43,7 +43,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 's' && "Writing the incorrect value type to a GMST.");
       }
       #endif
-      auto& dst         = std::get<facts::game_setting_types::key_of<'s'>>(this->_value.variant);
+      auto& dst         = std::get<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant);
       auto& alo         = this->_owner->owner;
       auto* active_file = alo.get_active_file();
       assert(!!active_file);
@@ -70,7 +70,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 's' && "Writing the incorrect value type to a GMST.");
       }
       #endif
-      auto& dst         = std::get<facts::game_setting_types::key_of<'s'>>(this->_value.variant);
+      auto& dst         = std::get<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant);
       auto* active_file = this->_owner->owner.get_active_file();
       assert(!!active_file);
       assert(!active_file->header().flags.has_all_of<tes::file_header_flag::localized_strings>() && "Cannot set a string GMST to a non-localized string if the active file is localized.");
@@ -93,7 +93,7 @@ namespace dovah {
       const std::string& name_lowercase,
       value_variant&&    value
    ) {
-      using managed_l_string_type = facts::game_setting_types::key_of<'s'>;
+      using managed_l_string_type = facts::game_settings::value_types::key_of<'s'>;
       bare_localized_string_id prior_string_id = 0;
 
       bare_form_id moved_from_form_id = 0;
@@ -123,8 +123,8 @@ namespace dovah {
       if (this->_name.lowercase[0] == 's') {
          auto& alo = *source_file.get_active_load_order();
          auto& lsc = alo.get_localized_string_collection();
-         assert(std::holds_alternative<facts::game_setting_types::key_of<'s'>>(this->_value.variant));
-         const auto& value_s         = std::get<facts::game_setting_types::key_of<'s'>>(this->_value.variant);
+         assert(std::holds_alternative<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant));
+         const auto& value_s         = std::get<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant);
          const auto  string_id_after = value_s.get_localized_id();
          if (auto* prior_use = this->_value.string_use_info) {
             bare_localized_string_id string_id_prior = prior_use->used.id;

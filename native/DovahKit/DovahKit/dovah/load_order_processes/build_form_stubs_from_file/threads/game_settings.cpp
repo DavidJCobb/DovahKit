@@ -146,7 +146,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          
          bool no_read_error = true;
          bool type_is_known = false;
-         facts::game_setting_types::for_each_pair([&subrecord, &no_read_error, &type_is_known, &setting_name, &setting_value]<typename K, char V>() {
+         facts::game_settings::value_types::for_each_pair([&subrecord, &no_read_error, &type_is_known, &setting_name, &setting_value]<typename K, char V>() {
             if (setting_name.empty())
                return lu::foreach_lambda_result::stop;
             if (setting_name[0] == V || setting_name[0] == (V - 0x20)) {
@@ -212,7 +212,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          // validates that the setting name and type match.
          //
          if (!setting_name.empty()) {
-            facts::game_setting_types::for_each_pair([&setting_name, &setting_value]<typename K, char V>() {
+            facts::game_settings::value_types::for_each_pair([&setting_name, &setting_value]<typename K, char V>() {
                if (setting_name.empty())
                   return lu::foreach_lambda_result::stop;
                if (setting_name[0] == V || setting_name[0] == (V - 0x20)) {
