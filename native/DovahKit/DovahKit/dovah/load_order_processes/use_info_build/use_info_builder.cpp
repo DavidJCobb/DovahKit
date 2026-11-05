@@ -1,8 +1,8 @@
 #include "./use_info_builder.h"
 #include "dovah/_passkeys/build_use_info_during_load.h"
 #include "dovah/form_stub.h"
-#include "dovah/use_info/entry.h"
-#include "dovah/use_info/entry_flags/base.h"
+#include "dovah/form_use_info/entry.h"
+#include "dovah/form_use_info/entry_flags/base.h"
 #include "./use_info_builder_form_specific_data.h"
 
 namespace dovah::load_order_processes::use_info_build {

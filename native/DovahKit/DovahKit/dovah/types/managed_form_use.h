@@ -1,6 +1,6 @@
 #pragma once
-#include "dovah/use_info/entry_flag_to_mask.h"
-#include "dovah/use_info/entry_flag_underlying_type.h"
+#include "dovah/form_use_info/entry_flag_to_mask.h"
+#include "dovah/form_use_info/entry_flag_underlying_type.h"
 namespace dovah {
    namespace tes {
       class subrecord_view;

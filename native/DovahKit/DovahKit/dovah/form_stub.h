@@ -12,10 +12,11 @@
 #include "lu/passkey.h"
 #include "lu/strings/low_footprint_string.h"
 #include "./_passkeys/build_use_info_during_load.h"
+#include "./form_use_info/entry.h"
+#include "./form_use_info/entry_flag_underlying_type.h"
 #include "./localization/category.h"
 #include "./types/bare_form_id.h"
 #include "./types/bare_localized_string_id.h"
-#include "./use_info/entry.h"
 namespace dovah {
    namespace _passkeys {
       class add_form_stub_source_file;

@@ -1,12 +1,12 @@
 #pragma once
 #include <array>
 #include "lu/containers/small_vector.h"
+#include "dovah/form_use_info/entry_flag_to_mask.h"
+#include "dovah/form_use_info/entry_flag_underlying_type.h"
+#include "dovah/form_use_info/is_entry_flag_type.h"
 #include "dovah/types/bare_form_id.h"
 #include "dovah/types/bare_localized_string_id.h"
 #include "dovah/types/form_id.h"
-#include "dovah/use_info/entry_flag_to_mask.h"
-#include "dovah/use_info/entry_flag_underlying_type.h"
-#include "dovah/use_info/is_entry_flag_type.h"
 #include "dovah/utils/localization/data_by_string_category.h"
 
 namespace dovah {
