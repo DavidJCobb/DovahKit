@@ -281,6 +281,7 @@
     <ClInclude Include="dovah\form_data\helpers\subrecord_was_handled_at_stub_creation.h" />
     <ClInclude Include="dovah\form_data\helpers\type_aliases.h" />
     <ClInclude Include="dovah\form_data\helpers\load_hardcoded_form_data.h" />
+    <ClInclude Include="dovah\form_data\operations\clear_outbound_uses.h" />
     <ClInclude Include="dovah\form_data\params.h" />
     <ClInclude Include="dovah\form_data\types\s\shout.h" />
     <ClInclude Include="dovah\form_data\types\_base.h" />
@@ -489,11 +490,14 @@
     <ClInclude Include="lu\concepts\instantiation_of\std_array.h" />
     <ClInclude Include="lu\concepts\instantiation_of\std_basic_string.h" />
     <ClInclude Include="lu\concepts\instantiation_of\std_basic_string_view.h" />
+    <ClInclude Include="lu\concepts\instantiation_of\std_pair.h" />
     <ClInclude Include="lu\concepts\instantiation_of\std_vector.h" />
     <ClInclude Include="lu\concepts\integer.h" />
     <ClInclude Include="lu\concepts\lambda_invocable_per_tuple_element_type.h" />
+    <ClInclude Include="lu\concepts\supports_range_based_for_loops.h" />
     <ClInclude Include="lu\concepts\supports_std_tuple_element.h" />
     <ClInclude Include="lu\concepts\supports_std_tuple_size.h" />
+    <ClInclude Include="lu\concepts\supports_string_like_interface.h" />
     <ClInclude Include="lu\containers\bitset.h" />
     <ClInclude Include="lu\containers\grids\fixed_grid.h" />
     <ClInclude Include="lu\containers\grids\resizable_grid.h" />

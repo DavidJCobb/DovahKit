@@ -1318,6 +1318,18 @@
     <ClInclude Include="dovah\form_data_function_tables\clear_outbound_uses.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\form_data\operations\clear_outbound_uses.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\concepts\supports_string_like_interface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\concepts\instantiation_of\std_pair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\concepts\supports_range_based_for_loops.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">

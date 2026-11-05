@@ -2,39 +2,13 @@
 #include <array>
 #include "./_helpers.inl"
 #include "../form_data/all_types.h"
-#include "../form_data/helpers/is_visitable.h"
+#include "../form_data/operations/clear_outbound_uses.h"
 #include "../form_type_info.h"
-#include "../types/managed_form_use.h"
-#include "../types/managed_localized_string_use.h"
 
 namespace {
    template<typename T>
-   static void _clear_outbound_uses(dovah::form_stub& containing_form, T& data) {
-   }
-
-   template<typename T>
-      requires std::is_base_of_v<dovah::managed_form_use, T>
-   static void _clear_outbound_uses<T>(dovah::form_stub& containing_form, T& data) {
-      data.set(containing_form, nullptr);
-   }
-
-   template<typename T>
-      requires std::is_base_of_v<dovah::_base_managed_localized_string_use, T>
-   static void _clear_outbound_uses<T>(dovah::form_stub& containing_form, T& data) {
-      if (data.is_localized())
-         data.set_localized_id(containing_form, 0);
-   }
-
-   template<dovah::form_data_helpers::is_visitable T>
-   static void _clear_outbound_uses<T>(dovah::form_stub& containing_form, T& data) {
-      T::visit_members(data, [&containing_form](auto& field) {
-         _clear_outbound_uses(containing_form, field);
-      });
-   }
-
-   template<typename T>
    static void _clear_outbound_uses_from_form_data(dovah::base_managed_form_data& form_data) {
-      _clear_outbound_uses(form_data.stub, static_cast<T&>(form_data));
+      dovah::form_data_operations::clear_outbound_uses(form_data.stub, static_cast<T&>(form_data));
    }
 }
 
