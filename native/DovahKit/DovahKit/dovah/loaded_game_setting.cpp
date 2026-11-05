@@ -5,10 +5,20 @@
 #include "dovah/game_setting_collection.h"
 #include "dovah/localization/string_collection.h"
 #include "dovah/localization/use_node.h"
+#include "dovah/requests/create_form.h"
 #include "dovah/tes/file.h"
 #include "dovah/types/localized_string_id.h"
 
 namespace dovah {
+   bare_form_id loaded_game_setting::form_id() const noexcept {
+      for (auto it = this->_source_files.rbegin(); it != this->_source_files.rend(); ++it) {
+         auto& info = *it;
+         if (info.form_id)
+            return info.form_id;
+      }
+      return 0;
+   }
+
    void loaded_game_setting::set_value(bool v) {
       #if _DEBUG
       {
@@ -16,6 +26,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 'b' && "Writing the incorrect value type to a GMST.");
       }
       #endif
+      this->_on_value_edited();
       std::get<decltype(v)>(this->_value.variant) = v;
    }
    void loaded_game_setting::set_value(float v) {
@@ -25,6 +36,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 'f' && "Writing the incorrect value type to a GMST.");
       }
       #endif
+      this->_on_value_edited();
       std::get<decltype(v)>(this->_value.variant) = v;
    }
    void loaded_game_setting::set_value(int32_t v) {
@@ -34,6 +46,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 'i' && "Writing the incorrect value type to a GMST.");
       }
       #endif
+      this->_on_value_edited();
       std::get<decltype(v)>(this->_value.variant) = v;
    }
    void loaded_game_setting::set_value(localized_string_id<localization::category::general> id) {
@@ -43,6 +56,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 's' && "Writing the incorrect value type to a GMST.");
       }
       #endif
+      this->_on_value_edited();
       auto& dst         = std::get<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant);
       auto& alo         = this->_owner->owner;
       auto* active_file = alo.get_active_file();
@@ -70,6 +84,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 's' && "Writing the incorrect value type to a GMST.");
       }
       #endif
+      this->_on_value_edited();
       auto& dst         = std::get<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant);
       auto* active_file = this->_owner->owner.get_active_file();
       assert(!!active_file);
@@ -150,5 +165,36 @@ namespace dovah {
       }
 
       return moved_from_form_id;
+   }
+
+   void loaded_game_setting::_on_value_edited() {
+      auto& alo         = this->_owner->owner;
+      auto* active_file = alo.get_active_file();
+      assert(!!active_file);
+
+      bare_form_id form_id = this->form_id();
+      if (!this->_source_files.empty()) {
+         auto& info = this->_source_files.back();
+         if (info.source_file == active_file) {
+            if (!form_id) {
+               requests::create_form request{ alo };
+               request.form_type = form_type::setting;
+               request.editor_id = this->_name.loaded;
+               auto& stub = request.commit();
+               info.form_id = stub.form_id;
+            }
+            return;
+         }
+      }
+      auto& info = this->_source_files.emplace_back();
+      info.source_file = active_file;
+      if (!form_id) {
+         requests::create_form request{ alo };
+         request.form_type = form_type::setting;
+         request.editor_id = this->_name.loaded;
+         auto& stub = request.commit();
+         form_id = stub.form_id;
+      }
+      info.form_id = form_id;
    }
 }

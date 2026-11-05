@@ -14,6 +14,9 @@ namespace dovah {
    namespace load_order_processes::build_form_stubs_from_file {
       class process;
    }
+   namespace requests {
+      class create_form;
+   }
    namespace tes {
       class  file;
       struct record_header;
@@ -98,6 +101,10 @@ namespace dovah {
             std::vector<bare_form_id>    list;
             mutable std::recursive_mutex lock;
          } _reserved_form_ids;
+      public:
+         struct {
+            bool new_forms_avoid_extended_esl_form_id_range = false;
+         } prefs;
 
       public:
          inline size_t count_all_forms() const noexcept;
@@ -138,7 +145,7 @@ namespace dovah {
          void for_each_active_file_form_of_type(form_type, Functor&& functor);
 
          form_stub* get_canonical_instance_of_singleton_form(form_type) const noexcept;
-         form_stub* get_or_create_canonical_instance_of_singleton_form(form_type);
+         form_stub& get_or_create_canonical_instance_of_singleton_form(form_type);
          inline const form_stub* get_form_by_id(bare_form_id, bool ignore_none_stubs = true) const;
          inline form_stub* get_form_by_id(bare_form_id, bool ignore_none_stubs = true);
          inline const form_stub* get_form_by_id(bare_form_id, form_type, bool ignore_none_stubs = true) const;
@@ -152,6 +159,9 @@ namespace dovah {
          void _make_none_stubs(lu::passkey<active_load_order>, tes::file& none_stubs_file);
          void _on_stub_flagged_as_edited(lu::passkey<form_stub>, form_stub&);
          void _reserve(lu::passkey<active_load_order>, size_t expected_total_form_count);
+
+         bare_form_id _reserve_form_id(lu::passkey<requests::create_form>);
+         void _abandon_form_id_reservation(lu::passkey<requests::create_form>, bare_form_id);
    };
 }
 

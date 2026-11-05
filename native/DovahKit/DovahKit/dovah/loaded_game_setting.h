@@ -56,11 +56,15 @@ namespace dovah {
 
          constexpr const value_variant& get_value_variant() const noexcept;
 
-         // These assert that the typing is correct.
+         bare_form_id form_id() const noexcept;
+
+         // These assert that the typing is correct and that there's an active file.
+         // These may throw, if the GMST doesn't already have a form ID and no form stub can be created.
          void set_value(bool);
          void set_value(float);
          void set_value(int32_t);
-         // These assert on typing, but also on writing localized strings to a non-localized active file or vice versa.
+         // Above preconditions, but also assert on writing localized strings to a non-localized active 
+         // file or vice versa.
          void set_value(localized_string_id<localization::category::general>);
          void set_value(std::string&&);
 
@@ -77,6 +81,8 @@ namespace dovah {
             const std::string& name_lowercase,
             value_variant&&    value
          );
+
+         void _on_value_edited();
    };
 }
 
