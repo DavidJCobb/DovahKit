@@ -10,14 +10,14 @@
 #include "./form_data_function_tables/create_blank_instance.h"
 #include "./form_data_function_tables/load.h"
 #include "./form_stub_addenda.h"
+#include "./form_use_info/entry_flag_to_mask.h"
+#include "./form_use_info/entry_flags/base.h"
 #include "./load_order_interfaces/form_load.h"
 #include "./localization/use_node.h"
 #include "./tes/file.h"
 #include "./tes/reading/file_view.h"
 #include "./tes/record_flags.h"
 #include "./types/file_prefix.h"
-#include "./use_info/entry_flag_to_mask.h"
-#include "./use_info/entry_flags/base.h"
 #include "./utils/form_stubs/can_ever_be_edited.h"
 #include "./utils/form_stubs/can_load_form_data.h"
 
@@ -281,7 +281,7 @@ namespace dovah {
    #pragma endregion
       
    #pragma region Use info (internal)
-      void form_stub::_sever_outbound_use(form_stub& used, form_use_info::entry_flag_underlying_type flags_mask) {
+      void form_stub::_sever_outbound_form_use(form_stub& used, form_use_info::entry_flag_underlying_type flags_mask) {
          auto user_it = this->outbound.find(used.form_id);
          if (user_it == this->outbound.end()) {
             #if _DEBUG
@@ -309,7 +309,7 @@ namespace dovah {
             used.inbound.erase(used_it);
          }
       }
-      void form_stub::_build_outbound_use(form_stub& used, form_use_info::entry_flag_underlying_type flags_mask) {
+      void form_stub::_build_outbound_form_use(form_stub& used, form_use_info::entry_flag_underlying_type flags_mask) {
          auto& user_entry = this->outbound[used.form_id];
          auto& used_entry = used.outbound[this->form_id];
          #if _DEBUG
@@ -334,7 +334,7 @@ namespace dovah {
       void form_stub::_add_source_file(_passkeys::add_form_stub_source_file, tes::file& f, uint32_t record_offset, uint32_t record_flags) {
          this->_add_source_file(f, record_offset, record_flags);
       }
-      void form_stub::_add_one_way_outbound_use(_passkeys::build_use_info_during_load, form_stub& to_stub, form_use_info::entry_flag_underlying_type flags) {
+      void form_stub::_add_one_way_outbound_form_use(_passkeys::build_use_info_during_load, form_stub& to_stub, form_use_info::entry_flag_underlying_type flags) {
          //
          // This function creates a single-direction connection from (this) to (to_stub), with the understanding 
          // that a later call to (this->send_inbound_refs()) will make all such connections bidirectional. As 
@@ -358,7 +358,7 @@ namespace dovah {
          if (flags)
             entry.flags |= flags;
       }
-      void form_stub::_add_one_way_outbound_use(_passkeys::build_use_info_during_load, bare_form_id used_form_id, form_use_info::entry_flag_underlying_type flags) {
+      void form_stub::_add_one_way_outbound_form_use(_passkeys::build_use_info_during_load, bare_form_id used_form_id, form_use_info::entry_flag_underlying_type flags) {
          //
          // Please refer to the documentation comments in this function's other overload.
          //
@@ -452,15 +452,15 @@ namespace dovah {
          // Set the new parent form.
          //
          if (parent)
-            this->_add_one_way_outbound_use({}, *parent, form_use_info::entry_flag_to_mask(form_use_info::entry_flags::base::parent));
+            this->_add_one_way_outbound_form_use({}, *parent, form_use_info::entry_flag_to_mask(form_use_info::entry_flags::base::parent));
       }
    #pragma endregion
 
-   void form_stub::_replace_outbound_use(lu::passkey<managed_form_use>, form_stub* old_used, form_stub* now_used, form_use_info::entry_flag_underlying_type flags_mask) {
+   void form_stub::_replace_outbound_form_use(lu::passkey<managed_form_use>, form_stub* old_used, form_stub* now_used, form_use_info::entry_flag_underlying_type flags_mask) {
       if (old_used)
-         this->_sever_outbound_use(*old_used, flags_mask);
+         this->_sever_outbound_form_use(*old_used, flags_mask);
       if (now_used)
-         this->_build_outbound_use(*now_used, flags_mask);
+         this->_build_outbound_form_use(*now_used, flags_mask);
    }
    
    #pragma region Localized string use info

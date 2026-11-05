@@ -53,9 +53,9 @@ namespace dovah::load_order_processes::use_info_build {
       }
       for (auto& entry : this->_pending_uses.of_forms) {
          if (auto* to_stub = entry.target_stub)
-            this->_stub._add_one_way_outbound_use({}, *to_stub, entry.flags);
+            this->_stub._add_one_way_outbound_form_use({}, *to_stub, entry.flags);
          else
-            this->_stub._add_one_way_outbound_use({}, entry.target_id, entry.flags);
+            this->_stub._add_one_way_outbound_form_use({}, entry.target_id, entry.flags);
       }
       this->_pending_uses.of_forms.clear();
    }

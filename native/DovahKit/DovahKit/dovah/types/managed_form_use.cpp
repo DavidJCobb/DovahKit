@@ -9,12 +9,12 @@ namespace dovah {
    void managed_form_use::set(form_stub& containing_form, form_stub* value) {
       if (this->_used == value)
          return;
-      containing_form._replace_outbound_use({}, this->_used, value, 0);
+      containing_form._replace_outbound_form_use({}, this->_used, value, 0);
    }
    void managed_form_use::_set_with_flags(form_stub& containing_form, form_stub* value, form_use_info::entry_flag_underlying_type mask) {
       if (this->_used == value)
          return;
-      containing_form._replace_outbound_use({}, this->_used, value, mask);
+      containing_form._replace_outbound_form_use({}, this->_used, value, mask);
    }
 
    bool managed_form_use::stream(tes::subrecord_view& subrecord) {
