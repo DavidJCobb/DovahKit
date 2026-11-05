@@ -1,11 +1,16 @@
 #include "./create_form.h"
+
+#define OBJECT_REFERENCE_FORM_DATA_IMPLEMENTED 0 // TODO
+
 #include <cassert>
 #include "../_passkeys/add_form_stub_source_file.h"
 #include "../active_load_order.h"
 #include "../exceptions/form_creation_failed.h"
 #include "../facts/cells/exterior_cell_side_length.h"
 #include "../form_data/can_load_form_data_of_type.h"
-#include "../form_data/types/r/object_reference.h"
+#if OBJECT_REFERENCE_FORM_DATA_IMPLEMENTED
+   #include "../form_data/types/r/object_reference.h"
+#endif
 #include "../form_data_function_tables/create_blank_instance.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
@@ -171,6 +176,7 @@ namespace dovah::requests {
       //
       if (this->child_of) {
          stub->set_parent_form(this->child_of);
+         #if OBJECT_REFERENCE_FORM_DATA_IMPLEMENTED
          if (
             this->child_of->form_type == dovah::form_type::cell
          && utils::form_types::is_ref(stub->form_type)
@@ -198,6 +204,7 @@ namespace dovah::requests {
                casted->position.z = 0;
             }
          }
+         #endif
       }
       //
       if (this->clone_of) {

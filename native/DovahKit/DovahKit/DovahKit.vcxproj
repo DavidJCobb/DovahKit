@@ -282,6 +282,7 @@
     <ClInclude Include="dovah\form_data\helpers\type_aliases.h" />
     <ClInclude Include="dovah\form_data\helpers\load_hardcoded_form_data.h" />
     <ClInclude Include="dovah\form_data\operations\clear_outbound_uses.h" />
+    <ClInclude Include="dovah\form_data\operations\assign.h" />
     <ClInclude Include="dovah\form_data\params.h" />
     <ClInclude Include="dovah\form_data\types\s\shout.h" />
     <ClInclude Include="dovah\form_data\types\_base.h" />
@@ -494,6 +495,7 @@
     <ClInclude Include="lu\concepts\instantiation_of\std_vector.h" />
     <ClInclude Include="lu\concepts\integer.h" />
     <ClInclude Include="lu\concepts\lambda_invocable_per_tuple_element_type.h" />
+    <ClInclude Include="lu\concepts\map_like_type.h" />
     <ClInclude Include="lu\concepts\supports_range_based_for_loops.h" />
     <ClInclude Include="lu\concepts\supports_std_tuple_element.h" />
     <ClInclude Include="lu\concepts\supports_std_tuple_size.h" />

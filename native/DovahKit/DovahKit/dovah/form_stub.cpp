@@ -10,6 +10,7 @@
 #include "./form_data_function_tables/create_blank_instance.h"
 #include "./form_data_function_tables/load.h"
 #include "./form_stub_addenda.h"
+#include "./form_stub_addendum_types/passkeys/ordered_child_collection.h"
 #include "./form_use_info/entry_flag_to_mask.h"
 #include "./form_use_info/entry_flags/base.h"
 #include "./load_order_interfaces/form_load.h"
@@ -20,6 +21,7 @@
 #include "./types/file_prefix.h"
 #include "./utils/form_stubs/can_ever_be_edited.h"
 #include "./utils/form_stubs/can_load_form_data.h"
+#include "./utils/form_stubs/get_parent_form.h"
 
 namespace {
    using form_stub_heap = lu::memory::threaded_slab_heap<dovah::form_stub, 16000>;
@@ -121,6 +123,28 @@ namespace dovah {
          if (this->refcount == 0)
             this->_unload_form();
       }
+   }
+   void form_stub::set_parent_form(form_stub* new_parent) {
+      constexpr const auto parent_child_use_flag_mask = form_use_info::entry_flag_to_mask(form_use_info::entry_flags::base::parent);
+
+      auto* old_parent = utils::form_stubs::get_parent_form(*this);
+      if (old_parent == new_parent)
+         return;
+      if (old_parent) {
+         this->_sever_outbound_form_use(*old_parent, parent_child_use_flag_mask);
+         if (this->form_type == form_type::topic_info && old_parent->form_type == form_type::topic) {
+            if (auto* old_addenda = old_parent->addenda)
+               old_addenda->ordered_children._remove_child_after_load({}, *this);
+         }
+      }
+      if (new_parent) {
+         this->_build_outbound_form_use(*new_parent, parent_child_use_flag_mask);
+         if (this->form_type == form_type::topic_info && new_parent->form_type == form_type::topic) {
+            auto& new_addenda = new_parent->get_or_create_addenda();
+            new_addenda.ordered_children._remove_child_after_load({}, *this);
+         }
+      }
+      this->set_edited(true);
    }
 
    form_stub_addenda& form_stub::get_or_create_addenda() {

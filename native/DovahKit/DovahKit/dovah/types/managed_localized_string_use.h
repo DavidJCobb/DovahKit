@@ -31,6 +31,7 @@ namespace dovah {
          void _discard_localized_id(form_stub& containing_form, localization::category);
 
       protected:
+         // ID must be for an active-file string.
          void _set_localized_id(form_stub& containing_form, localization::category, bare_localized_string_id);
          void _set_non_localized_string(form_stub& containing_form, localization::category, std::string_view);
          void _set_non_localized_string(form_stub& containing_form, localization::category, std::string&&);
@@ -56,6 +57,11 @@ namespace dovah {
          constexpr bool is_localized() const noexcept {
             return std::holds_alternative<_localized_id>(this->_value);
          }
+         constexpr std::string_view get_non_localized_string() const noexcept {
+            if (std::holds_alternative<std::string>(this->_value))
+               return std::get<std::string>(this->_value);
+            return {};
+         }
 
          bool stream(tes::subrecord_view& subrecord);
    };
@@ -65,6 +71,7 @@ namespace dovah {
       public:
          static constexpr const localization::category category = V;
 
+         // ID must be for an active-file string.
          void set_localized_id(form_stub& containing_form, bare_localized_string_id id) {
             _base_managed_localized_string_use::_set_localized_id(containing_form, category, id);
          }

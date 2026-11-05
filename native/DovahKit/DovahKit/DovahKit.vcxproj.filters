@@ -1330,6 +1330,12 @@
     <ClInclude Include="lu\concepts\supports_range_based_for_loops.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\form_data\operations\assign.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\concepts\map_like_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">

@@ -119,6 +119,7 @@ namespace dovah {
          bool is_injected() const noexcept;
          bool is_none_stub() const noexcept;
          void set_edited(bool);
+         void set_parent_form(form_stub*);
 
          form_stub_addenda& get_or_create_addenda();
 
