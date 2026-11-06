@@ -1,7 +1,7 @@
 #include "./build_hardcoded_uses.h"
 #include "dovah/facts/form_ids/hardcoded.h"
-#include "dovah/use_info/entry_flags/reference.h"
 #include "dovah/form_stub.h"
+#include "dovah/form_use_info/entry_flags/reference.h"
 #include "./use_info_builder.h"
 
 namespace dovah::load_order_processes::use_info_build {
@@ -9,7 +9,7 @@ namespace dovah::load_order_processes::use_info_build {
       auto& stub = uib.stub();
       switch (stub.form_id) {
          case facts::form_ids::hardcoded::PlayerRef:
-            uib.add_outbound_use(facts::form_ids::hardcoded::Player, form_use_info::entry_flags::reference::base_form);
+            uib.add_outbound_form_use(facts::form_ids::hardcoded::Player, form_use_info::entry_flags::reference::base_form);
             break;
          case facts::form_ids::hardcoded::DefaultWeather:
             //

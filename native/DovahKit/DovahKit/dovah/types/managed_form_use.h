@@ -39,7 +39,7 @@ namespace dovah {
 
       public:
          void set(form_stub& containing_form, form_stub* value) {
-            this->_set_with_flags(containing_form, value, use_info::entry_flag_to_mask(use_info_flag));
+            this->_set_with_flags(containing_form, value, form_use_info::entry_flag_to_mask(use_info_flag));
          }
    };
 }

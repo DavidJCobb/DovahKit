@@ -1,4 +1,5 @@
 #pragma once
+#include <compare>
 #include <limits>
 #include "./integral_wrapper.h"
 #include "../macros/FORCE_INLINE.define.h"
@@ -44,12 +45,10 @@ namespace lu::utils {
                LU_FORCE_INLINE constexpr Self operator _op_ (this const Self& self, U v) noexcept { \
                   auto out = self; out _op_##= v; return out; \
                } \
-               template<typename Identity, typename U> \
-               LU_FORCE_INLINE constexpr Self& operator _op_##= (this Self& self, nominal_integer_type<Identity, U> v) noexcept { \
+               LU_FORCE_INLINE constexpr Self& operator _op_##= (this Self& self, nominal_integer_type v) noexcept { \
                   return self _op_##= v.wrapped_integral; \
                } \
-               template<typename Identity, typename U> \
-               LU_FORCE_INLINE constexpr Self operator _op_ (this const Self& self, nominal_integer_type<Identity, U> v) noexcept { \
+               LU_FORCE_INLINE constexpr Self operator _op_ (this const Self& self, nominal_integer_type v) noexcept { \
                   return self _op_ v.wrapped_integral; \
                }
 
@@ -69,27 +68,23 @@ namespace lu::utils {
          #pragma endregion
 
          #pragma region Comparison operator overloads
-            #pragma push_macro("MAKE_COMPARISON_OPERATOR_OVERLOAD")
-            #define MAKE_COMPARISON_OPERATOR_OVERLOAD(_op_) \
-               template<typename U> \
-                  requires (std::is_arithmetic_v<U>) \
-               LU_FORCE_INLINE constexpr bool operator _op_(U v) const noexcept { \
-                  return this->wrapped_integral _op_ v; \
-               } \
-               template<typename Identity, typename U> \
-               LU_FORCE_INLINE constexpr bool operator _op_ (nominal_integer_type<Identity, U> v) const noexcept { \
-                  return *this _op_ v.wrapped_integral; \
-               }
+            template<typename U>
+               requires (std::is_arithmetic_v<U>)
+            constexpr std::strong_ordering operator<=>(const U v) const noexcept {
+               return this->wrapped_integral <=> v;
+            }
+            constexpr std::strong_ordering operator<=>(const nominal_integer_type v) const noexcept {
+               return this->wrapped_integral <=> v.wrapped_integral;
+            }
 
-            MAKE_COMPARISON_OPERATOR_OVERLOAD(<);
-            MAKE_COMPARISON_OPERATOR_OVERLOAD(<=);
-            MAKE_COMPARISON_OPERATOR_OVERLOAD(>);
-            MAKE_COMPARISON_OPERATOR_OVERLOAD(>=);
-            MAKE_COMPARISON_OPERATOR_OVERLOAD(==);
-            MAKE_COMPARISON_OPERATOR_OVERLOAD(!=);
-
-            #undef MAKE_COMPARISON_OPERATOR_OVERLOAD
-            #pragma pop_macro("MAKE_COMPARISON_OPERATOR_OVERLOAD")
+            template<typename U>
+               requires (std::is_arithmetic_v<U>)
+            constexpr bool operator==(const U v) const noexcept {
+               return this->wrapped_integral == v;
+            }
+            constexpr bool operator==(const nominal_integer_type v) const noexcept {
+               return this->wrapped_integral == v.wrapped_integral;
+            }
          #pragma endregion
 
          #pragma region Unary operator overloads

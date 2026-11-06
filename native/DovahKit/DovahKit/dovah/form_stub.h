@@ -25,7 +25,7 @@ namespace dovah {
       class form_load;
    }
    namespace localization {
-      class use_node;
+      struct use_node;
    }
    namespace requests {
       class create_form;

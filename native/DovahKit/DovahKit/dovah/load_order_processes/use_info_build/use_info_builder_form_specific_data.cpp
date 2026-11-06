@@ -12,7 +12,7 @@ namespace dovah::load_order_processes::use_info_build {
             auto id = pair.second;
             if (!id)
                continue;
-            dst.add_outbound_use(id);
+            dst.add_outbound_form_use(id);
          }
       }
       if (auto& opt = this->by_form_type.navmesh_info_map; opt.has_value()) {
@@ -21,16 +21,16 @@ namespace dovah::load_order_processes::use_info_build {
          for (auto& pair : data.navmesh_info.infos) {
             auto& list = pair.second;
             for (auto id : list)
-               dst.add_outbound_reference(id);
+               dst.add_outbound_form_use(id);
          }
          for (auto id : data.precomputed_paths.navmeshes)
-            dst.add_outbound_reference(id);
+            dst.add_outbound_form_use(id);
          //*/
          for (auto id : data.deleted_navmeshes)
-            dst.add_outbound_use(id);
+            dst.add_outbound_form_use(id);
          /*// TODO: Put this back in place once NAVI is implemented
          for (auto id : data.road_markers.navmeshes)
-            dst.add_outbound_reference(id);
+            dst.add_outbound_form_use(id);
          //*/
       }
       //
@@ -43,7 +43,7 @@ namespace dovah::load_order_processes::use_info_build {
             for (auto id : pair.second) {
                if (!id)
                   continue;
-               dst.add_outbound_reference(id);
+               dst.add_outbound_form_use(id);
             }
          }
       }

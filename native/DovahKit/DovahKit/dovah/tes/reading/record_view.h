@@ -1,11 +1,9 @@
 #pragma once
 #include <cstdint>
-#include "lu/concepts/instantiation_of/std_array.h"
-#include "lu/memory/basic_buffer.h"
 #include "../bytereader.h"
 #include "../record_header.h"
-#include "./impl/enforce_endianness.h"
 namespace dovah::tes {
+   class file;
    class file_view;
    class subrecord_view;
 }

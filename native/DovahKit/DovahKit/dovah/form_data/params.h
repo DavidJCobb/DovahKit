@@ -24,11 +24,6 @@ namespace dovah {
    template<template<form_data_params> typename Struct>
    using unmanaged_data = Struct<unmanaged_form_params>;
    
-   template<typename T>
-   struct uses_form_data_params : std::false_type {};
-   template<template<form_data_params> typename T, form_data_params Params>
-   struct uses_form_data_params<T<Params>> : std::true_type {};
-   //
    namespace impl {
       template<typename T>
       struct _uses_form_data_params : std::false_type {};

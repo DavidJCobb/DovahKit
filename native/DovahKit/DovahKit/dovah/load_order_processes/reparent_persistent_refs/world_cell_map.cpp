@@ -3,8 +3,8 @@
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_addenda.h"
 #include "dovah/form_type.h"
-#include "dovah/use_info/entry_flags/base.h"
-#include "dovah/use_info/entry_flag_to_mask.h"
+#include "dovah/form_use_info/entry_flags/base.h"
+#include "dovah/form_use_info/entry_flag_to_mask.h"
 #include "dovah/utils/form_stubs/get_parent_form.h"
 #include "dovah/utils/worldspaces/world_position_to_grid_position.h"
 

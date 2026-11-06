@@ -1,6 +1,7 @@
 #include "./initialize.h"
 #include <array>
 #include <concepts>
+#include "./_helpers.inl"
 #include "dovah/form_data/all_types.h"
 #include "dovah/form_type_info.h"
 

@@ -40,7 +40,7 @@ namespace dovah::localization {
             dst.buffer = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!dst.buffer.empty())
-               this->_parse_single_file(localized_string_type::general, dst, this->_defined_ids.general);
+               this->_parse_single_file(category::general, dst, this->_defined_ids.general);
          }
          {
             auto& dst      = data.description;
@@ -48,7 +48,7 @@ namespace dovah::localization {
             dst.buffer = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!dst.buffer.empty())
-               this->_parse_single_file(localized_string_type::description, dst, this->_defined_ids.description);
+               this->_parse_single_file(category::description, dst, this->_defined_ids.description);
          }
          {
             auto& dst      = data.info;
@@ -56,7 +56,7 @@ namespace dovah::localization {
             dst.buffer = archives.lookup_file(std::string("strings\\") + filename);
             dst.strings_by_id.clear();
             if (!dst.buffer.empty())
-               this->_parse_single_file(localized_string_type::info, dst, this->_defined_ids.info);
+               this->_parse_single_file(category::info, dst, this->_defined_ids.info);
          }
       }
    }

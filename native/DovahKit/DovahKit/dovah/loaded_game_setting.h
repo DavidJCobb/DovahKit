@@ -11,7 +11,7 @@ namespace dovah {
       class definition;
    }
    namespace localization {
-      class use_node;
+      struct use_node;
    }
    namespace tes {
       class file;
