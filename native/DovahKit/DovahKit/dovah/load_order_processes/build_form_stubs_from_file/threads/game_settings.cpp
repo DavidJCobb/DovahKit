@@ -1,7 +1,6 @@
 #include "./game_settings.h"
 #include "dovah/active_load_order.h"
 #include "dovah/callback_sets/data_load.h"
-#include "dovah/facts/game_settings/all_definitions.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_collection.h"
 #include "dovah/form_type.h"
@@ -31,6 +30,8 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
       auto& alo         = this->_config.active_load_order;
       auto& callbacks   = this->_config.callbacks;
       auto& source_file = this->_config.source_file;
+
+      this->_cached.uses_localized_strings = source_file.header().flags.has_all_of<tes::file_header_flag::localized_strings>();
 
       tes::file_view view;
       view.set_target_file(&source_file);
@@ -146,7 +147,7 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          
          bool no_read_error = true;
          bool type_is_known = false;
-         facts::game_settings::value_types::for_each_pair([&subrecord, &no_read_error, &type_is_known, &setting_name, &setting_value]<typename K, char V>() {
+         facts::game_settings::value_types::for_each_pair([this, &subrecord, &no_read_error, &type_is_known, &setting_name, &setting_value]<typename K, char V>() {
             if (setting_name.empty())
                return lu::foreach_lambda_result::stop;
             if (setting_name[0] == V || setting_name[0] == (V - 0x20)) {
@@ -155,6 +156,15 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
                   uint32_t dword = 0;
                   no_read_error = subrecord.read(dword);
                   setting_value.emplace<K>() = dword;
+               } else if constexpr (std::is_same_v<K, loaded_game_setting::string_value_type>) {
+                  if (this->_cached.uses_localized_strings) {
+                     auto& dst = setting_value.emplace<K>().emplace<loaded_game_setting::string_id_type>();
+                     no_read_error = subrecord.read(dst);
+                  } else {
+                     auto& dst = setting_value.emplace<K>().emplace<std::string>();
+                     subrecord.read_all_to_string(dst);
+                     no_read_error = true;
+                  }
                } else {
                   no_read_error = subrecord.read(setting_value.emplace<K>());
                }

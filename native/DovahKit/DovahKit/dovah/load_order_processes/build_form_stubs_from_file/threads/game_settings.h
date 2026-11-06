@@ -13,13 +13,16 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
       public:
          using _my_base::_base;
 
-      public:
          struct queued_group {
             uint32_t pos = 0;
          };
 
       public:
          std::vector<queued_group> queue;
+      protected:
+         struct {
+            bool uses_localized_strings = false;
+         } _cached;
 
       public:
          void execute_on_thread();

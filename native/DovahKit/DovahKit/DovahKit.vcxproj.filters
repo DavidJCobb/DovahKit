@@ -1351,6 +1351,12 @@
     <ClInclude Include="dovah\form_data_function_tables\initialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\exceptions\game_setting_edit_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\facts\game_settings\string_id_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -1442,6 +1448,7 @@
     <None Include="dovah\loaded_game_setting.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\_docs\use info.md" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />

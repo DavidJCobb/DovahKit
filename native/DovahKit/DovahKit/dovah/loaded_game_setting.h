@@ -35,6 +35,9 @@ namespace dovah {
             bare_form_id     form_id       = 0; // may be zero if the GMST's record ID did not resolve to a valid form ID
          };
 
+         using string_value_type = facts::game_settings::value_types::key_of<'s'>;
+         using string_id_type    = facts::game_settings::string_id_type;
+
       protected:
          game_setting_collection*                _owner      = nullptr;
          const facts::game_settings::definition* _definition = nullptr;
@@ -65,7 +68,7 @@ namespace dovah {
          void set_value(int32_t);
          // Above preconditions, but also assert on writing localized strings to a non-localized active 
          // file or vice versa.
-         void set_value(localized_string_id<localization::category::general>);
+         void set_value(string_id_type);
          void set_value(std::string&&);
 
       protected:
@@ -82,7 +85,8 @@ namespace dovah {
             value_variant&&    value
          );
 
-         void _on_value_edited();
+         void _sever_string_use();
+         void _prepare_to_edit_value();
    };
 }
 

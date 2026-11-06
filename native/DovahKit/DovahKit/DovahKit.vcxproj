@@ -250,6 +250,7 @@
     <ClInclude Include="dovah\exceptions\file_parse_errors\unexpected_nested_group.h" />
     <ClInclude Include="dovah\exceptions\file_parse_errors\orphaned_group.h" />
     <ClInclude Include="dovah\exceptions\form_creation_failed.h" />
+    <ClInclude Include="dovah\exceptions\game_setting_edit_failed.h" />
     <ClInclude Include="dovah\exceptions\load_order_error.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\active_file_is_a_master_and_there_are_plugins.h" />
     <ClInclude Include="dovah\exceptions\load_order_errors\cyclical_dependency_between_files.h" />
@@ -268,6 +269,7 @@
     <ClInclude Include="dovah\facts\game\min_file_version.h" />
     <ClInclude Include="dovah\facts\game_settings\all_definitions.h" />
     <ClInclude Include="dovah\facts\game_settings\definition.h" />
+    <ClInclude Include="dovah\facts\game_settings\string_id_type.h" />
     <ClInclude Include="dovah\facts\game_settings\value_types.h" />
     <ClInclude Include="dovah\facts\localized_strings\all_language_names.h" />
     <ClInclude Include="dovah\facts\localized_strings\serialized_strings_are_length_prefixed.h" />
@@ -597,6 +599,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\file loading.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\use info.md">
       <SubType>
       </SubType>
     </None>

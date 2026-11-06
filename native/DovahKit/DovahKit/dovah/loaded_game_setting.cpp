@@ -27,7 +27,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 'b' && "Writing the incorrect value type to a GMST.");
       }
       #endif
-      this->_on_value_edited();
+      this->_prepare_to_edit_value();
       std::get<decltype(v)>(this->_value.variant) = v;
    }
    void loaded_game_setting::set_value(float v) {
@@ -37,7 +37,7 @@ namespace dovah {
          assert(!n.empty() && n[0] == 'f' && "Writing the incorrect value type to a GMST.");
       }
       #endif
-      this->_on_value_edited();
+      this->_prepare_to_edit_value();
       std::get<decltype(v)>(this->_value.variant) = v;
    }
    void loaded_game_setting::set_value(int32_t v) {
@@ -47,33 +47,30 @@ namespace dovah {
          assert(!n.empty() && n[0] == 'i' && "Writing the incorrect value type to a GMST.");
       }
       #endif
-      this->_on_value_edited();
+      this->_prepare_to_edit_value();
       std::get<decltype(v)>(this->_value.variant) = v;
    }
-   void loaded_game_setting::set_value(localized_string_id<localization::category::general> id) {
+   void loaded_game_setting::set_value(string_id_type id) {
       #if _DEBUG
       {
          auto n = this->name_in_lowercase();
          assert(!n.empty() && n[0] == 's' && "Writing the incorrect value type to a GMST.");
       }
       #endif
-      this->_on_value_edited();
-      auto& dst         = std::get<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant);
+      this->_prepare_to_edit_value();
+      auto& dst         = std::get<string_value_type>(this->_value.variant);
       auto& alo         = this->_owner->owner;
       auto* active_file = alo.get_active_file();
       assert(!!active_file);
       assert(active_file->header().flags.has_all_of<tes::file_header_flag::localized_strings>() && "Cannot set a string GMST to a localized string ID if the active file is non-localized.");
-      dst.set_localized_id(*active_file, (bare_localized_string_id)id);
+      dst = id;
       //
       // Update l-string use info:
       //
-      if (auto* pu = this->_value.string_use_info) {
-         pu->users.game_settings.erase(this->_name.lowercase);
-         this->_value.string_use_info = nullptr;
-      }
+      this->_sever_string_use();
       if (id) {
          auto& lsc = alo.get_localized_string_collection();
-         auto& use = lsc._get_or_create_use_node({}, *active_file, localization::category::general, (bare_localized_string_id)id);
+         auto& use = lsc._get_or_create_use_node({}, *active_file, string_id_type::category, (bare_localized_string_id)id);
          use.users.game_settings.insert(this->_name.lowercase);
          this->_value.string_use_info = &use;
       }
@@ -85,19 +82,16 @@ namespace dovah {
          assert(!n.empty() && n[0] == 's' && "Writing the incorrect value type to a GMST.");
       }
       #endif
-      this->_on_value_edited();
-      auto& dst         = std::get<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant);
+      this->_prepare_to_edit_value();
+      auto& dst         = std::get<string_value_type>(this->_value.variant);
       auto* active_file = this->_owner->owner.get_active_file();
       assert(!!active_file);
       assert(!active_file->header().flags.has_all_of<tes::file_header_flag::localized_strings>() && "Cannot set a string GMST to a non-localized string if the active file is localized.");
-      dst.set_non_localized_string(std::move(text));
+      dst = std::move(text);
       //
       // Update l-string use info:
       //
-      if (auto* pu = this->_value.string_use_info) {
-         pu->users.game_settings.erase(this->_name.lowercase);
-         this->_value.string_use_info = nullptr;
-      }
+      this->_sever_string_use();
    }
 
    bare_form_id loaded_game_setting::_on_record_loaded(
@@ -109,9 +103,6 @@ namespace dovah {
       const std::string& name_lowercase,
       value_variant&&    value
    ) {
-      using managed_l_string_type = facts::game_settings::value_types::key_of<'s'>;
-      bare_localized_string_id prior_string_id = 0;
-
       bare_form_id moved_from_form_id = 0;
 
       bool is_new_file = false;
@@ -139,9 +130,14 @@ namespace dovah {
       if (this->_name.lowercase[0] == 's') {
          auto& alo = *source_file.get_active_load_order();
          auto& lsc = alo.get_localized_string_collection();
-         assert(std::holds_alternative<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant));
-         const auto& value_s         = std::get<facts::game_settings::value_types::key_of<'s'>>(this->_value.variant);
-         const auto  string_id_after = value_s.get_localized_id();
+         assert(std::holds_alternative<string_value_type>(this->_value.variant));
+         const auto& value_s = std::get<string_value_type>(this->_value.variant);
+
+         string_id_type string_id_after;
+         if (std::holds_alternative<string_id_type>(value_s)) {
+            string_id_after = std::get<string_id_type>(value_s);
+         }
+
          if (auto* prior_use = this->_value.string_use_info) {
             bare_localized_string_id string_id_prior = prior_use->used.id;
             if (string_id_prior != string_id_after || prior_use->used.tes_file != &source_file) {
@@ -152,7 +148,7 @@ namespace dovah {
             }
          }
          if (string_id_after) {
-            auto& use = lsc._get_or_create_use_node({}, source_file, localization::category::general, string_id_after);
+            auto& use = lsc._get_or_create_use_node({}, source_file, string_id_type::category, (bare_localized_string_id)string_id_after);
             use.users.game_settings.insert(this->_name.lowercase);
          }
       }
@@ -168,7 +164,38 @@ namespace dovah {
       return moved_from_form_id;
    }
 
-   void loaded_game_setting::_on_value_edited() {
+   void loaded_game_setting::_sever_string_use() {
+      if (auto* pu = this->_value.string_use_info) {
+         pu->users.game_settings.erase(this->_name.lowercase);
+         this->_value.string_use_info = nullptr;
+      }
+   }
+   void loaded_game_setting::_prepare_to_edit_value() {
+      //
+      // There are two things we need to do before we can edit the GMST's value.
+      // 
+      //  - For values of any type, we need to ensure that we have a valid form ID. If we 
+      //    don't, then we need to create a new form stub with a valid form ID, so we can 
+      //    accept that form ID as our own.
+      // 
+      //  - If our source file list doesn't contain the active file, then we need to add 
+      //    the active file to the list. This is both for the above (since form IDs are 
+      //    tracked per source file) and so that we can properly track localized string 
+      //    use info.
+      // 
+      //    You see, ihree criteria are needed to identify a localized string ID:
+      // 
+      //     - The ID itself.
+      //     - The string category (`localization::category`).
+      //     - The TES file with which the string files are associated.
+      // 
+      //    We store the ID as part of our value. The category is the same for all game 
+      //    settings, so that's just hardcoded. The TES file is the last source file in 
+      //    our source file list.
+      //
+      // This function handles both of the above tasks, and should be called before any 
+      // attempt is made to modify the setting's current value.
+      //
       auto& alo         = this->_owner->owner;
       auto* active_file = alo.get_active_file();
       assert(!!active_file);
