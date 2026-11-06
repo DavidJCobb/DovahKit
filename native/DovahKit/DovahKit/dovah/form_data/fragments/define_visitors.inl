@@ -63,6 +63,15 @@
 
 using form_data_params_type = Params;
 
+#pragma region T::member_types
+   #define X(fieldname, ...) decltype(fieldname),
+   using member_types = std::tuple<
+      PER_FIELD(X)
+      void
+   >;
+   #undef X
+#pragma endregion
+
 #pragma region T::visit_fields(T&, visitor)
    #define X(fieldname, ...) std::forward<Visitor>(visitor)(v.fieldname);
    

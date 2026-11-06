@@ -1,6 +1,6 @@
 #pragma once
 #include <type_traits>
-#include "../use_info/management_mode.h"
+#include "../form_use_info/management_mode.h"
 
 namespace dovah {
    // This is a struct in case we need to extend it later.

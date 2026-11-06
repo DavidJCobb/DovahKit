@@ -126,9 +126,11 @@
     <ClCompile Include="dovah\form_data\can_load_form_data_of_type.cpp" />
     <ClCompile Include="dovah\form_data\helpers\load_hardcoded_form_data.cpp" />
     <ClCompile Include="dovah\form_data\types\s\shout.cpp" />
+    <ClCompile Include="dovah\form_data_function_tables\assign.cpp" />
     <ClCompile Include="dovah\form_data_function_tables\build_outbound_use_info.cpp" />
     <ClCompile Include="dovah\form_data_function_tables\clear_outbound_uses.cpp" />
     <ClCompile Include="dovah\form_data_function_tables\create_blank_instance.cpp" />
+    <ClCompile Include="dovah\form_data_function_tables\initialize.cpp" />
     <ClCompile Include="dovah\form_data_function_tables\load.cpp" />
     <ClCompile Include="dovah\form_data_pointer.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
@@ -277,6 +279,7 @@
     <None Include="dovah\form_data\fragments\declare_tabled_load_functions.inl">
       <FileType>Document</FileType>
     </None>
+    <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_use.h" />
     <ClInclude Include="dovah\form_data\helpers\is_visitable.h" />
     <ClInclude Include="dovah\form_data\helpers\subrecord_was_handled_at_stub_creation.h" />
     <ClInclude Include="dovah\form_data\helpers\type_aliases.h" />
@@ -286,9 +289,11 @@
     <ClInclude Include="dovah\form_data\params.h" />
     <ClInclude Include="dovah\form_data\types\s\shout.h" />
     <ClInclude Include="dovah\form_data\types\_base.h" />
+    <ClInclude Include="dovah\form_data_function_tables\assign.h" />
     <ClInclude Include="dovah\form_data_function_tables\build_outbound_use_info.h" />
     <ClInclude Include="dovah\form_data_function_tables\clear_outbound_uses.h" />
     <ClInclude Include="dovah\form_data_function_tables\create_blank_instance.h" />
+    <ClInclude Include="dovah\form_data_function_tables\initialize.h" />
     <ClInclude Include="dovah\form_data_function_tables\load.h" />
     <ClInclude Include="dovah\form_data_pointer.h" />
     <ClInclude Include="dovah\form_stub.h" />

@@ -281,6 +281,12 @@
     <ClCompile Include="dovah\form_data_function_tables\clear_outbound_uses.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\form_data_function_tables\assign.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data_function_tables\initialize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1334,6 +1340,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lu\concepts\map_like_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_use.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data_function_tables\assign.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data_function_tables\initialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
