@@ -18,7 +18,7 @@ namespace dovahkit::tests {
          auto  ptr  = stub->load_as_type<dovah::form_data::shout>();
          __debugbreak();
          dovah::form_data_operations::clear_outbound_uses(*stub, *ptr);
-         stub->set_edited(true);
+         stub->set_edited(true); // `clear_outbound_uses` does not implicitly call this
          __debugbreak();
       }
       {  // Dismay
@@ -26,7 +26,7 @@ namespace dovahkit::tests {
          auto  ptr  = stub->load_as_type<dovah::form_data::shout>();
          __debugbreak();
          dovah::form_data_operations::clear_outbound_uses(*stub, *ptr);
-         stub->set_edited(true);
+         stub->set_edited(true); // `clear_outbound_uses` does not implicitly call this
          __debugbreak();
       }
    }
