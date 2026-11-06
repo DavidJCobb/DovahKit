@@ -123,6 +123,8 @@ This fragment defines the following members:
 
 * **Type alias `form_data_params_type`:** Whatever `form_data_params` the [enclosing] form-data type has been templated on. Used so that the params are retrievable for nested classes defined inside of a form-data class; our machinery for form-data-op functions requires this.
 
+* **Type alias `member_types`\:** A `std::tuple` listing the types of all of the struct's members, followed by `void`. The trailing `void` type is currently there due to technical limitations (i.e. X-macros + trailing comma in template params = bad), and this definition may be improved in the future to remove the `void`.
+
 The `TYPENAME` input is used for cases where two instances that may be templated on different `form_data_params` should be usable together (e.g. `visit_fields_in_tandem`), so that we have a means to refer to the type of an instance templated on different params.
 
 ### `enable_construction_via_table`
