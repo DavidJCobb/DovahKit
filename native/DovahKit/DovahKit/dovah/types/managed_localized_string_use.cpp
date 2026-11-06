@@ -22,7 +22,7 @@ namespace dovah {
          auto* prior_file = v.file;
          auto  prior_id   = v.id;
          if (prior_id) {
-            containing_form._replace_string_use({}, category, *prior_file, prior_id, 0);
+            containing_form._replace_string_use({}, category, prior_file, prior_id, 0);
          }
       }
    }
@@ -43,7 +43,7 @@ namespace dovah {
       }
       if (prior_id == id)
          return;
-      containing_form._replace_string_use({}, category, *prior_file, prior_id, id);
+      containing_form._replace_string_use({}, category, prior_file, prior_id, id);
       this->_value.emplace<_localized_id>() = {
          .file = active_file,
          .id   = id,
@@ -69,7 +69,7 @@ namespace dovah {
             auto* prior_file = v.file;
             auto  prior_id   = v.id;
             if (prior_id) {
-               containing_form._replace_string_use({}, category, *prior_file, prior_id, 0);
+               containing_form._replace_string_use({}, category, prior_file, prior_id, 0);
             }
          }
       }

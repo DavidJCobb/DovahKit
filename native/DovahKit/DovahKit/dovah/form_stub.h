@@ -197,7 +197,7 @@ namespace dovah {
             void _replace_string_use(
                lu::passkey<_base_managed_localized_string_use>,
                localization::category,
-               const tes::file&         prior_source_file,
+               const tes::file*         prior_source_file, // must be non-null if `prior_id` is non-zero
                bare_localized_string_id prior_id,
                bare_localized_string_id after_id // must be in the active file
             );

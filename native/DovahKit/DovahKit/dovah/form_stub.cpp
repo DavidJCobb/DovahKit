@@ -518,12 +518,13 @@ namespace dovah {
       void form_stub::_replace_string_use(
          lu::passkey<_base_managed_localized_string_use>,
          localization::category   category,
-         const tes::file&         prior_source_file,
+         const tes::file*         prior_source_file,
          bare_localized_string_id prior_id,
          bare_localized_string_id after_id
       ) {
          if (prior_id == after_id)
             return;
+         assert((prior_id == 0 || !!prior_source_file) && "If you specify a prior string ID, you must also specify the TES file that ID belongs to!");
          auto& alo         = this->get_load_order();
          auto& lsc         = alo.get_localized_string_collection();
          auto* active_file = alo.get_active_file();
@@ -544,7 +545,7 @@ namespace dovah {
                const auto& used = use.used;
                if (used.category != category)
                   continue;
-               if (used.id == prior_id) {
+               if (used.id == prior_id && used.tes_file == prior_source_file) {
                   prior_node = &use;
                   prior_it   = it;
                } else if (used.id == after_id && used.tes_file == active_file) {
@@ -560,7 +561,7 @@ namespace dovah {
             // our use count. That way, the LSC can delete the use-node if we're severing the 
             // last use of the localized string in question.
             //
-            const auto remaining_use_count = lsc._remove_string_user({}, *prior_node, *this, prior_source_file);
+            const auto remaining_use_count = lsc._remove_string_user({}, *prior_node, *this);
             if (remaining_use_count == 0) {
                //
                // And since we're not using this string at all anymore, remove the use node 

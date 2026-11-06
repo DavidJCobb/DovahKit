@@ -21,9 +21,27 @@
 
 ### Have
 
-* `string_file_bundle`, as read-only storage for non-active-file localized strings
+* Infrastructure
 
-* `active_string_file_bundle`, as mutable storage for active-file localized strings
+  * `string_file_bundle`, as read-only storage for non-active-file localized strings
+
+  * `active_string_file_bundle`, as mutable storage for active-file localized strings
+
+  * String use info (for both forms as users, and GMSTs as users)
+  
+  * Managing string use info
+  
+    * Start tracking form-to-string uses when we build form-stub use info
+    
+    * Start tracking GMST-to-string uses when we load GMSTs
+    
+    * Update form-to-string use info when a `managed_localized_string_use` is `set`
+    
+    * Update GMST-to-string use info when a GMST's value is changed
+  
+* Accessors
+
+  * For-each functions for all localized strings belonging to a given TES file
 
 ### Need
 
@@ -41,36 +59,4 @@
     
     * We must remember to update l-string Use Info for the active file (i.e. by clearing it en masse).
 
-* Form/l-string Use Info
-
-  * Must be built at the same time as form-to-form Use Info
-  
-    * REMEMBER: We need typed IDs for the `tes::bytereader`, because there are three ID spaces for l-strings (STRINGS/DLSTRINGS/ILSTRINGS)
-  
-  * User-to-used info is ideally stored on the `form_stub`
-  
-  * Used-to-user info is ideally stored on the `string_file_bundle` (and the active-file counterpart, once I implement that) as a whole
-
-* GMST/l-string Use Info
-
-  * Must be built when loading GMST records
-  
-  * User-to-used info is ideally stored on the `loaded_game_setting::per_file_data` content
-  
-  * Used-to-user info is ideally stored on the `string_file_bundle` (and the active-file counterpart, once I implement that) as a whole
-
-* When a form or GMST is deleted from the active file, we must sever Use Info between it and any l-strings it used.
-
 * When an active file l-string is deleted, we must sever Use Info between it and any forms and GMSTs that used it, amending those to use ID 0 (i.e. "no string") in its place.
-
-* Helpers, to enable robust editing in the future
-
-  * On `string_file_bundle` and its active-file counterpart, a "for-each" member function template which takes a language and a `localized_string_type`, and permits const access to all defined string IDs and content. Bonus points if the string's use info is easily accessible as well. We want this so that users can browse the l-strings associated with a given TES-file and language. (Potentially the UI could build its own `QAbstractItemModel` and facilitate searching/filtering too.)
-
-## What do we have to work with
-
-* `form_stub` has 16 bytes to spare for tracking l-string use info; that should be enough for either a simple container (e.g. data pointer + length), or a more robust heap-allocated container (e.g. `std::unique_ptr<std::vector<some_l_string_use_info_type>>`
-
-  * Another option is two pointers: one to non-active-file l-string use info; and one to active-file l-string use info. The former would be considered immutable after the initial use-info build step (because non-active files should not be considered modifiable); the latter would be more likely to mutate post-load. Each could use a different heap-allocated container to account for these differing properties.
-  
-    * Tempting to make the non-active use info just be a single pointer to some null-terminated list, but remember that we need to build this stuff incrementally file-by-file a.k.a. record-by-record as the form is being loaded; so for a form overridden by multiple localized non-active files, rebuilding a null-terminated list would be inconvenient (we'd have to measure its length `strlen`-style for every non-active-file record we parse, to know its existing size and know how to realloc it).

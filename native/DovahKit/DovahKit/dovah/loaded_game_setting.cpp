@@ -166,8 +166,10 @@ namespace dovah {
 
    void loaded_game_setting::_sever_string_use() {
       if (auto* pu = this->_value.string_use_info) {
-         pu->users.game_settings.erase(this->_name.lowercase);
          this->_value.string_use_info = nullptr;
+         auto& gsc = this->_owner;
+         auto& alo = gsc->owner;
+         alo.get_localized_string_collection()._remove_string_user({}, *pu, *this);
       }
    }
    void loaded_game_setting::_prepare_to_edit_value() {
