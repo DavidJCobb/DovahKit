@@ -1,5 +1,6 @@
 #include "./form_stub_collection.h"
 #include "./active_load_order.h"
+#include "./exceptions/game_setting_edit_failed.h"
 #include "./form_stub.h"
 #include "./form_type_info.h"
 #include "./_impl/form_stub_collection/create_hardcoded_form_stubs.h"
@@ -104,6 +105,36 @@ namespace dovah {
       type[formID] = &stub;
       this->forms[formID] = &stub;
    }
+   bare_form_id form_stub_collection::_reserve_form_id() {
+      auto& alo         = this->owner;
+      auto* active_file = alo.get_active_file();
+      if (!active_file)
+         return 0;
+      auto prefix  = alo.expected_active_file_prefix_post_save();
+      auto form_id = prefix.coerce_form_id(active_file->header().nextFormID);
+         
+      auto  guard = std::lock_guard(this->_reserved_form_ids.lock);
+      auto& list  = this->_reserved_form_ids.list;
+      {
+         auto guard = std::lock_guard(this->forms_lock);
+         if (std::find(list.begin(), list.end(), form_id) != list.end()) // if the form ID is reserved, then we need to find a new one
+            form_id = 0;
+         if (!(form_id & 0x00FFFFFF) || this->get_form_by_id(form_id, true) != nullptr) {
+            form_id = this->find_first_free_form_id_in_active_file();
+         }
+         if (this->prefs.new_forms_avoid_extended_esl_form_id_range && form_id) {
+            auto local_id = form_id & 0x00FFFFFF;
+            if (local_id < 0x800) {
+               auto alternative_id = this->find_first_free_form_id_in_active_file(0x00000800);
+               if (alternative_id)
+                  form_id = alternative_id;
+            }
+         }
+      }
+      if (form_id)
+         list.push_back(form_id);
+      return form_id;
+   }
 
    //
    // passkeyed
@@ -169,34 +200,7 @@ namespace dovah {
    }
 
    bare_form_id form_stub_collection::_reserve_form_id(lu::passkey<requests::create_form>) {
-      auto& alo         = this->owner;
-      auto* active_file = alo.get_active_file();
-      if (!active_file)
-         return 0;
-      auto prefix  = alo.expected_active_file_prefix_post_save();
-      auto form_id = prefix.coerce_form_id(active_file->header().nextFormID);
-         
-      auto  guard = std::lock_guard(this->_reserved_form_ids.lock);
-      auto& list  = this->_reserved_form_ids.list;
-      {
-         auto guard = std::lock_guard(this->forms_lock);
-         if (std::find(list.begin(), list.end(), form_id) != list.end()) // if the form ID is reserved, then we need to find a new one
-            form_id = 0;
-         if (!(form_id & 0x00FFFFFF) || this->get_form_by_id(form_id, true) != nullptr) {
-            form_id = this->find_first_free_form_id_in_active_file();
-         }
-         if (this->prefs.new_forms_avoid_extended_esl_form_id_range && form_id) {
-            auto local_id = form_id & 0x00FFFFFF;
-            if (local_id < 0x800) {
-               auto alternative_id = this->find_first_free_form_id_in_active_file(0x00000800);
-               if (alternative_id)
-                  form_id = alternative_id;
-            }
-         }
-      }
-      if (form_id)
-         list.push_back(form_id);
-      return form_id;
+      return this->_reserve_form_id();
    }
    void form_stub_collection::_abandon_form_id_reservation(lu::passkey<requests::create_form>, bare_form_id id) {
       if (!id)
@@ -207,5 +211,37 @@ namespace dovah {
       if (it != list.end()) {
          list.erase(it);
       }
+   }
+
+   form_stub& form_stub_collection::_make_stub_for_game_setting(lu::passkey<loaded_game_setting>, const std::string& editor_id) {
+      tes::file* active_file = this->owner.get_active_file();
+      if (!active_file) {
+         throw exceptions::game_setting_edit_failed(
+            exceptions::game_setting_edit_failed::error_code::no_active_file,
+            editor_id
+         );
+      }
+      bare_form_id form_id = this->_reserve_form_id();
+      if (!form_id) {
+         throw exceptions::game_setting_edit_failed(
+            exceptions::game_setting_edit_failed::error_code::no_form_id_available,
+            editor_id
+         );
+      }
+
+      auto* stub = new form_stub;
+      stub->editor_id = editor_id;
+      stub->form_id   = form_id;
+      stub->form_type = form_type::setting;
+      stub->_add_source_file({}, *active_file, 0);
+      stub->set_edited(true);
+
+      auto guard = std::lock_guard(this->forms_lock);
+      this->forms[form_id] = stub;
+      this->forms_by_type[form_type::setting][form_id] = stub;
+      this->active_file_forms[form_id] = stub;
+      this->active_file_forms_by_type[form_type::setting][form_id] = stub;
+
+      return *stub;
    }
 }

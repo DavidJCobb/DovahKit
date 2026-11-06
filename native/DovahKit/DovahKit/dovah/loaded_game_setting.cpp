@@ -2,10 +2,11 @@
 #include <cassert>
 #include "dovah/active_load_order.h"
 #include "dovah/facts/game_settings/all_definitions.h"
+#include "dovah/form_stub.h"
+#include "dovah/form_stub_collection.h"
 #include "dovah/game_setting_collection.h"
 #include "dovah/localization/string_collection.h"
 #include "dovah/localization/use_node.h"
-#include "dovah/requests/create_form.h"
 #include "dovah/tes/file.h"
 #include "dovah/types/localized_string_id.h"
 
@@ -177,10 +178,7 @@ namespace dovah {
          auto& info = this->_source_files.back();
          if (info.source_file == active_file) {
             if (!form_id) {
-               requests::create_form request{ alo };
-               request.form_type = form_type::setting;
-               request.editor_id = this->_name.loaded;
-               auto& stub = request.commit();
+               auto& stub = alo.get_form_stub_collection()._make_stub_for_game_setting({}, this->_name.loaded);
                info.form_id = stub.form_id;
             }
             return;
@@ -189,10 +187,7 @@ namespace dovah {
       auto& info = this->_source_files.emplace_back();
       info.source_file = active_file;
       if (!form_id) {
-         requests::create_form request{ alo };
-         request.form_type = form_type::setting;
-         request.editor_id = this->_name.loaded;
-         auto& stub = request.commit();
+         auto& stub = alo.get_form_stub_collection()._make_stub_for_game_setting({}, this->_name.loaded);
          form_id = stub.form_id;
       }
       info.form_id = form_id;

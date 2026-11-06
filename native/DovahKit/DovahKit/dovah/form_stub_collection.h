@@ -24,6 +24,7 @@ namespace dovah {
    class  active_load_order;
    struct file_prefix;
    class  form_stub;
+   class  loaded_game_setting;
 }
 
 namespace dovah {
@@ -153,6 +154,7 @@ namespace dovah {
 
       protected:
          void _add_hardcoded_form(form_stub&);
+         bare_form_id _reserve_form_id();
 
       public: // passkeyed
          void _destroy_none_stub(lu::passkey<requests::create_form>, form_stub& none_stub);
@@ -164,6 +166,9 @@ namespace dovah {
 
          bare_form_id _reserve_form_id(lu::passkey<requests::create_form>);
          void _abandon_form_id_reservation(lu::passkey<requests::create_form>, bare_form_id);
+
+         // post-load, when editing a loaded game setting's value.
+         form_stub& _make_stub_for_game_setting(lu::passkey<loaded_game_setting>, const std::string& editor_id);
    };
 }
 

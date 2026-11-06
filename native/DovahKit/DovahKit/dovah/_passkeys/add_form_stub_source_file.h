@@ -35,6 +35,7 @@ namespace dovah::_passkeys {
    class add_form_stub_source_file {
       friend load_order_processes::build_form_stubs_from_file::process;
       friend requests::create_form;
+      friend form_stub_collection;
       friend void       impl::_form_stub_collection::create_hardcoded_form_stubs(form_stub_collection&, tes::file&);
       friend void       impl::_form_stub_collection::create_none_stubs(form_stub_collection&, tes::file&);
       friend void       load_order_processes::build_form_stubs_from_file::set_file_list_for_newest_singleton_stub(
