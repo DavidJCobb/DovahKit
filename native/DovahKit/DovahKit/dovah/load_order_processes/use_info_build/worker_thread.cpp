@@ -35,6 +35,7 @@ namespace dovah::load_order_processes::use_info_build {
             assert(!!source_info);
             const auto* source_file = source_info->pointer;
             assert(!!source_file);
+            uib._source_file       = source_file;
             uib._is_active_file    = (source_file == active_file);
             uib._is_base_record    = (i == 0);
             uib._is_final_file     = (i == file_count - 1);

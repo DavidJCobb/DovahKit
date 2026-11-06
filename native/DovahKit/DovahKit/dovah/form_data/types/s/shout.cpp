@@ -83,9 +83,9 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
                {
                   form_id id;
                   if (subrecord.read(id)) {
-                     uib.add_outbound_use(id);
+                     uib.add_outbound_form_use(id);
                      if (subrecord.read(id)) {
-                        uib.add_outbound_use(id);
+                        uib.add_outbound_form_use(id);
                         // and then a four-byte float, which we can ignore
                      }
                   }
@@ -98,10 +98,11 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
       }
 
       if (uses_localized_strings) {
-         static_assert(false, "TODO: add `name` and `description`");
+         uib.add_outbound_string_use(name);
+         uib.add_outbound_string_use(description);
       }
-      uib.add_outbound_use(equip_type);
-      uib.add_outbound_use(menu_display_object);
+      uib.add_outbound_form_use(equip_type);
+      uib.add_outbound_form_use(menu_display_object);
       //
       // If the winning record defines fewer than three words (i.e. fewer than three 
       // SNAM subrecords), then we want the SNAMs from the losing records to "bleed 
@@ -110,8 +111,8 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
       // we've loaded during this go-around.
       //
       for (size_t i = word_count; i < max_word_count; ++i) {
-         uib.add_outbound_use(uib.extra_form_ids[(i * 2) + 0]);
-         uib.add_outbound_use(uib.extra_form_ids[(i * 2) + 1]);
+         uib.add_outbound_form_use(uib.extra_form_ids[(i * 2) + 0]);
+         uib.add_outbound_form_use(uib.extra_form_ids[(i * 2) + 1]);
       }
    }
 }

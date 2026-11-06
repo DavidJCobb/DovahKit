@@ -7,12 +7,16 @@
 #include "dovah/types/bare_form_id.h"
 #include "dovah/types/bare_localized_string_id.h"
 #include "dovah/types/form_id.h"
+#include "dovah/types/localized_string_id.h"
 #include "dovah/utils/localization/data_by_string_category.h"
 
 namespace dovah {
    namespace load_order_processes::use_info_build {
       class use_info_builder_form_specific_data;
       class worker_thread;
+   }
+   namespace tes {
+      class file;
    }
    class form_stub;
 }
@@ -32,6 +36,7 @@ namespace dovah::load_order_processes::use_info_build {
          };
          
          form_stub& _stub;
+         const tes::file* _source_file = nullptr;
          bool _is_active_file    = false;
          bool _is_base_record    = false;
          bool _is_final_file     = false;
@@ -49,19 +54,29 @@ namespace dovah::load_order_processes::use_info_build {
          ~use_info_builder();
          
       public:
-         void add_outbound_use(form_id toFormID, form_use_info::entry_flag_underlying_type flags = 0);
-         void cancel_outbound_use(form_id toFormID, form_use_info::entry_flag_underlying_type flags = 0);
+         #pragma region Form uses
+            void add_outbound_form_use(form_id toFormID, form_use_info::entry_flag_underlying_type flags = 0);
+            void cancel_outbound_form_use(form_id toFormID, form_use_info::entry_flag_underlying_type flags = 0);
 
-         template<typename UseInfoFlag>
-            requires form_use_info::is_entry_flag_type_v<UseInfoFlag>
-         void add_outbound_use(form_id to_form_id, UseInfoFlag flag) {
-            this->add_outbound_use(to_form_id, form_use_info::entry_flag_to_mask(flag));
-         }
-         template<typename UseInfoFlag>
-            requires form_use_info::is_entry_flag_type_v<UseInfoFlag>
-         void cancel_outbound_use(form_id to_form_id, UseInfoFlag flag) {
-            this->cancel_outbound_use(to_form_id, form_use_info::entry_flag_to_mask(flag));
-         }
+            template<typename UseInfoFlag>
+               requires form_use_info::is_entry_flag_type_v<UseInfoFlag>
+            void add_outbound_form_use(form_id to_form_id, UseInfoFlag flag) {
+               this->add_outbound_form_use(to_form_id, form_use_info::entry_flag_to_mask(flag));
+            }
+            template<typename UseInfoFlag>
+               requires form_use_info::is_entry_flag_type_v<UseInfoFlag>
+            void cancel_outbound_form_use(form_id to_form_id, UseInfoFlag flag) {
+               this->cancel_outbound_form_use(to_form_id, form_use_info::entry_flag_to_mask(flag));
+            }
+         #pragma endregion
+         #pragma region String uses
+            void add_outbound_string_use(localization::category, bare_localized_string_id);
+
+            template<localization::category C>
+            void add_outbound_string_use(localized_string_id<C> id) {
+               this->add_outbound_string_use(C, (bare_localized_string_id)id);
+            }
+         #pragma endregion
 
          void commit();
          
@@ -86,7 +101,7 @@ namespace dovah::load_order_processes::use_info_build {
          constexpr bool is_partial_record() const noexcept { return this->_is_partial_record; }
          
          void clear_pending_use_info() noexcept; // discard any yet-to-be-committed use info inside of this builder instance specifically
-         void clear_all_prior_use_info() const noexcept; // delete ALL existing use info for the form stub. needed for TopicInfos due to their bizarre partial-record behavior
+         void clear_all_prior_form_use_info() const noexcept; // delete ALL existing use info for the form stub. needed for TopicInfos due to their bizarre partial-record behavior
 
          form_specific_data* get_form_specific_data();
          constexpr form_specific_data* get_form_specific_data_if_exists() const noexcept { return this->_form_specific_data; }

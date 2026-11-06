@@ -15,7 +15,7 @@ namespace dovah::load_order_processes::use_info_build {
       }
    }
 
-   void use_info_builder::add_outbound_use(form_id used_form_id, form_use_info::entry_flag_underlying_type flags) {
+   void use_info_builder::add_outbound_form_use(form_id used_form_id, form_use_info::entry_flag_underlying_type flags) {
       if (!used_form_id)
          return;
       this->_pending_uses.of_forms.push_back(pending_entry{
@@ -23,7 +23,7 @@ namespace dovah::load_order_processes::use_info_build {
          .flags     = flags
       });
    }
-   void use_info_builder::cancel_outbound_use(form_id used_form_id, form_use_info::entry_flag_underlying_type flags) {
+   void use_info_builder::cancel_outbound_form_use(form_id used_form_id, form_use_info::entry_flag_underlying_type flags) {
       const auto   bare_used_form_id = (bare_form_id)used_form_id;
       const size_t size              = this->_pending_uses.of_forms.size();
       for (size_t i = 0; i < size; ++i) {
@@ -34,16 +34,37 @@ namespace dovah::load_order_processes::use_info_build {
          }
       }
    }
+
+   void use_info_builder::add_outbound_string_use(localization::category category, bare_localized_string_id id) {
+      if (id)
+         this->_pending_uses.of_strings.for_category(category).push_back(id);
+   }
+
    void use_info_builder::commit() {
       if (this->_parent) {
          if (auto* fsd = this->_form_specific_data) {
             fsd->commit(*this->_parent);
             fsd->clear();
          }
+
          for (auto& entry : this->_pending_uses.of_forms) {
             this->_parent->_pending_uses.of_forms.push_back(entry);
          }
          this->_pending_uses.of_forms.clear();
+
+         for (const auto category : std::array{
+            localization::category::description,
+            localization::category::general,
+            localization::category::info,
+         }) {
+            auto& src = this->_pending_uses.of_strings.for_category(category);
+            auto& dst = this->_parent->_pending_uses.of_strings.for_category(category);
+            dst.reserve(dst.size() + src.size());
+            for (auto id : src)
+               dst.push_back(id);
+            src.clear();
+         }
+
          return;
       }
 
@@ -58,11 +79,23 @@ namespace dovah::load_order_processes::use_info_build {
             this->_stub._add_one_way_outbound_form_use({}, entry.target_id, entry.flags);
       }
       this->_pending_uses.of_forms.clear();
+
+      for (const auto category : std::array{
+         localization::category::description,
+         localization::category::general,
+         localization::category::info,
+      }) {
+         auto& src = this->_pending_uses.of_strings.for_category(category);
+         for (auto id : src)
+            this->_stub._add_string_use({}, *this->_source_file, category, id);
+         src.clear();
+      }
    }
    
    [[nodiscard]] use_info_builder* use_info_builder::spawn_subordinate() noexcept {
       auto sub = new use_info_builder(this->_stub);
       sub->_parent            = this;
+      sub->_source_file       = this->_source_file;
       sub->_is_active_file    = this->_is_active_file;
       sub->_is_base_record    = this->_is_base_record;
       sub->_is_final_file     = this->_is_final_file;
@@ -72,6 +105,7 @@ namespace dovah::load_order_processes::use_info_build {
    [[nodiscard]] use_info_builder use_info_builder::spawn_subordinate_on_stack() noexcept {
       auto sub = use_info_builder(this->_stub);
       sub._parent             = this;
+      sub._source_file        = this->_source_file;
       sub._is_active_file     = this->_is_active_file;
       sub._is_base_record     = this->_is_base_record;
       sub._is_final_file      = this->_is_final_file;
@@ -84,8 +118,16 @@ namespace dovah::load_order_processes::use_info_build {
          fsd->clear();
       }
       this->_pending_uses.of_forms.clear();
+      
+      for (const auto category : std::array{
+         localization::category::description,
+         localization::category::general,
+         localization::category::info,
+      }) {
+         this->_pending_uses.of_strings.for_category(category).clear();
+      }
    }
-   void use_info_builder::clear_all_prior_use_info() const noexcept {
+   void use_info_builder::clear_all_prior_form_use_info() const noexcept {
       form_use_info::entry parent_entry;
       //
       auto& stub = this->_stub;
