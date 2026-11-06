@@ -202,10 +202,12 @@
     <ClCompile Include="lu\memory\basic_buffer.cpp" />
     <ClCompile Include="lu\windows\read_single_ini_setting.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tests\basic\clear_outbound_uses.cpp" />
     <ClCompile Include="tests\basic\count_all_records.cpp" />
     <ClCompile Include="tests\basic\file_list_to_load_order.cpp" />
     <ClCompile Include="tests\basic\index_stubs.cpp" />
     <ClCompile Include="tests\basic\load_a_shout.cpp" />
+    <ClCompile Include="tests\pieces\load_skyrim_esm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\active_load_order.h" />
@@ -278,6 +280,7 @@
     <ClInclude Include="dovah\form_data\base_unmanaged_form_data.h" />
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
     <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h" />
+    <ClInclude Include="tests\pieces\load_skyrim_esm.h" />
     <None Include="dovah\form_data\fragments\declare_tabled_load_functions.inl">
       <FileType>Document</FileType>
     </None>
@@ -563,6 +566,7 @@
     <ClInclude Include="lu\vectors\re_sort_item_within.h" />
     <ClInclude Include="lu\vectors\unordered_erase.h" />
     <ClInclude Include="lu\windows\read_single_ini_setting.h" />
+    <ClInclude Include="tests\basic\clear_outbound_uses.h" />
     <ClInclude Include="tests\basic\count_all_records.h" />
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
     <ClInclude Include="tests\basic\index_stubs.h" />

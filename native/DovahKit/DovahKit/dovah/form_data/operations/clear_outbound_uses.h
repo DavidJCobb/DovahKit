@@ -40,8 +40,7 @@ namespace dovah::form_data_operations {
    template<typename T>
       requires std::is_base_of_v<_base_managed_localized_string_use, T>
    LU_FORCE_INLINE void clear_outbound_uses(form_stub& containing_form, T& data) {
-      if (data.is_localized())
-         data.set_localized_id(containing_form, 0);
+      data.clear(containing_form);
    }
 
    // Arrays.

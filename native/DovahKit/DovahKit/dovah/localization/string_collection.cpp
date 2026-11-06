@@ -113,17 +113,17 @@ namespace dovah::localization {
       return *use_ptr;
    }
 
-   void string_collection::_remove_active_file_string_user(lu::passkey<form_stub>, use_node& use, form_stub& user) {
-      // Ensure that this actually is an active-file string use:
-      assert(!!this->_active_file);
-      assert(use.used.tes_file == &this->_active_file->get_tes_file());
+   size_t string_collection::_remove_string_user(lu::passkey<form_stub>, use_node& use, form_stub& user, const tes::file& tes_file) {
+      assert(use.used.tes_file == &tes_file);
 
       auto it = use.users.forms.find(&user);
       assert(it != use.users.forms.end() && "use isn't bidirectional?!");
-      if (--(it->second) == 0) {
+      size_t remaining_use_count = --(it->second);
+      if (remaining_use_count == 0) {
          use.users.forms.erase(it);
          this->_destroy_use_node_if_no_users(use);
       }
+      return remaining_use_count;
    }
    void string_collection::_remove_active_file_string_user(lu::passkey<loaded_game_setting>, use_node& use, loaded_game_setting& user) {
       // Ensure that this actually is an active-file string use:
@@ -133,5 +133,6 @@ namespace dovah::localization {
       auto it = use.users.game_settings.find(user.name_in_lowercase());
       assert(it != use.users.game_settings.end() && "use isn't bidirectional?!");
       use.users.game_settings.erase(it);
+      this->_destroy_use_node_if_no_users(use);
    }
 }

@@ -64,8 +64,13 @@ namespace dovah::localization {
             bare_localized_string_id
          );
 
-         // post-load
-         void _remove_active_file_string_user(lu::passkey<form_stub>, use_node&, form_stub&); // use-node reference may become invalid after this function exits
-         void _remove_active_file_string_user(lu::passkey<loaded_game_setting>, use_node&, loaded_game_setting&); // use-node reference may become invalid after this function exits
+         // For post-load changes.
+         // Returns the number of uses this form stub still has of the given node.
+         // The passed-in use node may be deleted as a result of this call (i.e. if nothing is using that string anymore).
+         size_t _remove_string_user(lu::passkey<form_stub>, use_node&, form_stub&, const tes::file&);
+
+         // For post-load changes.
+         // The passed-in use node may be deleted as a result of this call (i.e. if nothing is using that string anymore).
+         void _remove_active_file_string_user(lu::passkey<loaded_game_setting>, use_node&, loaded_game_setting&);
    };
 }

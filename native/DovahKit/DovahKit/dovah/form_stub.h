@@ -45,6 +45,9 @@ namespace dovah {
 
    class _base_managed_localized_string_use;
 
+   namespace form_data_pointer_impl {
+      class base;
+   }
    class untyped_form_data_pointer;
 
    template<template<typename> typename FormDataTemplate>
@@ -53,7 +56,7 @@ namespace dovah {
 
 namespace dovah {
    class form_stub {
-      friend untyped_form_data_pointer;
+      friend form_data_pointer_impl::base;
       public:
          static void* operator new(std::size_t sz);
          static void operator delete(void* ptr, std::size_t sz);
@@ -125,8 +128,8 @@ namespace dovah {
 
          untyped_form_data_pointer load();
 
-         template<template<auto> typename FormDataTemplate>
-         void load_as_type();
+         template<template<typename> typename FormDataTemplate>
+         form_data_pointer<FormDataTemplate> load_as_type();
 
          #pragma region Record flag functions
             void edit_record_flags(uint32_t mask, bool clear_or_set) noexcept; // also sets the form as edited
@@ -191,11 +194,12 @@ namespace dovah {
             void _add_string_use(_passkeys::build_use_info_during_load, const tes::file&, localization::category, bare_localized_string_id);
 
             // post-load, for editing
-            void _replace_active_file_string_use(
+            void _replace_string_use(
                lu::passkey<_base_managed_localized_string_use>,
                localization::category,
+               const tes::file&         prior_source_file,
                bare_localized_string_id prior_id,
-               bare_localized_string_id after_id
+               bare_localized_string_id after_id // must be in the active file
             );
          #pragma endregion
    };

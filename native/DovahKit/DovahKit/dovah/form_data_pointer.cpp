@@ -2,13 +2,13 @@
 #include <cassert>
 
 namespace dovah {
-   #pragma region untyped_form_data_pointer
-      void untyped_form_data_pointer::_inc() {
+   namespace form_data_pointer_impl {
+      void base::_inc() {
          if (auto* s = this->_stub) {
             ++s->refcount;
          }
       }
-      void untyped_form_data_pointer::_dec() {
+      void base::_dec() {
          if (!this->_stub)
             return;
          auto* s = this->_stub;
@@ -17,7 +17,9 @@ namespace dovah {
          if (s->refcount == 0)
             s->_unload_form();
       }
+   }
 
+   #pragma region untyped_form_data_pointer
       untyped_form_data_pointer::untyped_form_data_pointer(const untyped_form_data_pointer& other) {
          this->_stub = other._stub;
          this->_inc();

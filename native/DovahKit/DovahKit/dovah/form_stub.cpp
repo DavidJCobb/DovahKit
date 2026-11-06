@@ -515,9 +515,10 @@ namespace dovah {
          list_ptr->push_back(&use);
       }
 
-      void form_stub::_replace_active_file_string_use(
+      void form_stub::_replace_string_use(
          lu::passkey<_base_managed_localized_string_use>,
          localization::category   category,
+         const tes::file&         prior_source_file,
          bare_localized_string_id prior_id,
          bare_localized_string_id after_id
       ) {
@@ -532,37 +533,41 @@ namespace dovah {
          if (prior_id) {
             assert(!!this->_string_use_info);
             localization::use_node* prior_node = nullptr;
-            {
-               //
-               // Find and remove any entry for the previous localized string, and find any 
-               // existing entry for the replacement localized string.
-               //
-               auto& list     = *this->_string_use_info.get();
-               auto  prior_it = list.end();
-               for (auto it = list.begin(); it != list.end(); ++it) {
-                  auto&       use  = **it;
-                  const auto& used = use.used;
-                  if (used.category != category || used.tes_file != active_file)
-                     continue;
-                  if (used.id == prior_id) {
-                     prior_node = &use;
-                     prior_it   = it;
-                     break;
-                  }
-                  if (used.id == after_id) {
-                     after_node = &use;
-                  }
+            //
+            // Find the entry for the previous localized string, and any existing entry for 
+            // the replacement localized string.
+            //
+            auto& list     = *this->_string_use_info.get();
+            auto  prior_it = list.end();
+            for (auto it = list.begin(); it != list.end(); ++it) {
+               auto&       use  = **it;
+               const auto& used = use.used;
+               if (used.category != category)
+                  continue;
+               if (used.id == prior_id) {
+                  prior_node = &use;
+                  prior_it   = it;
+               } else if (used.id == after_id && used.tes_file == active_file) {
+                  after_node = &use;
                }
-               assert(!!prior_node);
-               assert(prior_it != list.end());
-               list.erase(prior_it);
+               if (prior_node && after_node)
+                  break;
             }
+            assert(!!prior_node);
+            assert(prior_it != list.end());
             //
             // Pass the node for the previous localized string to the LSC, and let that lower 
             // our use count. That way, the LSC can delete the use-node if we're severing the 
             // last use of the localized string in question.
             //
-            lsc._remove_active_file_string_user({}, *prior_node, *this);
+            const auto remaining_use_count = lsc._remove_string_user({}, *prior_node, *this, prior_source_file);
+            if (remaining_use_count == 0) {
+               //
+               // And since we're not using this string at all anymore, remove the use node 
+               // from our list.
+               //
+               list.erase(prior_it);
+            }
          } else if (after_id) {
             if (!this->_string_use_info) {
                //
@@ -576,12 +581,12 @@ namespace dovah {
                // duplicate pointer to the list.
                //
                auto& list = *this->_string_use_info.get();
-               for (auto* prior_use_ptr : list) {
-                  const auto& used = prior_use_ptr->used;
+               for (auto* use_ptr : list) {
+                  const auto& used = use_ptr->used;
                   if (used.category != category || used.tes_file != active_file)
                      continue;
                   if (used.id == after_id) {
-                     after_node = prior_use_ptr;
+                     after_node = use_ptr;
                      break;
                   }
                }

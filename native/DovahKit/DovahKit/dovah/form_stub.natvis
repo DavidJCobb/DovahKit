@@ -112,13 +112,17 @@
          <Item Name="[source file]" Condition="!_has_stub_flag(flag::has_multiple_source_files)">file</Item>
          <Item Name="[addenda]" Condition="addenda != nullptr">addenda</Item>
          <Item Name="[loaded form]" Condition="loaded != nullptr">loaded</Item>
-         <Synthetic Name="[use info]">
+         <Synthetic Name="[form use info]">
             <DisplayString>{outbound._Mypair._Myval2._Myval2._Mysize,d} outbound refs; {inbound._Mypair._Myval2._Myval2._Mysize,d} inbound</DisplayString>
             <Expand>
                <Item Name="outbound">outbound,view(dkFormOutbound)</Item>
                <Item Name="inbound">inbound,view(dkFormInbound)</Item>
             </Expand>
          </Synthetic>
+         <Synthetic Name="[string use info]" Condition="_string_use_info._Mypair._Myval2 == nullptr">
+            <DisplayString>&lt;none&gt;</DisplayString>
+         </Synthetic>
+         <Item Name="[string use info]" Condition="_string_use_info._Mypair._Myval2 != nullptr">_string_use_info._Mypair._Myval2,na</Item>
       </Expand>
    </Type>
    

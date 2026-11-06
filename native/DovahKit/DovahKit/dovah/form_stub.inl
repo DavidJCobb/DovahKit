@@ -15,9 +15,13 @@ namespace dovah {
       return this->flags.has_all_of<flag::is_hardcoded>();
    }
 
-   template<template<auto> typename FormDataTemplate>
-   void form_stub::load_as_type() {
-      return form_data_pointer<FormDataTemplate>(this->load());
+   template<template<typename> typename FormDataTemplate>
+   form_data_pointer<FormDataTemplate> form_stub::load_as_type() {
+      using pointer_type = form_data_pointer<FormDataTemplate>;
+      if (this->form_type == pointer_type::form_type) {
+         return pointer_type(this->load());
+      }
+      return {};
    }
 
    #pragma region Record flag functions

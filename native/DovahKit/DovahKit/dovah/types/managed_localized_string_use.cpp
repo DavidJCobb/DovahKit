@@ -18,9 +18,11 @@ namespace dovah {
 
       bare_localized_string_id prior_id = 0;
       if (std::holds_alternative<_localized_id>(this->_value)) {
-         prior_id = std::get<_localized_id>(this->_value).id;
+         auto& v = std::get<_localized_id>(this->_value);
+         auto* prior_file = v.file;
+         auto  prior_id   = v.id;
          if (prior_id) {
-            containing_form._replace_active_file_string_use({}, category, prior_id, 0);
+            containing_form._replace_string_use({}, category, *prior_file, prior_id, 0);
          }
       }
    }
@@ -32,13 +34,16 @@ namespace dovah {
       assert(!!active_file);
       assert(active_file->header().flags.has_all_of<tes::file_header_flag::localized_strings>() && "If the active file doesn't currently use localized strings, we can't write a localized string ID in!");
 
-      bare_localized_string_id prior_id = 0;
+      const tes::file*         prior_file = nullptr;
+      bare_localized_string_id prior_id   = 0;
       if (std::holds_alternative<_localized_id>(this->_value)) {
-         prior_id = std::get<_localized_id>(this->_value).id;
+         auto& v = std::get<_localized_id>(this->_value);
+         prior_file = v.file;
+         prior_id   = v.id;
       }
       if (prior_id == id)
          return;
-      containing_form._replace_active_file_string_use({}, category, prior_id, id);
+      containing_form._replace_string_use({}, category, *prior_file, prior_id, id);
       this->_value.emplace<_localized_id>() = {
          .file = active_file,
          .id   = id,
@@ -51,6 +56,30 @@ namespace dovah {
    void _base_managed_localized_string_use::_set_non_localized_string(form_stub& containing_form, localization::category category, std::string&& text) {
       this->_discard_localized_id(containing_form, category);
       this->_value.emplace<std::string>() = std::move(text);
+   }
+
+   void _base_managed_localized_string_use::_clear(form_stub& containing_form, localization::category category) {
+      auto& alo         = containing_form.get_load_order();
+      auto& lsc         = alo.get_localized_string_collection();
+      auto* active_file = alo.get_active_file();
+      assert(!!active_file);
+      if (this->is_localized()) {
+         if (std::holds_alternative<_localized_id>(this->_value)) {
+            auto& v = std::get<_localized_id>(this->_value);
+            auto* prior_file = v.file;
+            auto  prior_id   = v.id;
+            if (prior_id) {
+               containing_form._replace_string_use({}, category, *prior_file, prior_id, 0);
+            }
+         }
+      }
+      if (active_file->header().flags.has_all_of<tes::file_header_flag::localized_strings>()) {
+         auto& v = this->_value.emplace<_localized_id>();
+         v.file = active_file;
+         v.id   = 0;
+      } else {
+         this->_value.emplace<std::string>();
+      }
    }
 
    bool _base_managed_localized_string_use::is_active_file_string_id() const noexcept {

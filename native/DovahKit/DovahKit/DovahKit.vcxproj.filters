@@ -287,6 +287,12 @@
     <ClCompile Include="dovah\form_data_function_tables\initialize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tests\basic\clear_outbound_uses.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\pieces\load_skyrim_esm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1355,6 +1361,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\facts\game_settings\string_id_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\basic\clear_outbound_uses.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\pieces\load_skyrim_esm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

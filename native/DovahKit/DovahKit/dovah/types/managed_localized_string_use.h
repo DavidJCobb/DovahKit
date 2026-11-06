@@ -35,6 +35,7 @@ namespace dovah {
          void _set_localized_id(form_stub& containing_form, localization::category, bare_localized_string_id);
          void _set_non_localized_string(form_stub& containing_form, localization::category, std::string_view);
          void _set_non_localized_string(form_stub& containing_form, localization::category, std::string&&);
+         void _clear(form_stub& containing_form, localization::category);
 
       public:
          constexpr bool empty() const noexcept {
@@ -70,6 +71,10 @@ namespace dovah {
    class managed_localized_string_use : public _base_managed_localized_string_use {
       public:
          static constexpr const localization::category category = V;
+
+         void clear(form_stub& containing_form) {
+            _base_managed_localized_string_use::_clear(containing_form, category);
+         }
 
          // ID must be for an active-file string.
          void set_localized_id(form_stub& containing_form, bare_localized_string_id id) {
