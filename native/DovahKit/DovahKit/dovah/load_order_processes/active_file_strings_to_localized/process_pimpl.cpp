@@ -28,7 +28,7 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
          auto& map = strings_to_ids.for_category(category);
          auto  mit = map.find(s);
          if (mit == map.end()) {
-            lsc._get_active_strings_as_mutable({})._create_id_and_store_string({}, category, this->params.languages, s);
+            id = lsc._get_active_strings_as_mutable({})._create_id_and_store_string({}, category, this->params.languages, s);
             map[s] = id;
          } else {
             id = mit->second;
@@ -59,7 +59,7 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
          auto& map = strings_to_ids.for_category(localization::category::general);
          auto  mit = map.find(s);
          if (mit == map.end()) {
-            lsc._get_active_strings_as_mutable({})._create_id_and_store_string({}, localization::category::general, this->params.languages, s);
+            id = lsc._get_active_strings_as_mutable({})._create_id_and_store_string({}, localization::category::general, this->params.languages, s);
             map[s] = id;
          } else {
             id = mit->second;

@@ -1414,6 +1414,9 @@
     <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_string_use.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tests\pieces\assert_even_in_release.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">

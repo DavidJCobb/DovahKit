@@ -1,11 +1,10 @@
 #pragma once
 #include <array>
-#include <cassert>
-#include <exception> // std::terminate, for Release
 #include "dovah/form_stub.h"
 #include "dovah/localization/use_node.h"
 #include "dovah/tes/file.h"
 #include "../types/localized_string_descriptor.h"
+#include "./assert_even_in_release.h"
 
 namespace dovahkit::tests::pieces {
    template<size_t S>
@@ -19,7 +18,7 @@ namespace dovahkit::tests::pieces {
 
          bool found = false;
          for (const auto* use_node : string_uses) {
-            assert(!!use_node);
+            assert_even_in_release(!!use_node);
             auto& used = use_node->used;
             if (used.id != id)
                continue;
@@ -29,12 +28,7 @@ namespace dovahkit::tests::pieces {
                continue;
             found = true;
          }
-         #if _DEBUG
-            assert(!!found && "String is not used");
-         #else
-            if (!found)
-               std::terminate();
-         #endif
+         assert_even_in_release(!!found && "String is not used");
       }
    }
 }

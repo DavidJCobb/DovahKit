@@ -4,10 +4,6 @@
 #include "../pieces/load_skyrim_esm.h"
 
 namespace dovahkit::tests {
-   static void on_warning(const dovah::notices::base_warning& warning) {
-      __debugbreak();
-   }
-
    extern void load_a_shout() {
       auto alo_ptr = pieces::load_skyrim_esm(true);
       if (!alo_ptr)

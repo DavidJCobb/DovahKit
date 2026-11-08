@@ -1,9 +1,8 @@
 #pragma once
 #include <array>
-#include <cassert>
-#include <exception> // std::terminate, for Release
 #include "dovah/form_stub.h"
 #include "dovah/types/bare_form_id.h"
+#include "./assert_even_in_release.h"
 
 namespace dovahkit::tests::pieces {
    // Assert that all specified form IDs are used by the `user` stub, and return 
@@ -21,12 +20,7 @@ namespace dovahkit::tests::pieces {
                break;
             }
          }
-         #if _DEBUG
-            assert(!!found);
-         #else
-            if (!found)
-               std::terminate();
-         #endif
+         assert_even_in_release(!!found);
       }
       return stubs;
    }
