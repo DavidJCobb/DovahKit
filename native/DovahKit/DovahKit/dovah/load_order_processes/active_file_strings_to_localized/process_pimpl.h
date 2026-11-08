@@ -19,8 +19,9 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
          process_pimpl(lu::passkey<process>, const process_params&);
 
       public:
-         const process_params params;
-         string_to_id_maps strings_to_ids; // only used if folding identical strings is enabled
+         const process_params     params;
+         string_to_id_maps        strings_to_ids; // only used if folding identical strings is enabled
+         bare_localized_string_id next_id = 1;
 
       protected:
          bare_localized_string_id _get_id_for_new_string(localization::category, const std::string&);

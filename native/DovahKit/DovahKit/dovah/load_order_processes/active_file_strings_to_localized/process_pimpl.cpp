@@ -19,11 +19,21 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
          if (mit != map.end())
             return mit->second;
       }
-      auto& lsc = this->params.active_load_order.get_localized_string_collection();
-      auto  id  = lsc._get_active_strings_as_mutable({})._create_id_and_store_string({}, category, this->params.languages, s);
+
+      auto& lsc            = this->params.active_load_order.get_localized_string_collection();
+      auto& active_strings = lsc._get_active_strings_as_mutable({});
+
+      bare_localized_string_id id = this->next_id;
+      ++this->next_id;
+      for (size_t i = 0; i < localization::language_count; ++i) {
+         if (this->params.languages.has((localization::language)i))
+            active_strings.replace(category, (localization::language)i, id, s);
+      }
+
       if (this->params.merge_identical_strings) {
          map[s] = id;
       }
+
       return id;
    }
 
