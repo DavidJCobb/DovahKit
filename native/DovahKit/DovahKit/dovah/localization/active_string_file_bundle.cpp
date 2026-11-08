@@ -108,6 +108,7 @@ namespace dovah::localization {
       }
       auto& file = this->_by_language[(size_t)lang].for_category(category);
       file.strings_by_id[id] = v;
+      this->_defined_ids.for_category(category).insert(id);
    }
 
    void active_string_file_bundle::_parse_single_file(asset_file_buffer& buffer, category category, string_file& file, id_set& presence) {
