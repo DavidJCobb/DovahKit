@@ -1,4 +1,5 @@
 #include "./file_view.h"
+#include <cassert>
 #include "zlib/zlib.h"
 #include "dovah/form_type_info.h"
 #include "dovah/utils/files/tes/signature_is_suspicious.h"

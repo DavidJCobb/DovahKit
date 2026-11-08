@@ -112,7 +112,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
@@ -280,6 +280,9 @@
     <ClInclude Include="dovah\form_data\base_unmanaged_form_data.h" />
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
     <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h" />
+    <ClInclude Include="tests\pieces\assert_uses_are_severed.h" />
+    <ClInclude Include="tests\pieces\assert_uses_strings.h" />
+    <ClInclude Include="tests\pieces\get_expected_used_stubs.h" />
     <ClInclude Include="tests\pieces\load_skyrim_esm.h" />
     <None Include="dovah\form_data\fragments\declare_tabled_load_functions.inl">
       <FileType>Document</FileType>

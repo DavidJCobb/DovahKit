@@ -1,4 +1,5 @@
 #include "./managed_form_use.h"
+#include <cassert>
 #include "dovah/active_load_order.h"
 #include "dovah/form_stub_collection.h"
 #include "dovah/tes/file.h"

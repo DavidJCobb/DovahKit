@@ -1,4 +1,5 @@
 #include "./managed_localized_string_use.h"
+#include <cassert>
 #include <stdexcept>
 #include "dovah/active_load_order.h"
 #include "dovah/form_stub.h"

@@ -1,4 +1,5 @@
 #include "./exterior_cells_and_children.h"
+#include <cassert>
 #include "dovah/active_load_order.h"
 #include "dovah/callback_sets/data_load.h"
 #include "dovah/form_stub.h"
@@ -37,8 +38,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          this->_progress.current = i;
          auto& queue_item = this->queue[i];
          view.set_position(queue_item.pos);
-         assert(view.next_record_or_group() == tes::file_view::chunk_type::group); // opens `sub_block_group`
-         assert(view.get_current_group()    == &sub_block_group);
+         {
+            auto result = view.next_record_or_group(); // opens `sub_block_group`
+            assert(result == tes::file_view::chunk_type::group);
+            assert(view.get_current_group() == &sub_block_group);
+         }
 
          form_stub* cell_stub_for_group   = nullptr;
          form_stub* last_seen_cell_record = nullptr;

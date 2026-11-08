@@ -1,4 +1,5 @@
 #include "./topics_and_infos.h"
+#include <cassert>
 #include "dovah/active_load_order.h"
 #include "dovah/callback_sets/data_load.h"
 #include "dovah/form_stub.h"
@@ -31,7 +32,10 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
          this->_progress.current = i;
          auto& desired = this->queue[i];
          view.set_position(desired.pos);
-         assert(view.next_record_or_group() == tes::file_view::chunk_type::group);
+         {
+            auto result = view.next_record_or_group();
+            assert(result == tes::file_view::chunk_type::group);
+         }
 
          form_stub* topic_stub = nullptr;
 

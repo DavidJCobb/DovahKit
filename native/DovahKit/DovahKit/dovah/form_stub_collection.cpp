@@ -1,4 +1,5 @@
 #include "./form_stub_collection.h"
+#include <cassert>
 #include "./active_load_order.h"
 #include "./exceptions/game_setting_edit_failed.h"
 #include "./form_stub.h"

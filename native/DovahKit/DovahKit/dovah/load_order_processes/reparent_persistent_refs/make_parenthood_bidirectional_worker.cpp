@@ -1,4 +1,5 @@
 #include "./make_parenthood_bidirectional_worker.h"
+#include <cassert>
 #include "dovah/_impl/form_stubs/make_one_way_use_bidirectional.h"
 #include "dovah/termination_handler.h"
 #include "./queued_ref.h"

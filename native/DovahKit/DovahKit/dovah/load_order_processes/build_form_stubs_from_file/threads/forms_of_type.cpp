@@ -1,4 +1,5 @@
 #include "./forms_of_type.h"
+#include <cassert>
 #include "dovah/callback_sets/data_load.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_type.h"
@@ -25,8 +26,11 @@ namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
       for (uint32_t i = 0; i < size; i++) {
          this->_progress.current = i;
          auto& desired = this->queue[i];
-         view.set_position(desired.pos);
-         assert(view.next_record_or_group() == tes::file_view::chunk_type::group);
+         view.set_position(desired.pos); 
+         {
+            auto result = view.next_record_or_group();
+            assert(result == tes::file_view::chunk_type::group);
+         }
 
          const auto&     group_of_interest = view.groups[0];
          const form_type group_form_type   = form_type_info::signature_to_form_type(desired.signature);

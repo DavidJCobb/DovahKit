@@ -1,4 +1,5 @@
 #include "./string_collection.h"
+#include <cassert>
 #include "../loaded_game_setting.h"
 #include "../tes/file.h"
 #include "./active_string_file_bundle.h"

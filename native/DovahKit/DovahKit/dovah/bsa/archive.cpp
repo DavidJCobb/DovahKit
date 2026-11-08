@@ -1,5 +1,6 @@
 #include "archive.h"
 #include <bit>
+#include <cassert>
 #include "lu/bytestreams/base_bytereader.h"
 extern "C" {
    #include "zlib/zlib.h"

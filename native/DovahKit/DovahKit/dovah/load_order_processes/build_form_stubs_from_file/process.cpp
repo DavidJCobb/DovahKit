@@ -1,5 +1,6 @@
 #include "./process.h"
 #include <bit>
+#include <cassert>
 #include <tuple> // tuple_size_v
 #include "lu/arrays/make_filled.h"
 #include "dovah/_passkeys/build_use_info_during_load.h"

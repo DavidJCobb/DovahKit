@@ -1369,6 +1369,15 @@
     <ClInclude Include="tests\pieces\load_skyrim_esm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tests\pieces\get_expected_used_stubs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\pieces\assert_uses_are_severed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\pieces\assert_uses_strings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">

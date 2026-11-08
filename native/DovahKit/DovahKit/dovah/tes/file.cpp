@@ -1,4 +1,5 @@
 #include "./file.h"
+#include <cassert>
 #include "lu/ascii/equals_i.h"
 #include "lu/integral_character_code.h"
 #include "./bytereader.h"
