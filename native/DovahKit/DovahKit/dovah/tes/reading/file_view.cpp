@@ -28,12 +28,12 @@ namespace dovah::tes {
    }
    /*static*/ file_view file_view::open_view_to_record(const file& file, size_t record_header_offset) {
       file_view out;
+      out.options.assume_file_is_valid = true; // skip validating record signature
       out._set_target_file_impl(&file);
       out._reader.seek(record_header_offset);
-      out.options.allow_suspicious_record_signatures = true;
-      out.options.allow_unknown_record_signatures    = true;
       auto r = out.next_record_or_group();
       assert(r == chunk_type::record);
+      out.options.assume_file_is_valid = false;
       return out;
    }
 
