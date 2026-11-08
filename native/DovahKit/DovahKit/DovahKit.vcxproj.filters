@@ -1512,6 +1512,7 @@
     <None Include="dovah\game_setting_collection.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\_docs\localization.md" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />

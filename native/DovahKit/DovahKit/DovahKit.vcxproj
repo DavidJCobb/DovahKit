@@ -623,6 +623,10 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\localization.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\use info.md">
       <SubType>
       </SubType>

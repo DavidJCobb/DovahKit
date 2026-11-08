@@ -13,9 +13,8 @@
 namespace dovah::load_order_processes::active_file_strings_to_localized {
    namespace {
       struct convert_state {
-         form_stub&         containing_form;
-         process_pimpl&     pimpl;
-         string_to_id_maps& strings_to_ids;
+         form_stub&     containing_form;
+         process_pimpl& pimpl;
       };
    }
 
@@ -23,7 +22,6 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
       template<localization::category C>
       static void _convert_all_strings_in(const convert_state& state, managed_localized_string_use<C>& use) {
          state.pimpl.convert_localized_string(
-            state.strings_to_ids,
             state.containing_form,
             C,
             use
@@ -87,7 +85,6 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
 
    extern void convert_strings_in_form(
       process_pimpl& pimpl,
-      utils::localization::data_by_string_category<std::unordered_map<std::string, bare_localized_string_id>>& strings_to_ids,
       form_stub& stub,
       base_managed_form_data& data
    ) {
@@ -98,7 +95,6 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
       const convert_state state = {
          .containing_form = stub,
          .pimpl           = pimpl,
-         .strings_to_ids  = strings_to_ids,
       };
       handler(state, data);
    }

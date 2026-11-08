@@ -10,8 +10,24 @@
 namespace dovah::load_order_processes::active_file_strings_to_localized {
    process_pimpl::process_pimpl(lu::passkey<process>, const process_params& params) : params(params) {}
 
+   bare_localized_string_id process_pimpl::_get_id_for_new_string(localization::category category, const std::string& s) {
+      if (s.empty())
+         return 0;
+      auto& map = this->strings_to_ids.for_category(category);
+      if (this->params.merge_identical_strings) {
+         auto mit = map.find(s);
+         if (mit != map.end())
+            return mit->second;
+      }
+      auto& lsc = this->params.active_load_order.get_localized_string_collection();
+      auto  id  = lsc._get_active_strings_as_mutable({})._create_id_and_store_string({}, category, this->params.languages, s);
+      if (this->params.merge_identical_strings) {
+         map[s] = id;
+      }
+      return id;
+   }
+
    void process_pimpl::convert_localized_string(
-      string_to_id_maps& strings_to_ids,
       form_stub& containing_form,
       localization::category category,
       _base_managed_localized_string_use& use
@@ -22,17 +38,8 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
          use._force_localized_id({}, active_file, 0);
       } else {
          assert(!use.is_localized());
-         std::string s = use._take_non_localized_string({});
-         bare_localized_string_id id = 0;
-
-         auto& map = strings_to_ids.for_category(category);
-         auto  mit = map.find(s);
-         if (mit == map.end()) {
-            id = lsc._get_active_strings_as_mutable({})._create_id_and_store_string({}, category, this->params.languages, s);
-            map[s] = id;
-         } else {
-            id = mit->second;
-         }
+         std::string s  = use._take_non_localized_string({});
+         auto        id = this->_get_id_for_new_string(category, s);
          if (id) {
             auto& use_info = lsc._get_or_create_use_node({}, active_file, category, id);
             containing_form._on_string_converted_to_localized({}, use_info);
@@ -42,7 +49,6 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
    }
 
    void process_pimpl::convert_localized_string(
-      string_to_id_maps& strings_to_ids,
       loaded_game_setting& gmst
    ) {
       const auto& prior_value  = gmst.get_value_variant();
@@ -53,18 +59,8 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
       auto& active_file = *this->params.active_load_order.get_active_file();
       auto& lsc         = this->params.active_load_order.get_localized_string_collection();
 
-      auto s = std::get<std::string>(prior_string);
-      bare_localized_string_id id = 0;
-      if (!s.empty()) {
-         auto& map = strings_to_ids.for_category(localization::category::general);
-         auto  mit = map.find(s);
-         if (mit == map.end()) {
-            id = lsc._get_active_strings_as_mutable({})._create_id_and_store_string({}, localization::category::general, this->params.languages, s);
-            map[s] = id;
-         } else {
-            id = mit->second;
-         }
-      }
+      auto s  = std::get<std::string>(prior_string);
+      auto id = this->_get_id_for_new_string(localization::category::general, s);
       localization::use_node* use_node = nullptr;
       if (id) {
          use_node = &lsc._get_or_create_use_node({}, active_file, localization::category::general, id);

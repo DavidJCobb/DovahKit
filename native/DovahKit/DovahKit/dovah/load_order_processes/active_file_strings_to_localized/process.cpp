@@ -47,15 +47,13 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
       assert(!!active_bundle);
       assert(active_bundle->empty());
 
-      utils::localization::data_by_string_category<std::unordered_map<std::string, bare_localized_string_id>> strings_to_ids;
-
-      fsc.for_each_active_file_form([this, &strings_to_ids](form_stub& stub) {
+      fsc.for_each_active_file_form([this](form_stub& stub) {
          auto loaded_ptr = stub.load();
          assert(!!loaded_ptr);
-         convert_strings_in_form(*this->_pimpl, strings_to_ids, stub, *loaded_ptr);
+         convert_strings_in_form(*this->_pimpl, stub, *loaded_ptr);
       });
-      gsc.for_each_active_file_game_setting([this, &strings_to_ids](loaded_game_setting& gmst) {
-         this->_pimpl->convert_localized_string(strings_to_ids, gmst);
+      gsc.for_each_active_file_game_setting([this](loaded_game_setting& gmst) {
+         this->_pimpl->convert_localized_string(gmst);
       });
 
       active_file->header().flags.set_each_of<tes::file_header_flag::localized_strings>();

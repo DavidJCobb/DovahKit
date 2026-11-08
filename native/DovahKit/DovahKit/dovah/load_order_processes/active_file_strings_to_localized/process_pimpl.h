@@ -1,6 +1,7 @@
 #pragma once
 #include "lu/passkey.h"
 #include "dovah/localization/category.h"
+#include "dovah/types/bare_localized_string_id.h"
 #include "dovah/types/managed_localized_string_use.h"
 #include "./process_params.h"
 #include "./string_to_id_maps.h"
@@ -19,17 +20,19 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
 
       public:
          const process_params params;
+         string_to_id_maps strings_to_ids; // only used if folding identical strings is enabled
+
+      protected:
+         bare_localized_string_id _get_id_for_new_string(localization::category, const std::string&);
 
       public:
          void convert_localized_string(
-            string_to_id_maps&,
             form_stub& containing_form,
             localization::category,
             _base_managed_localized_string_use&
          );
 
          void convert_localized_string(
-            string_to_id_maps&,
             loaded_game_setting& containing_form
          );
    };
