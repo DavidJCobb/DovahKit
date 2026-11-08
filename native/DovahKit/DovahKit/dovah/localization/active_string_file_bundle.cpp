@@ -166,5 +166,6 @@ namespace dovah::localization {
          auto& strings = this->_by_language[i].for_category(category).strings_by_id;
          strings[id] = string;
       }
+      return id;
    }
 }
