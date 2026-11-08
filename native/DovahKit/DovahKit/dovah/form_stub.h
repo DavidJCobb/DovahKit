@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -160,6 +161,8 @@ namespace dovah {
                { callable(record, intfc) };
             }
          void for_each_source_record(Callable&& callable);
+
+         constexpr const std::span<const localization::use_node* const> get_string_uses() const noexcept;
 
       protected:
          tes::file_view _open_record(const tes::file&, uint32_t record_offset) const noexcept;

@@ -154,4 +154,13 @@ namespace dovah {
          }
       }
    }
+
+   constexpr const std::span<const localization::use_node* const> form_stub::get_string_uses() const noexcept {
+      if (!this->_string_use_info)
+         return {};
+      const auto& list = *this->_string_use_info.get();
+      if (list.empty())
+         return {};
+      return { list.begin(), list.size() };
+   }
 }

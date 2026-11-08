@@ -1378,6 +1378,9 @@
     <ClInclude Include="tests\pieces\assert_uses_strings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tests\types\localized_string_descriptor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">

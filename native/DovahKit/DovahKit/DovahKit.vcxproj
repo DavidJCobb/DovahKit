@@ -284,6 +284,7 @@
     <ClInclude Include="tests\pieces\assert_uses_strings.h" />
     <ClInclude Include="tests\pieces\get_expected_used_stubs.h" />
     <ClInclude Include="tests\pieces\load_skyrim_esm.h" />
+    <ClInclude Include="tests\types\localized_string_descriptor.h" />
     <None Include="dovah\form_data\fragments\declare_tabled_load_functions.inl">
       <FileType>Document</FileType>
     </None>
