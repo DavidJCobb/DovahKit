@@ -1,9 +1,13 @@
 #pragma once
 #include <string>
 #include <variant>
+#include "lu/passkey.h"
 #include "dovah/localization/category.h"
 #include "./bare_localized_string_id.h"
 namespace dovah {
+   namespace load_order_processes::active_file_strings_to_localized {
+      class process_pimpl;
+   }
    namespace tes {
       class file;
       class subrecord_view;
@@ -34,8 +38,12 @@ namespace dovah {
          // ID must be for an active-file string.
          void _set_localized_id(form_stub& containing_form, localization::category, bare_localized_string_id);
          void _set_non_localized_string(form_stub& containing_form, localization::category, std::string_view);
-         void _set_non_localized_string(form_stub& containing_form, localization::category, std::string&&);
+         void _set_non_localized_string_via_move(form_stub& containing_form, localization::category, std::string&&);
          void _clear(form_stub& containing_form, localization::category);
+
+      public: // passkeyed
+         void _force_localized_id(lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>, const tes::file&, bare_localized_string_id);
+         std::string _take_non_localized_string(lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>);
 
       public:
          constexpr bool empty() const noexcept {
@@ -83,8 +91,9 @@ namespace dovah {
          void set_non_localized_string(form_stub& containing_form, std::string_view v) {
             _base_managed_localized_string_use::_set_non_localized_string(containing_form, category, v);
          }
-         void set_non_localized_string(form_stub& containing_form, std::string&& v) {
-            _base_managed_localized_string_use::_set_non_localized_string(containing_form, category, std::move(v));
+         template<std::same_as<std::string&&> T = std::string&&>
+         void set_non_localized_string(form_stub& containing_form, T v) {
+            _base_managed_localized_string_use::_set_non_localized_string_via_move(containing_form, category, std::move(v));
          }
    };
 }

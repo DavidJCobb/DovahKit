@@ -603,5 +603,22 @@ namespace dovah {
             }
          }
       }
+
+      void form_stub::_on_string_converted_to_localized(
+         lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>,
+         localization::use_node& use_node
+      ) {
+         ++use_node.users.forms[this];
+         if (auto* list_ptr = this->_string_use_info.get()) {
+            auto& list = *list_ptr;
+            auto  it   = std::find(list.begin(), list.end(), &use_node);
+            if (it == list.end()) {
+               list.push_back(&use_node);
+            }
+         } else {
+            this->_string_use_info = std::make_unique<decltype(this->_string_use_info)::element_type>();
+            this->_string_use_info->push_back(&use_node);
+         }
+      }
    #pragma endregion
 }

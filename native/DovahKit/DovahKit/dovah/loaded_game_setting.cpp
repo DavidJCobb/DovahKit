@@ -221,4 +221,23 @@ namespace dovah {
       }
       info.form_id = form_id;
    }
+
+   //
+   // passkeyed
+   //
+
+
+   void loaded_game_setting::_on_string_converted_to_localized(
+      lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>,
+      localization::use_node* use_node
+   ) {
+      assert(this->_value.string_use_info == nullptr && "This GMST must not already be a localized string!");
+      if (use_node) {
+         use_node->users.game_settings.insert(this->_name.lowercase);
+         this->_value.variant.emplace<string_value_type>().emplace<string_id_type>(use_node->used.id);
+      } else {
+         this->_value.variant.emplace<string_value_type>().emplace<string_id_type>(0);
+      }
+      this->_value.string_use_info = use_node;
+   }
 }

@@ -293,6 +293,18 @@
     <ClCompile Include="tests\pieces\load_skyrim_esm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\active_file_strings_to_localized\process.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\active_file_strings_to_localized\process_pimpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\basic\active_file_to_localized.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1381,6 +1393,27 @@
     <ClInclude Include="tests\types\localized_string_descriptor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\string_to_id_maps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_pimpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_params.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\basic\active_file_to_localized.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_string_use.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -1473,6 +1506,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\_docs\use info.md" />
+    <None Include="dovah\game_setting_collection.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />

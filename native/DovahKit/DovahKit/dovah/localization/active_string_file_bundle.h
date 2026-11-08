@@ -5,6 +5,8 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include "lu/enums/enum_flags.h"
+#include "lu/passkey.h"
 #include "dovah/types/bare_localized_string_id.h"
 #include "dovah/utils/localization/data_by_string_category.h"
 #include "./category.h"
@@ -12,6 +14,9 @@
 namespace dovah {
    namespace bsa {
       class archive_collection;
+   }
+   namespace load_order_processes::active_file_strings_to_localized {
+      class process_pimpl;
    }
    namespace tes {
       class file;
@@ -42,6 +47,8 @@ namespace dovah::localization {
       public:
          active_string_file_bundle(const tes::file&);
 
+         constexpr bool empty() const noexcept;
+
          template<typename Callable>
             requires std::is_invocable_v<Callable, bare_localized_string_id>
          void for_each_string_id_of_category(category, Callable&&) const;
@@ -66,6 +73,14 @@ namespace dovah::localization {
          utils::localization::data_by_string_category<id_set> _defined_ids;
 
          void _parse_single_file(asset_file_buffer&, category, string_file&, id_set&);
+
+      public: // passkeyed
+         bare_localized_string_id _create_id_and_store_string(
+            lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>,
+            localization::category,
+            lu::enum_flags<language, language_count>,
+            const std::string&
+         );
    };
 }
 

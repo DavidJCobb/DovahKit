@@ -10,6 +10,9 @@ namespace dovah {
    namespace facts::game_settings {
       class definition;
    }
+   namespace load_order_processes::active_file_strings_to_localized {
+      class process_pimpl;
+   }
    namespace localization {
       struct use_node;
    }
@@ -87,6 +90,12 @@ namespace dovah {
 
          void _sever_string_use();
          void _prepare_to_edit_value();
+
+      public: // passkeyed
+         void _on_string_converted_to_localized(
+            lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>,
+            localization::use_node*
+         );
    };
 }
 

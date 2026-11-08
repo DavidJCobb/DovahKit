@@ -85,16 +85,18 @@ namespace dovah::localization {
          this->_non_active_files.push_back(p);
       }
       for (size_t i = 0; i < size; ++i) {
-         this->_non_active_files[i]->load(bsa_collection);
+         if (tes_files[i]->header().flags.has_all_of<tes::file_header_flag::localized_strings>())
+            this->_non_active_files[i]->load(bsa_collection);
       }
       if (active_file) {
          this->_active_file = new active_string_file_bundle(*active_file);
-         this->_active_file->load(bsa_collection);
+         if (active_file->header().flags.has_all_of<tes::file_header_flag::localized_strings>())
+            this->_active_file->load(bsa_collection);
       }
    }
 
    use_node& string_collection::_get_or_create_use_node(
-      lu::passkey<form_stub, loaded_game_setting>,
+      lu::passkey<form_stub, loaded_game_setting, load_order_processes::active_file_strings_to_localized::process_pimpl>,
       const tes::file& tes_file,
       category category,
       bare_localized_string_id id

@@ -140,6 +140,9 @@
     <ClCompile Include="dovah\loaded_game_setting.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
+    <ClCompile Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.cpp" />
+    <ClCompile Include="dovah\load_order_processes\active_file_strings_to_localized\process.cpp" />
+    <ClCompile Include="dovah\load_order_processes\active_file_strings_to_localized\process_pimpl.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\extract_high_value_subrecords_for_stub.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\impl\file_offset_of_exception.cpp" />
     <ClCompile Include="dovah\load_order_processes\build_form_stubs_from_file\process.cpp" />
@@ -202,6 +205,7 @@
     <ClCompile Include="lu\memory\basic_buffer.cpp" />
     <ClCompile Include="lu\windows\read_single_ini_setting.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tests\basic\active_file_to_localized.cpp" />
     <ClCompile Include="tests\basic\clear_outbound_uses.cpp" />
     <ClCompile Include="tests\basic\count_all_records.cpp" />
     <ClCompile Include="tests\basic\file_list_to_load_order.cpp" />
@@ -280,6 +284,13 @@
     <ClInclude Include="dovah\form_data\base_unmanaged_form_data.h" />
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
     <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h" />
+    <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_string_use.h" />
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.h" />
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process.h" />
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_params.h" />
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_pimpl.h" />
+    <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\string_to_id_maps.h" />
+    <ClInclude Include="tests\basic\active_file_to_localized.h" />
     <ClInclude Include="tests\pieces\assert_uses_are_severed.h" />
     <ClInclude Include="tests\pieces\assert_uses_strings.h" />
     <ClInclude Include="tests\pieces\get_expected_used_stubs.h" />
@@ -591,6 +602,7 @@
     <None Include="dovah\form_data_pointer.inl" />
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stub_collection.inl" />
+    <None Include="dovah\game_setting_collection.inl" />
     <None Include="dovah\loaded_game_setting.inl" />
     <None Include="dovah\localization\active_string_file_bundle.inl" />
     <None Include="dovah\localization\README.md">

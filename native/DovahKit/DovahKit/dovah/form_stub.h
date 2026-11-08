@@ -25,6 +25,9 @@ namespace dovah {
    namespace load_order_interfaces {
       class form_load;
    }
+   namespace load_order_processes::active_file_strings_to_localized {
+      class process_pimpl;
+   }
    namespace localization {
       struct use_node;
    }
@@ -203,6 +206,11 @@ namespace dovah {
                const tes::file*         prior_source_file, // must be non-null if `prior_id` is non-zero
                bare_localized_string_id prior_id,
                bare_localized_string_id after_id // must be in the active file
+            );
+
+            void _on_string_converted_to_localized(
+               lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>,
+               localization::use_node&
             );
          #pragma endregion
    };

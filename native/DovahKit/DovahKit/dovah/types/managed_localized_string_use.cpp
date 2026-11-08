@@ -54,7 +54,7 @@ namespace dovah {
       this->_discard_localized_id(containing_form, category);
       this->_value.emplace<std::string>() = text;
    }
-   void _base_managed_localized_string_use::_set_non_localized_string(form_stub& containing_form, localization::category category, std::string&& text) {
+   void _base_managed_localized_string_use::_set_non_localized_string_via_move(form_stub& containing_form, localization::category category, std::string&& text) {
       this->_discard_localized_id(containing_form, category);
       this->_value.emplace<std::string>() = std::move(text);
    }
@@ -82,6 +82,29 @@ namespace dovah {
          this->_value.emplace<std::string>();
       }
    }
+
+   //
+   // passkeyed
+   //
+
+   void _base_managed_localized_string_use::_force_localized_id(
+      lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>,
+      const tes::file& tes_file,
+      bare_localized_string_id id
+   ) {
+      auto& v = this->_value.emplace<_localized_id>();
+      v.file = &tes_file;
+      v.id   = id;
+   }
+   std::string _base_managed_localized_string_use::_take_non_localized_string(lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>) {
+      std::string s = std::move(std::get<std::string>(this->_value));
+      this->_value.emplace<std::monostate>();
+      return s;
+   }
+
+   //
+   // public
+   //
 
    bool _base_managed_localized_string_use::is_active_file_string_id() const noexcept {
       if (!this->is_localized())

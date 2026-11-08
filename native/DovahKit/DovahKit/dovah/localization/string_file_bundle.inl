@@ -3,6 +3,16 @@
 #include "lu/foreach_lambda_result.h"
 
 namespace dovah::localization {
+   constexpr bool string_file_bundle::empty() const noexcept {
+      if (!this->_defined_ids.description.empty())
+         return false;
+      if (!this->_defined_ids.general.empty())
+         return false;
+      if (!this->_defined_ids.info.empty())
+         return false;
+      return true;
+   }
+
    template<typename Callable>
       requires std::is_invocable_v<Callable, bare_localized_string_id>
    void string_file_bundle::for_each_string_id_of_category(category category, Callable&& callable) const {

@@ -13,6 +13,9 @@ namespace dovah {
    namespace bsa {
       class archive_collection;
    }
+   namespace load_order_processes::active_file_strings_to_localized {
+      class process_pimpl;
+   }
    namespace localization {
       class  active_string_file_bundle;
       class  string_file_bundle;
@@ -56,9 +59,13 @@ namespace dovah::localization {
          void _clear(lu::passkey<active_load_order>);
          void _load(lu::passkey<active_load_order>, const dovah::bsa::archive_collection&, std::span<const tes::file* const>, const tes::file* active_file);
 
+         constexpr active_string_file_bundle& _get_active_strings_as_mutable(lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>) noexcept {
+            return *this->_active_file;
+         }
+
          // during load or post-load
          use_node& _get_or_create_use_node(
-            lu::passkey<form_stub, loaded_game_setting>,
+            lu::passkey<form_stub, loaded_game_setting, load_order_processes::active_file_strings_to_localized::process_pimpl>,
             const tes::file&,
             category,
             bare_localized_string_id

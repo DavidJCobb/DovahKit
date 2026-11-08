@@ -1,9 +1,14 @@
 #include "./game_setting_collection.h"
 #include <cassert>
+#include "dovah/active_load_order.h"
 #include "dovah/facts/game_settings/all_definitions.h"
 #include "dovah/facts/game_settings/value_types.h"
 
 namespace dovah {
+   const tes::file* game_setting_collection::_get_active_file() const noexcept {
+      return this->owner.get_active_file();
+   }
+
    const loaded_game_setting* game_setting_collection::get_loaded_game_setting(std::string_view name) const noexcept {
       std::string key;
       {

@@ -46,6 +46,8 @@ namespace dovah::localization {
       public:
          string_file_bundle(const tes::file&);
 
+         constexpr bool empty() const noexcept;
+
          template<typename Callable>
             requires std::is_invocable_v<Callable, bare_localized_string_id>
          void for_each_string_id_of_category(category, Callable&&) const;

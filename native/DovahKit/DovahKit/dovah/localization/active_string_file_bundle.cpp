@@ -140,4 +140,31 @@ namespace dovah::localization {
          }
       }
    }
+
+   //
+   // passkeyed
+   //
+   
+   bare_localized_string_id active_string_file_bundle::_create_id_and_store_string(
+      lu::passkey<load_order_processes::active_file_strings_to_localized::process_pimpl>,
+      localization::category category,
+      lu::enum_flags<language, language_count> languages,
+      const std::string& string
+   ) {
+      auto& presence = this->_defined_ids.for_category(category);
+      bare_localized_string_id id = 0;
+      if (presence.empty()) {
+         id = 1;
+      } else {
+         id = *presence.rbegin() + 1;
+      }
+      presence.insert(id);
+
+      for (size_t i = 0; i < language_count; ++i) {
+         if (!languages.has((language)i))
+            continue;
+         auto& strings = this->_by_language[i].for_category(category).strings_by_id;
+         strings[id] = string;
+      }
+   }
 }
