@@ -305,6 +305,9 @@
     <ClCompile Include="tests\basic\active_file_to_localized.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tests\pieces\assert_even_in_release.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1415,6 +1418,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tests\pieces\assert_even_in_release.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\helpers\visit_members_recursively.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

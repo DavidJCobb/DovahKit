@@ -211,6 +211,7 @@
     <ClCompile Include="tests\basic\file_list_to_load_order.cpp" />
     <ClCompile Include="tests\basic\index_stubs.cpp" />
     <ClCompile Include="tests\basic\load_a_shout.cpp" />
+    <ClCompile Include="tests\pieces\assert_even_in_release.cpp" />
     <ClCompile Include="tests\pieces\load_skyrim_esm.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -285,6 +286,7 @@
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
     <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h" />
     <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_string_use.h" />
+    <ClInclude Include="dovah\form_data\helpers\visit_members_recursively.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_params.h" />

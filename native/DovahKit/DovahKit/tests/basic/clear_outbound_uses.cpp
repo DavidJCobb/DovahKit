@@ -3,22 +3,13 @@
 
 #include "../pieces/load_skyrim_esm.h"
 //
+#include "../pieces/assert_even_in_release.h"
 #include "../pieces/assert_uses_are_severed.h"
 #include "../pieces/assert_uses_strings.h"
 #include "../pieces/get_expected_used_stubs.h"
 
 #include "dovah/form_data/operations/clear_outbound_uses.h"
 #include "dovah/form_data/types/s/shout.h"
-
-static void assert_string_uses_cleared(dovah::form_stub& stub) {
-   bool string_uses_cleared = stub.get_string_uses().empty();
-   #if _DEBUG
-   assert(string_uses_cleared);
-   #else
-   if (!string_uses_cleared)
-      std::terminate();
-   #endif
-}
 
 namespace dovahkit::tests {
    extern void clear_outbound_uses() {
@@ -50,7 +41,7 @@ namespace dovahkit::tests {
          stub->set_edited(true); // `clear_outbound_uses` does not implicitly call this
 
          pieces::assert_uses_are_severed(*stub, used_stubs);
-         assert_string_uses_cleared(*stub);
+         assert_even_in_release(stub->get_string_uses().empty() && "String uses should've been cleared!");
          __debugbreak();
       }
 
@@ -77,7 +68,7 @@ namespace dovahkit::tests {
          stub->set_edited(true); // `clear_outbound_uses` does not implicitly call this
 
          pieces::assert_uses_are_severed(*stub, used_stubs);
-         assert_string_uses_cleared(*stub);
+         assert_even_in_release(stub->get_string_uses().empty() && "String uses should've been cleared!");
          __debugbreak();
       }
    }

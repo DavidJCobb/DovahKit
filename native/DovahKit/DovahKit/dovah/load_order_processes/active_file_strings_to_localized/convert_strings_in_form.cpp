@@ -1,14 +1,12 @@
 #include "./convert_strings_in_form.h"
-#include <array>
-#include <utility>
-#include "lu/concepts/instantiation_of/std_array.h"
 #include "dovah/form_data/all_types.h"
+#include "dovah/form_data/helpers/visit_members_recursively.h"
 #include "dovah/form_data_function_tables/_helpers.inl"
-#include "dovah/form_data/helpers/is_or_contains_managed_string_use.h"
-#include "dovah/form_data/helpers/is_visitable.h"
 #include "dovah/form_stub.h"
-#include "dovah/form_type.h"
+#include "dovah/types/managed_form_use.h"
+#include "dovah/types/managed_localized_string_use.h"
 #include "./process_pimpl.h"
+#include "lu/macros/FORCE_INLINE.define.h"
 
 namespace dovah::load_order_processes::active_file_strings_to_localized {
    namespace {
@@ -16,37 +14,46 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
          form_stub&     containing_form;
          process_pimpl& pimpl;
       };
-   }
 
-   #pragma region _convert_all_strings_in
-      template<localization::category C>
-      static void _convert_all_strings_in(const convert_state& state, managed_localized_string_use<C>& use) {
-         state.pimpl.convert_localized_string(
-            state.containing_form,
-            C,
-            use
-         );
-      }
+      class visitor : public form_data_helpers::recursive_visitor_bases::ignore_primitives {
+         public:
+            constexpr visitor(const convert_state state) : state(state) {}
 
-      template<lu::concepts::instantiation_of_std_array T>
-      static void _convert_all_strings_in(const convert_state& state, T& data) {
-         for (auto& item : data)
-            _convert_all_strings_in(state, item);
-      }
+         public:
+            const convert_state state;
+
+            #pragma region Values to accept
+               using form_data_helpers::recursive_visitor_bases::ignore_primitives::visit;
+
+               // Form uses
+               template<typename T>
+                  requires std::is_base_of_v<managed_form_use, T>
+               LU_FORCE_INLINE void visit(T& data) {
+               }
+         
+               // String uses.
+               template<localization::category C>
+               LU_FORCE_INLINE void visit(managed_localized_string_use<C>& use) {
+                  this->state.pimpl.convert_localized_string(
+                     this->state.containing_form,
+                     C,
+                     use
+                  );
+               }
+            #pragma endregion
+      };
 
       template<form_data_helpers::is_visitable T>
-      static void _convert_all_strings_in(const convert_state& state, T& data) {
-         if constexpr (form_data_helpers::is_or_contains_managed_string_use<T>) {
-            T::visit_fields(data, [&state](auto& field) {
-               using field_type = std::decay_t<decltype(field)>;
-               if constexpr (form_data_helpers::is_or_contains_managed_string_use<field_type>) {
-                  _convert_all_strings_in(state, field);
-               }
-            });
-         }
+      void _convert_all_strings_in(const convert_state& state, T& data) {
+         visitor visitor{ state };
+         form_data_helpers::visit_members_recursively(data, visitor);
       }
-   #pragma endregion
+   }
+}
 
+#include "lu/macros/FORCE_INLINE.undef.h"
+
+namespace dovah::load_order_processes::active_file_strings_to_localized {
    namespace function_table_impl {
       using function_type = void(*)(const convert_state&, base_managed_form_data&);
       using table_type    = std::array<function_type, std::tuple_size_v<decltype(form_types)>>;
