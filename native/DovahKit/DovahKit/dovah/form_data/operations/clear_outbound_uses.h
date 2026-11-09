@@ -31,6 +31,13 @@ namespace dovah::form_data_operations {
             LU_FORCE_INLINE void visit(T& data) {
                data.clear(this->containing_form);
             }
+         
+            // Vectors of form or string uses.
+            template<typename T>
+               requires (std::is_base_of_v<managed_form_use, T> || std::is_base_of_v< _base_managed_localized_string_use, T>)
+            LU_FORCE_INLINE void visit(form_data::pieces::managed_vector<T>& data) {
+               data.clear(this->containing_form);
+            }
          #pragma endregion
    };
 

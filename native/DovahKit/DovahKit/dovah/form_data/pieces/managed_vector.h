@@ -5,6 +5,12 @@ namespace dovah {
 }
 
 namespace dovah::form_data::pieces {
+   //
+   // A wrapper around `std::vector` for use with value types that either are managed form/string 
+   // uses, or contain managed form/string uses. Mutating accessors require passing a reference 
+   // to the `form_stub` that owns the vector's containing form-data, so that use info can be 
+   // updated properly.
+   //
    template<typename T>
    class managed_vector {
       public:
@@ -79,6 +85,11 @@ namespace dovah::form_data::pieces {
             constexpr void pop_back(form_stub& containing_form);
             constexpr void resize(form_stub& containing_form, size_type);
          #pragma endregion
+
+         //
+         // Non-STL APIs:
+         //
+         value_type& append();
    };
 }
 

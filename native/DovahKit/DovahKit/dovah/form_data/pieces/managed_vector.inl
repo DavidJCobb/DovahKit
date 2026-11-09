@@ -65,6 +65,11 @@ namespace dovah::form_data::pieces {
          this->_wrapped.resize(size_after);
       }
    #pragma endregion
+
+   TEMPLATE_PARAMS
+   typename CLASS_NAME::value_type& CLASS_NAME::append() {
+      return this->_wrapped.emplace_back();
+   }
 }
 
 #undef TEMPLATE_PARAMS
