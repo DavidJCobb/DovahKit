@@ -1,7 +1,9 @@
 #pragma once
+#include <type_traits>
 #include "dovah/form_stub.h"
 #include "dovah/types/managed_form_use.h"
 #include "dovah/types/managed_localized_string_use.h"
+#include "../helpers/is_visitable.h"
 #include "../helpers/visit_members_recursively.h"
 #include "lu/macros/FORCE_INLINE.define.h"
 

@@ -1357,9 +1357,6 @@
     <ClInclude Include="lu\concepts\supports_range_based_for_loops.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data\operations\assign.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="lu\concepts\map_like_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1421,6 +1418,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\form_data\helpers\visit_members_recursively.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\operations\assign.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\helpers\visit_members_in_tandem_recursively.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

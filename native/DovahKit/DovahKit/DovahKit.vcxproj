@@ -286,7 +286,9 @@
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
     <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h" />
     <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_string_use.h" />
+    <ClInclude Include="dovah\form_data\helpers\visit_members_in_tandem_recursively.h" />
     <ClInclude Include="dovah\form_data\helpers\visit_members_recursively.h" />
+    <ClInclude Include="dovah\form_data\operations\assign.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_params.h" />
@@ -308,7 +310,6 @@
     <ClInclude Include="dovah\form_data\helpers\type_aliases.h" />
     <ClInclude Include="dovah\form_data\helpers\load_hardcoded_form_data.h" />
     <ClInclude Include="dovah\form_data\operations\clear_outbound_uses.h" />
-    <ClInclude Include="dovah\form_data\operations\assign.h" />
     <ClInclude Include="dovah\form_data\params.h" />
     <ClInclude Include="dovah\form_data\types\s\shout.h" />
     <ClInclude Include="dovah\form_data\types\_base.h" />
