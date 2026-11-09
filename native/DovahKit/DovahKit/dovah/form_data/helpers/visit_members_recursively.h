@@ -5,6 +5,7 @@
 #include <tuple>
 #include <type_traits>
 #include "lu/concepts/instantiation_of/std_array.h"
+#include "./is_subobject_vector_type.h"
 #include "./is_visitable.h"
 
 namespace dovah::form_data_helpers {
@@ -26,6 +27,11 @@ namespace dovah::form_data_helpers {
          template<typename T, size_t S, typename Visitor>
             requires (!accepted_by_visitor<std::array<T, S>, Visitor>)
          struct is_or_contains_accepted_by_visitor<std::array<T, S>, Visitor> : public is_or_contains_accepted_by_visitor<T, Visitor> {};
+         
+         // If a vector is not, itself, accepted by the visitor type, check if any subobject is.
+         template<is_subobject_vector_type T, typename Visitor>
+            requires (!accepted_by_visitor<T, Visitor>)
+         struct is_or_contains_accepted_by_visitor<T, Visitor> : public is_or_contains_accepted_by_visitor<typename T::value_type, Visitor> {};
          
          // If a visitable is not, itself, accepted by the visitor type, check if any subobject is.
          template<is_visitable T, typename Visitor>
@@ -66,6 +72,11 @@ namespace dovah::form_data_helpers {
             requires (!accepted_by_visitor<T, Visitor>)
          void _exec(T& data, Visitor&& visitor);
 
+         // Vectors.
+         template<typename Visitor, is_subobject_vector_type T>
+            requires (!accepted_by_visitor<T, Visitor>)
+         void _exec(T& data, Visitor&& visitor);
+
          // Types that the passed-in visitor can handle directly.
          template<typename Visitor, accepted_by_visitor<Visitor> T>
          void _exec(T& data, Visitor&& visitor);
@@ -87,6 +98,14 @@ namespace dovah::form_data_helpers {
 
       // Arrays.
       template<typename Visitor, lu::concepts::instantiation_of_std_array T>
+         requires (!accepted_by_visitor<T, Visitor>)
+      void _exec(T& data, Visitor&& visitor) {
+         for (auto& item : data)
+            _exec(item, std::forward<Visitor>(visitor));
+      }
+      
+      // Vectors.
+      template<typename Visitor, is_subobject_vector_type T>
          requires (!accepted_by_visitor<T, Visitor>)
       void _exec(T& data, Visitor&& visitor) {
          for (auto& item : data)

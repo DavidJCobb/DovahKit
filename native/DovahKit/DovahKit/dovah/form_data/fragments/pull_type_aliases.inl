@@ -18,3 +18,6 @@ X(localized_info_string_use)
 
 template<auto UseInfoEntryFlag>
 using unique_form_use = form_data_helpers::type_aliases<Params>::template unique_form_use<UseInfoEntryFlag>;
+
+template<typename T>
+using vector = form_data_helpers::type_aliases<Params>::template vector<T>;

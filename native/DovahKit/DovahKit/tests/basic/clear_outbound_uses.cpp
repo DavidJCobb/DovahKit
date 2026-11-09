@@ -9,6 +9,7 @@
 #include "../pieces/get_expected_used_stubs.h"
 
 #include "dovah/form_data/operations/clear_outbound_uses.h"
+#include "dovah/form_data/types/f/form_list.h"
 #include "dovah/form_data/types/s/shout.h"
 
 namespace dovahkit::tests {
@@ -69,6 +70,26 @@ namespace dovahkit::tests {
 
          pieces::assert_uses_are_severed(*stub, used_stubs);
          assert_even_in_release(stub->get_string_uses().empty() && "String uses should've been cleared!");
+         __debugbreak();
+      }
+
+      {  // MS07NPCs
+         auto* stub = alo.get_form_stub_collection().get_form_by_id(0x00025F7A);
+         auto  ptr  = stub->load_as_type<dovah::form_data::form_list>();
+         __debugbreak();
+
+         const auto used_stubs = pieces::get_expected_used_stubs<5>(*stub, {
+            0x00025F8A, // [NPC_]MS07Bandit03Melee1H
+            0x00013298, // [NPC_]Mazaka
+            0x000132A1, // [NPC_]Rikke
+            0x00013268, // [NPC_]Deeja
+            0x0001328D, // [NPC_]JareeRa
+         });
+
+         dovah::form_data_operations::clear_outbound_uses(*stub, *ptr);
+         stub->set_edited(true); // `clear_outbound_uses` does not implicitly call this
+
+         pieces::assert_uses_are_severed(*stub, used_stubs);
          __debugbreak();
       }
    }

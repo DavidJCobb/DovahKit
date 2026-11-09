@@ -5,6 +5,7 @@
 #include <tuple>
 #include <type_traits>
 #include "lu/concepts/instantiation_of/std_array.h"
+#include "./is_subobject_vector_type.h"
 #include "./is_visitable.h"
 
 namespace dovah::form_data_helpers {
@@ -26,6 +27,11 @@ namespace dovah::form_data_helpers {
          // If an array is not, itself, accepted by the visitor type, check if any subobject is.
          template<typename Visitor, lu::concepts::instantiation_of_std_array T, lu::concepts::instantiation_of_std_array U>
             requires (!accepted_by_visitor<T, U, Visitor> && std::tuple_size_v<T> == std::tuple_size_v<U>)
+         struct is_or_contains_accepted_by_visitor<T, U, Visitor> : public is_or_contains_accepted_by_visitor<typename T::value_type, typename U::value_type, Visitor> {};
+
+         // If a vector is not, itself, accepted by the visitor type, check if any subobject is.
+         template<typename Visitor, is_subobject_vector_type T, is_subobject_vector_type U>
+            requires (!accepted_by_visitor<T, U, Visitor>)
          struct is_or_contains_accepted_by_visitor<T, U, Visitor> : public is_or_contains_accepted_by_visitor<typename T::value_type, typename U::value_type, Visitor> {};
          
          // If a visitable is not, itself, accepted by the visitor type, check if any subobject is.
@@ -76,6 +82,11 @@ namespace dovah::form_data_helpers {
             )
          void _exec(T&&, U&&, Visitor&&);
 
+         // Vectors.
+         template<typename Visitor, is_subobject_vector_type T, is_subobject_vector_type U>
+            requires (!accepted_by_visitor<T, U, Visitor>)
+         void _exec(T&&, U&&, Visitor&&);
+
          // Types that the passed-in visitor can handle directly.
          template<typename Visitor,typename T, typename U>
             requires accepted_by_visitor<T, U, Visitor>
@@ -83,12 +94,12 @@ namespace dovah::form_data_helpers {
       #pragma endregion
       
       // Visitables.
-         template<typename Visitor, typename T, typename U>
-            requires (
-               !accepted_by_visitor<T, U, Visitor>
-            && is_visitable<std::decay_t<T>>
-            && is_visitable<std::decay_t<U>>
-            )
+      template<typename Visitor, typename T, typename U>
+         requires (
+            !accepted_by_visitor<T, U, Visitor>
+         && is_visitable<std::decay_t<T>>
+         && is_visitable<std::decay_t<U>>
+         )
       void _exec(T&& a, U&& b, Visitor&& visitor) {
          if constexpr (is_or_contains_accepted_by_visitor_v<T, U, std::decay_t<Visitor>>) {
             T::visit_fields_in_tandem(a, b, [&visitor](auto& field_a, auto& field_b) {
@@ -112,6 +123,17 @@ namespace dovah::form_data_helpers {
       void _exec(T&& a, U&& b, Visitor&& visitor) {
          constexpr const size_t size = std::tuple_size_v<T>;
          for (size_t i = 0; i < size; ++i)
+            _exec(a[i], b[i], std::forward<Visitor>(visitor));
+      }
+
+      // Vectors.
+      template<typename Visitor, is_subobject_vector_type T, is_subobject_vector_type U>
+         requires (!accepted_by_visitor<T, U, Visitor>)
+      void _exec(T&& a, U&& b, Visitor&& visitor) {
+         const size_t size_a   = a.size();
+         const size_t size_b   = b.size();
+         const size_t size_min = (size_a < size_b) ? size_a : size_b;
+         for (size_t i = 0; i < size_min; ++i)
             _exec(a[i], b[i], std::forward<Visitor>(visitor));
       }
 

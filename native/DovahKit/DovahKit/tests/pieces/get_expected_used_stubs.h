@@ -13,6 +13,7 @@ namespace dovahkit::tests::pieces {
       for(size_t i = 0; i < S; ++i) {
          auto id    = ids[i];
          bool found = false;
+         assert_even_in_release(id != 0 && "You need to change the `S` template parameter. If it's longer than the array you pass in, zeroes will make it in.");
          for (auto& [entry_id, entry] : user.outbound) {
             if (entry_id == id) {
                stubs[i] = entry.other;

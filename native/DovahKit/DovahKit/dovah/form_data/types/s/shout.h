@@ -23,7 +23,7 @@ namespace dovah::form_data {
          float    recovery_time = 0.0F; // SNAM+0x08
          
          #define CLASSNAME word_type
-         #define TYPENAME  shout<FORM_DATA_PARAMS>::CLASSNAME
+         #define TYPENAME  DOVAH_FORM_CLASSNAME<FORM_DATA_PARAMS>::CLASSNAME
          #define PER_FIELD(X) \
             X(spell) \
             X(word_of_power) \
@@ -37,7 +37,7 @@ namespace dovah::form_data {
       form_use                         menu_display_object; // MDOB -> STAT
       std::array<word_type, 3>         words;               // SNAM[3]
 
-      #define CLASSNAME shout
+      #define CLASSNAME DOVAH_FORM_CLASSNAME
       #define TYPENAME  CLASSNAME<FORM_DATA_PARAMS>
       #define PER_FIELD(X) \
          X(name) \

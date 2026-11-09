@@ -1,5 +1,8 @@
 #pragma once
+#include <vector>
 #include "../params.h"
+#include "../helpers/is_or_contains_managed_use.h"
+#include "../pieces/managed_vector.h"
 #include "dovah/localization/category.h"
 namespace dovah {
    class form_stub;
@@ -26,6 +29,13 @@ namespace dovah::form_data_helpers {
          using localized_general_string_use     = managed_localized_string_use<localization::category::general>;
          using localized_description_string_use = managed_localized_string_use<localization::category::description>;
          using localized_info_string_use        = managed_localized_string_use<localization::category::info>;
+
+         template<typename T>
+         using vector = std::conditional_t<
+            is_or_contains_managed_use<T>,
+            form_data::pieces::managed_vector<T>,
+            std::vector<T>
+         >;
       };
       struct unmanaged {
          using form_use = form_stub*;
@@ -36,6 +46,9 @@ namespace dovah::form_data_helpers {
          using localized_general_string_use     = unmanaged_localized_string_use<localization::category::general>;
          using localized_description_string_use = unmanaged_localized_string_use<localization::category::description>;
          using localized_info_string_use        = unmanaged_localized_string_use<localization::category::info>;
+
+         template<typename T>
+         using vector = std::vector<T>;
       };
    }
    template<form_data_params Params>
