@@ -3,7 +3,7 @@
 #include "dovah/tes/file.h"
 #include "dovah/tes/reading/file_view.h"
 #include "dovah/active_load_order.h"
-#include "dovah/form_data_function_tables/build_outbound_use_info.h"
+#include "dovah/form_data/function_tables/build_outbound_use_info.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_type_info.h"
 #include "dovah/termination_handler.h"
@@ -54,7 +54,7 @@ namespace dovah::load_order_processes::use_info_build {
             if (i > 0 && can_be_parent && source_info->record_flags & (1 << ((uint32_t)tes::record_flag::partial))) {
                uib._is_partial_record = true;
             }
-            auto func = form_data_function_tables::build_outbound_use_info::lookup(stub->form_type);
+            auto func = form_data::function_tables::build_outbound_use_info::lookup(stub->form_type);
             if (func) {
                auto& record = view.subviews.record;
                (func)(record, uib);

@@ -1,26 +1,35 @@
-#include "./load.h"
+#include "./initialize.h"
 #include <array>
+#include <concepts>
 #include "./_helpers.inl"
+#include "dovah/form_data/all_types.h"
+#include "dovah/form_type_info.h"
 
-namespace dovah::form_data_function_tables::load {
+namespace dovah::form_data::function_tables::initialize {
    namespace {
-      using table_type = impl::table_type<function_type>;
+      using table_type = std::array<function_type, std::tuple_size_v<decltype(form_types)>>;
 
       template<form_type V>
-      concept entry_is_defined = requires(impl::form_data_class_for_form_type<V>& data, tes::record_view& record, load_order_interfaces::form_load& intfc) {
-         { serialize_form_data::load(data, record, intfc) };
+      concept entry_is_defined = requires {
+         { &entry<V>::execute } -> 
+            #ifdef __INTELLISENSE__
+               std::same_as<function_type>
+            #else
+               std::same_as<function_type&>
+            #endif
+         ;
       };
 
       template<form_type V>
-      static void _adapted_load(base_managed_form_data& data, tes::record_view& record, load_order_interfaces::form_load& intfc) {
+      static void _cast_and_exec(base_managed_form_data& data) {
          using typed_data_type = impl::form_data_class_for_form_type<V>;
-         serialize_form_data::load(static_cast<typed_data_type&>(data), record, intfc);
+         entry<V>::execute(static_cast<typed_data_type&>(data));
       }
 
       template<form_type V>
       constexpr function_type entry_for = []() -> function_type {
          if constexpr (entry_is_defined<V>) {
-            return &_adapted_load<V>;
+            return &_cast_and_exec<V>;
          } else {
             return nullptr;
          }

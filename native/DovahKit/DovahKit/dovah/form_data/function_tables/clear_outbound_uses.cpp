@@ -1,11 +1,11 @@
 #include "./clear_outbound_uses.h"
 #include <array>
+#include "dovah/form_type_info.h"
 #include "./_helpers.inl"
-#include "../form_data/all_types.h"
-#include "../form_data/operations/clear_outbound_uses.h"
-#include "../form_type_info.h"
+#include "../all_types.h"
+#include "../operations/clear_outbound_uses.h"
 
-namespace dovah::form_data_function_tables::clear_outbound_uses {
+namespace dovah::form_data::function_tables::clear_outbound_uses {
    namespace {
       using table_type = std::array<function_type, std::tuple_size_v<decltype(form_types)>>;
 

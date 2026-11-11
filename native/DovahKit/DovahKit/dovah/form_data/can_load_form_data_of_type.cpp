@@ -1,6 +1,6 @@
 #include "./can_load_form_data_of_type.h"
-#include "dovah/form_data_function_tables/create_blank_instance.h"
-#include "dovah/form_data_function_tables/load.h"
+#include "dovah/form_data/function_tables/create_blank_instance.h"
+#include "dovah/form_data/function_tables/load.h"
 #include "dovah/form_type.h"
 
 namespace dovah {
@@ -17,9 +17,9 @@ namespace dovah {
          case form_type::active_magic_effect:
             return false;
       }
-      if (!form_data_function_tables::load::lookup(ft))
+      if (!form_data::function_tables::load::lookup(ft))
          return false;
-      if (!form_data_function_tables::create_blank_instance::lookup(ft))
+      if (!form_data::function_tables::create_blank_instance::lookup(ft))
          return false;
       return true;
    }

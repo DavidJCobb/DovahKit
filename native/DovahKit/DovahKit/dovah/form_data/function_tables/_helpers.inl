@@ -5,7 +5,7 @@
 #include "dovah/form_data/form_type_for_form_data_class.h"
 #include "dovah/form_type_info.h"
 
-namespace dovah::form_data_function_tables::impl {
+namespace dovah::form_data::function_tables::impl {
    template<form_type V>
    constexpr const size_t index_of_form_type = []() {
       size_t result = (size_t)-1;

@@ -16,12 +16,12 @@ Here's the definition for Shouts with a few things ripped out, for a simple demo
 //
 // Macros used as inputs to some of the fragments used below.
 //
-#define DOVAH_FORM_TYPE      shout // `dovah::form_type` enumeration member
+#define DOVAH_FORM_TYPE      Shout // `dovah::form_type` enumeration member
 #define DOVAH_FORM_CLASSNAME shout // identifier in `dovah::form_data` namespace
 
 namespace dovah::form_data {
    template<form_data_params Params>
-   struct shout : public _base<Params> {
+   struct Shout : public _base<Params> {
       #include "dovah/form_data/fragments/pull_type_aliases.inl"
 
       //
@@ -39,7 +39,7 @@ namespace dovah::form_data {
          // undef'd after usage.
          //
          #define CLASSNAME word_type
-         #define TYPENAME  shout<FORM_DATA_PARAMS>::CLASSNAME
+         #define TYPENAME  DOVAH_FORM_CLASSNAME<FORM_DATA_PARAMS>::CLASSNAME
          #define PER_FIELD(X) \
             X(spell) \
             X(word_of_power) \
@@ -56,7 +56,7 @@ namespace dovah::form_data {
       // type. Preceding macros are used as inputs, and are (in this case) 
       // undef'd after usage.
       //
-      #define CLASSNAME shout
+      #define CLASSNAME DOVAH_FORM_CLASSNAME
       #define TYPENAME  CLASSNAME<FORM_DATA_PARAMS>
       #define PER_FIELD(X) \
          X(equip_type) \
@@ -88,8 +88,8 @@ namespace dovah::form_data {
 
 Use outside of any struct definition or namespace. Declares, but does not define, the functions used to load a form data type and to generate its use info:
 
-* `dovah::form_data_function_tables::build_outbound_use_info::entry<...>::execute` (templated on a `form_type` constant)
-* `dovah::form_data_function_tables::serialize_form_data::load` (overload for the managed form-data type)
+* `dovah::form_data::function_tables::build_outbound_use_info::entry<...>::execute` (templated on a `form_type` constant)
+* `dovah::form_data::function_tables::serialize_form_data::load` (overload for the managed form-data type)
 
 Inputs are:
 

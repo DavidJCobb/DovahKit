@@ -127,12 +127,12 @@
     <ClCompile Include="dovah\form_data\helpers\load_hardcoded_form_data.cpp" />
     <ClCompile Include="dovah\form_data\types\f\FormList.cpp" />
     <ClCompile Include="dovah\form_data\types\s\Shout.cpp" />
-    <ClCompile Include="dovah\form_data_function_tables\assign.cpp" />
-    <ClCompile Include="dovah\form_data_function_tables\build_outbound_use_info.cpp" />
-    <ClCompile Include="dovah\form_data_function_tables\clear_outbound_uses.cpp" />
-    <ClCompile Include="dovah\form_data_function_tables\create_blank_instance.cpp" />
-    <ClCompile Include="dovah\form_data_function_tables\initialize.cpp" />
-    <ClCompile Include="dovah\form_data_function_tables\load.cpp" />
+    <ClCompile Include="dovah\form_data\function_tables\assign.cpp" />
+    <ClCompile Include="dovah\form_data\function_tables\build_outbound_use_info.cpp" />
+    <ClCompile Include="dovah\form_data\function_tables\clear_outbound_uses.cpp" />
+    <ClCompile Include="dovah\form_data\function_tables\create_blank_instance.cpp" />
+    <ClCompile Include="dovah\form_data\function_tables\initialize.cpp" />
+    <ClCompile Include="dovah\form_data\function_tables\load.cpp" />
     <ClCompile Include="dovah\form_data_pointer.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_addendum_types\ordered_child_collection.cpp" />
@@ -318,12 +318,12 @@
     <ClInclude Include="dovah\form_data\params.h" />
     <ClInclude Include="dovah\form_data\types\s\Shout.h" />
     <ClInclude Include="dovah\form_data\types\_base.h" />
-    <ClInclude Include="dovah\form_data_function_tables\assign.h" />
-    <ClInclude Include="dovah\form_data_function_tables\build_outbound_use_info.h" />
-    <ClInclude Include="dovah\form_data_function_tables\clear_outbound_uses.h" />
-    <ClInclude Include="dovah\form_data_function_tables\create_blank_instance.h" />
-    <ClInclude Include="dovah\form_data_function_tables\initialize.h" />
-    <ClInclude Include="dovah\form_data_function_tables\load.h" />
+    <ClInclude Include="dovah\form_data\function_tables\assign.h" />
+    <ClInclude Include="dovah\form_data\function_tables\build_outbound_use_info.h" />
+    <ClInclude Include="dovah\form_data\function_tables\clear_outbound_uses.h" />
+    <ClInclude Include="dovah\form_data\function_tables\create_blank_instance.h" />
+    <ClInclude Include="dovah\form_data\function_tables\initialize.h" />
+    <ClInclude Include="dovah\form_data\function_tables\load.h" />
     <ClInclude Include="dovah\form_data_pointer.h" />
     <ClInclude Include="dovah\form_stub.h" />
     <ClInclude Include="dovah\form_stub_addenda.h" />
@@ -608,7 +608,7 @@
       </SubType>
     </None>
     <None Include="dovah\types\managed_vector.inl" />
-    <None Include="dovah\form_data_function_tables\_helpers.inl" />
+    <None Include="dovah\form_data\function_tables\_helpers.inl" />
     <None Include="dovah\form_data_pointer.inl" />
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stub_collection.inl" />

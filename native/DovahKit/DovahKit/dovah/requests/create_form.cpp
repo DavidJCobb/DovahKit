@@ -8,12 +8,12 @@
 #include "../exceptions/form_creation_failed.h"
 #include "../facts/cells/exterior_cell_side_length.h"
 #include "../form_data/can_load_form_data_of_type.h"
+#include "../form_data/function_tables/assign.h"
+#include "../form_data/function_tables/create_blank_instance.h"
+#include "../form_data/function_tables/initialize.h"
 #if OBJECT_REFERENCE_FORM_DATA_IMPLEMENTED
    #include "../form_data/types/r/object_reference.h"
 #endif
-#include "../form_data_function_tables/assign.h"
-#include "../form_data_function_tables/create_blank_instance.h"
-#include "../form_data_function_tables/initialize.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../form_stub_collection.h"
@@ -159,7 +159,7 @@ namespace dovah::requests {
       auto* stub = new form_stub;
       stub->form_type = this->form_type;
       {
-         auto factory = form_data_function_tables::create_blank_instance::lookup(this->form_type);
+         auto factory = form_data::function_tables::create_blank_instance::lookup(this->form_type);
          assert(!!factory);
          loaded = &((factory)(*stub));
          assert(loaded != nullptr && "Previous checks already established that we can construct this form type. Why did we receive nullptr when trying?");
@@ -219,12 +219,12 @@ namespace dovah::requests {
          //
          auto original = this->clone_of->load();
          if (original) {
-            auto assign_handler = form_data_function_tables::assign::managed_to_managed::lookup(stub->form_type);
+            auto assign_handler = form_data::function_tables::assign::managed_to_managed::lookup(stub->form_type);
             assert(!!assign_handler);
             (assign_handler)(*loaded, *original);
          }
       } else {
-         auto init_handler = form_data_function_tables::initialize::lookup(stub->form_type);
+         auto init_handler = form_data::function_tables::initialize::lookup(stub->form_type);
          if (init_handler)
             (init_handler)(*loaded);
       }

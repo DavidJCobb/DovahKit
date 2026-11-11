@@ -1,7 +1,7 @@
 #include "./convert_strings_in_form.h"
 #include "dovah/form_data/all_types.h"
 #include "dovah/form_data/helpers/visit_members_recursively.h"
-#include "dovah/form_data_function_tables/_helpers.inl"
+#include "dovah/form_data/function_tables/_helpers.inl"
 #include "dovah/form_stub.h"
 #include "dovah/types/managed_form_use.h"
 #include "dovah/types/managed_localized_string_use.h"
@@ -69,9 +69,9 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
       };
       //
       template<form_type V>
-         requires (form_data_function_tables::impl::index_of_form_type<V> != (size_t)-1)
+         requires (form_data::function_tables::impl::index_of_form_type<V> != (size_t)-1)
       struct _get_entry<V> {
-         using loaded_form_data = form_data_function_tables::impl::form_data_class_for_form_type<V>;
+         using loaded_form_data = form_data::function_tables::impl::form_data_class_for_form_type<V>;
          static constexpr const function_type value = &_cast_and_exec<loaded_form_data>;
       };
 

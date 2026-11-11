@@ -16,7 +16,7 @@ namespace {
    }
 }
 
-namespace dovah::form_data_function_tables::build_outbound_use_info {
+namespace dovah::form_data::function_tables::build_outbound_use_info {
    void entry<form_type::shout>::execute(tes::record_view& record, load_order_processes::use_info_build::use_info_builder& uib) {
       using loaded_form_data = form_data::Shout<managed_form_params>;
       constexpr const size_t max_word_count = std::tuple_size_v<decltype(loaded_form_data::words)>;
@@ -116,7 +116,7 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
       }
    }
 }
-namespace dovah::form_data_function_tables::serialize_form_data {
+namespace dovah::form_data::function_tables::serialize_form_data {
    extern void load(form_data::Shout<managed_form_params>& self, tes::record_view& record, load_order_interfaces::form_load& intfc) {
       size_t current_word = 0;
       auto   _load_current_word = [&self, &intfc, &current_word](tes::subrecord_view& subrecord) {

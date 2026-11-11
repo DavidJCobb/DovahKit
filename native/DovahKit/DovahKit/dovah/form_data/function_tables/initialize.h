@@ -6,7 +6,7 @@ namespace dovah {
    enum class form_type : uint8_t;
 }
 
-namespace dovah::form_data_function_tables::initialize {
+namespace dovah::form_data::function_tables::initialize {
    using function_type = void(*)(base_managed_form_data&);
 
    extern function_type lookup(form_type);

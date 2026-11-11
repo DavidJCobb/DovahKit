@@ -5,10 +5,10 @@
 #include "./_passkeys/add_form_stub_source_file.h"
 #include "./active_load_order.h"
 #include "./form_data/base_managed_form_data.h"
-#include "./form_data_pointer.h"
+#include "./form_data/function_tables/create_blank_instance.h"
+#include "./form_data/function_tables/load.h"
 #include "./form_data/helpers/load_hardcoded_form_data.h"
-#include "./form_data_function_tables/create_blank_instance.h"
-#include "./form_data_function_tables/load.h"
+#include "./form_data_pointer.h"
 #include "./form_stub_addenda.h"
 #include "./form_stub_addendum_types/passkeys/ordered_child_collection.h"
 #include "./form_use_info/entry_flag_to_mask.h"
@@ -174,9 +174,9 @@ namespace dovah {
       }
       
       auto intfc   = load_order_interfaces::form_load(*this);
-      auto loader  = form_data_function_tables::load::lookup(this->form_type);
+      auto loader  = form_data::function_tables::load::lookup(this->form_type);
       assert(!!loader);  // should've been checked by `can_load_form_data`
-      auto factory = form_data_function_tables::create_blank_instance::lookup(this->form_type);
+      auto factory = form_data::function_tables::create_blank_instance::lookup(this->form_type);
       assert(!!factory); // should've been checked by `can_load_form_data`
 
       this->loaded = &((factory)(*this));

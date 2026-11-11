@@ -28,11 +28,11 @@ namespace dovah::form_data {
    >;
 }
 
-namespace dovah::form_data_function_tables::build_outbound_use_info {
+namespace dovah::form_data::function_tables::build_outbound_use_info {
    template<form_type>
    struct entry;
 }
-namespace dovah::form_data_function_tables::create_blank_instance {
+namespace dovah::form_data::function_tables::create_blank_instance {
    template<form_type>
    struct entry;
 }

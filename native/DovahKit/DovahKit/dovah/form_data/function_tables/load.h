@@ -11,7 +11,7 @@ namespace dovah {
    enum class form_type : uint8_t;
 }
 
-namespace dovah::form_data_function_tables::load {
+namespace dovah::form_data::function_tables::load {
    using function_type = void(*)(base_managed_form_data&, tes::record_view&, load_order_interfaces::form_load&);
 
    extern function_type lookup(form_type);

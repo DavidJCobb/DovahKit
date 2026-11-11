@@ -1,12 +1,12 @@
 #include "./form_stub_collection.h"
 #include <cassert>
-#include "./active_load_order.h"
-#include "./exceptions/game_setting_edit_failed.h"
-#include "./form_stub.h"
-#include "./form_type_info.h"
 #include "./_impl/form_stub_collection/create_hardcoded_form_stubs.h"
 #include "./_impl/form_stub_collection/create_none_stubs.h"
-#include "./form_data_function_tables/clear_outbound_uses.h"
+#include "./active_load_order.h"
+#include "./exceptions/game_setting_edit_failed.h"
+#include "./form_data/function_tables/clear_outbound_uses.h"
+#include "./form_stub.h"
+#include "./form_type_info.h"
 #include "./requests/create_form.h"
 #include "./tes/file.h"
 #include "./types/file_prefix.h"
@@ -156,7 +156,7 @@ namespace dovah {
       }
       for (auto* user : pending) {
          auto form    = user->load();
-         auto handler = form_data_function_tables::clear_outbound_uses::lookup(user->form_type);
+         auto handler = form_data::function_tables::clear_outbound_uses::lookup(user->form_type);
          assert(!!handler);
          (handler)(*form);
       }

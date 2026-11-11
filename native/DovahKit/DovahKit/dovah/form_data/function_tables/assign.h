@@ -5,7 +5,7 @@ namespace dovah {
    enum class form_type : uint8_t;
 }
 
-namespace dovah::form_data_function_tables::assign {
+namespace dovah::form_data::function_tables::assign {
    namespace managed_to_managed {
       using function_type = void(*)(base_managed_form_data&, const base_managed_form_data&);
 

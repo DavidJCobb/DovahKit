@@ -2,7 +2,7 @@
 #include "lu/passkey.h"
 #include "./_helpers.inl"
 
-namespace dovah::form_data_function_tables::create_blank_instance {
+namespace dovah::form_data::function_tables::create_blank_instance {
    template<form_type V>
    struct entry {
       static constexpr const bool defined = impl::index_of_form_type<V> != (size_t)-1;

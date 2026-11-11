@@ -1,11 +1,10 @@
-#include "./initialize.h"
+#include "./build_outbound_use_info.h"
 #include <array>
 #include <concepts>
-#include "./_helpers.inl"
 #include "dovah/form_data/all_types.h"
 #include "dovah/form_type_info.h"
 
-namespace dovah::form_data_function_tables::initialize {
+namespace dovah::form_data::function_tables::build_outbound_use_info {
    namespace {
       using table_type = std::array<function_type, std::tuple_size_v<decltype(form_types)>>;
 
@@ -20,16 +19,13 @@ namespace dovah::form_data_function_tables::initialize {
          ;
       };
 
-      template<form_type V>
-      static void _cast_and_exec(base_managed_form_data& data) {
-         using typed_data_type = impl::form_data_class_for_form_type<V>;
-         entry<V>::execute(static_cast<typed_data_type&>(data));
-      }
+      // sanity check/test
+      static_assert(entry_is_defined<form_type::shout>);
 
       template<form_type V>
       constexpr function_type entry_for = []() -> function_type {
          if constexpr (entry_is_defined<V>) {
-            return &_cast_and_exec<V>;
+            return &entry<V>::execute;
          } else {
             return nullptr;
          }

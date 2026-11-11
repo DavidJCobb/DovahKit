@@ -6,7 +6,7 @@
 #include "dovah/tes/reading/subrecord_view.h"
 #include "dovah/types/form_id.h"
 
-namespace dovah::form_data_function_tables::build_outbound_use_info {
+namespace dovah::form_data::function_tables::build_outbound_use_info {
    void entry<form_type::formlist>::execute(tes::record_view& record, load_order_processes::use_info_build::use_info_builder& uib) {
       using loaded_form_data = form_data::FormList<managed_form_params>;
 
@@ -30,7 +30,7 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
       }
    }
 }
-namespace dovah::form_data_function_tables::serialize_form_data {
+namespace dovah::form_data::function_tables::serialize_form_data {
    extern void load(form_data::FormList<managed_form_params>& self, tes::record_view& record, load_order_interfaces::form_load& intfc) {
       if (!intfc.is_winning_record) {
          return;

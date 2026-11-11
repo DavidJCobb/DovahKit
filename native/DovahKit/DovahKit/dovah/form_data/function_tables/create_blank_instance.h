@@ -6,7 +6,7 @@ namespace dovah {
    enum class form_type : uint8_t;
 }
 
-namespace dovah::form_data_function_tables::create_blank_instance {
+namespace dovah::form_data::function_tables::create_blank_instance {
    using function_type = base_managed_form_data&(*)(form_stub&);
 
    extern function_type lookup(form_type);

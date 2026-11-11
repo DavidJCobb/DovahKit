@@ -218,7 +218,7 @@
     <ClCompile Include="dovah\game_setting_collection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\form_data_function_tables\build_outbound_use_info.cpp">
+    <ClCompile Include="dovah\form_data\function_tables\build_outbound_use_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tests\basic\index_stubs.cpp">
@@ -233,10 +233,10 @@
     <ClCompile Include="dovah\form_data_pointer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\form_data_function_tables\load.cpp">
+    <ClCompile Include="dovah\form_data\function_tables\load.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\form_data_function_tables\create_blank_instance.cpp">
+    <ClCompile Include="dovah\form_data\function_tables\create_blank_instance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\form_data\helpers\load_hardcoded_form_data.cpp">
@@ -278,13 +278,13 @@
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\form_data_function_tables\clear_outbound_uses.cpp">
+    <ClCompile Include="dovah\form_data\function_tables\clear_outbound_uses.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\form_data_function_tables\assign.cpp">
+    <ClCompile Include="dovah\form_data\function_tables\assign.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\form_data_function_tables\initialize.cpp">
+    <ClCompile Include="dovah\form_data\function_tables\initialize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tests\basic\clear_outbound_uses.cpp">
@@ -706,7 +706,7 @@
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data_function_tables\build_outbound_use_info.h">
+    <ClInclude Include="dovah\form_data\function_tables\build_outbound_use_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\form_stub.h">
@@ -1273,10 +1273,10 @@
     <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data_function_tables\load.h">
+    <ClInclude Include="dovah\form_data\function_tables\load.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data_function_tables\create_blank_instance.h">
+    <ClInclude Include="dovah\form_data\function_tables\create_blank_instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\form_data\helpers\load_hardcoded_form_data.h">
@@ -1345,7 +1345,7 @@
     <ClInclude Include="dovah\exceptions\form_creation_failed.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data_function_tables\clear_outbound_uses.h">
+    <ClInclude Include="dovah\form_data\function_tables\clear_outbound_uses.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\form_data\operations\clear_outbound_uses.h">
@@ -1366,10 +1366,10 @@
     <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_use.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data_function_tables\assign.h">
+    <ClInclude Include="dovah\form_data\function_tables\assign.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data_function_tables\initialize.h">
+    <ClInclude Include="dovah\form_data\function_tables\initialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\exceptions\game_setting_edit_failed.h">
@@ -1512,7 +1512,7 @@
     <None Include="dovah\form_data_pointer.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="dovah\form_data_function_tables\_helpers.inl">
+    <None Include="dovah\form_data\function_tables\_helpers.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\form_data\fragments\enable_construction_via_table.inl">
