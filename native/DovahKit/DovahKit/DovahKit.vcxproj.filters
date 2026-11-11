@@ -227,7 +227,7 @@
     <ClCompile Include="dovah\types\managed_form_use.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\form_data\types\s\shout.cpp">
+    <ClCompile Include="dovah\form_data\types\s\Shout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\form_data_pointer.cpp">
@@ -308,7 +308,7 @@
     <ClCompile Include="tests\pieces\assert_even_in_release.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\form_data\types\f\form_list.cpp">
+    <ClCompile Include="dovah\form_data\types\f\FormList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1240,7 +1240,7 @@
     <ClInclude Include="lu\strings\low_footprint_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data\types\s\shout.h">
+    <ClInclude Include="dovah\form_data\types\s\Shout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\form_data\base_unmanaged_form_data.h">
@@ -1438,7 +1438,7 @@
     <ClInclude Include="dovah\form_data\helpers\is_managed_vector_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data\types\f\form_list.h">
+    <ClInclude Include="dovah\form_data\types\f\FormList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

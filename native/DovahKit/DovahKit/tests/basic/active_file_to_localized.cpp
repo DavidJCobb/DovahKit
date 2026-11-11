@@ -1,6 +1,6 @@
 #include "./active_file_to_localized.h"
 #include "dovah/active_load_order.h"
-#include "dovah/form_data/types/s/shout.h"
+#include "dovah/form_data/types/s/Shout.h"
 #include "dovah/form_stub.h"
 #include "dovah/load_order_processes/active_file_strings_to_localized/process.h"
 #include "dovah/localization/active_string_file_bundle.h"
@@ -29,7 +29,7 @@ namespace dovahkit::tests {
          return request.commit();
       }();
 
-      auto loaded_ptr = created_shout.load_as_type<dovah::form_data::shout>();
+      auto loaded_ptr = created_shout.load_as_type<dovah::form_data::Shout>();
       assert_even_in_release(!!loaded_ptr);
       loaded_ptr->name.set_non_localized_string(created_shout, "Test Shout 01");
       loaded_ptr->description.set_non_localized_string(created_shout, "This is a test shout. We're gonna convert it to use l-strings.");

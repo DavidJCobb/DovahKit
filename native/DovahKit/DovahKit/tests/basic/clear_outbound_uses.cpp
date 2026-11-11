@@ -9,8 +9,8 @@
 #include "../pieces/get_expected_used_stubs.h"
 
 #include "dovah/form_data/operations/clear_outbound_uses.h"
-#include "dovah/form_data/types/f/form_list.h"
-#include "dovah/form_data/types/s/shout.h"
+#include "dovah/form_data/types/f/FormList.h"
+#include "dovah/form_data/types/s/Shout.h"
 
 namespace dovahkit::tests {
    extern void clear_outbound_uses() {
@@ -21,7 +21,7 @@ namespace dovahkit::tests {
       
       {  // Become Ethereal
          auto* stub = alo.get_form_stub_collection().get_form_by_id(0x00032920);
-         auto  ptr  = stub->load_as_type<dovah::form_data::shout>();
+         auto  ptr  = stub->load_as_type<dovah::form_data::Shout>();
          __debugbreak();
 
          const auto used_stubs = pieces::get_expected_used_stubs<7>(*stub, {
@@ -48,7 +48,7 @@ namespace dovahkit::tests {
 
       {  // Dismay
          auto* stub = alo.get_form_stub_collection().get_form_by_id(0x0002395A);
-         auto  ptr  = stub->load_as_type<dovah::form_data::shout>();
+         auto  ptr  = stub->load_as_type<dovah::form_data::Shout>();
          __debugbreak();
 
          const auto used_stubs = pieces::get_expected_used_stubs<7>(*stub, {
@@ -75,7 +75,7 @@ namespace dovahkit::tests {
 
       {  // MS07NPCs
          auto* stub = alo.get_form_stub_collection().get_form_by_id(0x00025F7A);
-         auto  ptr  = stub->load_as_type<dovah::form_data::form_list>();
+         auto  ptr  = stub->load_as_type<dovah::form_data::FormList>();
          __debugbreak();
 
          const auto used_stubs = pieces::get_expected_used_stubs<5>(*stub, {

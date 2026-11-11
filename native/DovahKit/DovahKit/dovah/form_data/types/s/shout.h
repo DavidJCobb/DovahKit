@@ -6,11 +6,11 @@
 #include "../_base.h"
 
 #define DOVAH_FORM_TYPE      shout // `dovah::form_type` enumeration member
-#define DOVAH_FORM_CLASSNAME shout // identifier in `dovah::form_data` namespace
+#define DOVAH_FORM_CLASSNAME Shout // identifier in `dovah::form_data` namespace
 
 namespace dovah::form_data {
    template<form_data_params Params>
-   struct shout : public _base<Params> {
+   struct Shout : public _base<Params> {
       #include "dovah/form_data/fragments/pull_type_aliases.inl"
 
       enum class shout_record_flag { // bit indices

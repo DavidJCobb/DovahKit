@@ -125,8 +125,8 @@
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\form_data\can_load_form_data_of_type.cpp" />
     <ClCompile Include="dovah\form_data\helpers\load_hardcoded_form_data.cpp" />
-    <ClCompile Include="dovah\form_data\types\f\form_list.cpp" />
-    <ClCompile Include="dovah\form_data\types\s\shout.cpp" />
+    <ClCompile Include="dovah\form_data\types\f\FormList.cpp" />
+    <ClCompile Include="dovah\form_data\types\s\Shout.cpp" />
     <ClCompile Include="dovah\form_data_function_tables\assign.cpp" />
     <ClCompile Include="dovah\form_data_function_tables\build_outbound_use_info.cpp" />
     <ClCompile Include="dovah\form_data_function_tables\clear_outbound_uses.cpp" />
@@ -293,7 +293,7 @@
     <ClInclude Include="dovah\form_data\helpers\visit_members_recursively.h" />
     <ClInclude Include="dovah\form_data\operations\assign.h" />
     <ClInclude Include="dovah\form_data\pieces\managed_vector.h" />
-    <ClInclude Include="dovah\form_data\types\f\form_list.h" />
+    <ClInclude Include="dovah\form_data\types\f\FormList.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_params.h" />
@@ -316,7 +316,7 @@
     <ClInclude Include="dovah\form_data\helpers\load_hardcoded_form_data.h" />
     <ClInclude Include="dovah\form_data\operations\clear_outbound_uses.h" />
     <ClInclude Include="dovah\form_data\params.h" />
-    <ClInclude Include="dovah\form_data\types\s\shout.h" />
+    <ClInclude Include="dovah\form_data\types\s\Shout.h" />
     <ClInclude Include="dovah\form_data\types\_base.h" />
     <ClInclude Include="dovah\form_data_function_tables\assign.h" />
     <ClInclude Include="dovah\form_data_function_tables\build_outbound_use_info.h" />

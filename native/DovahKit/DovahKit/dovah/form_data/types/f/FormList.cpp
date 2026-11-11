@@ -1,4 +1,4 @@
-#include "./form_list.h"
+#include "./FormList.h"
 #include "dovah/form_data/helpers/subrecord_was_handled_at_stub_creation.h"
 #include "dovah/load_order_interfaces/form_load.h"
 #include "dovah/load_order_processes/use_info_build/use_info_builder.h"
@@ -8,7 +8,7 @@
 
 namespace dovah::form_data_function_tables::build_outbound_use_info {
    void entry<form_type::formlist>::execute(tes::record_view& record, load_order_processes::use_info_build::use_info_builder& uib) {
-      using loaded_form_data = form_data::form_list<managed_form_params>;
+      using loaded_form_data = form_data::FormList<managed_form_params>;
 
       if (!uib.is_final_file()) {
          return;
@@ -31,7 +31,7 @@ namespace dovah::form_data_function_tables::build_outbound_use_info {
    }
 }
 namespace dovah::form_data_function_tables::serialize_form_data {
-   extern void load(form_data::form_list<managed_form_params>& self, tes::record_view& record, load_order_interfaces::form_load& intfc) {
+   extern void load(form_data::FormList<managed_form_params>& self, tes::record_view& record, load_order_interfaces::form_load& intfc) {
       if (!intfc.is_winning_record) {
          return;
       }
