@@ -40,6 +40,10 @@ namespace dovah::form_data::pieces {
          this->_wrapped.clear();
       }
       TEMPLATE_PARAMS
+      typename CLASS_NAME::value_type& CLASS_NAME::emplace_back() {
+         return this->_wrapped.emplace_back();
+      }
+      TEMPLATE_PARAMS
       constexpr typename CLASS_NAME::iterator CLASS_NAME::erase(form_stub& containing_form, iterator it) {
          form_data_operations::clear_outbound_uses(containing_form, *it);
          this->_wrapped.erase(it);
@@ -65,11 +69,6 @@ namespace dovah::form_data::pieces {
          this->_wrapped.resize(size_after);
       }
    #pragma endregion
-
-   TEMPLATE_PARAMS
-   typename CLASS_NAME::value_type& CLASS_NAME::append() {
-      return this->_wrapped.emplace_back();
-   }
 }
 
 #undef TEMPLATE_PARAMS

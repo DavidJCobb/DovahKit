@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <version>
 namespace dovah {
    class form_stub;
 }
@@ -80,16 +81,27 @@ namespace dovah::form_data::pieces {
          #pragma endregion
          #pragma region Modifiers
             constexpr void clear(form_stub& containing_form);
+
+            value_type& emplace_back();
+            
+            // Don't allow `emplace_back` with constructor arguments. For managed uses, we'd have to 
+            // ferry a `form_stub&` to them; for subobjects which contain managed uses somewhere, 
+            // likewise; and that feels... challenging to guarantee. Easier to just reject it.
+            template<typename... Args>
+               requires (sizeof...(Args) > 0)
+            value_type& emplace_back(Args&&...) =
+               #if __cpp_deleted_function >= 202403L
+                  delete("`emplace_back` is only supported for default-constructing a new element")
+               #else
+                  delete
+               #endif
+            ;
+
             constexpr iterator erase(form_stub& containing_form, iterator);
             constexpr iterator erase(form_stub& containing_form, iterator first, iterator last);
             constexpr void pop_back(form_stub& containing_form);
             constexpr void resize(form_stub& containing_form, size_type);
          #pragma endregion
-
-         //
-         // Non-STL APIs:
-         //
-         value_type& append();
    };
 }
 
