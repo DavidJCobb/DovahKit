@@ -2,8 +2,8 @@
 #include <vector>
 #include "../params.h"
 #include "../helpers/is_or_contains_managed_use.h"
-#include "../pieces/managed_vector.h"
 #include "dovah/localization/category.h"
+#include "dovah/types/managed_vector.h"
 namespace dovah {
    class form_stub;
    class managed_form_use;
@@ -33,7 +33,7 @@ namespace dovah::form_data_helpers {
          template<typename T>
          using vector = std::conditional_t<
             is_or_contains_managed_use<T>,
-            form_data::pieces::managed_vector<T>,
+            managed_vector<T>,
             std::vector<T>
          >;
       };

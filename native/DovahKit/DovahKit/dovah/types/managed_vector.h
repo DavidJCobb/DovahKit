@@ -5,7 +5,7 @@ namespace dovah {
    class form_stub;
 }
 
-namespace dovah::form_data::pieces {
+namespace dovah {
    //
    // A wrapper around `std::vector` for use with value types that either are managed form/string 
    // uses, or contain managed form/string uses. Mutating accessors require passing a reference 

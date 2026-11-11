@@ -11,7 +11,7 @@
 #define TEMPLATE_PARAMS template<typename T>
 #define CLASS_NAME managed_vector<T>
 
-namespace dovah::form_data::pieces {
+namespace dovah {
    #pragma region Copy
       TEMPLATE_PARAMS
       constexpr void CLASS_NAME::assign(form_stub& containing_form, const managed_vector& src) {

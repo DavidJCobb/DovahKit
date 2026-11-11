@@ -5,11 +5,10 @@
 #include <vector>
 #include "./is_visitable.h"
 namespace dovah {
-   namespace form_data::pieces {
-      template<typename T>
-      class managed_vector;
-   }
    class _base_managed_localized_string_use;
+
+   template<typename T>
+   class managed_vector;
 }
 
 namespace dovah::form_data_helpers {
@@ -37,7 +36,7 @@ namespace dovah::form_data_helpers {
       struct is_or_contains_managed_string_use<std::vector<T>> : public is_or_contains_managed_string_use<T> {};
 
       template<typename T>
-      struct is_or_contains_managed_string_use<form_data::pieces::managed_vector<T>> : public is_or_contains_managed_string_use<T> {};
+      struct is_or_contains_managed_string_use<managed_vector<T>> : public is_or_contains_managed_string_use<T> {};
 
       // Specialization of a helper template for the "visitable" types:
       template<typename... Types>
