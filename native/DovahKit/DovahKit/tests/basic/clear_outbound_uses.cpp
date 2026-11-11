@@ -38,7 +38,7 @@ namespace dovahkit::tests {
             types::localized_string_descriptor{ "Skyrim.esm", dovah::localization::category::general,     0x3CD },
          });
 
-         dovah::form_data_operations::clear_outbound_uses(*stub, *ptr);
+         dovah::form_data::operations::clear_outbound_uses(*stub, *ptr);
          stub->set_edited(true); // `clear_outbound_uses` does not implicitly call this
 
          pieces::assert_uses_are_severed(*stub, used_stubs);
@@ -65,7 +65,7 @@ namespace dovahkit::tests {
             types::localized_string_descriptor{ "Skyrim.esm", dovah::localization::category::general,     0x43C },
          });
 
-         dovah::form_data_operations::clear_outbound_uses(*stub, *ptr);
+         dovah::form_data::operations::clear_outbound_uses(*stub, *ptr);
          stub->set_edited(true); // `clear_outbound_uses` does not implicitly call this
 
          pieces::assert_uses_are_severed(*stub, used_stubs);
@@ -86,7 +86,7 @@ namespace dovahkit::tests {
             0x0001328D, // [NPC_]JareeRa
          });
 
-         dovah::form_data_operations::clear_outbound_uses(*stub, *ptr);
+         dovah::form_data::operations::clear_outbound_uses(*stub, *ptr);
          stub->set_edited(true); // `clear_outbound_uses` does not implicitly call this
 
          pieces::assert_uses_are_severed(*stub, used_stubs);

@@ -8,7 +8,7 @@
 namespace {
    template<typename T>
    static void _clear_outbound_uses_from_form_data(dovah::base_managed_form_data& form_data) {
-      dovah::form_data_operations::clear_outbound_uses(form_data.stub, static_cast<T&>(form_data));
+      dovah::form_data::operations::clear_outbound_uses(form_data.stub, static_cast<T&>(form_data));
    }
 }
 
@@ -19,7 +19,7 @@ namespace dovah::form_data_function_tables::assign {
 
          template<typename T>
          static void _cast_and_exec(dovah::base_managed_form_data& dst_data, const dovah::base_managed_form_data& src_data) {
-            dovah::form_data_operations::assign(dst_data.stub, static_cast<T&>(dst_data), static_cast<const T&>(src_data));
+            dovah::form_data::operations::assign(dst_data.stub, static_cast<T&>(dst_data), static_cast<const T&>(src_data));
          }
 
          template<form_type V>

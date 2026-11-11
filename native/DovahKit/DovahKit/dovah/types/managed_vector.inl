@@ -21,11 +21,11 @@ namespace dovah {
             this->_wrapped.resize(size_after);
          }
          for (size_t i = 0; i < size_after; ++i) {
-            form_data_operations::assign(containing_form, this->_wrapped[i], src._wrapped[i]);
+            form_data::operations::assign(containing_form, this->_wrapped[i], src._wrapped[i]);
          }
          if (size_prior > size_after) {
             for (size_t i = size_after; i < size_prior; ++i) {
-               form_data_operations::clear_outbound_uses(containing_form, this->_wrapped[i]);
+               form_data::operations::clear_outbound_uses(containing_form, this->_wrapped[i]);
             }
             this->_wrapped.resize(size_after);
          }
@@ -35,7 +35,7 @@ namespace dovah {
       TEMPLATE_PARAMS
       constexpr void CLASS_NAME::clear(form_stub& containing_form) {
          for (auto& item : this->_wrapped) {
-            form_data_operations::clear_outbound_uses(containing_form, item);
+            form_data::operations::clear_outbound_uses(containing_form, item);
          }
          this->_wrapped.clear();
       }
@@ -45,13 +45,13 @@ namespace dovah {
       }
       TEMPLATE_PARAMS
       constexpr typename CLASS_NAME::iterator CLASS_NAME::erase(form_stub& containing_form, iterator it) {
-         form_data_operations::clear_outbound_uses(containing_form, *it);
+         form_data::operations::clear_outbound_uses(containing_form, *it);
          this->_wrapped.erase(it);
       }
       TEMPLATE_PARAMS
       constexpr typename CLASS_NAME::iterator CLASS_NAME::erase(form_stub& containing_form, iterator first, iterator last) {
          for(auto it = first; it <= last; ++it)
-            form_data_operations::clear_outbound_uses(containing_form, *it);
+            form_data::operations::clear_outbound_uses(containing_form, *it);
          this->_wrapped.erase(first, last);
       }
       TEMPLATE_PARAMS
@@ -63,7 +63,7 @@ namespace dovah {
          const auto size_prior = this->size();
          if (size_prior > size_after) {
             for (size_type i = size_after; i < size_prior; ++i) {
-               form_data_operations::clear_outbound_uses(containing_form, this->_wrapped[i]);
+               form_data::operations::clear_outbound_uses(containing_form, this->_wrapped[i]);
             }
          }
          this->_wrapped.resize(size_after);

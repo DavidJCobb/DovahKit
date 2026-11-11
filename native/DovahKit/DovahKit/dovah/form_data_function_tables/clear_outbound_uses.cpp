@@ -11,7 +11,7 @@ namespace dovah::form_data_function_tables::clear_outbound_uses {
 
       template<typename T>
       static void _cast_and_exec(dovah::base_managed_form_data& form_data) {
-         dovah::form_data_operations::clear_outbound_uses(form_data.stub, static_cast<T&>(form_data));
+         dovah::form_data::operations::clear_outbound_uses(form_data.stub, static_cast<T&>(form_data));
       }
       
       template<form_type V>

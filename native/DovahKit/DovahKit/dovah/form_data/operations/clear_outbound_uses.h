@@ -8,7 +8,7 @@
 #include "../helpers/visit_members_recursively.h"
 #include "lu/macros/FORCE_INLINE.define.h"
 
-namespace dovah::form_data_operations {
+namespace dovah::form_data::operations {
    class clear_outbound_uses_visitor : public form_data::helpers::recursive_visitor_bases::ignore_primitives {
       public:
          constexpr clear_outbound_uses_visitor(form_stub& cf) : containing_form(cf) {}

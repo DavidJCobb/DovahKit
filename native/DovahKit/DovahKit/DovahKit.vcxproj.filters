@@ -1429,7 +1429,7 @@
     <ClInclude Include="dovah\form_data\helpers\visit_members_in_tandem_recursively.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_data\pieces\managed_vector.h">
+    <ClInclude Include="dovah\types\managed_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\form_data\helpers\is_subobject_vector_type.h">
@@ -1537,7 +1537,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\_docs\localization.md" />
-    <None Include="dovah\form_data\pieces\managed_vector.inl">
+    <None Include="dovah\types\managed_vector.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

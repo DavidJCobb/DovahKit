@@ -292,7 +292,7 @@
     <ClInclude Include="dovah\form_data\helpers\visit_members_in_tandem_recursively.h" />
     <ClInclude Include="dovah\form_data\helpers\visit_members_recursively.h" />
     <ClInclude Include="dovah\form_data\operations\assign.h" />
-    <ClInclude Include="dovah\form_data\pieces\managed_vector.h" />
+    <ClInclude Include="dovah\types\managed_vector.h" />
     <ClInclude Include="dovah\form_data\types\f\FormList.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process.h" />
@@ -607,7 +607,7 @@
       <SubType>
       </SubType>
     </None>
-    <None Include="dovah\form_data\pieces\managed_vector.inl" />
+    <None Include="dovah\types\managed_vector.inl" />
     <None Include="dovah\form_data_function_tables\_helpers.inl" />
     <None Include="dovah\form_data_pointer.inl" />
     <None Include="dovah\form_stub.inl" />

@@ -14,7 +14,7 @@
 #include "./clear_outbound_uses.h"
 #include "lu/macros/FORCE_INLINE.define.h"
 
-namespace dovah::form_data_operations {
+namespace dovah::form_data::operations {
    class assign_visitor {
       public:
          constexpr assign_visitor(form_stub& s) : dst_containing_form(s) {}
