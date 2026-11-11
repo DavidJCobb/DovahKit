@@ -17,7 +17,7 @@ namespace {
    };
 }
 
-namespace dovah::form_data_helpers {
+namespace dovah::form_data::helpers {
    extern void load_hardcoded_form_data(base_managed_form_data& data) {
       const auto& stub = data.stub;
       auto&       alo  = stub.get_load_order();

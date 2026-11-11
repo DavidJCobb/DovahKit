@@ -9,7 +9,7 @@
 #include "lu/macros/FORCE_INLINE.define.h"
 
 namespace dovah::form_data_operations {
-   class clear_outbound_uses_visitor : public form_data_helpers::recursive_visitor_bases::ignore_primitives {
+   class clear_outbound_uses_visitor : public form_data::helpers::recursive_visitor_bases::ignore_primitives {
       public:
          constexpr clear_outbound_uses_visitor(form_stub& cf) : containing_form(cf) {}
 
@@ -17,7 +17,7 @@ namespace dovah::form_data_operations {
          form_stub& containing_form;
 
          #pragma region Values to accept
-            using form_data_helpers::recursive_visitor_bases::ignore_primitives::visit;
+            using form_data::helpers::recursive_visitor_bases::ignore_primitives::visit;
 
             // Form uses
             template<typename T>
@@ -42,10 +42,10 @@ namespace dovah::form_data_operations {
          #pragma endregion
    };
 
-   template<form_data_helpers::is_visitable T>
+   template<form_data::helpers::is_visitable T>
    void clear_outbound_uses(form_stub& containing_form, T& data) {
       clear_outbound_uses_visitor visitor{ containing_form };
-      form_data_helpers::visit_members_recursively(data, visitor);
+      form_data::helpers::visit_members_recursively(data, visitor);
    }
 }
 

@@ -185,7 +185,7 @@ namespace dovah {
       uint16_t first_file_to_load_from = 0;
       if (auto* file = files[0].pointer) {
          if (file->app_flags().has_all_of<tes::file_app_specific_flag::is_hardcoded_dummy>()) {
-            form_data_helpers::load_hardcoded_form_data(*this->loaded);
+            form_data::helpers::load_hardcoded_form_data(*this->loaded);
             ++first_file_to_load_from;
          }
       }

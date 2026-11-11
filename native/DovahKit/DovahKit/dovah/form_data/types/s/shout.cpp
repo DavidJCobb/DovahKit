@@ -133,7 +133,7 @@ namespace dovah::form_data_function_tables::serialize_form_data {
 
       if (intfc.is_winning_record) {
          while (auto& subrecord = record.next_subrecord()) {
-            if (form_data_helpers::subrecord_was_handled_at_stub_creation(subrecord.signature()))
+            if (form_data::helpers::subrecord_was_handled_at_stub_creation(subrecord.signature()))
                continue;
             switch (subrecord.signature()) {
                case 'FULL':
@@ -166,7 +166,7 @@ namespace dovah::form_data_function_tables::serialize_form_data {
          // overridden record to "leak through."
          //
          while (auto& subrecord = record.next_subrecord()) {
-            if (form_data_helpers::subrecord_was_handled_at_stub_creation(subrecord.signature()))
+            if (form_data::helpers::subrecord_was_handled_at_stub_creation(subrecord.signature()))
                continue;
             switch (subrecord.signature()) {
                case 'SNAM':

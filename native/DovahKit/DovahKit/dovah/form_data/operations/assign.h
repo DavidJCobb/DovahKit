@@ -24,7 +24,7 @@ namespace dovah::form_data_operations {
 
          #pragma region Values to accept
             template<typename Dst, typename Src>
-               requires (!(form_data_helpers::is_or_contains_managed_use<Dst> || form_data_helpers::is_or_contains_managed_use<Src>))
+               requires (!(form_data::helpers::is_or_contains_managed_use<Dst> || form_data::helpers::is_or_contains_managed_use<Src>))
             LU_FORCE_INLINE void visit(Dst& dst, const Src& src) {
                dst = src;
             }
@@ -34,7 +34,7 @@ namespace dovah::form_data_operations {
                requires (
                   (std::is_base_of_v<managed_form_use, Dst> || std::is_same_v<form_stub*, Dst>)
                && (std::is_base_of_v<managed_form_use, Src> || std::is_same_v<form_stub*, Src>)
-               && (form_data_helpers::is_or_contains_managed_use<Dst> || form_data_helpers::is_or_contains_managed_use<Src>)
+               && (form_data::helpers::is_or_contains_managed_use<Dst> || form_data::helpers::is_or_contains_managed_use<Src>)
                )
             LU_FORCE_INLINE void visit(Dst& dst_data, const Src& src_data) {
                form_stub* v;
@@ -55,7 +55,7 @@ namespace dovah::form_data_operations {
                requires (
                   std::is_base_of_v<_base_managed_localized_string_use, Dst>
                && std::is_base_of_v<_base_managed_localized_string_use, Src>
-               && (form_data_helpers::is_or_contains_managed_use<Dst> || form_data_helpers::is_or_contains_managed_use<Src>)
+               && (form_data::helpers::is_or_contains_managed_use<Dst> || form_data::helpers::is_or_contains_managed_use<Src>)
                )
             void visit(Dst& dst_data, const Src& src_data) {
                const bool dst_is_localized = dst_data.is_localized();
@@ -72,7 +72,7 @@ namespace dovah::form_data_operations {
             }
             
             // Vectors (assign managed to unmanaged).
-            template<lu::concepts::instantiation_of_std_vector Dst, form_data_helpers::is_managed_vector_type Src>
+            template<lu::concepts::instantiation_of_std_vector Dst, form_data::helpers::is_managed_vector_type Src>
             void visit(Dst& dst_data, const Src& src_data) {
                const size_t size = src_data.size();
                dst_data.resize(size);
@@ -82,7 +82,7 @@ namespace dovah::form_data_operations {
             }
             
             // Vectors (assign unmanaged to managed).
-            template<form_data_helpers::is_managed_vector_type Dst, lu::concepts::instantiation_of_std_vector Src>
+            template<form_data::helpers::is_managed_vector_type Dst, lu::concepts::instantiation_of_std_vector Src>
             void visit(Dst& dst_data, const Src& src_data) {
                const size_t size = src_data.size();
                dst_data.resize(size);
@@ -92,17 +92,17 @@ namespace dovah::form_data_operations {
             }
             
             // Vectors (assign managed to managed).
-            template<form_data_helpers::is_managed_vector_type Dst, form_data_helpers::is_managed_vector_type Src>
+            template<form_data::helpers::is_managed_vector_type Dst, form_data::helpers::is_managed_vector_type Src>
             void visit(Dst& dst_data, const Src& src_data) {
                dst_data.assign(this->dst_containing_form, src_data);
             }
          #pragma endregion
    };
 
-   template<form_data_helpers::is_visitable Dst, form_data_helpers::is_visitable Src>
+   template<form_data::helpers::is_visitable Dst, form_data::helpers::is_visitable Src>
    void assign(form_stub& dst_containing_form, Dst& dst_data, const Src& src_data) {
       assign_visitor visitor{ dst_containing_form };
-      form_data_helpers::visit_members_in_tandem_recursively(dst_data, src_data, visitor);
+      form_data::helpers::visit_members_in_tandem_recursively(dst_data, src_data, visitor);
    }
 }
 

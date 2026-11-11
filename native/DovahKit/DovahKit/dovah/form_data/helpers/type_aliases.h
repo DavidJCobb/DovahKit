@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "../params.h"
-#include "../helpers/is_or_contains_managed_use.h"
+#include "./is_or_contains_managed_use.h"
 #include "dovah/localization/category.h"
 #include "dovah/types/managed_vector.h"
 namespace dovah {
@@ -18,7 +18,7 @@ namespace dovah {
    class unmanaged_localized_string_use;
 }
 
-namespace dovah::form_data_helpers {
+namespace dovah::form_data::helpers {
    namespace type_alias_groups {
       struct managed {
          using form_use = managed_form_use;

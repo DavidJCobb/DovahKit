@@ -8,7 +8,7 @@
 
 #pragma push_macro("X")
 #undef  X
-#define X(_typename_) using _typename_ = form_data_helpers::type_aliases<Params>::_typename_;
+#define X(_typename_) using _typename_ = form_data::helpers::type_aliases<Params>::_typename_;
 X(form_use)
 X(localized_general_string_use)
 X(localized_description_string_use)
@@ -17,7 +17,7 @@ X(localized_info_string_use)
 #pragma pop_macro("X")
 
 template<auto UseInfoEntryFlag>
-using unique_form_use = form_data_helpers::type_aliases<Params>::template unique_form_use<UseInfoEntryFlag>;
+using unique_form_use = form_data::helpers::type_aliases<Params>::template unique_form_use<UseInfoEntryFlag>;
 
 template<typename T>
-using vector = form_data_helpers::type_aliases<Params>::template vector<T>;
+using vector = form_data::helpers::type_aliases<Params>::template vector<T>;

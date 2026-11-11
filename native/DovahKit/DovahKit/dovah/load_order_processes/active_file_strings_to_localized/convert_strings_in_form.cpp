@@ -15,7 +15,7 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
          process_pimpl& pimpl;
       };
 
-      class visitor : public form_data_helpers::recursive_visitor_bases::ignore_primitives {
+      class visitor : public form_data::helpers::recursive_visitor_bases::ignore_primitives {
          public:
             constexpr visitor(const convert_state state) : state(state) {}
 
@@ -23,7 +23,7 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
             const convert_state state;
 
             #pragma region Values to accept
-               using form_data_helpers::recursive_visitor_bases::ignore_primitives::visit;
+               using form_data::helpers::recursive_visitor_bases::ignore_primitives::visit;
 
                // Form uses
                template<typename T>
@@ -43,10 +43,10 @@ namespace dovah::load_order_processes::active_file_strings_to_localized {
             #pragma endregion
       };
 
-      template<form_data_helpers::is_visitable T>
+      template<form_data::helpers::is_visitable T>
       void _convert_all_strings_in(const convert_state& state, T& data) {
          visitor visitor{ state };
-         form_data_helpers::visit_members_recursively(data, visitor);
+         form_data::helpers::visit_members_recursively(data, visitor);
       }
    }
 }
