@@ -9,34 +9,36 @@
 #include "./is_visitable.h"
 
 namespace dovah::form_data::helpers {
-   namespace visit_members_in_tandem_recursively_impl {
-      template<typename T, typename U, typename Visitor>
-      concept accepted_by_visitor = requires (Visitor visitor, T&& a, U&& b) {
-         { visitor.visit(a, b) };
-      };
+   // Check whether a visitor type can act directly on a given value type (as opposed to 
+   // us recursively walking that value pair for it until we find something it can act on).
+   template<typename T, typename U, typename Visitor>
+   concept can_visit_recursively_in_tandem_with = requires (Visitor visitor, T&& a, U&& b) {
+      { visitor.visit(a, b) };
+   };
 
+   namespace visit_members_in_tandem_recursively_impl {
       #pragma region is_or_contains_accepted_by_visitor
          template<typename T, typename U, typename Visitor>
          struct is_or_contains_accepted_by_visitor;
          
          // Types that are directly accepted by the passed-in visitor should produce "true."
          template<typename Visitor, typename T, typename U>
-            requires accepted_by_visitor<T, U, Visitor>
+            requires can_visit_recursively_in_tandem_with<T, U, Visitor>
          struct is_or_contains_accepted_by_visitor<T, U, Visitor> : public std::true_type {};
          
          // If an array is not, itself, accepted by the visitor type, check if any subobject is.
          template<typename Visitor, lu::concepts::instantiation_of_std_array T, lu::concepts::instantiation_of_std_array U>
-            requires (!accepted_by_visitor<T, U, Visitor> && std::tuple_size_v<T> == std::tuple_size_v<U>)
+            requires (!can_visit_recursively_in_tandem_with<T, U, Visitor> && std::tuple_size_v<T> == std::tuple_size_v<U>)
          struct is_or_contains_accepted_by_visitor<T, U, Visitor> : public is_or_contains_accepted_by_visitor<typename T::value_type, typename U::value_type, Visitor> {};
 
          // If a vector is not, itself, accepted by the visitor type, check if any subobject is.
          template<typename Visitor, is_subobject_vector_type T, is_subobject_vector_type U>
-            requires (!accepted_by_visitor<T, U, Visitor>)
+            requires (!can_visit_recursively_in_tandem_with<T, U, Visitor>)
          struct is_or_contains_accepted_by_visitor<T, U, Visitor> : public is_or_contains_accepted_by_visitor<typename T::value_type, typename U::value_type, Visitor> {};
          
          // If a visitable is not, itself, accepted by the visitor type, check if any subobject is.
          template<is_visitable T, is_visitable U, typename Visitor>
-            requires (!accepted_by_visitor<T, U, Visitor>)
+            requires (!can_visit_recursively_in_tandem_with<T, U, Visitor>)
          struct is_or_contains_accepted_by_visitor<T, U, Visitor> {
             private:
                template<typename X, typename Y>
@@ -66,7 +68,7 @@ namespace dovah::form_data::helpers {
          // Visitables.
          template<typename Visitor, typename T, typename U>
             requires (
-               !accepted_by_visitor<T, U, Visitor>
+               !can_visit_recursively_in_tandem_with<T, U, Visitor>
             && is_visitable<std::decay_t<T>>
             && is_visitable<std::decay_t<U>>
             )
@@ -75,7 +77,7 @@ namespace dovah::form_data::helpers {
          // Arrays.
          template<typename Visitor, lu::concepts::instantiation_of_std_array T, lu::concepts::instantiation_of_std_array U>
             requires (
-               !accepted_by_visitor<T, U, Visitor>
+               !can_visit_recursively_in_tandem_with<T, U, Visitor>
             && lu::concepts::instantiation_of_std_array<T>
             && lu::concepts::instantiation_of_std_array<U>
             && std::tuple_size_v<T> == std::tuple_size_v<U>
@@ -84,19 +86,19 @@ namespace dovah::form_data::helpers {
 
          // Vectors.
          template<typename Visitor, is_subobject_vector_type T, is_subobject_vector_type U>
-            requires (!accepted_by_visitor<T, U, Visitor>)
+            requires (!can_visit_recursively_in_tandem_with<T, U, Visitor>)
          void _exec(T&&, U&&, Visitor&&);
 
          // Types that the passed-in visitor can handle directly.
          template<typename Visitor,typename T, typename U>
-            requires accepted_by_visitor<T, U, Visitor>
+            requires can_visit_recursively_in_tandem_with<T, U, Visitor>
          void _exec(T&&, U&&, Visitor&&);
       #pragma endregion
       
       // Visitables.
       template<typename Visitor, typename T, typename U>
          requires (
-            !accepted_by_visitor<T, U, Visitor>
+            !can_visit_recursively_in_tandem_with<T, U, Visitor>
          && is_visitable<std::decay_t<T>>
          && is_visitable<std::decay_t<U>>
          )
@@ -115,7 +117,7 @@ namespace dovah::form_data::helpers {
       // Arrays.
       template<typename Visitor, lu::concepts::instantiation_of_std_array T, lu::concepts::instantiation_of_std_array U>
          requires (
-            !accepted_by_visitor<T, U, Visitor>
+            !can_visit_recursively_in_tandem_with<T, U, Visitor>
          && lu::concepts::instantiation_of_std_array<T>
          && lu::concepts::instantiation_of_std_array<U>
          && std::tuple_size_v<T> == std::tuple_size_v<U>
@@ -128,7 +130,7 @@ namespace dovah::form_data::helpers {
 
       // Vectors.
       template<typename Visitor, is_subobject_vector_type T, is_subobject_vector_type U>
-         requires (!accepted_by_visitor<T, U, Visitor>)
+         requires (!can_visit_recursively_in_tandem_with<T, U, Visitor>)
       void _exec(T&& a, U&& b, Visitor&& visitor) {
          const size_t size_a   = a.size();
          const size_t size_b   = b.size();
@@ -139,7 +141,7 @@ namespace dovah::form_data::helpers {
 
       // Types that the passed-in visitor can handle directly.
       template<typename Visitor, typename T, typename U>
-         requires accepted_by_visitor<T, U, Visitor>
+         requires can_visit_recursively_in_tandem_with<T, U, Visitor>
       void _exec(T&& a, U&& b, Visitor&& visitor) {
          visitor.visit(a, b);
       }

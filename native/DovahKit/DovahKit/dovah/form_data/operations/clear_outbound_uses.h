@@ -3,7 +3,6 @@
 #include "dovah/form_stub.h"
 #include "dovah/types/managed_form_use.h"
 #include "dovah/types/managed_localized_string_use.h"
-#include "dovah/types/managed_vector.h"
 #include "../helpers/is_visitable.h"
 #include "../helpers/visit_members_recursively.h"
 #include "lu/macros/FORCE_INLINE.define.h"
@@ -42,10 +41,18 @@ namespace dovah::form_data::operations {
          #pragma endregion
    };
 
-   template<form_data::helpers::is_visitable T>
+   template<typename T>
+      requires (
+         helpers::can_visit_recursively_with<T, clear_outbound_uses_visitor>
+      || helpers::is_visitable<T>
+      )
    void clear_outbound_uses(form_stub& containing_form, T& data) {
       clear_outbound_uses_visitor visitor{ containing_form };
-      form_data::helpers::visit_members_recursively(data, visitor);
+      if constexpr (helpers::can_visit_recursively_with<T, clear_outbound_uses_visitor>) {
+         visitor.visit(data);
+      } else {
+         helpers::visit_members_recursively(data, visitor);
+      }
    }
 }
 
