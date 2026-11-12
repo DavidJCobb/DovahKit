@@ -12,7 +12,7 @@ namespace dovah::form_data::helpers {
    // Check whether a visitor type can act directly on a given value type (as opposed to 
    // us recursively walking that value for it until we find something it can act on).
    template<typename T, typename Visitor>
-   concept can_visit_recursively_with = requires (Visitor visitor, T& v) {
+   concept directly_visited_by = requires (Visitor visitor, T& v) {
       { visitor.visit(v) };
    };
 
@@ -22,22 +22,22 @@ namespace dovah::form_data::helpers {
          struct is_or_contains_accepted_by_visitor;
          
          // Types that are directly accepted by the passed-in visitor should produce "true."
-         template<typename Visitor, can_visit_recursively_with<Visitor> T>
+         template<typename Visitor, directly_visited_by<Visitor> T>
          struct is_or_contains_accepted_by_visitor<T, Visitor> : public std::true_type {};
          
          // If an array is not, itself, accepted by the visitor type, check if any subobject is.
          template<typename T, size_t S, typename Visitor>
-            requires (!can_visit_recursively_with<std::array<T, S>, Visitor>)
+            requires (!directly_visited_by<std::array<T, S>, Visitor>)
          struct is_or_contains_accepted_by_visitor<std::array<T, S>, Visitor> : public is_or_contains_accepted_by_visitor<T, Visitor> {};
          
          // If a vector is not, itself, accepted by the visitor type, check if any subobject is.
          template<is_subobject_vector_type T, typename Visitor>
-            requires (!can_visit_recursively_with<T, Visitor>)
+            requires (!directly_visited_by<T, Visitor>)
          struct is_or_contains_accepted_by_visitor<T, Visitor> : public is_or_contains_accepted_by_visitor<typename T::value_type, Visitor> {};
          
          // If a visitable is not, itself, accepted by the visitor type, check if any subobject is.
          template<is_visitable T, typename Visitor>
-            requires (!can_visit_recursively_with<T, Visitor>)
+            requires (!directly_visited_by<T, Visitor>)
          struct is_or_contains_accepted_by_visitor<T, Visitor> {
             private:
                template<typename X>
@@ -66,27 +66,27 @@ namespace dovah::form_data::helpers {
       #pragma region Forward declarations
          // Visitables.
          template<typename Visitor, is_visitable T>
-            requires (!can_visit_recursively_with<T, Visitor>)
+            requires (!directly_visited_by<T, Visitor>)
          void _exec(T& data, Visitor&& visitor);
 
          // Arrays.
          template<typename Visitor, lu::concepts::instantiation_of_std_array T>
-            requires (!can_visit_recursively_with<T, Visitor>)
+            requires (!directly_visited_by<T, Visitor>)
          void _exec(T& data, Visitor&& visitor);
 
          // Vectors.
          template<typename Visitor, is_subobject_vector_type T>
-            requires (!can_visit_recursively_with<T, Visitor>)
+            requires (!directly_visited_by<T, Visitor>)
          void _exec(T& data, Visitor&& visitor);
 
          // Types that the passed-in visitor can handle directly.
-         template<typename Visitor, can_visit_recursively_with<Visitor> T>
+         template<typename Visitor, directly_visited_by<Visitor> T>
          void _exec(T& data, Visitor&& visitor);
       #pragma endregion
       
       // Visitables.
       template<typename Visitor, is_visitable T>
-         requires (!can_visit_recursively_with<T, Visitor>)
+         requires (!directly_visited_by<T, Visitor>)
       void _exec(T& data, Visitor&& visitor) {
          if constexpr (is_or_contains_accepted_by_visitor_v<T, std::decay_t<Visitor>>) {
             T::visit_fields(data, [&visitor](auto& field) {
@@ -100,7 +100,7 @@ namespace dovah::form_data::helpers {
 
       // Arrays.
       template<typename Visitor, lu::concepts::instantiation_of_std_array T>
-         requires (!can_visit_recursively_with<T, Visitor>)
+         requires (!directly_visited_by<T, Visitor>)
       void _exec(T& data, Visitor&& visitor) {
          for (auto& item : data)
             _exec(item, std::forward<Visitor>(visitor));
@@ -108,14 +108,14 @@ namespace dovah::form_data::helpers {
       
       // Vectors.
       template<typename Visitor, is_subobject_vector_type T>
-         requires (!can_visit_recursively_with<T, Visitor>)
+         requires (!directly_visited_by<T, Visitor>)
       void _exec(T& data, Visitor&& visitor) {
          for (auto& item : data)
             _exec(item, std::forward<Visitor>(visitor));
       }
 
       // Types that the passed-in visitor can handle directly.
-      template<typename Visitor, can_visit_recursively_with<Visitor> T>
+      template<typename Visitor, directly_visited_by<Visitor> T>
       void _exec(T& data, Visitor&& visitor) {
          visitor.visit(data);
       }
@@ -135,10 +135,15 @@ namespace dovah::form_data::helpers {
             void visit(const std::string&) {}
       };
    }
+         
+   template<typename T, typename Visitor>
+   concept can_visit_recursively_with = requires (Visitor visitor, T& v) {
+      { visit_members_recursively_impl::_exec(v, visitor) };
+   };
 
    template<
       typename Visitor,
-      is_visitable T
+      can_visit_recursively_with<Visitor> T
    >
    void visit_members_recursively(T& data, Visitor&& visitor) {
       visit_members_recursively_impl::_exec(data, std::forward<Visitor>(visitor));

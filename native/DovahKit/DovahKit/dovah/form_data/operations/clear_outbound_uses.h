@@ -41,18 +41,10 @@ namespace dovah::form_data::operations {
          #pragma endregion
    };
 
-   template<typename T>
-      requires (
-         helpers::can_visit_recursively_with<T, clear_outbound_uses_visitor>
-      || helpers::is_visitable<T>
-      )
+   template<helpers::can_visit_recursively_with<clear_outbound_uses_visitor> T>
    void clear_outbound_uses(form_stub& containing_form, T& data) {
       clear_outbound_uses_visitor visitor{ containing_form };
-      if constexpr (helpers::can_visit_recursively_with<T, clear_outbound_uses_visitor>) {
-         visitor.visit(data);
-      } else {
-         helpers::visit_members_recursively(data, visitor);
-      }
+      helpers::visit_members_recursively(data, visitor);
    }
 }
 

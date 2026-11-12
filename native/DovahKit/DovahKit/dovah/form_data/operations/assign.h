@@ -112,17 +112,10 @@ namespace dovah::form_data::operations {
    };
    
    template<typename Dst, typename Src>
-      requires (
-         helpers::can_visit_recursively_in_tandem_with<Dst, Src, assign_visitor>
-      || (helpers::is_visitable<Dst> && helpers::is_visitable<Src>)
-      )
+      requires helpers::can_visit_in_tandem_recursively_with<assign_visitor, Dst, Src>
    void assign(form_stub& dst_containing_form, Dst& dst_data, const Src& src_data) {
       assign_visitor visitor{ dst_containing_form };
-      if constexpr (helpers::can_visit_recursively_in_tandem_with<Dst, Src, assign_visitor>) {
-         visitor.visit(dst_data, src_data);
-      } else {
-         helpers::visit_members_in_tandem_recursively(dst_data, src_data, visitor);
-      }
+      helpers::visit_members_in_tandem_recursively(dst_data, src_data, visitor);
    }
 }
 
