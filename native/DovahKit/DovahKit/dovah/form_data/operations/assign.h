@@ -69,6 +69,19 @@ namespace dovah::form_data::operations {
                   dst_data.set_non_localized_string(this->dst_containing_form, src_data.get_non_localized_string());
                }
             }
+
+            //
+            // A note on the vector-related handlers below: We act on `managed_vector` types, but 
+            // we can't *include* the `managed_vector` header here, because that will lead to a 
+            // circular include. (The `managed_vector` class itself depends on the functionality 
+            // defined in this file, you see.) Fortunately, we don't need to. Since we're dealing 
+            // with templates, the compiler basically doesn't care exactly what's inside of these 
+            // functions at parse time (beyond needing to be *able* to parse them); it only cares 
+            // once the function templates are instantiated (i.e. at the call site). If these 
+            // functions are ever called, it will be because someone passed in a data structure 
+            // that is or contains a `managed_vector`, and so the definition of `managed_vector` 
+            // will be visible at that point.
+            //
             
             // Vectors (assign managed to unmanaged).
             template<lu::concepts::instantiation_of_std_vector Dst, helpers::is_managed_vector_type Src>
