@@ -124,7 +124,9 @@
     <ClCompile Include="dovah\bsa\thread_for_parsing.cpp" />
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\form_data\can_load_form_data_of_type.cpp" />
+    <ClCompile Include="dovah\form_data\component_accessors.cpp" />
     <ClCompile Include="dovah\form_data\helpers\load_hardcoded_form_data.cpp" />
+    <ClCompile Include="dovah\form_data\components\bounds.cpp" />
     <ClCompile Include="dovah\form_data\types\f\FormList.cpp" />
     <ClCompile Include="dovah\form_data\types\s\Shout.cpp" />
     <ClCompile Include="dovah\form_data\function_tables\assign.cpp" />
@@ -285,6 +287,7 @@
     <ClInclude Include="dovah\form_data\base_managed_form_data.h" />
     <ClInclude Include="dovah\form_data\base_unmanaged_form_data.h" />
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
+    <ClInclude Include="dovah\form_data\component_accessors.h" />
     <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h" />
     <ClInclude Include="dovah\form_data\helpers\is_managed_vector_type.h" />
     <ClInclude Include="dovah\form_data\helpers\is_or_contains_managed_string_use.h" />
@@ -292,6 +295,7 @@
     <ClInclude Include="dovah\form_data\helpers\visit_members_in_tandem_recursively.h" />
     <ClInclude Include="dovah\form_data\helpers\visit_members_recursively.h" />
     <ClInclude Include="dovah\form_data\operations\assign.h" />
+    <ClInclude Include="dovah\form_data\components\bounds.h" />
     <ClInclude Include="dovah\types\managed_vector.h" />
     <ClInclude Include="dovah\form_data\types\f\FormList.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.h" />
@@ -299,6 +303,9 @@
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_params.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_pimpl.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\string_to_id_maps.h" />
+    <ClInclude Include="lu\math\sqrt.h" />
+    <ClInclude Include="lu\math\types\vec3.decl.h" />
+    <ClInclude Include="lu\math\types\vec3.h" />
     <ClInclude Include="tests\basic\active_file_to_localized.h" />
     <ClInclude Include="tests\pieces\assert_even_in_release.h" />
     <ClInclude Include="tests\pieces\assert_uses_are_severed.h" />
@@ -607,6 +614,10 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\form_data\README.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\types\managed_vector.inl" />
     <None Include="dovah\form_data\function_tables\_helpers.inl" />
     <None Include="dovah\form_data_pointer.inl" />
@@ -650,6 +661,7 @@
     <None Include="lu\containers\grids\resizable_grid.inl" />
     <None Include="lu\containers\grids\resizable_square_grid.inl" />
     <None Include="lu\containers\small_vector.inl" />
+    <None Include="lu\math\types\vec3.inl" />
     <None Include="lu\memory\basic_buffer.inl" />
     <None Include="lu\memory\buffer_view.inl" />
     <None Include="lu\memory\threaded_slab_heap.inl" />

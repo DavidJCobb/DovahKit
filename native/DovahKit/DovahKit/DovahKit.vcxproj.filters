@@ -311,6 +311,12 @@
     <ClCompile Include="dovah\form_data\types\f\FormList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\form_data\components\bounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data\component_accessors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1441,6 +1447,21 @@
     <ClInclude Include="dovah\form_data\types\f\FormList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lu\math\sqrt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\math\types\vec3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\math\types\vec3.decl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\components\bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\component_accessors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -1540,6 +1561,10 @@
     <None Include="dovah\types\managed_vector.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="lu\math\types\vec3.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\form_data\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />
