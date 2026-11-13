@@ -1,5 +1,7 @@
 #include "./worker_thread.h"
 #include <cassert>
+#include "lu/threads/current/set_name.h"
+#include "lu/threads/max_name_length.h"
 #include "dovah/tes/file.h"
 #include "dovah/tes/reading/file_view.h"
 #include "dovah/active_load_order.h"
@@ -13,6 +15,11 @@
 namespace dovah::load_order_processes::use_info_build {
    void worker_thread::_execute() {
       termination_handler::update_this_thread();
+      if constexpr (lu::threads::max_name_length > 16) {
+         lu::threads::current::set_name("Dovah: Build outbound use info");
+      } else {
+         lu::threads::current::set_name("dovah-use-info");
+      }
 
       const auto* active_file = this->owner.get_active_file();
 

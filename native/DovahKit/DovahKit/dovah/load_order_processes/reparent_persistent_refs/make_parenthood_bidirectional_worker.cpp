@@ -1,5 +1,7 @@
 #include "./make_parenthood_bidirectional_worker.h"
 #include <cassert>
+#include "lu/threads/current/set_name.h"
+#include "lu/threads/max_name_length.h"
 #include "dovah/_impl/form_stubs/make_one_way_use_bidirectional.h"
 #include "dovah/termination_handler.h"
 #include "./queued_ref.h"
@@ -11,6 +13,11 @@ namespace dovah::load_order_processes::reparent_persistent_refs {
 
    void make_parenthood_bidirectional_worker::_execute() {
       termination_handler::update_this_thread();
+      if constexpr (lu::threads::max_name_length > 16) {
+         lu::threads::current::set_name("Dovah: Reparent persistent refs: make parenthood bidirectional");
+      } else {
+         lu::threads::current::set_name("dovah-pers-bidi");
+      }
 
       const uint64_t start_distance_sq = (int64_t)this->ring.radii.start * this->ring.radii.start;
       const uint64_t end_distance_sq   = (int64_t)this->ring.radii.end   * this->ring.radii.end;

@@ -9,17 +9,34 @@
 #include "./all_types.h"
 #include "./components/bounds.h"
 
+// Only suitable if the component type is not, itself, templated on the form-data-params.
+// Requires that `component_type` be in-scope as the component type.
+#define DEFINE_SIMPLE_CONCEPT_CHECK(member_name) \
+   template<typename FormData> \
+   concept has_component = requires(FormData& data) { \
+      { data.member_name } -> std::same_as<component_type&>; \
+   };
+
+// Use if the compoennt type is templated on form-data-params.
+// Requires that `component_type` be in-scope as the component type template.
+#define DEFINE_PARAMS_CONCEPT_CHECK(member_name) \
+   template<typename FormData> \
+   concept has_component = requires(FormData& data) { \
+      typename FormData::form_data_params; \
+      { data.member_name } -> std::same_as<component_type<FormData::form_data_params>&>; \
+   };
+
 namespace dovah::form_data::component_accessors {
    #pragma region bounds
       namespace bounds_impl {
          using component_type = components::bounds;
          using offset_type    = uint16_t;
 
+         DEFINE_SIMPLE_CONCEPT_CHECK(bounds);
+
          template<typename FormData>
          constexpr offset_type offset_in = []() {
-            if constexpr (requires(FormData& data) {
-               { data.bounds } -> std::same_as<component_type&>
-            }) {
+            if constexpr (has_component<FormData>) {
                return offsetof(FormData, bounds);
             } else {
                return 0;

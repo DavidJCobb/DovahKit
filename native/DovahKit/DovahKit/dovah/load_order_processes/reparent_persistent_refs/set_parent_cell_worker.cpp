@@ -1,5 +1,7 @@
 #include "./set_parent_cell_worker.h"
 #include <cassert>
+#include "lu/threads/current/set_name.h"
+#include "lu/threads/max_name_length.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_stub_addenda.h"
 #include "dovah/load_order_interfaces/form_load.h"
@@ -12,6 +14,12 @@
 namespace dovah::load_order_processes::reparent_persistent_refs {
    void set_parent_cell_worker::_execute() {
       termination_handler::update_this_thread();
+      if constexpr (lu::threads::max_name_length > 16) {
+         lu::threads::current::set_name("Dovah: Reparent persistent refs: set parent cell");
+      } else {
+         lu::threads::current::set_name("dovah-pers-setp");
+      }
+
       for (size_t i = this->range.start; i < this->range.end; ++i) {
          auto& item = this->refs[i];
          auto& ref  = *item.ref;

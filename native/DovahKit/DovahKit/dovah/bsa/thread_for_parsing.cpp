@@ -1,5 +1,7 @@
 #include "./thread_for_parsing.h"
 #include <stdexcept>
+#include "lu/threads/current/set_name.h"
+#include "lu/threads/max_name_length.h"
 #include "./archive.h"
 #include "./archive_collection.h"
 #include "dovah/exceptions/bsa_parse_error.h"
@@ -11,6 +13,11 @@ namespace dovah::bsa {
 
    /*static*/ void thread_for_parsing::_exec(thread_for_parsing* instance) {
       termination_handler::update_this_thread();
+      if constexpr (lu::threads::max_name_length > 16) {
+         lu::threads::current::set_name("Dovah: Parse BSA");
+      } else {
+         lu::threads::current::set_name("dovah-parse-bsa");
+      }
 
       auto& self = *instance;
       for (auto* archive : self.archives) {

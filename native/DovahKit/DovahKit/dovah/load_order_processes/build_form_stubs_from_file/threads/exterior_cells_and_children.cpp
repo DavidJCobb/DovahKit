@@ -1,5 +1,7 @@
 #include "./exterior_cells_and_children.h"
 #include <cassert>
+#include "lu/threads/current/set_name.h"
+#include "lu/threads/max_name_length.h"
 #include "dovah/active_load_order.h"
 #include "dovah/callback_sets/data_load.h"
 #include "dovah/form_stub.h"
@@ -18,6 +20,12 @@
 
 namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
    void exterior_cells_and_children::execute_on_thread() {
+      if constexpr (lu::threads::max_name_length > 16) {
+         lu::threads::current::set_name("Dovah: Index form stubs (exterior cells and chilren)");
+      } else {
+         lu::threads::current::set_name("dovah-form-extc");
+      }
+
       auto& alo         = this->_config.active_load_order;
       auto& callbacks   = this->_config.callbacks;
       auto& source_file = this->_config.source_file;

@@ -206,6 +206,7 @@
     <ClCompile Include="lu\cpuinfo.cpp" />
     <ClCompile Include="lu\files\mapped_file.cpp" />
     <ClCompile Include="lu\memory\basic_buffer.cpp" />
+    <ClCompile Include="lu\threads\current\set_name.cpp" />
     <ClCompile Include="lu\windows\read_single_ini_setting.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tests\basic\active_file_to_localized.cpp" />
@@ -306,6 +307,9 @@
     <ClInclude Include="lu\math\sqrt.h" />
     <ClInclude Include="lu\math\types\vec3.decl.h" />
     <ClInclude Include="lu\math\types\vec3.h" />
+    <ClInclude Include="lu\strings\zstring_view.h" />
+    <ClInclude Include="lu\threads\current\set_name.h" />
+    <ClInclude Include="lu\threads\max_name_length.h" />
     <ClInclude Include="tests\basic\active_file_to_localized.h" />
     <ClInclude Include="tests\pieces\assert_even_in_release.h" />
     <ClInclude Include="tests\pieces\assert_uses_are_severed.h" />
@@ -602,6 +606,7 @@
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
     <ClInclude Include="tests\basic\index_stubs.h" />
     <ClInclude Include="tests\basic\load_a_shout.h" />
+    <None Include="lu\strings\zstring_view.inl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\bsa\archive.inl" />
@@ -682,6 +687,7 @@
     <Natvis Include="lu\integral_character_code.natvis" />
     <Natvis Include="lu\memory\threaded_slab_heap.natvis" />
     <Natvis Include="lu\strings\low_footprint_string.natvis" />
+    <Natvis Include="lu\strings\zstring_view.natvis" />
     <Natvis Include="lu\utils\nominal_integer_type.natvis" />
   </ItemGroup>
   <ItemGroup>

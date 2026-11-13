@@ -68,22 +68,22 @@ namespace lu::utils {
          #pragma endregion
 
          #pragma region Comparison operator overloads
-            template<typename U>
-               requires (std::is_arithmetic_v<U>)
-            constexpr std::strong_ordering operator<=>(const U v) const noexcept {
-               return this->wrapped_integral <=> v;
-            }
             constexpr std::strong_ordering operator<=>(const nominal_integer_type v) const noexcept {
                return this->wrapped_integral <=> v.wrapped_integral;
+            }
+            constexpr bool operator==(const nominal_integer_type v) const noexcept {
+               return this->wrapped_integral == v.wrapped_integral;
             }
 
             template<typename U>
                requires (std::is_arithmetic_v<U>)
-            constexpr bool operator==(const U v) const noexcept {
-               return this->wrapped_integral == v;
+            constexpr std::strong_ordering operator<=>(const U v) const noexcept {
+               return this->wrapped_integral <=> (Integral)v;
             }
-            constexpr bool operator==(const nominal_integer_type v) const noexcept {
-               return this->wrapped_integral == v.wrapped_integral;
+            template<typename U>
+               requires (std::is_arithmetic_v<U>)
+            constexpr bool operator==(const U v) const noexcept {
+               return this->wrapped_integral == (Integral)v;
             }
          #pragma endregion
 

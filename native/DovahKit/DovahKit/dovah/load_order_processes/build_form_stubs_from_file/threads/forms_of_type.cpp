@@ -1,5 +1,7 @@
 #include "./forms_of_type.h"
 #include <cassert>
+#include "lu/threads/current/set_name.h"
+#include "lu/threads/max_name_length.h"
 #include "dovah/callback_sets/data_load.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_type.h"
@@ -14,6 +16,12 @@
 
 namespace dovah::load_order_processes::build_form_stubs_from_file::threads {
    void forms_of_type::execute_on_thread() {
+      if constexpr (lu::threads::max_name_length > 16) {
+         lu::threads::current::set_name("Dovah: Index form stubs (forms of type)");
+      } else {
+         lu::threads::current::set_name("dovah-form-type");
+      }
+
       auto& alo         = this->_config.active_load_order;
       auto& callbacks   = this->_config.callbacks;
       auto& source_file = this->_config.source_file;

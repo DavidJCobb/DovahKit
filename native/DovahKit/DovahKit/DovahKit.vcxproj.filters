@@ -317,6 +317,9 @@
     <ClCompile Include="dovah\form_data\component_accessors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lu\threads\current\set_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1462,6 +1465,15 @@
     <ClInclude Include="dovah\form_data\component_accessors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lu\strings\zstring_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\threads\current\set_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\threads\max_name_length.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -1565,6 +1577,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\form_data\README.md" />
+    <None Include="lu\strings\zstring_view.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="lu\enums\enum_flags.natvis" />
@@ -1582,5 +1597,6 @@
     <Natvis Include="lu\strings\low_footprint_string.natvis" />
     <Natvis Include="dovah\types\managed_form_use.natvis" />
     <Natvis Include="dovah\types\managed_localized_string_use.natvis" />
+    <Natvis Include="lu\strings\zstring_view.natvis" />
   </ItemGroup>
 </Project>
