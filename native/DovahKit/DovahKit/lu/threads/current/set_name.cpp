@@ -34,6 +34,9 @@
    constexpr const native_result native_success_code = 0;
 #else
    using native_result = int;
+   //
+   constexpr const bool native_results_are_posix = true;
+   //
    constexpr const native_result native_success_code = 0;
 #endif
 

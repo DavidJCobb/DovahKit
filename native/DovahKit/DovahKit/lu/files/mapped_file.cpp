@@ -17,10 +17,12 @@ namespace lu::files {
          other._size = 0;
       }
       mapped_file& mapped_file::operator=(mapped_file&& other) noexcept {
+         auto prior_view = this->_view;
+         auto prior_size = this->_size;
          this->_view = other._view;
          this->_size = other._size;
-         other._view = nullptr;
-         other._size = 0;
+         other._view = prior_view;
+         other._size = prior_size;
          return *this;
       }
    #pragma endregion
