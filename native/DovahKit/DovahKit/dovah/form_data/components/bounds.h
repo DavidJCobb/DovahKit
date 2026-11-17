@@ -3,8 +3,13 @@
 #include "lu/bytestreams/customization/serialized_bytecount.h"
 #include "lu/integral_character_code.h"
 #include "lu/math/types/vec3.h"
-namespace dovah::tes {
-   class subrecord_view;
+namespace dovah {
+   namespace load_order_interfaces {
+      class form_load;
+   }
+   namespace tes {
+      class subrecord_view;
+   }
 }
 
 namespace dovah::form_data::components {
@@ -43,4 +48,11 @@ namespace lu::bytestreams {
       public:
          static constexpr const size_t value = sizeof(value_type::point_type::value_type) * 6;
    };
+}
+
+namespace dovah::form_data::serialization {
+   // provided for a consistent interface with other component types
+   inline void load(components::bounds& self, tes::subrecord_view& subrecord, load_order_interfaces::form_load&) {
+      self.stream(subrecord);
+   }
 }

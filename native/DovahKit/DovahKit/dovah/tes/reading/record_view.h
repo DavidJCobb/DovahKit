@@ -51,6 +51,8 @@ namespace dovah::tes {
          // Precondition: the owning `file_view` must have had a target file set.
          const file& get_source_file() const;
 
+         bool is_skyrim_special() const noexcept;
+
          const subrecord_view& get_current_subrecord() const noexcept;
          subrecord_view& get_current_subrecord() noexcept;
          subrecord_view& next_subrecord();

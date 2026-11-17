@@ -37,6 +37,8 @@ namespace dovah::tes {
 
          // Precondition: the owning `file_view` must have had a target file set.
          const file& get_source_file() const;
+
+         bool is_skyrim_special() const noexcept;
          
          constexpr const void* data() const noexcept { return this->_view.data(); }
          constexpr const void* data_at(size_type s) const noexcept { return this->_view.data_at(s); }

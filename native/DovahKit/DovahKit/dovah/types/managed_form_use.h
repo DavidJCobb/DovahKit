@@ -26,6 +26,9 @@ namespace dovah {
       public:
          bool stream(tes::subrecord_view& subrecord);
          void unchecked_stream(tes::subrecord_view& subrecord);
+
+         bool operator==(const managed_form_use&) const noexcept = default;
+         bool operator==(const form_stub* const v) const noexcept { return this->get() == v; }
    };
    
    template<auto UseInfoEntryFlag>

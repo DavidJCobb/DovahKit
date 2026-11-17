@@ -124,9 +124,12 @@
     <ClCompile Include="dovah\bsa\thread_for_parsing.cpp" />
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\form_data\can_load_form_data_of_type.cpp" />
+    <ClCompile Include="dovah\form_data\components\enchantable.cpp" />
+    <ClCompile Include="dovah\form_data\components\model.cpp" />
     <ClCompile Include="dovah\form_data\component_accessors.cpp" />
     <ClCompile Include="dovah\form_data\helpers\load_hardcoded_form_data.cpp" />
     <ClCompile Include="dovah\form_data\components\bounds.cpp" />
+    <ClCompile Include="dovah\form_data\pieces\precached_nif_info.cpp" />
     <ClCompile Include="dovah\form_data\types\f\FormList.cpp" />
     <ClCompile Include="dovah\form_data\types\s\Shout.cpp" />
     <ClCompile Include="dovah\form_data\function_tables\assign.cpp" />
@@ -288,6 +291,8 @@
     <ClInclude Include="dovah\form_data\base_managed_form_data.h" />
     <ClInclude Include="dovah\form_data\base_unmanaged_form_data.h" />
     <ClInclude Include="dovah\form_data\can_load_form_data_of_type.h" />
+    <ClInclude Include="dovah\form_data\components\enchantable.h" />
+    <ClInclude Include="dovah\form_data\components\model.h" />
     <ClInclude Include="dovah\form_data\component_accessors.h" />
     <ClInclude Include="dovah\form_data\form_type_for_form_data_class.h" />
     <ClInclude Include="dovah\form_data\helpers\is_managed_vector_type.h" />
@@ -297,6 +302,7 @@
     <ClInclude Include="dovah\form_data\helpers\visit_members_recursively.h" />
     <ClInclude Include="dovah\form_data\operations\assign.h" />
     <ClInclude Include="dovah\form_data\components\bounds.h" />
+    <ClInclude Include="dovah\form_data\pieces\precached_nif_info.h" />
     <ClInclude Include="dovah\types\managed_vector.h" />
     <ClInclude Include="dovah\form_data\types\f\FormList.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\convert_strings_in_form.h" />
@@ -304,6 +310,12 @@
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_params.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\process_pimpl.h" />
     <ClInclude Include="dovah\load_order_processes\active_file_strings_to_localized\string_to_id_maps.h" />
+    <ClInclude Include="lu\bit\reverse.h" />
+    <ClInclude Include="lu\hashing\crc.h" />
+    <ClInclude Include="lu\hashing\crc\common_definitions.h" />
+    <ClInclude Include="lu\hashing\crc\definition.h" />
+    <ClInclude Include="lu\hashing\crc\definition_value_type.h" />
+    <ClInclude Include="lu\hashing\crc\lookup_table.h" />
     <ClInclude Include="lu\math\sqrt.h" />
     <ClInclude Include="lu\math\types\vec3.decl.h" />
     <ClInclude Include="lu\math\types\vec3.h" />
@@ -606,6 +618,7 @@
     <ClInclude Include="tests\basic\file_list_to_load_order.h" />
     <ClInclude Include="tests\basic\index_stubs.h" />
     <ClInclude Include="tests\basic\load_a_shout.h" />
+    <None Include="dovah\form_data\pieces\precached_nif_info.inl" />
     <None Include="lu\strings\zstring_view.inl" />
   </ItemGroup>
   <ItemGroup>

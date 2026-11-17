@@ -16,6 +16,15 @@ namespace dovah::tes {
       return *this->owner.get_target_file();
    }
 
+   bool record_view::is_skyrim_special() const noexcept {
+      if (this->_header.version >= 44)
+         return true;
+      if (auto* file = this->owner.get_target_file()) {
+         return file->game() == game::skyrim_special;
+      }
+      return false;
+   }
+
    const subrecord_view& record_view::get_current_subrecord() const noexcept {
       return this->owner.subviews.subrecord;
    }

@@ -12,4 +12,8 @@ namespace dovah::tes {
    const file& subrecord_view::get_source_file() const {
       return *this->_owner.get_target_file();
    }
+
+   bool subrecord_view::is_skyrim_special() const noexcept {
+      return this->get_containing_record().is_skyrim_special();
+   }
 }

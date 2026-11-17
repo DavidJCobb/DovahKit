@@ -320,6 +320,15 @@
     <ClCompile Include="lu\threads\current\set_name.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\form_data\components\enchantable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data\components\model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_data\pieces\precached_nif_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\tes\file_queue.h">
@@ -1474,6 +1483,33 @@
     <ClInclude Include="lu\threads\max_name_length.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\form_data\components\enchantable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\pieces\precached_nif_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\hashing\crc\common_definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\hashing\crc\definition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\hashing\crc\definition_value_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\hashing\crc\lookup_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\hashing\crc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lu\bit\reverse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_data\components\model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\tes\file_queue.inl">
@@ -1578,6 +1614,9 @@
     </None>
     <None Include="dovah\form_data\README.md" />
     <None Include="lu\strings\zstring_view.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\form_data\pieces\precached_nif_info.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
